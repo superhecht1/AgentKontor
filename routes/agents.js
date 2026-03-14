@@ -74,7 +74,11 @@ router.put('/:id', auth, async (req, res) => {
     name, emoji, description, system_prompt, greeting, tone, language,
     quick_chips, color, is_active,
     widget_enabled, chatpage_enabled, api_enabled,
-    whatsapp_enabled, whatsapp_number, telegram_enabled, telegram_token
+    whatsapp_enabled, whatsapp_number, telegram_enabled, telegram_token,
+    rag_enabled, rag_prompt,
+    cap_calendar, cal_link, cap_leads, lead_fields, lead_email,
+    cap_products, products_data, cap_multilang, cap_email,
+    smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from
   } = req.body;
 
   try {
@@ -84,13 +88,23 @@ router.put('/:id', auth, async (req, res) => {
         tone=$6, language=$7, quick_chips=$8, color=$9, is_active=$10,
         widget_enabled=$11, chatpage_enabled=$12, api_enabled=$13,
         whatsapp_enabled=$14, whatsapp_number=$15, telegram_enabled=$16, telegram_token=$17,
+        rag_enabled=$18, rag_prompt=$19,
+        cap_calendar=$20, cal_link=$21, cap_leads=$22, lead_fields=$23, lead_email=$24,
+        cap_products=$25, products_data=$26, cap_multilang=$27, cap_email=$28,
+        smtp_host=$29, smtp_port=$30, smtp_user=$31, smtp_pass=$32, smtp_from=$33,
         updated_at=NOW()
-       WHERE id=$18 AND user_id=$19 RETURNING *`,
+       WHERE id=$34 AND user_id=$35 RETURNING *`,
       [name, emoji, description, system_prompt, greeting, tone, language,
        JSON.stringify(quick_chips || []), color, is_active ?? true,
        widget_enabled ?? true, chatpage_enabled ?? true, api_enabled ?? false,
        whatsapp_enabled ?? false, whatsapp_number || null,
        telegram_enabled ?? false, telegram_token || null,
+       rag_enabled ?? false, rag_prompt || '',
+       cap_calendar ?? false, cal_link || null,
+       cap_leads ?? false, JSON.stringify(lead_fields || []), lead_email || null,
+       cap_products ?? false, JSON.stringify(products_data || []),
+       cap_multilang ?? false, cap_email ?? false,
+       smtp_host || null, smtp_port || 587, smtp_user || null, smtp_pass || null, smtp_from || null,
        req.params.id, req.userId]
     );
     if (!result.rows.length) return res.status(404).json({ error: 'Agent nicht gefunden' });

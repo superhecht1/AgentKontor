@@ -418,6 +418,7 @@ Response:
       <div class="tab" :class="{active:aTab==='basics'}" @click="aTab='basics'" x-text="lang==='de'?'Grundlagen':'Basics'"></div>
       <div class="tab" :class="{active:aTab==='behavior'}" @click="aTab='behavior'" x-text="lang==='de'?'Verhalten':'Behavior'"></div>
       <div class="tab" :class="{active:aTab==='rag'}" @click="aTab='rag';if(editing)loadDocs(editing.id)" x-text="'RAG / Wissen'"></div>
+      <div class="tab" :class="{active:aTab==='caps'}" @click="aTab='caps'" x-text="lang==='de'?'Fähigkeiten':'Capabilities'"></div>
       <div class="tab" :class="{active:aTab==='integ'}" @click="aTab='integ'" x-text="lang==='de'?'Integrationen':'Integrations'"></div>
       <div class="tab" :class="{active:aTab==='preview'}" @click="aTab='preview'" x-text="lang==='de'?'Vorschau':'Preview'"></div>
       <template x-if="editing">
@@ -512,6 +513,95 @@ Response:
         </template>
       </div>
     </template>
+
+    <!-- CAPS -->
+    <template x-if="aTab==='caps'">
+      <div>
+        <div style="font-size:.78rem;color:var(--muted);margin-bottom:18px" x-text="lang==='de'?'Aktiviere zusätzliche Fähigkeiten für deinen Agenten:':'Enable additional capabilities for your agent:'"></div>
+
+        <!-- Calendar -->
+        <div class="integ-item">
+          <div class="ii-icon" style="background:rgba(108,92,231,.1)">📅</div>
+          <div class="ii-info">
+            <div class="ii-name" x-text="lang==='de'?'Termine buchen':'Book Appointments'"></div>
+            <div class="ii-desc" x-text="lang==='de'?'Agent verlinkt Nutzer zum richtigen Zeitpunkt zu deinem Buchungslink.':'Agent links users to your booking link at the right moment.'"></div>
+            <template x-if="af.cap_calendar"><input class="inp" type="url" x-model="af.cal_link" placeholder="https://calendly.com/dein-link" style="margin-top:7px;width:100%"></template>
+          </div>
+          <label class="toggle"><input type="checkbox" x-model="af.cap_calendar"><span class="slider"></span></label>
+        </div>
+
+        <!-- Leads -->
+        <div class="integ-item">
+          <div class="ii-icon" style="background:rgba(233,69,96,.1)">📋</div>
+          <div class="ii-info">
+            <div class="ii-name" x-text="lang==='de'?'Leads erfassen':'Capture Leads'"></div>
+            <div class="ii-desc" x-text="lang==='de'?'Agent sammelt Kontaktdaten natürlich im Gespräch.':'Agent collects contact data naturally in conversation.'"></div>
+            <template x-if="af.cap_leads">
+              <div style="margin-top:8px">
+                <div style="font-size:.74rem;color:var(--muted);margin-bottom:5px" x-text="lang==='de'?'Welche Felder sammeln? (kommagetrennt)':'Which fields to collect? (comma-separated)'"></div>
+                <input class="inp" type="text" :value="af.lead_fields.join(',')" @change="af.lead_fields=$event.target.value.split(',').map(s=>s.trim()).filter(Boolean)" :placeholder="lang==='de'?'Name, E-Mail, Telefon, Unternehmen':'Name, Email, Phone, Company'" style="margin-bottom:7px">
+                <input class="inp" type="email" x-model="af.lead_email" :placeholder="lang==='de'?'Benachrichtigungs-E-Mail (deine@email.de)':'Notification email (your@email.com)'">
+              </div>
+            </template>
+          </div>
+          <label class="toggle"><input type="checkbox" x-model="af.cap_leads"><span class="slider"></span></label>
+        </div>
+
+        <!-- Products -->
+        <div class="integ-item">
+          <div class="ii-icon" style="background:rgba(0,184,148,.1)">🛒</div>
+          <div class="ii-info">
+            <div class="ii-name" x-text="lang==='de'?'Produkte empfehlen':'Recommend Products'"></div>
+            <div class="ii-desc" x-text="lang==='de'?'Agent kennt deine Produkte und empfiehlt passende Angebote.':'Agent knows your products and recommends suitable offers.'"></div>
+            <template x-if="af.cap_products">
+              <div style="margin-top:8px">
+                <div style="font-size:.74rem;color:var(--muted);margin-bottom:8px" x-text="lang==='de'?'Produkte eingeben (Name · Beschreibung · Preis):':'Enter products (Name · Description · Price):'"></div>
+                <template x-for="(p,i) in af.products_data" :key="i">
+                  <div style="display:grid;grid-template-columns:1fr 2fr 80px 28px;gap:5px;margin-bottom:5px">
+                    <input class="inp" type="text" :value="p.name" @input="af.products_data[i].name=$event.target.value" :placeholder="lang==='de'?'Name':'Name'" style="padding:7px">
+                    <input class="inp" type="text" :value="p.description" @input="af.products_data[i].description=$event.target.value" :placeholder="lang==='de'?'Beschreibung':'Description'" style="padding:7px">
+                    <input class="inp" type="text" :value="p.price" @input="af.products_data[i].price=$event.target.value" placeholder="€99" style="padding:7px">
+                    <button style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.9rem" @click="af.products_data.splice(i,1)">✕</button>
+                  </div>
+                </template>
+                <button class="btn btn-ghost btn-sm" style="margin-top:4px" @click="af.products_data.push({name:'',description:'',price:''})" x-text="lang==='de'?'+ Produkt hinzufügen':'+ Add product'"></button>
+              </div>
+            </template>
+          </div>
+          <label class="toggle"><input type="checkbox" x-model="af.cap_products"><span class="slider"></span></label>
+        </div>
+
+        <!-- Multilang -->
+        <div class="integ-item">
+          <div class="ii-icon" style="background:rgba(240,192,64,.1)">🌍</div>
+          <div class="ii-info">
+            <div class="ii-name" x-text="lang==='de'?'Mehrsprachig (Auto-Erkennung)':'Multilingual (Auto-detect)'"></div>
+            <div class="ii-desc" x-text="lang==='de'?'Agent erkennt automatisch die Sprache des Nutzers und antwortet entsprechend.':'Agent automatically detects the user language and responds accordingly.'"></div>
+          </div>
+          <label class="toggle"><input type="checkbox" x-model="af.cap_multilang"><span class="slider"></span></label>
+        </div>
+
+        <!-- Email -->
+        <div class="integ-item">
+          <div class="ii-icon" style="background:rgba(162,155,254,.1)">✉️</div>
+          <div class="ii-info">
+            <div class="ii-name" x-text="lang==='de'?'E-Mails senden':'Send Emails'"></div>
+            <div class="ii-desc" x-text="lang==='de'?'Agent kann auf Nutzerwunsch E-Mails via SMTP versenden.':'Agent can send emails via SMTP on user request.'"></div>
+            <template x-if="af.cap_email">
+              <div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:7px">
+                <input class="inp" type="text" x-model="af.smtp_host" placeholder="smtp.gmail.com" style="padding:8px">
+                <input class="inp" type="number" x-model="af.smtp_port" placeholder="587" style="padding:8px">
+                <input class="inp" type="email" x-model="af.smtp_user" :placeholder="lang==='de'?'Absender E-Mail':'Sender email'" style="padding:8px">
+                <input class="inp" type="password" x-model="af.smtp_pass" placeholder="App-Passwort" style="padding:8px">
+                <input class="inp" type="text" x-model="af.smtp_from" placeholder="Mein Agent &lt;agent@firma.de&gt;" style="padding:8px;grid-column:span 2">
+              </div>
+            </template>
+          </div>
+          <label class="toggle"><input type="checkbox" x-model="af.cap_email"><span class="slider"></span></label>
+        </div>
+      </div>
+    </template>
+
 
     <!-- INTEGRATIONS -->
     <template x-if="aTab==='integ'">
@@ -658,7 +748,7 @@ function app() {
 
     openNew(){
       this.editing=null;this.aTab='basics';
-      this.af={name:'',emoji:'🤖',description:'',system_prompt:'',greeting:'',tone:'professionell',language:this.lang,quick_chips:[],color:'#6c5ce7',is_active:true,widget_enabled:true,chatpage_enabled:true,api_enabled:false,whatsapp_enabled:false,whatsapp_number:'',telegram_enabled:false,telegram_token:'',rag_enabled:false,rag_prompt:''};
+      this.af={name:'',emoji:'🤖',description:'',system_prompt:'',greeting:'',tone:'professionell',language:this.lang,quick_chips:[],color:'#6c5ce7',is_active:true,widget_enabled:true,chatpage_enabled:true,api_enabled:false,whatsapp_enabled:false,whatsapp_number:'',telegram_enabled:false,telegram_token:'',rag_enabled:false,rag_prompt:'',cap_calendar:false,cal_link:'',cap_leads:false,lead_fields:[],lead_email:'',cap_products:false,products_data:[],cap_multilang:false,cap_email:false,smtp_host:'',smtp_port:587,smtp_user:'',smtp_pass:'',smtp_from:''};
       this.showModal=true;
     },
 
@@ -666,7 +756,7 @@ function app() {
       const d=await this.api('/agents/'+a.id);
       if(!d.agent)return;
       this.editing=d.agent;
-      this.af={name:d.agent.name,emoji:d.agent.emoji,description:d.agent.description,system_prompt:d.agent.system_prompt,greeting:d.agent.greeting,tone:d.agent.tone,language:d.agent.language,quick_chips:d.agent.quick_chips||[],color:d.agent.color,is_active:d.agent.is_active,widget_enabled:d.agent.widget_enabled,chatpage_enabled:d.agent.chatpage_enabled,api_enabled:d.agent.api_enabled,whatsapp_enabled:d.agent.whatsapp_enabled,whatsapp_number:d.agent.whatsapp_number||'',telegram_enabled:d.agent.telegram_enabled,telegram_token:d.agent.telegram_token||'',rag_enabled:d.agent.rag_enabled||false,rag_prompt:d.agent.rag_prompt||''};
+      this.af={name:d.agent.name,emoji:d.agent.emoji,description:d.agent.description,system_prompt:d.agent.system_prompt,greeting:d.agent.greeting,tone:d.agent.tone,language:d.agent.language,quick_chips:d.agent.quick_chips||[],color:d.agent.color,is_active:d.agent.is_active,widget_enabled:d.agent.widget_enabled,chatpage_enabled:d.agent.chatpage_enabled,api_enabled:d.agent.api_enabled,whatsapp_enabled:d.agent.whatsapp_enabled,whatsapp_number:d.agent.whatsapp_number||'',telegram_enabled:d.agent.telegram_enabled,telegram_token:d.agent.telegram_token||'',rag_enabled:d.agent.rag_enabled||false,rag_prompt:d.agent.rag_prompt||'',cap_calendar:d.agent.cap_calendar||false,cal_link:d.agent.cal_link||'',cap_leads:d.agent.cap_leads||false,lead_fields:d.agent.lead_fields||[],lead_email:d.agent.lead_email||'',cap_products:d.agent.cap_products||false,products_data:d.agent.products_data||[],cap_multilang:d.agent.cap_multilang||false,cap_email:d.agent.cap_email||false,smtp_host:d.agent.smtp_host||'',smtp_port:d.agent.smtp_port||587,smtp_user:d.agent.smtp_user||'',smtp_pass:d.agent.smtp_pass||'',smtp_from:d.agent.smtp_from||''};
       this.docs=[];this.aTab='basics';this.showModal=true;
     },
 
