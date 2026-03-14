@@ -3,751 +3,925 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AgentKontor – Dashboard</title>
-<script src="//unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<title>AgentKontor – Baue deinen eigenen KI-Agenten</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#050510;--bg2:#09091a;--bg3:#0e0e22;--card:#0c0c1e;--border:rgba(255,255,255,.08);--purple:#6c5ce7;--pu-l:#a29bfe;--pu-d:#4a3db0;--teal:#00cec9;--white:#fff;--muted:#5a5a80;--text:#c8c8e8;--red:#e94560;--green:#00b894;--gold:#f0c040}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+:root {
+  --bg:     #050510;
+  --bg2:    #09091a;
+  --bg3:    #0e0e22;
+  --card:   #0c0c1e;
+  --border: rgba(255,255,255,0.07);
+  --purple: #6c5ce7;
+  --pu-l:   #a29bfe;
+  --pu-d:   #3d2fa0;
+  --teal:   #00cec9;
+  --white:  #ffffff;
+  --muted:  #5a5a80;
+  --text:   #c8c8e8;
+  --red:    #e94560;
+  --gold:   #f0c040;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  line-height: 1.6;
+}
 
-/* ─── AUTH ─── */
-.auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;position:relative;overflow:hidden}
-.auth-screen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(108,92,231,.12),transparent 70%);pointer-events:none}
-.auth-card{width:100%;max-width:440px;background:var(--card);border:1px solid rgba(108,92,231,.2);border-radius:20px;padding:44px 40px;position:relative;box-shadow:0 40px 100px rgba(0,0,0,.5)}
-.auth-card::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:60%;height:1px;background:linear-gradient(to right,transparent,rgba(108,92,231,.6),transparent)}
-.auth-logo{font-size:1.6rem;font-weight:800;color:var(--white);text-align:center;margin-bottom:32px;letter-spacing:-.02em}
-.auth-logo span{color:var(--pu-l)}
-.auth-tabs{display:flex;gap:0;margin-bottom:28px;background:rgba(255,255,255,.04);border-radius:10px;padding:4px}
-.auth-tab{flex:1;padding:9px;border-radius:8px;text-align:center;font-size:.84rem;font-weight:600;cursor:pointer;transition:all .2s;color:var(--muted)}
-.auth-tab.active{background:var(--purple);color:var(--white)}
-.field{margin-bottom:16px}
-.field label{display:block;font-size:.78rem;font-weight:600;color:var(--text);margin-bottom:5px;letter-spacing:.02em}
-.inp{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--white);font-size:.9rem;transition:all .2s;font-family:inherit}
-.inp:focus{outline:none;border-color:var(--purple);background:rgba(108,92,231,.06);box-shadow:0 0 0 3px rgba(108,92,231,.12)}
-.inp::placeholder{color:var(--muted)}
-.inp-icon{position:relative}
-.inp-icon .inp{padding-left:40px}
-.inp-icon .icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:.95rem;pointer-events:none}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:10px;font-size:.9rem;font-weight:600;border:none;cursor:pointer;transition:all .2s;font-family:inherit}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-.btn-purple{background:var(--purple);color:#fff;box-shadow:0 4px 20px rgba(108,92,231,.3)}
-.btn-purple:hover:not(:disabled){background:var(--pu-l);transform:translateY(-1px);box-shadow:0 8px 28px rgba(108,92,231,.4)}
-.btn-full{width:100%}
-.btn-sm{padding:7px 14px;font-size:.8rem;border-radius:8px}
-.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
-.btn-ghost:hover{border-color:rgba(108,92,231,.4);background:rgba(108,92,231,.06)}
-.btn-danger{background:var(--red);color:#fff}
-.btn-danger:hover:not(:disabled){filter:brightness(1.15)}
-.btn-teal{background:var(--teal);color:#050510}
-.btn-teal:hover{filter:brightness(1.1)}
-.err-box{background:rgba(233,69,96,.1);border:1px solid rgba(233,69,96,.25);border-radius:8px;padding:10px 14px;font-size:.82rem;color:var(--red);margin-bottom:16px;display:flex;align-items:center;gap:8px}
-.auth-footer{text-align:center;margin-top:20px;font-size:.8rem;color:var(--muted)}
+/* Noise overlay */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 1000; opacity: .25;
+}
 
-/* ─── APP LAYOUT ─── */
-.app{display:flex;height:100vh;overflow:hidden}
-.sidebar{width:248px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
-.sb-logo{padding:22px 20px;font-size:1.2rem;font-weight:800;color:var(--white);border-bottom:1px solid var(--border);letter-spacing:-.01em}
-.sb-logo span{color:var(--pu-l)}
-.sb-nav{flex:1;padding:12px 10px;overflow-y:auto}
-.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;font-size:.86rem;font-weight:500;color:var(--muted);cursor:pointer;transition:all .2s;margin-bottom:2px}
-.nav-item:hover,.nav-item.active{background:rgba(108,92,231,.12);color:var(--white)}
-.nav-item.active{color:var(--pu-l)}
-.nav-icon{font-size:1rem;width:20px;text-align:center;flex-shrink:0}
-.nav-section{font-size:.68rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding:14px 12px 5px;margin-top:4px}
-.sb-footer{padding:14px 16px;border-top:1px solid var(--border)}
-.sb-user{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.user-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--pu-l));display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:700;color:#fff;flex-shrink:0}
-.user-info .name{font-size:.84rem;font-weight:600;color:var(--white)}
-.user-info .plan{font-size:.7rem;color:var(--muted)}
-.sb-actions{display:flex;gap:6px}
-.sb-action{flex:1;padding:6px;border-radius:7px;border:1px solid var(--border);background:transparent;font-size:.72rem;color:var(--muted);cursor:pointer;transition:all .2s;text-align:center}
-.sb-action:hover{border-color:rgba(108,92,231,.3);color:var(--pu-l)}
-.sb-action.danger:hover{border-color:rgba(233,69,96,.3);color:var(--red)}
+/* NAV */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 52px;
+  backdrop-filter: blur(20px);
+  background: rgba(5,5,16,0.85);
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  transition: border-color .3s;
+}
+.nav-logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.45rem; font-weight: 800;
+  color: var(--white); text-decoration: none;
+  letter-spacing: -.01em;
+}
+.nav-logo span { color: var(--pu-l); }
+.nav-links { display: flex; gap: 32px; align-items: center; }
+.nav-link {
+  font-size: .82rem; font-weight: 500;
+  letter-spacing: .04em; text-transform: uppercase;
+  color: var(--muted); text-decoration: none; transition: color .2s;
+}
+.nav-link:hover { color: var(--white); }
+.nav-cta {
+  background: var(--purple); color: var(--white);
+  padding: 9px 22px; border-radius: 8px;
+  font-size: .82rem; font-weight: 600;
+  text-decoration: none; transition: all .2s;
+}
+.nav-cta:hover { background: var(--pu-l); transform: translateY(-1px); }
 
-.main{flex:1;overflow-y:auto;background:var(--bg)}
-.page{padding:32px 36px;max-width:1160px}
+/* HERO */
+.hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 120px 52px 80px;
+  position: relative; overflow: hidden; text-align: center;
+}
 
-/* ─── PAGE HEADER ─── */
-.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:16px}
-.ph-title{font-size:1.45rem;font-weight:700;color:var(--white);letter-spacing:-.02em}
-.ph-sub{font-size:.84rem;color:var(--muted);margin-top:2px}
+.hero-mesh {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(108,92,231,.18) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 20% 80%, rgba(0,206,201,.07) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 80% 70%, rgba(233,69,96,.06) 0%, transparent 60%);
+  pointer-events: none;
+}
 
-/* ─── CARDS ─── */
-.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px}
-.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}
-.stat-n{font-size:2.2rem;font-weight:700;color:var(--pu-l);line-height:1}
-.stat-l{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:5px}
+.hero-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(108,92,231,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(108,92,231,.04) 1px, transparent 1px);
+  background-size: 52px 52px;
+  animation: gridFlow 30s linear infinite;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent);
+}
+@keyframes gridFlow { to { transform: translateY(52px); } }
 
-/* ─── TABS ─── */
-.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:24px}
-.tab{padding:9px 16px;font-size:.84rem;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s}
-.tab:hover{color:var(--white)}
-.tab.active{color:var(--pu-l);border-bottom-color:var(--pu-l)}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(108,92,231,.1);
+  border: 1px solid rgba(108,92,231,.3);
+  padding: 5px 16px; border-radius: 100px;
+  font-size: .72rem; font-weight: 600;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: var(--pu-l); margin-bottom: 28px;
+  animation: fadeUp .6s ease both;
+}
+.badge-dot { width: 6px; height: 6px; background: var(--teal); border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-/* ─── AGENT CARDS ─── */
-.agent-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
-.agent-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:all .25s}
-.agent-card:hover{border-color:rgba(108,92,231,.3);transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.3)}
-.ac-stripe{height:3px}
-.ac-body{padding:18px}
-.ac-header{display:flex;align-items:center;gap:12px;margin-bottom:10px}
-.ac-av{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
-.ac-name{font-size:.95rem;font-weight:700;color:var(--white)}
-.ac-desc{font-size:.76rem;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;margin-top:2px}
-.ac-badges{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px}
-.badge{font-size:.62rem;padding:2px 7px;border-radius:20px;font-weight:600}
-.b-active{background:rgba(0,184,148,.12);color:var(--green);border:1px solid rgba(0,184,148,.2)}
-.b-off{background:rgba(233,69,96,.08);color:var(--red);border:1px solid rgba(233,69,96,.15)}
-.b-purple{background:rgba(108,92,231,.1);color:var(--pu-l);border:1px solid rgba(108,92,231,.2)}
-.b-gold{background:rgba(240,192,64,.1);color:var(--gold);border:1px solid rgba(240,192,64,.2)}
-.b-wa{background:rgba(37,211,102,.1);color:#25d366;border:1px solid rgba(37,211,102,.2)}
-.b-tg{background:rgba(0,136,204,.1);color:#0088cc;border:1px solid rgba(0,136,204,.2)}
-.b-rag{background:rgba(0,206,201,.1);color:var(--teal);border:1px solid rgba(0,206,201,.2)}
-.ac-stats{border-top:1px solid var(--border);padding-top:9px;display:flex;gap:14px;font-size:.73rem;color:var(--muted)}
-.ac-stats strong{color:var(--text)}
+h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(3.2rem, 8vw, 7.5rem);
+  font-weight: 800;
+  line-height: 1.0;
+  color: var(--white);
+  margin-bottom: 6px;
+  letter-spacing: -.03em;
+  animation: fadeUp .6s .1s ease both;
+}
+h1 .accent { color: var(--pu-l); }
+h1 .line2 {
+  display: block;
+  font-size: clamp(1.6rem, 3.5vw, 2.8rem);
+  font-weight: 400; font-family: 'DM Sans', sans-serif;
+  color: var(--muted); letter-spacing: .01em;
+  margin-top: 10px;
+}
 
-/* ─── EMPTY ─── */
-.empty{text-align:center;padding:60px 24px;color:var(--muted)}
-.empty-icon{font-size:3rem;margin-bottom:14px}
-.empty h3{font-size:1.05rem;font-weight:600;color:var(--white);margin-bottom:6px}
-.empty p{font-size:.84rem;margin-bottom:22px}
+.hero-desc {
+  font-size: 1.05rem; color: var(--muted);
+  max-width: 520px; margin: 28px auto 48px;
+  line-height: 1.75;
+  animation: fadeUp .6s .2s ease both;
+}
 
-/* ─── MODAL ─── */
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)}
-.modal{background:var(--bg3);border:1px solid rgba(108,92,231,.2);border-radius:18px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;padding:32px;box-shadow:0 40px 100px rgba(0,0,0,.6)}
-.modal-title{font-size:1.15rem;font-weight:700;color:var(--white);margin-bottom:24px}
-.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
+.hero-actions {
+  display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
+  animation: fadeUp .6s .3s ease both;
+}
+.btn-primary {
+  background: var(--purple); color: var(--white);
+  padding: 15px 36px; border-radius: 10px;
+  font-size: .9rem; font-weight: 600;
+  text-decoration: none; transition: all .25s;
+  border: 2px solid var(--purple);
+}
+.btn-primary:hover {
+  background: var(--pu-l); border-color: var(--pu-l);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(108,92,231,.35);
+}
+.btn-outline {
+  background: transparent; color: var(--pu-l);
+  padding: 15px 36px; border-radius: 10px;
+  font-size: .9rem; font-weight: 500;
+  text-decoration: none; transition: all .25s;
+  border: 1px solid rgba(108,92,231,.3);
+}
+.btn-outline:hover { border-color: var(--pu-l); background: rgba(108,92,231,.08); transform: translateY(-2px); }
 
-/* ─── FORM ─── */
-.fs{margin-bottom:22px}
-.fs-title{font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--pu-l);margin-bottom:12px;display:flex;align-items:center;gap:8px}
-.fs-title::after{content:'';flex:1;height:1px;background:var(--border)}
-.inp-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-textarea.inp{resize:vertical;min-height:80px;line-height:1.5}
-select.inp option{background:var(--bg3)}
-.hint{font-size:.73rem;color:var(--muted);margin-top:4px;line-height:1.4}
+/* HERO DEMO WIDGET */
+.hero-demo {
+  margin-top: 72px;
+  position: relative;
+  animation: fadeUp .7s .4s ease both;
+}
+.hero-demo::before {
+  content: '';
+  position: absolute; inset: -1px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(108,92,231,.4), rgba(0,206,201,.2), rgba(108,92,231,.1));
+  z-index: -1; filter: blur(1px);
+}
+.demo-window {
+  background: var(--bg3);
+  border: 1px solid rgba(108,92,231,.25);
+  border-radius: 18px;
+  width: min(600px, 90vw);
+  overflow: hidden;
+  box-shadow: 0 40px 100px rgba(0,0,0,.6), 0 0 60px rgba(108,92,231,.15);
+}
+.demo-bar {
+  background: rgba(255,255,255,.03);
+  padding: 12px 18px;
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.demo-dots { display: flex; gap: 6px; }
+.demo-dot { width: 10px; height: 10px; border-radius: 50%; }
+.demo-title {
+  flex: 1; text-align: center;
+  font-size: .75rem; color: var(--muted);
+}
+.demo-chat { padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.demo-msg { display: flex; gap: 10px; }
+.demo-msg.user { flex-direction: row-reverse; align-self: flex-end; }
+.demo-av {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .85rem; flex-shrink: 0;
+}
+.demo-msg.bot .demo-av { background: linear-gradient(135deg,var(--purple),var(--pu-l)); }
+.demo-msg.user .demo-av { background: rgba(255,255,255,.08); }
+.demo-bubble {
+  padding: 10px 14px; border-radius: 14px;
+  font-size: .84rem; line-height: 1.5; max-width: 78%;
+}
+.demo-msg.bot .demo-bubble { background: rgba(108,92,231,.15); border: 1px solid rgba(108,92,231,.2); color: var(--text); border-bottom-left-radius: 3px; }
+.demo-msg.user .demo-bubble { background: var(--purple); color: var(--white); border-bottom-right-radius: 3px; }
+.demo-chips { display: flex; gap: 7px; flex-wrap: wrap; padding: 0 20px 12px; }
+.demo-chip {
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+  border-radius: 20px; padding: 5px 13px;
+  font-size: .75rem; color: var(--text); cursor: pointer;
+  transition: all .2s;
+}
+.demo-chip:hover { border-color: var(--pu-l); color: var(--pu-l); }
+.demo-input-row {
+  padding: 12px 16px; border-top: 1px solid var(--border);
+  display: flex; gap: 8px;
+}
+.demo-inp {
+  flex: 1; background: rgba(255,255,255,.05);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 12px; color: var(--text); font-size: .82rem;
+  font-family: inherit;
+}
+.demo-send {
+  width: 36px; height: 36px; background: var(--purple);
+  border: none; border-radius: 8px; cursor: pointer;
+  color: var(--white); font-size: .9rem;
+  display: flex; align-items: center; justify-content: center;
+}
 
-/* ─── EMOJI ─── */
-.emoji-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px}
-.emo{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.03);cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all .15s}
-.emo:hover,.emo.on{border-color:var(--purple);background:rgba(108,92,231,.15)}
+/* Typing animation */
+.typing-dots { display: flex; gap: 4px; padding: 10px 14px; background: rgba(108,92,231,.15); border: 1px solid rgba(108,92,231,.2); border-radius: 14px; border-bottom-left-radius: 3px; }
+.typing-dots span { width: 6px; height: 6px; background: var(--pu-l); border-radius: 50%; animation: typeBounce .8s infinite; }
+.typing-dots span:nth-child(2) { animation-delay: .15s; }
+.typing-dots span:nth-child(3) { animation-delay: .3s; }
+@keyframes typeBounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-7px)} }
 
-/* ─── TONE ─── */
-.tone-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:5px}
-.tone-opt{padding:9px 11px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.02);cursor:pointer;transition:all .15s}
-.tone-opt:hover,.tone-opt.on{border-color:var(--purple);background:rgba(108,92,231,.1)}
-.tone-opt h4{font-size:.82rem;font-weight:600;color:var(--white);margin-bottom:1px}
-.tone-opt p{font-size:.71rem;color:var(--muted)}
+/* SECTIONS */
+section { padding: 100px 52px; position: relative; }
+.container { max-width: 1140px; margin: 0 auto; }
+.sec-label {
+  font-size: .7rem; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--pu-l); display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+}
+.sec-label::before { content: ''; width: 24px; height: 1px; background: var(--pu-l); }
+.sec-title {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(2rem, 4.5vw, 3.5rem);
+  font-weight: 800; letter-spacing: -.02em;
+  color: var(--white); line-height: 1.1; margin-bottom: 14px;
+}
+.sec-sub { font-size: 1rem; color: var(--muted); max-width: 520px; line-height: 1.75; }
 
-/* ─── COLOR ─── */
-.color-grid{display:flex;gap:8px;flex-wrap:wrap;margin-top:5px}
-.col-opt{width:30px;height:30px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s}
-.col-opt:hover{transform:scale(1.15)}
-.col-opt.on{border-color:#fff;transform:scale(1.1)}
+/* FEATURES */
+.features { background: var(--bg2); }
+.feat-grid {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 2px; margin-top: 56px;
+}
+.feat-card {
+  background: var(--card); padding: 36px 30px;
+  border: 1px solid var(--border);
+  position: relative; overflow: hidden;
+  transition: border-color .25s, transform .25s;
+}
+.feat-card:hover { border-color: rgba(108,92,231,.35); transform: translateY(-4px); }
+.feat-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--purple), var(--teal));
+  opacity: 0; transition: opacity .25s;
+}
+.feat-card:hover::before { opacity: 1; }
+.feat-icon {
+  width: 48px; height: 48px; border-radius: 12px;
+  background: rgba(108,92,231,.12); border: 1px solid rgba(108,92,231,.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem; margin-bottom: 18px;
+}
+.feat-card h3 { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--white); margin-bottom: 8px; }
+.feat-card p { font-size: .86rem; color: var(--muted); line-height: 1.65; }
 
-/* ─── CHIPS ─── */
-.chip-row{display:flex;gap:8px;margin-bottom:7px}
-.chip-row .inp{flex:1}
-.chips-wrap{display:flex;flex-wrap:wrap;gap:5px}
-.chip-tag{display:flex;align-items:center;gap:5px;background:rgba(108,92,231,.1);border:1px solid rgba(108,92,231,.22);border-radius:20px;padding:3px 10px;font-size:.75rem;color:var(--pu-l)}
-.chip-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;line-height:1;transition:color .2s}
-.chip-del:hover{color:var(--red)}
+/* HOW IT WORKS */
+.how { background: var(--bg); }
+.steps {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 0; margin-top: 60px; position: relative;
+}
+.steps::after {
+  content: '';
+  position: absolute; top: 28px; left: 16.6%; right: 16.6%; height: 1px;
+  background: linear-gradient(to right, transparent, rgba(108,92,231,.4), rgba(108,92,231,.4), transparent);
+}
+.step { text-align: center; padding: 0 28px; }
+.step-n {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--bg3); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px;
+  font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800;
+  color: var(--pu-l); position: relative; z-index: 1;
+  transition: all .25s;
+}
+.step:hover .step-n { background: rgba(108,92,231,.15); border-color: var(--purple); box-shadow: 0 0 20px rgba(108,92,231,.25); }
+.step h3 { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--white); margin-bottom: 8px; }
+.step p { font-size: .84rem; color: var(--muted); line-height: 1.6; }
 
-/* ─── TOGGLE ─── */
-.toggle{position:relative;display:inline-block;width:40px;height:21px}
-.toggle input{opacity:0;width:0;height:0}
-.slider{position:absolute;inset:0;background:rgba(255,255,255,.1);border-radius:21px;cursor:pointer;transition:.3s}
-.slider:before{position:absolute;content:"";width:15px;height:15px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
-input:checked+.slider{background:var(--purple)}
-input:checked+.slider:before{transform:translateX(19px)}
+/* INTEGRATIONS */
+.integrations { background: var(--bg2); }
+.integ-grid {
+  display: grid; grid-template-columns: repeat(2,1fr);
+  gap: 16px; margin-top: 56px;
+}
+.integ-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 28px;
+  display: flex; align-items: flex-start; gap: 18px;
+  transition: border-color .25s, transform .2s;
+}
+.integ-card:hover { border-color: rgba(108,92,231,.3); transform: translateY(-3px); }
+.integ-icon {
+  width: 52px; height: 52px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; flex-shrink: 0;
+}
+.integ-card h3 { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--white); margin-bottom: 5px; }
+.integ-card p { font-size: .83rem; color: var(--muted); line-height: 1.6; }
+.integ-badge {
+  display: inline-block; margin-top: 10px;
+  font-size: .68rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 100px;
+}
 
-/* ─── PREVIEW ─── */
-.preview-win{background:#0c0c1e;border:1px solid rgba(255,255,255,.1);border-radius:14px;overflow:hidden}
-.pw-hdr{padding:11px 14px;display:flex;align-items:center;gap:9px}
-.pw-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px}
-.pw-name{font-size:.86rem;font-weight:700;color:#fff}
-.pw-status{font-size:.68rem;color:var(--teal)}
-.pw-body{padding:12px;display:flex;flex-direction:column;gap:8px;min-height:100px}
-.pw-bbl{padding:8px 12px;border-radius:12px;font-size:.81rem;line-height:1.5}
-.pw-bbl.a{background:#1e1e38;color:#e0e0f0;border-bottom-left-radius:2px;align-self:flex-start;max-width:88%}
-.pw-bbl.u{color:#fff;border-bottom-right-radius:2px;align-self:flex-end;max-width:88%}
-.pw-foot{padding:9px 12px;border-top:1px solid rgba(255,255,255,.06);display:flex;gap:7px}
-.pw-inp{flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:7px;padding:6px 10px;color:#ccc;font-size:.79rem}
-.pw-send{width:30px;height:30px;border-radius:7px;border:none;cursor:pointer;font-size:.82rem}
+/* BUILDER PREVIEW */
+.builder { background: var(--bg); }
+.builder-inner {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 56px; align-items: center;
+}
+.builder-steps { list-style: none; display: flex; flex-direction: column; gap: 20px; }
+.builder-step {
+  display: flex; gap: 16px; align-items: flex-start;
+  padding: 18px 20px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; transition: border-color .2s;
+}
+.builder-step:hover { border-color: rgba(108,92,231,.3); }
+.bs-num {
+  width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+  background: rgba(108,92,231,.15); border: 1px solid rgba(108,92,231,.25);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-size: .9rem; font-weight: 800; color: var(--pu-l);
+}
+.bs-title { font-size: .9rem; font-weight: 600; color: var(--white); margin-bottom: 3px; }
+.bs-desc { font-size: .8rem; color: var(--muted); line-height: 1.5; }
 
-/* ─── INTEG ITEMS ─── */
-.integ-item{display:flex;align-items:flex-start;gap:14px;padding:16px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.02);margin-bottom:8px}
-.ii-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
-.ii-info{flex:1}
-.ii-name{font-size:.88rem;font-weight:600;color:var(--white);margin-bottom:2px}
-.ii-desc{font-size:.76rem;color:var(--muted);margin-bottom:8px}
+/* PRICING */
+.pricing { background: var(--bg2); }
+.pricing-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 56px; }
+.price-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 36px 28px;
+  position: relative; transition: border-color .25s, transform .25s;
+}
+.price-card:hover { transform: translateY(-5px); }
+.price-card.featured {
+  border-color: rgba(108,92,231,.4);
+  background: linear-gradient(135deg, rgba(108,92,231,.08), var(--card));
+}
+.price-card.featured::before {
+  content: '★ Beliebt';
+  position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+  background: var(--purple); color: var(--white);
+  font-size: .72rem; font-weight: 700; letter-spacing: .08em;
+  padding: 3px 14px; border-radius: 100px;
+}
+.price-plan { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--pu-l); margin-bottom: 6px; }
+.price-amount {
+  font-family: 'Syne', sans-serif;
+  font-size: 3rem; font-weight: 800; color: var(--white);
+  line-height: 1; margin-bottom: 4px;
+}
+.price-amount sup { font-size: 1.2rem; margin-right: 2px; }
+.price-period { font-size: .78rem; color: var(--muted); margin-bottom: 20px; }
+.price-features { list-style: none; margin-bottom: 28px; display: flex; flex-direction: column; gap: 9px; }
+.price-features li { display: flex; align-items: center; gap: 9px; font-size: .84rem; color: var(--text); }
+.price-features li::before { content: '✓'; color: var(--teal); font-weight: 700; font-size: .8rem; flex-shrink: 0; }
+.price-features li.off { color: var(--muted); }
+.price-features li.off::before { content: '—'; color: var(--muted); }
+.price-btn {
+  display: block; width: 100%; padding: 12px;
+  border-radius: 8px; font-size: .88rem; font-weight: 600;
+  text-align: center; text-decoration: none; border: none; cursor: pointer;
+  transition: all .2s;
+}
+.price-btn-outline { background: transparent; border: 1px solid rgba(108,92,231,.3); color: var(--pu-l); }
+.price-btn-outline:hover { background: rgba(108,92,231,.1); }
+.price-btn-fill { background: var(--purple); color: var(--white); }
+.price-btn-fill:hover { background: var(--pu-l); box-shadow: 0 8px 24px rgba(108,92,231,.35); }
 
-/* ─── CODE ─── */
-.code{background:#07070f;border:1px solid var(--border);border-radius:8px;padding:13px;font-family:'Courier New',monospace;font-size:.76rem;color:var(--pu-l);overflow-x:auto;white-space:pre-wrap;word-break:break-all;position:relative}
-.copy-btn{position:absolute;top:7px;right:7px;background:rgba(108,92,231,.2);border:1px solid rgba(108,92,231,.3);border-radius:6px;padding:3px 9px;font-size:.7rem;color:var(--pu-l);cursor:pointer;transition:background .2s}
-.copy-btn:hover{background:rgba(108,92,231,.4)}
+/* CTA */
+.cta-section { background: var(--bg); padding: 100px 52px; }
+.cta-box {
+  max-width: 760px; margin: 0 auto; text-align: center;
+  background: var(--card); border: 1px solid rgba(108,92,231,.25);
+  border-radius: 24px; padding: 80px 60px; position: relative; overflow: hidden;
+}
+.cta-box::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(108,92,231,.12), transparent 70%);
+  pointer-events: none;
+}
+.cta-box h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(2rem,4vw,3.2rem); font-weight: 800;
+  color: var(--white); letter-spacing: -.02em; margin-bottom: 12px;
+}
+.cta-box h2 span { color: var(--pu-l); }
+.cta-box p { font-size: 1rem; color: var(--muted); margin-bottom: 36px; }
+.cta-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
 
-/* ─── RAG ─── */
-.doc-item{display:flex;align-items:center;gap:14px;padding:14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.02);margin-bottom:8px;transition:border-color .2s}
-.doc-item:hover{border-color:rgba(108,92,231,.25)}
-.doc-icon{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
-.doc-name{font-size:.86rem;font-weight:600;color:var(--white)}
-.doc-meta{font-size:.72rem;color:var(--muted);margin-top:1px}
-.doc-status{margin-left:auto;flex-shrink:0}
-.status-pill{font-size:.68rem;font-weight:600;padding:3px 9px;border-radius:20px}
-.s-ready{background:rgba(0,184,148,.12);color:var(--green);border:1px solid rgba(0,184,148,.2)}
-.s-processing{background:rgba(240,192,64,.1);color:var(--gold);border:1px solid rgba(240,192,64,.2)}
-.s-error{background:rgba(233,69,96,.1);color:var(--red);border:1px solid rgba(233,69,96,.2)}
+/* FOOTER */
+footer {
+  background: var(--bg2); border-top: 1px solid var(--border);
+  padding: 48px 52px 32px;
+}
+.footer-top {
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 48px; margin-bottom: 48px;
+}
+.footer-brand h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.2rem; font-weight: 800; color: var(--white); margin-bottom: 10px;
+}
+.footer-brand h3 span { color: var(--pu-l); }
+.footer-brand p { font-size: .82rem; color: var(--muted); line-height: 1.7; max-width: 260px; }
+.footer-col h4 { font-size: .75rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--white); margin-bottom: 14px; }
+.footer-col a { display: block; font-size: .83rem; color: var(--muted); text-decoration: none; margin-bottom: 8px; transition: color .2s; }
+.footer-col a:hover { color: var(--pu-l); }
+.footer-bottom {
+  display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px solid var(--border); padding-top: 24px;
+  font-size: .75rem; color: var(--muted); flex-wrap: wrap; gap: 12px;
+}
 
-/* ─── UPLOAD ZONE ─── */
-.upload-zone{border:2px dashed rgba(108,92,231,.3);border-radius:12px;padding:36px;text-align:center;cursor:pointer;transition:all .25s;position:relative}
-.upload-zone:hover,.upload-zone.drag{border-color:var(--purple);background:rgba(108,92,231,.06)}
-.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
-.upload-zone .uz-icon{font-size:2rem;margin-bottom:10px}
-.upload-zone h4{font-size:.9rem;font-weight:600;color:var(--white);margin-bottom:4px}
-.upload-zone p{font-size:.78rem;color:var(--muted)}
+/* SCROLL REVEAL */
+.reveal { opacity: 0; transform: translateY(28px); transition: opacity .7s ease, transform .7s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
 
-/* ─── KEY ROWS ─── */
-.key-row{display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:9px;margin-bottom:7px}
-.key-label{font-size:.82rem;font-weight:500;color:var(--white)}
-.key-prefix{font-family:monospace;font-size:.78rem;color:var(--pu-l);background:#07070f;padding:3px 8px;border-radius:5px}
-.key-date{font-size:.7rem;color:var(--muted);white-space:nowrap}
+/* ANIMATIONS */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-/* ─── API DOCS ─── */
-.doc-block{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:12px}
-.doc-block h3{font-size:.88rem;font-weight:700;color:var(--white);margin-bottom:8px}
-.doc-block p{font-size:.8rem;color:var(--muted);margin-bottom:10px}
+/* TYPING EFFECT for demo */
+.typed::after { content: '|'; animation: blink .8s step-end infinite; }
+@keyframes blink { 50%{opacity:0} }
 
-/* ─── TOAST ─── */
-.toast-area{position:fixed;bottom:22px;right:22px;z-index:999;display:flex;flex-direction:column;gap:7px}
-.toast{background:var(--bg3);border:1px solid rgba(108,92,231,.3);border-radius:10px;padding:11px 16px;font-size:.82rem;color:var(--white);box-shadow:0 8px 24px rgba(0,0,0,.3);animation:slideIn .3s ease;display:flex;align-items:center;gap:8px;max-width:320px}
-.toast.ok{border-color:rgba(0,184,148,.3)}.toast.ok::before{content:'✓';color:var(--green)}
-.toast.err{border-color:rgba(233,69,96,.3);color:var(--red)}.toast.err::before{content:'✕'}
-@keyframes slideIn{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
-
-@media(max-width:768px){
-  .sidebar{display:none}.page{padding:18px 14px}
-  .inp-row,.grid-3{grid-template-columns:1fr}
+/* RESPONSIVE */
+@media(max-width:960px) {
+  .feat-grid { grid-template-columns: 1fr 1fr; }
+  .builder-inner { grid-template-columns: 1fr; }
+  .pricing-grid { grid-template-columns: 1fr; max-width: 400px; margin-left: auto; margin-right: auto; }
+  .footer-top { grid-template-columns: 1fr 1fr; }
+  .integ-grid { grid-template-columns: 1fr; }
+}
+@media(max-width:700px) {
+  nav { padding: 14px 20px; }
+  .nav-links .nav-link { display: none; }
+  section { padding: 72px 20px; }
+  .hero { padding: 100px 20px 72px; }
+  .feat-grid { grid-template-columns: 1fr; }
+  .steps { grid-template-columns: 1fr; gap: 24px; }
+  .steps::after { display: none; }
+  .cta-box { padding: 48px 24px; }
+  .footer-top { grid-template-columns: 1fr; gap: 28px; }
+  footer { padding: 40px 20px 24px; }
 }
 </style>
 </head>
-<body x-data="app()" x-init="init()">
+<body>
 
-<!-- AUTH -->
-<div x-show="!user" x-cloak>
-  <div class="auth-screen">
-    <div class="auth-card">
-      <div class="auth-logo">Agent<span>Kontor</span></div>
+<!-- NAV -->
+<nav id="nav">
+  <a class="nav-logo" href="/">Agent<span>Kontor</span></a>
+  <div class="nav-links">
+    <a class="nav-link" href="#features">Features</a>
+    <a class="nav-link" href="#integrations">Integrationen</a>
+    <a class="nav-link" href="#how">Wie es geht</a>
+    <a class="nav-link" href="#pricing">Preise</a>
+    <a class="nav-cta" href="/app">Kostenlos starten</a>
+  </div>
+</nav>
 
-      <div class="auth-tabs">
-        <div class="auth-tab" :class="{active:authTab==='login'}" @click="authTab='login';authErr=''" x-text="lang==='de'?'Anmelden':'Sign in'"></div>
-        <div class="auth-tab" :class="{active:authTab==='register'}" @click="authTab='register';authErr=''" x-text="lang==='de'?'Registrieren':'Register'"></div>
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-mesh"></div>
+  <div class="hero-grid"></div>
+
+  <div class="hero-badge"><span class="badge-dot"></span>Kostenlos starten · Kein Abo</div>
+
+  <h1>
+    Baue deinen eigenen<br>
+    <span class="accent">KI-Agenten.</span>
+    <span class="line2">In Minuten. Ohne Code.</span>
+  </h1>
+
+  <p class="hero-desc">
+    AgentKontor gibt dir alles um einen eigenen KI-Agenten zu erstellen — mit Chat-Seite, Website-Widget, WhatsApp, Telegram und API. Für jeden Anwendungsfall.
+  </p>
+
+  <div class="hero-actions">
+    <a href="/app" class="btn-primary">Jetzt kostenlos starten →</a>
+    <a href="#features" class="btn-outline">Mehr erfahren</a>
+  </div>
+
+  <!-- LIVE DEMO -->
+  <div class="hero-demo">
+    <div class="demo-window">
+      <div class="demo-bar">
+        <div class="demo-dots">
+          <div class="demo-dot" style="background:#ff5f56"></div>
+          <div class="demo-dot" style="background:#ffbd2e"></div>
+          <div class="demo-dot" style="background:#27c93f"></div>
+        </div>
+        <div class="demo-title">agentkontor.de/chat/dein-agent</div>
       </div>
-
-      <div class="err-box" x-show="authErr">⚠ <span x-text="authErr"></span></div>
-
-      <!-- LOGIN -->
-      <div x-show="authTab==='login'">
-        <div class="field">
-          <label>E-Mail</label>
-          <div class="inp-icon"><span class="icon">✉</span><input class="inp" type="email" x-model="lf.email" placeholder="name@beispiel.de" @keydown.enter="login()"></div>
+      <div class="demo-chat" id="demoChat">
+        <div class="demo-msg bot">
+          <div class="demo-av">🤖</div>
+          <div class="demo-bubble">Hallo! Ich bin Mia, dein KI-Assistent. Wie kann ich dir heute helfen?</div>
         </div>
-        <div class="field">
-          <label x-text="lang==='de'?'Passwort':'Password'"></label>
-          <div class="inp-icon"><span class="icon">🔒</span><input class="inp" type="password" x-model="lf.password" placeholder="••••••••" @keydown.enter="login()"></div>
-        </div>
-        <button class="btn btn-purple btn-full" @click="login()" :disabled="loading">
-          <span x-show="loading">⏳</span>
-          <span x-text="loading?(lang==='de'?'Anmelden...':'Signing in...'):(lang==='de'?'Jetzt anmelden':'Sign in now')"></span>
-        </button>
       </div>
-
-      <!-- REGISTER -->
-      <div x-show="authTab==='register'">
-        <div class="field">
-          <label x-text="lang==='de'?'Vollständiger Name':'Full Name'"></label>
-          <div class="inp-icon"><span class="icon">👤</span><input class="inp" type="text" x-model="rf.name" :placeholder="lang==='de'?'Max Mustermann':'Jane Doe'" @keydown.enter="register()"></div>
-        </div>
-        <div class="field">
-          <label>E-Mail</label>
-          <div class="inp-icon"><span class="icon">✉</span><input class="inp" type="email" x-model="rf.email" placeholder="name@beispiel.de" @keydown.enter="register()"></div>
-        </div>
-        <div class="field">
-          <label x-text="lang==='de'?'Passwort (min. 8 Zeichen)':'Password (min. 8 chars)'"></label>
-          <div class="inp-icon"><span class="icon">🔒</span><input class="inp" type="password" x-model="rf.password" placeholder="••••••••" @keydown.enter="register()"></div>
-        </div>
-        <div class="field">
-          <label x-text="lang==='de'?'Sprache':'Language'"></label>
-          <select class="inp" x-model="lang">
-            <option value="de">🇩🇪 Deutsch</option>
-            <option value="en">🇬🇧 English</option>
-          </select>
-        </div>
-        <button class="btn btn-purple btn-full" @click="register()" :disabled="loading">
-          <span x-show="loading">⏳</span>
-          <span x-text="loading?(lang==='de'?'Erstellen...':'Creating...'):(lang==='de'?'Kostenlos starten':'Start for free')"></span>
-        </button>
-        <p style="font-size:.73rem;color:var(--muted);text-align:center;margin-top:12px" x-text="lang==='de'?'Kein Abo · Keine Kreditkarte':'No subscription · No credit card'"></p>
+      <div class="demo-chips" id="demoChips">
+        <span class="demo-chip" onclick="demoSend('Was kannst du?')">Was kannst du?</span>
+        <span class="demo-chip" onclick="demoSend('Wie richte ich dich ein?')">Wie richte ich dich ein?</span>
+        <span class="demo-chip" onclick="demoSend('Welche Sprachen?')">Welche Sprachen?</span>
       </div>
-
-      <div class="auth-footer">
-        <button @click="lang=lang==='de'?'en':'de'" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.75rem;margin-top:4px" x-text="lang==='de'?'🇬🇧 Switch to English':'🇩🇪 Auf Deutsch wechseln'"></button>
+      <div class="demo-input-row">
+        <input class="demo-inp" id="demoInp" placeholder="Nachricht eingeben..." onkeydown="if(event.key==='Enter'){demoSend(this.value);this.value=''}">
+        <button class="demo-send" onclick="demoSend(document.getElementById('demoInp').value);document.getElementById('demoInp').value=''">➤</button>
       </div>
     </div>
   </div>
-</div>
+</section>
 
-<!-- APP -->
-<div class="app" x-show="user" x-cloak>
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="container">
+    <div class="sec-label reveal">Features</div>
+    <h2 class="sec-title reveal">Alles was du brauchst.</h2>
+    <p class="sec-sub reveal">Von der Konfiguration bis zur Auslieferung — AgentKontor deckt den kompletten Workflow ab.</p>
 
-  <!-- SIDEBAR -->
-  <div class="sidebar">
-    <div class="sb-logo">Agent<span>Kontor</span></div>
-    <nav class="sb-nav">
-      <div class="nav-item" :class="{active:page==='dashboard'}" @click="page='dashboard';loadAgents()"><span class="nav-icon">🏠</span><span x-text="lang==='de'?'Dashboard':'Dashboard'"></span></div>
-      <div class="nav-item" :class="{active:page==='agents'}" @click="page='agents';loadAgents()"><span class="nav-icon">🤖</span><span x-text="lang==='de'?'Meine Agenten':'My Agents'"></span></div>
-      <div class="nav-section" x-text="lang==='de'?'Entwickler':'Developer'"></div>
-      <div class="nav-item" :class="{active:page==='keys'}" @click="page='keys';loadKeys()"><span class="nav-icon">🔑</span>API Keys</div>
-      <div class="nav-item" :class="{active:page==='docs'}" @click="page='docs'"><span class="nav-icon">📖</span><span x-text="lang==='de'?'Dokumentation':'Docs'"></span></div>
-    </nav>
-    <div class="sb-footer">
-      <div class="sb-user">
-        <div class="user-av" x-text="user?.name?.[0]?.toUpperCase()||'U'"></div>
-        <div class="user-info">
-          <div class="name" x-text="user?.name"></div>
-          <div class="plan" x-text="'Plan: '+(user?.plan||'Free')"></div>
-        </div>
+    <div class="feat-grid reveal">
+      <div class="feat-card">
+        <div class="feat-icon">🎨</div>
+        <h3>Agent Builder</h3>
+        <p>Name, Emoji, Farbe, System-Prompt, Ton, Sprache, Schnellantworten — alles in einem visuellen Editor konfigurierbar.</p>
       </div>
-      <div class="sb-actions">
-        <button class="sb-action" @click="lang=lang==='de'?'en':'de'" x-text="lang==='de'?'🇬🇧 EN':'🇩🇪 DE'"></button>
-        <button class="sb-action danger" @click="logout()" x-text="lang==='de'?'Abmelden':'Logout'"></button>
+      <div class="feat-card">
+        <div class="feat-icon">🌐</div>
+        <h3>Öffentliche Chat-Seite</h3>
+        <p>Jeder Agent bekommt automatisch eine eigene URL. Einfach teilen — kein Login für Nutzer nötig.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🔧</div>
+        <h3>Website Widget</h3>
+        <p>Ein Script-Tag reicht. Chat-Widget läuft auf jeder Website, in jeder Farbe, vollständig anpassbar.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">📱</div>
+        <h3>WhatsApp & Telegram</h3>
+        <p>Verbinde deinen Agenten mit WhatsApp Business oder als Telegram-Bot. Einfach Token eingeben, fertig.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">⚡</div>
+        <h3>REST API</h3>
+        <p>API Key generieren, in eigene Apps einbinden. Vollständige Dokumentation, multi-turn Gespräche, JSON.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">📊</div>
+        <h3>Analytics</h3>
+        <p>Wie viele Nachrichten, welche Kanäle, welche Tage — alles auf einen Blick im Dashboard.</p>
       </div>
     </div>
   </div>
+</section>
 
-  <!-- MAIN -->
-  <div class="main">
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="container">
+    <div class="sec-label reveal">So geht's</div>
+    <h2 class="sec-title reveal">In 3 Schritten live.</h2>
+    <div class="steps reveal">
+      <div class="step">
+        <div class="step-n">1</div>
+        <h3>Agent konfigurieren</h3>
+        <p>Name, Persönlichkeit, Fokusbereich und Kommunikationsstil — im visuellen Builder ohne Code.</p>
+      </div>
+      <div class="step">
+        <div class="step-n">2</div>
+        <h3>Kanal aktivieren</h3>
+        <p>Chat-Seite teilen, Widget einbinden, WhatsApp verbinden oder API Key generieren — alles mit einem Klick.</p>
+      </div>
+      <div class="step">
+        <div class="step-n">3</div>
+        <h3>Live gehen</h3>
+        <p>Dein Agent ist sofort erreichbar. Nutzer chatten, du siehst Statistiken — vollautomatisch.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-    <!-- DASHBOARD -->
-    <div class="page" x-show="page==='dashboard'">
-      <div class="ph">
+<!-- INTEGRATIONS -->
+<section class="integrations" id="integrations">
+  <div class="container">
+    <div class="sec-label reveal">Integrationen</div>
+    <h2 class="sec-title reveal">Überall präsent.</h2>
+    <p class="sec-sub reveal">Dein Agent arbeitet auf den Kanälen wo deine Kunden bereits sind.</p>
+
+    <div class="integ-grid reveal">
+      <div class="integ-card">
+        <div class="integ-icon" style="background:rgba(108,92,231,.1)">🌐</div>
         <div>
-          <div class="ph-title" x-text="lang==='de'?'Dashboard':'Dashboard'"></div>
-          <div class="ph-sub" x-text="lang==='de'?'Willkommen zurück, '+user?.name:'Welcome back, '+user?.name"></div>
+          <h3>Chat-Seite</h3>
+          <p>Automatisch generierte Chat-URL für jeden Agenten. Teilen per Link, QR-Code oder Social Media. Kein Login für Nutzer.</p>
+          <span class="integ-badge" style="background:rgba(108,92,231,.1);color:var(--pu-l);border:1px solid rgba(108,92,231,.2)">agentkontor.de/chat/ID</span>
         </div>
-        <button class="btn btn-purple btn-sm" @click="openNew()">+ <span x-text="lang==='de'?'Neuer Agent':'New Agent'"></span></button>
       </div>
-      <div class="grid-3" style="margin-bottom:28px">
-        <div class="stat-card"><div class="stat-n" x-text="agents.length"></div><div class="stat-l" x-text="lang==='de'?'Agenten':'Agents'"></div></div>
-        <div class="stat-card"><div class="stat-n" x-text="agents.filter(a=>a.is_active).length"></div><div class="stat-l" x-text="lang==='de'?'Aktiv':'Active'"></div></div>
-        <div class="stat-card"><div class="stat-n" x-text="agents.reduce((s,a)=>s+(a.total_messages||0),0)"></div><div class="stat-l" x-text="lang==='de'?'Nachrichten':'Messages'"></div></div>
-      </div>
-      <div style="font-size:.88rem;font-weight:600;color:var(--white);margin-bottom:14px" x-text="lang==='de'?'Deine Agenten':'Your Agents'"></div>
-      <template x-if="agents.length===0">
-        <div class="empty"><div class="empty-icon">🤖</div><h3 x-text="lang==='de'?'Noch kein Agent':'No agents yet'"></h3><p x-text="lang==='de'?'Erstelle deinen ersten KI-Agenten.':'Create your first AI agent.'"></p><button class="btn btn-purple btn-sm" @click="openNew()">+ <span x-text="lang==='de'?'Ersten Agenten erstellen':'Create first agent'"></span></button></div>
-      </template>
-      <div class="agent-grid">
-        <template x-for="a in agents" :key="a.id"><div class="agent-card" @click="editAgent(a)"><div class="ac-stripe" :style="`background:${a.color}`"></div><div class="ac-body"><div class="ac-header"><div class="ac-av" :style="`background:${a.color}18;border:1px solid ${a.color}33`" x-text="a.emoji"></div><div><div class="ac-name" x-text="a.name"></div><div class="ac-desc" x-text="a.description||'—'"></div></div></div><div class="ac-badges"><span class="badge" :class="a.is_active?'b-active':'b-off'" x-text="a.is_active?'Aktiv':'Inaktiv'"></span><span class="badge b-purple" x-show="a.widget_enabled">Widget</span><span class="badge b-gold" x-show="a.api_enabled">API</span><span class="badge b-wa" x-show="a.whatsapp_enabled">WA</span><span class="badge b-tg" x-show="a.telegram_enabled">TG</span><span class="badge b-rag" x-show="a.rag_enabled">RAG</span></div><div class="ac-stats"><span><strong x-text="a.total_messages||0"></strong> <span x-text="lang==='de'?'Nachrichten':'msgs'"></span></span></div></div></div></template>
-      </div>
-    </div>
-
-    <!-- AGENTS PAGE -->
-    <div class="page" x-show="page==='agents'">
-      <div class="ph"><div><div class="ph-title" x-text="lang==='de'?'Meine Agenten':'My Agents'"></div><div class="ph-sub" x-text="lang==='de'?'Erstelle und verwalte deine Agenten':'Create and manage your agents'"></div></div><button class="btn btn-purple btn-sm" @click="openNew()">+ <span x-text="lang==='de'?'Neuer Agent':'New Agent'"></span></button></div>
-      <template x-if="agents.length===0"><div class="empty"><div class="empty-icon">🤖</div><h3 x-text="lang==='de'?'Noch kein Agent':'No agents yet'"></h3><p x-text="lang==='de'?'Erstelle deinen ersten KI-Agenten.':'Create your first AI agent.'"></p><button class="btn btn-purple btn-sm" @click="openNew()">+ Agent</button></div></template>
-      <div class="agent-grid">
-        <template x-for="a in agents" :key="a.id"><div class="agent-card" @click="editAgent(a)"><div class="ac-stripe" :style="`background:${a.color}`"></div><div class="ac-body"><div class="ac-header"><div class="ac-av" :style="`background:${a.color}18`" x-text="a.emoji"></div><div><div class="ac-name" x-text="a.name"></div><div class="ac-desc" x-text="a.description||'—'"></div></div></div><div class="ac-badges"><span class="badge" :class="a.is_active?'b-active':'b-off'" x-text="a.is_active?'Aktiv':'Inaktiv'"></span><span class="badge b-purple" x-show="a.widget_enabled">Widget</span><span class="badge b-gold" x-show="a.api_enabled">API</span><span class="badge b-rag" x-show="a.rag_enabled">RAG</span></div><div class="ac-stats"><span><strong x-text="a.total_messages||0"></strong> msgs</span></div></div></div></template>
-      </div>
-    </div>
-
-    <!-- API KEYS -->
-    <div class="page" x-show="page==='keys'">
-      <div class="ph"><div><div class="ph-title">API Keys</div><div class="ph-sub" x-text="lang==='de'?'Für externe Integrationen':'For external integrations'"></div></div><button class="btn btn-purple btn-sm" @click="showNewKey=true">+ Key</button></div>
-      <template x-if="newKeyRev"><div class="card" style="border-color:rgba(0,184,148,.3);margin-bottom:16px"><div style="color:var(--green);font-weight:600;margin-bottom:8px">✓ <span x-text="lang==='de'?'Key erstellt — nur einmal sichtbar!':'Key created — visible only once!'"></span></div><div class="code" x-text="newKeyRev"><button class="copy-btn" @click="copy(newKeyRev)">Copy</button></div><div style="font-size:.75rem;color:var(--muted);margin-top:7px" x-text="lang==='de'?'Speichere diesen Key jetzt. Er wird nicht erneut angezeigt.':'Save this key now. It will not be shown again.'"></div></div></template>
-      <template x-if="apiKeys.length===0"><div class="empty"><div class="empty-icon">🔑</div><h3 x-text="lang==='de'?'Keine Keys':'No Keys'"></h3></div></template>
-      <template x-for="k in apiKeys" :key="k.id"><div class="key-row"><div style="flex:1"><div class="key-label" x-text="k.label"></div><div style="display:flex;align-items:center;gap:8px;margin-top:3px"><span class="key-prefix" x-text="k.key_prefix+'••••••••'"></span><span style="font-size:.7rem;color:var(--muted)" x-text="k.agent_name?'Agent: '+k.agent_name:''"></span></div></div><span class="key-date" x-text="k.last_used?new Date(k.last_used).toLocaleDateString():(lang==='de'?'Nie genutzt':'Never used')"></span><button class="btn btn-sm btn-danger" @click="delKey(k.id)" x-text="lang==='de'?'Löschen':'Delete'"></button></div></template>
-    </div>
-
-    <!-- DOCS -->
-    <div class="page" x-show="page==='docs'">
-      <div class="ph"><div><div class="ph-title" x-text="lang==='de'?'Dokumentation':'Documentation'"></div></div></div>
-      <div class="tabs"><div class="tab" :class="{active:docsTab==='api'}" @click="docsTab='api'">REST API</div><div class="tab" :class="{active:docsTab==='widget'}" @click="docsTab='widget'">Widget</div><div class="tab" :class="{active:docsTab==='webhooks'}" @click="docsTab='webhooks'">Webhooks</div></div>
-      <template x-if="docsTab==='api'">
+      <div class="integ-card">
+        <div class="integ-icon" style="background:rgba(162,155,254,.1)">🔧</div>
         <div>
-          <div class="doc-block"><h3>Chat (POST)</h3><p x-text="lang==='de'?'Sende eine Nachricht an einen Agenten per API Key.':'Send a message to an agent via API key.'"></p><div class="code">POST /api/chat/api/:agentId
-
-Headers:
-  x-api-key: ak_live_xxxxxxxxxxxxxxxxxx
-  Content-Type: application/json
-
-Body:
-{
-  "messages": [{"role":"user","content":"Hallo!"}],
-  "sessionId": "optional-id"
-}
-
-Response:
-{
-  "reply": "Hallo! Wie kann ich helfen?",
-  "sessionId": "uuid"
-}</div></div>
+          <h3>Website Widget</h3>
+          <p>Schwebendes Chat-Widget mit deinen Farben und deinem Branding. Zwei Zeilen Code, überall einbettbar.</p>
+          <span class="integ-badge" style="background:rgba(162,155,254,.1);color:var(--pu-l);border:1px solid rgba(162,155,254,.2)">&lt;script&gt; Widget</span>
         </div>
-      </template>
-      <template x-if="docsTab==='widget'">
-        <div><div class="doc-block"><h3>Widget einbinden</h3><div class="code" x-html="'&lt;script&gt;\n  window.AK_AGENT_ID = &quot;DEINE_AGENT_ID&quot;;\n&lt;/script&gt;\n&lt;script src=&quot;'+window.location.origin+'/widget.js&quot;&gt;&lt;/script&gt;'"></div></div></div>
-      </template>
-      <template x-if="docsTab==='webhooks'">
+      </div>
+      <div class="integ-card">
+        <div class="integ-icon" style="background:rgba(37,211,102,.1)">📱</div>
         <div>
-          <div class="doc-block"><h3>Telegram</h3><div class="code" x-html="window.location.origin+'/webhook/telegram/BOT_TOKEN'"></div></div>
-          <div class="doc-block"><h3>WhatsApp (Meta Cloud API)</h3><div class="code" x-html="window.location.origin+'/webhook/whatsapp'"></div></div>
+          <h3>WhatsApp Business</h3>
+          <p>Verbinde über die Meta Cloud API. Dein Agent antwortet automatisch auf WhatsApp-Nachrichten — 24/7.</p>
+          <span class="integ-badge" style="background:rgba(37,211,102,.1);color:#25d366;border:1px solid rgba(37,211,102,.2)">Meta Cloud API</span>
         </div>
-      </template>
+      </div>
+      <div class="integ-card">
+        <div class="integ-icon" style="background:rgba(0,136,204,.1)">✈️</div>
+        <div>
+          <h3>Telegram Bot</h3>
+          <p>Bot-Token von @BotFather einfügen — dein Agent ist sofort als Telegram-Bot erreichbar.</p>
+          <span class="integ-badge" style="background:rgba(0,136,204,.1);color:#0088cc;border:1px solid rgba(0,136,204,.2)">@BotFather Token</span>
+        </div>
+      </div>
+      <div class="integ-card">
+        <div class="integ-icon" style="background:rgba(240,192,64,.1)">⚡</div>
+        <div>
+          <h3>REST API</h3>
+          <p>API Key generieren und deinen Agenten in eigene Apps, Tools oder Workflows einbinden. Multi-turn, JSON, einfach.</p>
+          <span class="integ-badge" style="background:rgba(240,192,64,.1);color:var(--gold);border:1px solid rgba(240,192,64,.2)">x-api-key Header</span>
+        </div>
+      </div>
+      <div class="integ-card">
+        <div class="integ-icon" style="background:rgba(0,206,201,.1)">🔔</div>
+        <div>
+          <h3>Webhooks</h3>
+          <p>Alle Nachrichten automatisch an eigene Systeme weiterleiten. Kompatibel mit Zapier, Make, n8n und mehr.</p>
+          <span class="integ-badge" style="background:rgba(0,206,201,.1);color:var(--teal);border:1px solid rgba(0,206,201,.2)">Bald verfügbar</span>
+        </div>
+      </div>
     </div>
+  </div>
+</section>
 
-  </div><!-- /main -->
-</div><!-- /app -->
+<!-- BUILDER PREVIEW -->
+<section class="builder">
+  <div class="container">
+    <div class="builder-inner">
+      <div class="reveal">
+        <div class="sec-label">Builder</div>
+        <h2 class="sec-title">Konfiguriere alles.<br>Ohne Code.</h2>
+        <p class="sec-sub" style="margin-bottom:32px">Der Agent-Builder führt dich Schritt für Schritt — von der Persönlichkeit bis zur Integration.</p>
+        <ul class="builder-steps">
+          <li class="builder-step">
+            <div class="bs-num">✦</div>
+            <div><div class="bs-title">Name, Emoji & Farbe</div><div class="bs-desc">Gib deinem Agenten eine Identität die zu dir und deiner Marke passt.</div></div>
+          </li>
+          <li class="builder-step">
+            <div class="bs-num">✦</div>
+            <div><div class="bs-title">System-Prompt & Ton</div><div class="bs-desc">Bestimme Fokus, Persönlichkeit und Kommunikationsstil — professionell, freundlich, direkt oder locker.</div></div>
+          </li>
+          <li class="builder-step">
+            <div class="bs-num">✦</div>
+            <div><div class="bs-title">Schnellantworten</div><div class="bs-desc">Bis zu 5 vordefinierte Themen die Nutzer per Klick auswählen können.</div></div>
+          </li>
+          <li class="builder-step">
+            <div class="bs-num">✦</div>
+            <div><div class="bs-title">Live-Vorschau</div><div class="bs-desc">Sieh vor dem Speichern genau wie dein Agent für Nutzer aussieht.</div></div>
+          </li>
+        </ul>
+        <a href="/app" class="btn-primary" style="display:inline-block;margin-top:24px">Jetzt ausprobieren →</a>
+      </div>
 
-<!-- AGENT MODAL -->
-<div class="modal-bg" x-show="showModal" @click.self="showModal=false" x-cloak>
-  <div class="modal">
-    <div class="modal-title" x-text="editing?(lang==='de'?'Agent bearbeiten':'Edit Agent'):(lang==='de'?'Neuen Agenten erstellen':'Create Agent')"></div>
+      <!-- Mini builder preview -->
+      <div class="reveal">
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:28px;box-shadow:0 24px 60px rgba(0,0,0,.4)">
+          <div style="font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--pu-l);margin-bottom:18px">✦ Agent Builder</div>
 
-    <div class="tabs" style="margin-bottom:16px">
-      <div class="tab" :class="{active:aTab==='basics'}" @click="aTab='basics'" x-text="lang==='de'?'Grundlagen':'Basics'"></div>
-      <div class="tab" :class="{active:aTab==='behavior'}" @click="aTab='behavior'" x-text="lang==='de'?'Verhalten':'Behavior'"></div>
-      <div class="tab" :class="{active:aTab==='rag'}" @click="aTab='rag';if(editing)loadDocs(editing.id)" x-text="'RAG / Wissen'"></div>
-      <div class="tab" :class="{active:aTab==='integ'}" @click="aTab='integ'" x-text="lang==='de'?'Integrationen':'Integrations'"></div>
-      <div class="tab" :class="{active:aTab==='preview'}" @click="aTab='preview'" x-text="lang==='de'?'Vorschau':'Preview'"></div>
-      <template x-if="editing">
-        <div class="tab" :class="{active:aTab==='embed'}" @click="aTab='embed'" x-text="lang==='de'?'Einbetten':'Embed'"></div>
-      </template>
+          <div style="margin-bottom:14px">
+            <div style="font-size:.75rem;color:var(--muted);margin-bottom:5px">Name</div>
+            <div style="background:rgba(255,255,255,.05);border:1px solid rgba(108,92,231,.3);border-radius:8px;padding:9px 12px;font-size:.86rem;color:var(--white)">Mia — Kundenservice Bot</div>
+          </div>
+
+          <div style="margin-bottom:14px">
+            <div style="font-size:.75rem;color:var(--muted);margin-bottom:5px">Emoji</div>
+            <div style="display:flex;gap:7px">
+              <span style="width:36px;height:36px;border-radius:8px;background:rgba(108,92,231,.2);border:1px solid var(--purple);display:flex;align-items:center;justify-content:center;font-size:1.1rem">🤖</span>
+              <span style="width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.1rem">💬</span>
+              <span style="width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.1rem">⭐</span>
+              <span style="width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.1rem">🎯</span>
+            </div>
+          </div>
+
+          <div style="margin-bottom:14px">
+            <div style="font-size:.75rem;color:var(--muted);margin-bottom:5px">Ton</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+              <div style="padding:9px 12px;border-radius:8px;background:rgba(108,92,231,.12);border:1px solid var(--purple);font-size:.8rem;color:var(--white)"><strong>Freundlich</strong><br><span style="color:var(--muted);font-size:.72rem">Warm & offen</span></div>
+              <div style="padding:9px 12px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid var(--border);font-size:.8rem;color:var(--muted)">Direkt<br><span style="font-size:.72rem">Präzise</span></div>
+            </div>
+          </div>
+
+          <div style="margin-bottom:18px">
+            <div style="font-size:.75rem;color:var(--muted);margin-bottom:5px">Integrationen</div>
+            <div style="display:flex;gap:7px;flex-wrap:wrap">
+              <span style="background:rgba(108,92,231,.1);border:1px solid rgba(108,92,231,.25);border-radius:6px;padding:4px 10px;font-size:.72rem;color:var(--pu-l)">🌐 Chat-Seite</span>
+              <span style="background:rgba(37,211,102,.08);border:1px solid rgba(37,211,102,.2);border-radius:6px;padding:4px 10px;font-size:.72rem;color:#25d366">📱 WhatsApp</span>
+              <span style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.72rem;color:var(--muted)">✈️ Telegram</span>
+            </div>
+          </div>
+
+          <button style="width:100%;padding:12px;background:var(--purple);border:none;border-radius:8px;color:#fff;font-size:.88rem;font-weight:600;cursor:pointer">💾 Agent speichern</button>
+        </div>
+      </div>
     </div>
+  </div>
+</section>
 
-    <!-- BASICS -->
-    <template x-if="aTab==='basics'">
-      <div>
-        <div class="fs"><div class="fs-title" x-text="lang==='de'?'Identität':'Identity'"></div>
-          <div class="inp-row" style="margin-bottom:12px">
-            <div class="field" style="margin:0"><label x-text="lang==='de'?'Name':'Name'"></label><input class="inp" type="text" x-model="af.name" :placeholder="lang==='de'?'z.B. Mia, Support-Bot':'e.g. Mia, Support Bot'"></div>
-            <div class="field" style="margin:0"><label x-text="lang==='de'?'Sprache':'Language'"></label><select class="inp" x-model="af.language"><option value="de">🇩🇪 Deutsch</option><option value="en">🇬🇧 English</option></select></div>
-          </div>
-          <div class="field"><label x-text="lang==='de'?'Beschreibung':'Description'"></label><input class="inp" type="text" x-model="af.description" :placeholder="lang==='de'?'Wofür ist dieser Agent?':'What is this agent for?'"></div>
-          <div class="field"><label>Emoji</label><div class="emoji-grid"><template x-for="e in emojis" :key="e"><div class="emo" :class="{on:af.emoji===e}" @click="af.emoji=e" x-text="e"></div></template></div></div>
-          <div class="field"><label x-text="lang==='de'?'Farbe':'Color'"></label><div class="color-grid"><template x-for="c in colors" :key="c"><div class="col-opt" :class="{on:af.color===c}" :style="`background:${c}`" @click="af.color=c"></div></template></div></div>
-        </div>
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+  <div class="container">
+    <div class="sec-label reveal">Preise</div>
+    <h2 class="sec-title reveal">Einfach. Transparent.</h2>
+    <p class="sec-sub reveal">Starte kostenlos — skaliere wenn du bereit bist. Kein Abo-Zwang, keine versteckten Kosten.</p>
+
+    <div class="pricing-grid reveal">
+      <!-- FREE -->
+      <div class="price-card">
+        <div class="price-plan">Free</div>
+        <div class="price-amount"><sup>€</sup>0</div>
+        <div class="price-period">für immer kostenlos</div>
+        <ul class="price-features">
+          <li>3 Agenten</li>
+          <li>Öffentliche Chat-Seite</li>
+          <li>Website Widget</li>
+          <li>500 Nachrichten/Monat</li>
+          <li class="off">API Zugang</li>
+          <li class="off">WhatsApp & Telegram</li>
+          <li class="off">Analytics</li>
+        </ul>
+        <a href="/app" class="price-btn price-btn-outline">Kostenlos starten</a>
       </div>
-    </template>
 
-    <!-- BEHAVIOR -->
-    <template x-if="aTab==='behavior'">
-      <div>
-        <div class="field"><label x-text="lang==='de'?'System-Prompt':'System Prompt'"></label><div class="hint" x-text="lang==='de'?'Persönlichkeit, Aufgaben und Regeln des Agenten.':'Personality, tasks and rules of the agent.'"></div><textarea class="inp" rows="5" x-model="af.system_prompt" :placeholder="lang==='de'?'Du bist [Name], ein KI-Assistent für [Unternehmen]...':'You are [Name], an AI assistant for [Company]...'"></textarea></div>
-        <div class="field"><label x-text="lang==='de'?'Begrüßungsnachricht':'Greeting Message'"></label><textarea class="inp" rows="2" x-model="af.greeting" :placeholder="lang==='de'?'Hallo! Wie kann ich helfen?':'Hello! How can I help?'"></textarea></div>
-        <div class="field"><label x-text="lang==='de'?'Kommunikationsstil':'Communication Style'"></label>
-          <div class="tone-grid">
-            <template x-for="t in tones" :key="t.key"><div class="tone-opt" :class="{on:af.tone===t.key}" @click="af.tone=t.key"><h4 x-text="lang==='de'?t.de:t.en"></h4><p x-text="lang==='de'?t.d:t.e"></p></div></template>
-          </div>
-        </div>
-        <div class="field"><label x-text="lang==='de'?'Schnellantworten (max. 5)':'Quick Replies (max. 5)'"></label>
-          <div class="chip-row"><input class="inp" type="text" x-model="chipIn" :placeholder="lang==='de'?'Vorschlag...':'Suggestion...'" @keydown.enter.prevent="addChip()"><button class="btn btn-ghost btn-sm" @click="addChip()">+ Add</button></div>
-          <div class="chips-wrap"><template x-for="(c,i) in af.quick_chips" :key="i"><div class="chip-tag"><span x-text="c"></span><button class="chip-del" @click="af.quick_chips.splice(i,1)">✕</button></div></template></div>
-        </div>
+      <!-- PRO -->
+      <div class="price-card featured">
+        <div class="price-plan">Pro</div>
+        <div class="price-amount"><sup>€</sup>19</div>
+        <div class="price-period">pro Monat</div>
+        <ul class="price-features">
+          <li>Unbegrenzte Agenten</li>
+          <li>Öffentliche Chat-Seite</li>
+          <li>Website Widget</li>
+          <li>10.000 Nachrichten/Monat</li>
+          <li>REST API + API Keys</li>
+          <li>WhatsApp & Telegram</li>
+          <li>Analytics Dashboard</li>
+        </ul>
+        <a href="/app" class="price-btn price-btn-fill">Pro starten</a>
       </div>
-    </template>
 
-    <!-- RAG TAB -->
-    <template x-if="aTab==='rag'">
-      <div>
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;padding:14px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px">
-          <div style="flex:1"><div style="font-size:.88rem;font-weight:600;color:var(--white)" x-text="lang==='de'?'RAG aktivieren':'Enable RAG'"></div><div style="font-size:.74rem;color:var(--muted)" x-text="lang==='de'?'Agent nutzt hochgeladene Dokumente als Wissensbasis':'Agent uses uploaded documents as knowledge base'"></div></div>
-          <label class="toggle"><input type="checkbox" x-model="af.rag_enabled"><span class="slider"></span></label>
-        </div>
-
-        <template x-if="af.rag_enabled">
-          <div>
-            <div class="field"><label x-text="lang==='de'?'RAG-Anweisung':'RAG Instruction'"></label><div class="hint" x-text="lang==='de'?'Wie soll der Agent mit den Dokumenten umgehen?':'How should the agent use the documents?'"></div><textarea class="inp" rows="2" x-model="af.rag_prompt" :placeholder="lang==='de'?'Nutze die bereitgestellten Dokumente...':'Use the provided documents...'"></textarea></div>
-
-            <template x-if="editing">
-              <div>
-                <!-- Upload Zone -->
-                <div class="upload-zone" :class="{drag:dragging}" @dragover.prevent="dragging=true" @dragleave="dragging=false" @drop.prevent="dropFile($event)">
-                  <input type="file" accept=".txt,.md,.pdf,.csv,.json,.html" @change="uploadFile($event)">
-                  <div class="uz-icon">📂</div>
-                  <h4 x-text="lang==='de'?'Datei hochladen':'Upload File'"></h4>
-                  <p x-text="lang==='de'?'TXT, MD, PDF, CSV, JSON, HTML · max. 10MB':'TXT, MD, PDF, CSV, JSON, HTML · max. 10MB'"></p>
-                  <p x-show="uploading" style="color:var(--pu-l);margin-top:8px" x-text="lang==='de'?'Wird hochgeladen...':'Uploading...'"></p>
-                </div>
-
-                <!-- Documents list -->
-                <div style="margin-top:16px">
-                  <div style="font-size:.78rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px" x-text="lang==='de'?'Hochgeladene Dokumente':'Uploaded Documents'"></div>
-                  <template x-if="docs.length===0"><div style="text-align:center;padding:24px;color:var(--muted);font-size:.83rem" x-text="lang==='de'?'Noch keine Dokumente':'No documents yet'"></div></template>
-                  <template x-for="doc in docs" :key="doc.id">
-                    <div class="doc-item">
-                      <div class="doc-icon" :style="`background:rgba(108,92,231,.1)`">
-                        <span x-text="doc.filetype==='pdf'?'📄':doc.filetype==='csv'?'📊':'📝'"></span>
-                      </div>
-                      <div style="flex:1">
-                        <div class="doc-name" x-text="doc.filename"></div>
-                        <div class="doc-meta" x-text="(doc.chunk_count||0)+' Chunks · '+(doc.filesize/1024).toFixed(1)+' KB'"></div>
-                      </div>
-                      <div class="doc-status">
-                        <span class="status-pill" :class="{'s-ready':doc.status==='ready','s-processing':doc.status==='processing','s-error':doc.status==='error'}" x-text="doc.status==='ready'?'✓ Bereit':doc.status==='processing'?'⏳ Verarbeitung':'✕ Fehler'"></span>
-                      </div>
-                      <button class="btn btn-sm btn-danger" style="margin-left:8px" @click="deleteDoc(doc.id)" x-text="lang==='de'?'Löschen':'Delete'"></button>
-                    </div>
-                  </template>
-                </div>
-              </div>
-            </template>
-
-            <template x-if="!editing">
-              <div style="padding:16px;background:rgba(108,92,231,.06);border:1px solid rgba(108,92,231,.2);border-radius:10px;font-size:.83rem;color:var(--muted)">
-                💡 <span x-text="lang==='de'?'Speichere den Agenten zuerst, dann kannst du Dokumente hochladen.':'Save the agent first, then you can upload documents.'"></span>
-              </div>
-            </template>
-          </div>
-        </template>
+      <!-- ENTERPRISE -->
+      <div class="price-card">
+        <div class="price-plan">Enterprise</div>
+        <div class="price-amount" style="font-size:2rem">Auf Anfrage</div>
+        <div class="price-period">individuelles Angebot</div>
+        <ul class="price-features">
+          <li>Alles aus Pro</li>
+          <li>Unbegrenzte Nachrichten</li>
+          <li>Custom Domain</li>
+          <li>White-Label</li>
+          <li>Dedicated Support</li>
+          <li>SLA Garantie</li>
+          <li>On-Premise Option</li>
+        </ul>
+        <a href="mailto:info@agentkontor.de" class="price-btn price-btn-outline">Kontakt aufnehmen</a>
       </div>
-    </template>
+    </div>
+  </div>
+</section>
 
-    <!-- INTEGRATIONS -->
-    <template x-if="aTab==='integ'">
-      <div>
-        <div style="display:flex;align-items:center;gap:12px;padding:14px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;margin-bottom:10px">
-          <div style="flex:1"><div style="font-size:.88rem;font-weight:600;color:var(--white)" x-text="lang==='de'?'Agent aktiv':'Agent active'"></div></div>
-          <label class="toggle"><input type="checkbox" x-model="af.is_active"><span class="slider"></span></label>
-        </div>
-        <div class="integ-item"><div class="ii-icon" style="background:rgba(108,92,231,.1)">🌐</div><div class="ii-info"><div class="ii-name" x-text="lang==='de'?'Öffentliche Chat-Seite':'Public Chat Page'"></div><div class="ii-desc" x-text="lang==='de'?'Teile einen Link — jeder kann chatten.':'Share a link — anyone can chat.'"></div></div><label class="toggle"><input type="checkbox" x-model="af.chatpage_enabled"><span class="slider"></span></label></div>
-        <div class="integ-item"><div class="ii-icon" style="background:rgba(162,155,254,.1)">🔧</div><div class="ii-info"><div class="ii-name">Widget</div><div class="ii-desc" x-text="lang==='de'?'Chat-Widget auf deiner Website.':'Chat widget on your website.'"></div></div><label class="toggle"><input type="checkbox" x-model="af.widget_enabled"><span class="slider"></span></label></div>
-        <div class="integ-item"><div class="ii-icon" style="background:rgba(240,192,64,.1)">⚡</div><div class="ii-info"><div class="ii-name">REST API</div><div class="ii-desc">API Key Zugang.</div></div><label class="toggle"><input type="checkbox" x-model="af.api_enabled"><span class="slider"></span></label></div>
-        <div class="integ-item"><div class="ii-icon" style="background:rgba(37,211,102,.1)">📱</div><div class="ii-info"><div class="ii-name">WhatsApp</div><div class="ii-desc">Meta Cloud API.</div><template x-if="af.whatsapp_enabled"><input class="inp" type="text" x-model="af.whatsapp_number" placeholder="4915123456789" style="margin-top:7px;width:100%"></template></div><label class="toggle"><input type="checkbox" x-model="af.whatsapp_enabled"><span class="slider"></span></label></div>
-        <div class="integ-item"><div class="ii-icon" style="background:rgba(0,136,204,.1)">✈️</div><div class="ii-info"><div class="ii-name">Telegram</div><div class="ii-desc">@BotFather Token.</div><template x-if="af.telegram_enabled"><input class="inp" type="text" x-model="af.telegram_token" placeholder="123456:ABCdefGHIjklMNO" style="margin-top:7px;width:100%"></template></div><label class="toggle"><input type="checkbox" x-model="af.telegram_enabled"><span class="slider"></span></label></div>
-      </div>
-    </template>
-
-    <!-- PREVIEW -->
-    <template x-if="aTab==='preview'">
-      <div>
-        <div class="preview-win">
-          <div class="pw-hdr" :style="`background:${af.color}22;border-bottom:1px solid ${af.color}33`">
-            <div class="pw-av" :style="`background:${af.color}33`" x-text="af.emoji||'🤖'"></div>
-            <div><div class="pw-name" x-text="af.name||'Agent'"></div><div class="pw-status">● Online</div></div>
-          </div>
-          <div class="pw-body">
-            <div class="pw-bbl a" x-text="af.greeting||(lang==='de'?'Hallo! Wie kann ich helfen?':'Hello! How can I help?')"></div>
-            <template x-if="af.quick_chips?.length"><div style="display:flex;flex-wrap:wrap;gap:5px"><template x-for="c in af.quick_chips" :key="c"><span style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:4px 11px;font-size:.73rem;color:#e0e0f0" x-text="c"></span></template></div></template>
-            <div class="pw-bbl u" :style="`background:${af.color}`" x-text="lang==='de'?'Was kannst du tun?':'What can you do?'"></div>
-            <div class="pw-bbl a" x-text="lang==='de'?'Ich helfe gerne! Stelle mir eine Frage.':'Happy to help! Ask me a question.'"></div>
-          </div>
-          <div class="pw-foot"><input class="pw-inp" :placeholder="lang==='de'?'Nachricht...':'Message...'"><div class="pw-send" :style="`background:${af.color}`">➤</div></div>
-        </div>
-      </div>
-    </template>
-
-    <!-- EMBED -->
-    <template x-if="aTab==='embed' && editing">
-      <div>
-        <div class="card" style="margin-bottom:12px">
-          <div style="font-weight:600;color:var(--white);margin-bottom:6px">🌐 Chat-Seite</div>
-          <div style="display:flex;gap:8px"><div class="code" style="flex:1;padding:9px" x-text="window.location.origin+'/chat/'+editing.public_id"></div><button class="btn btn-ghost btn-sm" @click="copy(window.location.origin+'/chat/'+editing.public_id)">Copy</button></div>
-        </div>
-        <div class="card" style="margin-bottom:12px">
-          <div style="font-weight:600;color:var(--white);margin-bottom:6px">🔧 Widget Code</div>
-          <div class="code" x-html="'&lt;script&gt;window.AK_AGENT_ID=&quot;'+editing.public_id+'&quot;;&lt;/script&gt;\n&lt;script src=&quot;'+window.location.origin+'/widget.js&quot;&gt;&lt;/script&gt;'"></div>
-        </div>
-        <div class="card">
-          <div style="font-weight:600;color:var(--white);margin-bottom:6px">⚡ API Endpoint</div>
-          <div class="code" x-html="'POST '+window.location.origin+'/api/chat/api/'+editing.id+'\nx-api-key: ak_live_...'"></div>
-        </div>
-      </div>
-    </template>
-
-    <div class="modal-footer">
-      <template x-if="editing"><button class="btn btn-sm btn-danger" @click="delAgent()" x-text="lang==='de'?'Löschen':'Delete'"></button></template>
-      <button class="btn btn-sm btn-ghost" @click="showModal=false" x-text="lang==='de'?'Abbrechen':'Cancel'"></button>
-      <button class="btn btn-sm btn-purple" @click="saveAgent()" :disabled="saving">
-        <span x-text="saving?(lang==='de'?'Speichern...':'Saving...'):(lang==='de'?'💾 Speichern':'💾 Save')"></span>
-      </button>
+<!-- CTA -->
+<div class="cta-section">
+  <div class="cta-box reveal">
+    <h2>Starte jetzt.<br><span>Kostenlos.</span></h2>
+    <p>Kein Abo, keine Kreditkarte. Dein erster Agent ist in weniger als 5 Minuten live.</p>
+    <div class="cta-btns">
+      <a href="/app" class="btn-primary">Kostenlos registrieren →</a>
+      <a href="#features" class="btn-outline">Mehr erfahren</a>
     </div>
   </div>
 </div>
 
-<!-- NEW KEY MODAL -->
-<div class="modal-bg" x-show="showNewKey" @click.self="showNewKey=false" x-cloak>
-  <div class="modal" style="max-width:400px">
-    <div class="modal-title" x-text="lang==='de'?'Neuen API Key erstellen':'Create API Key'"></div>
-    <div class="field"><label x-text="lang==='de'?'Bezeichnung':'Label'"></label><input class="inp" type="text" x-model="nkf.label" :placeholder="lang==='de'?'z.B. Produktionskey':'e.g. Production key'"></div>
-    <div class="field"><label x-text="lang==='de'?'Agent (optional)':'Agent (optional)'"></label><select class="inp" x-model="nkf.agentId"><option value="" x-text="lang==='de'?'Alle Agenten':'All agents'"></option><template x-for="a in agents" :key="a.id"><option :value="a.id" x-text="a.emoji+' '+a.name"></option></template></select></div>
-    <div class="modal-footer"><button class="btn btn-sm btn-ghost" @click="showNewKey=false" x-text="lang==='de'?'Abbrechen':'Cancel'"></button><button class="btn btn-sm btn-purple" @click="createKey()" x-text="lang==='de'?'Key erstellen':'Create Key'"></button></div>
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <h3>Agent<span>Kontor</span></h3>
+      <p>Baue, konfiguriere und deploye eigene KI-Agenten — ohne Code, ohne Komplexität.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Produkt</h4>
+      <a href="#features">Features</a>
+      <a href="#integrations">Integrationen</a>
+      <a href="#pricing">Preise</a>
+      <a href="/app">Dashboard</a>
+    </div>
+    <div class="footer-col">
+      <h4>Entwickler</h4>
+      <a href="#integrations">REST API</a>
+      <a href="/app">API Keys</a>
+      <a href="/app">Webhook Docs</a>
+      <a href="/app">Widget Embed</a>
+    </div>
+    <div class="footer-col">
+      <h4>Rechtliches</h4>
+      <a href="#">Impressum</a>
+      <a href="#">Datenschutz</a>
+      <a href="#">AGB</a>
+      <a href="mailto:info@agentkontor.de">Kontakt</a>
+    </div>
   </div>
-</div>
-
-<!-- TOASTS -->
-<div class="toast-area">
-  <template x-for="t in toasts" :key="t.id"><div class="toast" :class="t.type" x-text="t.msg"></div></template>
-</div>
+  <div class="footer-bottom">
+    <div>© 2025 AgentKontor · superhecht.ai · Köln</div>
+    <div>Made with ☕ in Deutschland</div>
+  </div>
+</footer>
 
 <script>
-function app() {
-  return {
-    user:null, token:null, page:'dashboard', lang:'de',
-    authTab:'login', authErr:'', loading:false,
-    lf:{email:'',password:''}, rf:{name:'',email:'',password:''},
-    agents:[], apiKeys:[], docs:[], toasts:[],
-    showModal:false, showNewKey:false, saving:false,
-    editing:null, aTab:'basics', docsTab:'api',
-    chipIn:'', uploading:false, dragging:false,
-    newKeyRev:null, nkf:{label:'',agentId:''},
-    af:{name:'',emoji:'🤖',description:'',system_prompt:'',greeting:'',tone:'professionell',language:'de',quick_chips:[],color:'#6c5ce7',is_active:true,widget_enabled:true,chatpage_enabled:true,api_enabled:false,whatsapp_enabled:false,whatsapp_number:'',telegram_enabled:false,telegram_token:'',rag_enabled:false,rag_prompt:''},
-    emojis:['🤖','💬','⭐','🎓','💡','🔥','🦾','🧠','✨','🚀','🏆','💼','🎯','🌟','⚡','🎪'],
-    colors:['#6c5ce7','#e94560','#00b894','#00aaff','#f39c12','#a29bfe','#fd79a8','#00cec9','#e17055','#74b9ff'],
-    tones:[
-      {key:'professionell',de:'Professionell',en:'Professional',d:'Sachlich & klar',e:'Factual & clear'},
-      {key:'freundlich',de:'Freundlich',en:'Friendly',d:'Warm & motivierend',e:'Warm & motivating'},
-      {key:'direkt',de:'Direkt',en:'Direct',d:'Präzise & effizient',e:'Precise & efficient'},
-      {key:'locker',de:'Locker',en:'Casual',d:'Entspannt & sympathisch',e:'Relaxed & likeable'},
-    ],
-
-    async init() {
-      const t=localStorage.getItem('ak_token'), u=localStorage.getItem('ak_user');
-      if(t&&u){this.token=t;this.user=JSON.parse(u);this.lang=this.user.lang||'de';this.loadAgents();}
-    },
-
-    async api(path,method='GET',body=null) {
-      const opts={method,headers:{'Content-Type':'application/json'}};
-      if(this.token) opts.headers['Authorization']='Bearer '+this.token;
-      if(body) opts.body=JSON.stringify(body);
-      const r=await fetch('/api'+path,opts);
-      return r.json();
-    },
-
-    async login() {
-      this.loading=true;this.authErr='';
-      const d=await this.api('/auth/login','POST',this.lf);
-      this.loading=false;
-      if(d.error){this.authErr=d.error;return;}
-      this.setUser(d.token,d.user);
-    },
-
-    async register() {
-      if(this.rf.password.length<8){this.authErr=this.lang==='de'?'Passwort mindestens 8 Zeichen':'Password at least 8 characters';return;}
-      this.loading=true;this.authErr='';
-      const d=await this.api('/auth/register','POST',{...this.rf,lang:this.lang});
-      this.loading=false;
-      if(d.error){this.authErr=d.error;return;}
-      this.setUser(d.token,d.user);
-    },
-
-    setUser(token,user){
-      this.token=token;this.user=user;
-      localStorage.setItem('ak_token',token);
-      localStorage.setItem('ak_user',JSON.stringify(user));
-      this.lang=user.lang||'de';
-      this.loadAgents();
-    },
-
-    logout(){
-      this.token=null;this.user=null;
-      localStorage.removeItem('ak_token');localStorage.removeItem('ak_user');
-    },
-
-    async loadAgents(){const d=await this.api('/agents');if(d.agents)this.agents=d.agents;},
-
-    openNew(){
-      this.editing=null;this.aTab='basics';
-      this.af={name:'',emoji:'🤖',description:'',system_prompt:'',greeting:'',tone:'professionell',language:this.lang,quick_chips:[],color:'#6c5ce7',is_active:true,widget_enabled:true,chatpage_enabled:true,api_enabled:false,whatsapp_enabled:false,whatsapp_number:'',telegram_enabled:false,telegram_token:'',rag_enabled:false,rag_prompt:''};
-      this.showModal=true;
-    },
-
-    async editAgent(a){
-      const d=await this.api('/agents/'+a.id);
-      if(!d.agent)return;
-      this.editing=d.agent;
-      this.af={name:d.agent.name,emoji:d.agent.emoji,description:d.agent.description,system_prompt:d.agent.system_prompt,greeting:d.agent.greeting,tone:d.agent.tone,language:d.agent.language,quick_chips:d.agent.quick_chips||[],color:d.agent.color,is_active:d.agent.is_active,widget_enabled:d.agent.widget_enabled,chatpage_enabled:d.agent.chatpage_enabled,api_enabled:d.agent.api_enabled,whatsapp_enabled:d.agent.whatsapp_enabled,whatsapp_number:d.agent.whatsapp_number||'',telegram_enabled:d.agent.telegram_enabled,telegram_token:d.agent.telegram_token||'',rag_enabled:d.agent.rag_enabled||false,rag_prompt:d.agent.rag_prompt||''};
-      this.docs=[];this.aTab='basics';this.showModal=true;
-    },
-
-    async saveAgent(){
-      if(!this.af.name){this.toast(this.lang==='de'?'Name erforderlich':'Name required','err');return;}
-      if(!this.af.system_prompt){this.toast(this.lang==='de'?'System-Prompt erforderlich':'System prompt required','err');return;}
-      this.saving=true;
-      const d=this.editing?await this.api('/agents/'+this.editing.id,'PUT',this.af):await this.api('/agents','POST',this.af);
-      this.saving=false;
-      if(d.error){this.toast(d.error,'err');return;}
-      this.toast(this.lang==='de'?'Gespeichert ✓':'Saved ✓');
-      if(!this.editing){this.editing=d.agent;this.aTab='embed';}
-      await this.loadAgents();
-    },
-
-    async delAgent(){
-      if(!confirm(this.lang==='de'?'Agent löschen?':'Delete agent?'))return;
-      await this.api('/agents/'+this.editing.id,'DELETE');
-      this.showModal=false;this.editing=null;
-      await this.loadAgents();this.toast(this.lang==='de'?'Gelöscht':'Deleted');
-    },
-
-    addChip(){const v=this.chipIn.trim();if(!v||this.af.quick_chips.length>=5)return;this.af.quick_chips.push(v);this.chipIn='';},
-
-    // RAG
-    async loadDocs(agentId){
-      const d=await this.api('/rag/'+agentId+'/documents');
-      if(d.documents)this.docs=d.documents;
-    },
-
-    async uploadFile(event){
-      const file=event.target.files[0];if(!file)return;
-      await this._upload(file);
-      event.target.value='';
-    },
-
-    async dropFile(event){
-      this.dragging=false;
-      const file=event.dataTransfer.files[0];if(!file)return;
-      await this._upload(file);
-    },
-
-    async _upload(file){
-      if(!this.editing)return;
-      this.uploading=true;
-      const fd=new FormData();fd.append('file',file);
-      try{
-        const r=await fetch('/api/rag/'+this.editing.id+'/upload',{method:'POST',headers:{Authorization:'Bearer '+this.token},body:fd});
-        const d=await r.json();
-        if(d.error){this.toast(d.error,'err');}
-        else{this.toast(this.lang==='de'?'Wird verarbeitet...':'Processing...');setTimeout(()=>this.loadDocs(this.editing.id),3000);}
-      }catch{this.toast(this.lang==='de'?'Upload fehlgeschlagen':'Upload failed','err');}
-      this.uploading=false;
-    },
-
-    async deleteDoc(docId){
-      if(!confirm(this.lang==='de'?'Dokument löschen?':'Delete document?'))return;
-      await this.api('/rag/'+this.editing.id+'/documents/'+docId,'DELETE');
-      this.loadDocs(this.editing.id);this.toast(this.lang==='de'?'Gelöscht':'Deleted');
-    },
-
-    // Keys
-    async loadKeys(){const d=await this.api('/keys');if(d.keys)this.apiKeys=d.keys;},
-    async createKey(){
-      const d=await this.api('/keys','POST',this.nkf);
-      if(d.error){this.toast(d.error,'err');return;}
-      this.newKeyRev=d.key;this.showNewKey=false;
-      await this.loadKeys();this.toast(this.lang==='de'?'Key erstellt!':'Key created!');
-    },
-    async delKey(id){
-      if(!confirm(this.lang==='de'?'Key löschen?':'Delete key?'))return;
-      await this.api('/keys/'+id,'DELETE');await this.loadKeys();
-    },
-
-    copy(t){navigator.clipboard.writeText(t).then(()=>this.toast(this.lang==='de'?'Kopiert!':'Copied!'));},
-
-    toast(msg,type='ok'){
-      const id=Date.now();this.toasts.push({id,msg,type});
-      setTimeout(()=>this.toasts=this.toasts.filter(t=>t.id!==id),3500);
+// Scroll reveal
+const obs = new IntersectionObserver(entries => {
+  entries.forEach((e,i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('visible'), i * 80);
+      obs.unobserve(e.target);
     }
-  }
+  });
+}, { threshold: 0.08 });
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+// Nav scroll
+window.addEventListener('scroll', () => {
+  document.getElementById('nav').style.borderBottomColor =
+    window.scrollY > 50 ? 'rgba(108,92,231,0.15)' : 'rgba(255,255,255,0.05)';
+});
+
+// Demo chat
+const demoReplies = {
+  'was kannst du?': 'Ich kann Fragen beantworten, Aufgaben erledigen, Informationen erklären und vieles mehr — ganz auf deinen Anwendungsfall zugeschnitten. Konfiguriere mich wie du möchtest!',
+  'wie richte ich dich ein?': 'Ganz einfach: 1. Account erstellen 2. Agent konfigurieren (Name, Persönlichkeit, Fokus) 3. Kanal wählen (Chat-Seite, Widget, WhatsApp...) 4. Live gehen ✓',
+  'welche sprachen?': 'Ich bin auf Deutsch und Englisch verfügbar — du kannst die Sprache pro Agent individuell einstellen. Weitere Sprachen sind möglich.',
+};
+const defaultReplies = [
+  'Das ist eine gute Frage! Als KI-Agent kann ich auf deinen speziellen Anwendungsfall zugeschnitten werden.',
+  'Interessant! In AgentKontor kannst du mich genau für solche Fragen trainieren.',
+  'Gerne helfe ich dabei. Konfiguriere mich über den Builder und ich bin auf deine Bedürfnisse optimiert.',
+];
+let demoReplyIdx = 0;
+
+async function demoSend(text) {
+  if (!text.trim()) return;
+  const chat = document.getElementById('demoChat');
+  document.getElementById('demoChips').innerHTML = '';
+
+  // User msg
+  const userDiv = document.createElement('div');
+  userDiv.className = 'demo-msg user';
+  userDiv.innerHTML = `<div class="demo-av">👤</div><div class="demo-bubble" style="background:var(--purple);color:#fff">${text}</div>`;
+  chat.appendChild(userDiv);
+
+  // Typing
+  const typDiv = document.createElement('div');
+  typDiv.className = 'demo-msg bot';
+  typDiv.id = 'demo-typing';
+  typDiv.innerHTML = `<div class="demo-av">🤖</div><div class="typing-dots"><span></span><span></span><span></span></div>`;
+  chat.appendChild(typDiv);
+  chat.scrollTop = chat.scrollHeight;
+
+  await new Promise(r => setTimeout(r, 1200));
+  typDiv.remove();
+
+  const reply = demoReplies[text.toLowerCase()] || defaultReplies[demoReplyIdx++ % defaultReplies.length];
+  const botDiv = document.createElement('div');
+  botDiv.className = 'demo-msg bot';
+  botDiv.innerHTML = `<div class="demo-av">🤖</div><div class="demo-bubble">${reply}</div>`;
+  chat.appendChild(botDiv);
+  chat.scrollTop = chat.scrollHeight;
 }
 </script>
 </body>

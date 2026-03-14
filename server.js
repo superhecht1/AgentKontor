@@ -38,7 +38,6 @@ app.use('/api/auth',   require('./routes/auth'));
 app.use('/api/agents', require('./routes/agents'));
 app.use('/api/chat',   require('./routes/chat'));
 app.use('/api/keys',   require('./routes/keys'));
-app.use('/api/rag',    require('./routes/rag'));
 app.use('/webhook',    require('./routes/webhooks'));
 
 // Public chat page
