@@ -3,925 +3,901 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AgentKontor – Baue deinen eigenen KI-Agenten</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<title>AgentKontor – Baue deinen KI-Agenten</title>
+<script src="//unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 <style>
-:root {
-  --bg:     #050510;
-  --bg2:    #09091a;
-  --bg3:    #0e0e22;
-  --card:   #0c0c1e;
-  --border: rgba(255,255,255,0.07);
-  --purple: #6c5ce7;
-  --pu-l:   #a29bfe;
-  --pu-d:   #3d2fa0;
-  --teal:   #00cec9;
-  --white:  #ffffff;
-  --muted:  #5a5a80;
-  --text:   #c8c8e8;
-  --red:    #e94560;
-  --gold:   #f0c040;
-}
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-body {
-  font-family: 'DM Sans', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  overflow-x: hidden;
-  line-height: 1.6;
-}
+:root{--bg:#07070f;--bg2:#0c0c1a;--bg3:#111122;--card:#12121f;--border:rgba(255,255,255,.08);--purple:#6c5ce7;--purple-l:#a29bfe;--purple-d:#4a3db0;--white:#fff;--muted:#6b6b8a;--text:#d0d0e8;--green:#00cec9;--red:#e94560;--gold:#f0c040}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+a{color:inherit;text-decoration:none}
+input,textarea,select{font-family:inherit}
 
-/* Noise overlay */
-body::after {
-  content: '';
-  position: fixed; inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-  pointer-events: none; z-index: 1000; opacity: .25;
-}
+/* AUTH */
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--bg)}
+.auth-box{width:100%;max-width:420px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:40px 36px}
+.auth-logo{font-size:1.5rem;font-weight:800;color:var(--white);margin-bottom:28px;text-align:center}
+.auth-logo span{color:var(--purple-l)}
+.auth-title{font-size:1.4rem;font-weight:700;color:var(--white);margin-bottom:4px}
+.auth-sub{font-size:.85rem;color:var(--muted);margin-bottom:28px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:.8rem;font-weight:600;color:var(--text);margin-bottom:5px}
+.inp{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--white);font-size:.9rem;transition:border-color .2s}
+.inp:focus{outline:none;border-color:var(--purple);background:rgba(108,92,231,.05)}
+.inp::placeholder{color:var(--muted)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 20px;border-radius:8px;font-size:.88rem;font-weight:600;border:none;cursor:pointer;transition:all .2s}
+.btn-primary{background:var(--purple);color:#fff}.btn-primary:hover{background:var(--purple-d)}
+.btn-full{width:100%}
+.btn-sm{padding:7px 14px;font-size:.8rem}
+.btn-ghost{background:transparent;color:var(--purple-l);border:1px solid rgba(108,92,231,.3)}.btn-ghost:hover{background:rgba(108,92,231,.1)}
+.btn-danger{background:var(--red);color:#fff}.btn-danger:hover{filter:brightness(1.15)}
+.btn-green{background:var(--green);color:#07070f}.btn-green:hover{filter:brightness(1.1)}
+.auth-switch{text-align:center;margin-top:20px;font-size:.83rem;color:var(--muted)}
+.auth-switch a{color:var(--purple-l);cursor:pointer}
+.err{background:rgba(233,69,96,.1);border:1px solid rgba(233,69,96,.25);color:var(--red);padding:10px 14px;border-radius:8px;font-size:.82rem;margin-bottom:16px}
 
-/* NAV */
-nav {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 18px 52px;
-  backdrop-filter: blur(20px);
-  background: rgba(5,5,16,0.85);
-  border-bottom: 1px solid rgba(255,255,255,.05);
-  transition: border-color .3s;
-}
-.nav-logo {
-  font-family: 'Syne', sans-serif;
-  font-size: 1.45rem; font-weight: 800;
-  color: var(--white); text-decoration: none;
-  letter-spacing: -.01em;
-}
-.nav-logo span { color: var(--pu-l); }
-.nav-links { display: flex; gap: 32px; align-items: center; }
-.nav-link {
-  font-size: .82rem; font-weight: 500;
-  letter-spacing: .04em; text-transform: uppercase;
-  color: var(--muted); text-decoration: none; transition: color .2s;
-}
-.nav-link:hover { color: var(--white); }
-.nav-cta {
-  background: var(--purple); color: var(--white);
-  padding: 9px 22px; border-radius: 8px;
-  font-size: .82rem; font-weight: 600;
-  text-decoration: none; transition: all .2s;
-}
-.nav-cta:hover { background: var(--pu-l); transform: translateY(-1px); }
+/* LAYOUT */
+.app{display:flex;min-height:100vh}
+.sidebar{width:240px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;padding:0}
+.sidebar-logo{padding:22px 20px 16px;font-size:1.2rem;font-weight:800;color:var(--white);border-bottom:1px solid var(--border)}
+.sidebar-logo span{color:var(--purple-l)}
+.sidebar-nav{flex:1;padding:12px 10px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;font-size:.87rem;font-weight:500;color:var(--muted);cursor:pointer;transition:all .2s;margin-bottom:2px}
+.nav-item:hover,.nav-item.active{background:rgba(108,92,231,.12);color:var(--white)}
+.nav-item.active{color:var(--purple-l)}
+.nav-icon{font-size:1rem;width:20px;text-align:center}
+.sidebar-footer{padding:14px 16px;border-top:1px solid var(--border);font-size:.78rem;color:var(--muted)}
+.sidebar-user{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.user-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--purple-l));display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:#fff;flex-shrink:0}
+.user-name{font-size:.82rem;color:var(--text);font-weight:500}
+.logout-btn{font-size:.75rem;color:var(--muted);cursor:pointer;transition:color .2s}
+.logout-btn:hover{color:var(--red)}
 
-/* HERO */
-.hero {
-  min-height: 100vh;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  padding: 120px 52px 80px;
-  position: relative; overflow: hidden; text-align: center;
-}
+.main{flex:1;overflow-y:auto;background:var(--bg)}
+.page{padding:32px 36px;max-width:1100px}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:16px}
+.page-title{font-size:1.5rem;font-weight:700;color:var(--white)}
+.page-sub{font-size:.85rem;color:var(--muted);margin-top:2px}
 
-.hero-mesh {
-  position: absolute; inset: 0;
-  background:
-    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(108,92,231,.18) 0%, transparent 70%),
-    radial-gradient(ellipse 40% 40% at 20% 80%, rgba(0,206,201,.07) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 40% at 80% 70%, rgba(233,69,96,.06) 0%, transparent 60%);
-  pointer-events: none;
-}
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px}
+.card-sm{padding:18px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 
-.hero-grid {
-  position: absolute; inset: 0;
-  background-image:
-    linear-gradient(rgba(108,92,231,.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(108,92,231,.04) 1px, transparent 1px);
-  background-size: 52px 52px;
-  animation: gridFlow 30s linear infinite;
-  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent);
-}
-@keyframes gridFlow { to { transform: translateY(52px); } }
+/* AGENT CARD */
+.agent-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.agent-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .2s,transform .2s;cursor:pointer}
+.agent-card:hover{border-color:rgba(108,92,231,.35);transform:translateY(-2px)}
+.agent-stripe{height:4px}
+.agent-body{padding:20px}
+.agent-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.agent-av{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0}
+.agent-name{font-size:1rem;font-weight:700;color:var(--white)}
+.agent-desc{font-size:.78rem;color:var(--muted);margin-top:2px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.agent-badges{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.badge{font-size:.65rem;padding:2px 8px;border-radius:20px;font-weight:600;letter-spacing:.04em}
+.badge-active{background:rgba(0,206,201,.12);color:var(--green);border:1px solid rgba(0,206,201,.2)}
+.badge-inactive{background:rgba(233,69,96,.1);color:var(--red);border:1px solid rgba(233,69,96,.2)}
+.badge-widget{background:rgba(108,92,231,.1);color:var(--purple-l);border:1px solid rgba(108,92,231,.2)}
+.badge-api{background:rgba(240,192,64,.1);color:var(--gold);border:1px solid rgba(240,192,64,.2)}
+.badge-wa{background:rgba(37,211,102,.1);color:#25d366;border:1px solid rgba(37,211,102,.2)}
+.badge-tg{background:rgba(0,136,204,.1);color:#0088cc;border:1px solid rgba(0,136,204,.2)}
+.agent-stats{font-size:.75rem;color:var(--muted);border-top:1px solid var(--border);padding-top:10px;margin-top:10px;display:flex;gap:16px}
+.agent-stat strong{color:var(--text)}
 
-.hero-badge {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: rgba(108,92,231,.1);
-  border: 1px solid rgba(108,92,231,.3);
-  padding: 5px 16px; border-radius: 100px;
-  font-size: .72rem; font-weight: 600;
-  letter-spacing: .14em; text-transform: uppercase;
-  color: var(--pu-l); margin-bottom: 28px;
-  animation: fadeUp .6s ease both;
-}
-.badge-dot { width: 6px; height: 6px; background: var(--teal); border-radius: 50%; animation: pulse 2s infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+/* EMPTY STATE */
+.empty{text-align:center;padding:64px 24px;color:var(--muted)}
+.empty-icon{font-size:3rem;margin-bottom:16px}
+.empty h3{font-size:1.1rem;font-weight:600;color:var(--white);margin-bottom:6px}
+.empty p{font-size:.85rem;margin-bottom:24px}
 
-h1 {
-  font-family: 'Syne', sans-serif;
-  font-size: clamp(3.2rem, 8vw, 7.5rem);
-  font-weight: 800;
-  line-height: 1.0;
-  color: var(--white);
-  margin-bottom: 6px;
-  letter-spacing: -.03em;
-  animation: fadeUp .6s .1s ease both;
-}
-h1 .accent { color: var(--pu-l); }
-h1 .line2 {
-  display: block;
-  font-size: clamp(1.6rem, 3.5vw, 2.8rem);
-  font-weight: 400; font-family: 'DM Sans', sans-serif;
-  color: var(--muted); letter-spacing: .01em;
-  margin-top: 10px;
-}
+/* FORM */
+.form-section{margin-bottom:24px}
+.form-section-title{font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--purple-l);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.form-section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.inp-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+textarea.inp{resize:vertical;min-height:90px;line-height:1.5}
+select.inp option{background:var(--bg3)}
+.hint{font-size:.74rem;color:var(--muted);margin-top:4px}
+.char-count{font-size:.7rem;color:var(--muted);text-align:right;margin-top:2px}
 
-.hero-desc {
-  font-size: 1.05rem; color: var(--muted);
-  max-width: 520px; margin: 28px auto 48px;
-  line-height: 1.75;
-  animation: fadeUp .6s .2s ease both;
-}
+/* EMOJI PICKER */
+.emoji-grid{display:flex;flex-wrap:wrap;gap:7px;margin-top:6px}
+.emo{width:38px;height:38px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.04);cursor:pointer;font-size:1.2rem;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.emo:hover,.emo.active{border-color:var(--purple);background:rgba(108,92,231,.15)}
 
-.hero-actions {
-  display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
-  animation: fadeUp .6s .3s ease both;
-}
-.btn-primary {
-  background: var(--purple); color: var(--white);
-  padding: 15px 36px; border-radius: 10px;
-  font-size: .9rem; font-weight: 600;
-  text-decoration: none; transition: all .25s;
-  border: 2px solid var(--purple);
-}
-.btn-primary:hover {
-  background: var(--pu-l); border-color: var(--pu-l);
-  transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(108,92,231,.35);
-}
-.btn-outline {
-  background: transparent; color: var(--pu-l);
-  padding: 15px 36px; border-radius: 10px;
-  font-size: .9rem; font-weight: 500;
-  text-decoration: none; transition: all .25s;
-  border: 1px solid rgba(108,92,231,.3);
-}
-.btn-outline:hover { border-color: var(--pu-l); background: rgba(108,92,231,.08); transform: translateY(-2px); }
+/* TONE */
+.tone-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:6px}
+.tone-opt{padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.03);cursor:pointer;transition:all .15s}
+.tone-opt:hover,.tone-opt.active{border-color:var(--purple);background:rgba(108,92,231,.1)}
+.tone-opt h4{font-size:.84rem;font-weight:600;color:var(--white);margin-bottom:1px}
+.tone-opt p{font-size:.72rem;color:var(--muted)}
 
-/* HERO DEMO WIDGET */
-.hero-demo {
-  margin-top: 72px;
-  position: relative;
-  animation: fadeUp .7s .4s ease both;
-}
-.hero-demo::before {
-  content: '';
-  position: absolute; inset: -1px;
-  border-radius: 20px;
-  background: linear-gradient(135deg, rgba(108,92,231,.4), rgba(0,206,201,.2), rgba(108,92,231,.1));
-  z-index: -1; filter: blur(1px);
-}
-.demo-window {
-  background: var(--bg3);
-  border: 1px solid rgba(108,92,231,.25);
-  border-radius: 18px;
-  width: min(600px, 90vw);
-  overflow: hidden;
-  box-shadow: 0 40px 100px rgba(0,0,0,.6), 0 0 60px rgba(108,92,231,.15);
-}
-.demo-bar {
-  background: rgba(255,255,255,.03);
-  padding: 12px 18px;
-  display: flex; align-items: center; gap: 8px;
-  border-bottom: 1px solid var(--border);
-}
-.demo-dots { display: flex; gap: 6px; }
-.demo-dot { width: 10px; height: 10px; border-radius: 50%; }
-.demo-title {
-  flex: 1; text-align: center;
-  font-size: .75rem; color: var(--muted);
-}
-.demo-chat { padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-.demo-msg { display: flex; gap: 10px; }
-.demo-msg.user { flex-direction: row-reverse; align-self: flex-end; }
-.demo-av {
-  width: 30px; height: 30px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: .85rem; flex-shrink: 0;
-}
-.demo-msg.bot .demo-av { background: linear-gradient(135deg,var(--purple),var(--pu-l)); }
-.demo-msg.user .demo-av { background: rgba(255,255,255,.08); }
-.demo-bubble {
-  padding: 10px 14px; border-radius: 14px;
-  font-size: .84rem; line-height: 1.5; max-width: 78%;
-}
-.demo-msg.bot .demo-bubble { background: rgba(108,92,231,.15); border: 1px solid rgba(108,92,231,.2); color: var(--text); border-bottom-left-radius: 3px; }
-.demo-msg.user .demo-bubble { background: var(--purple); color: var(--white); border-bottom-right-radius: 3px; }
-.demo-chips { display: flex; gap: 7px; flex-wrap: wrap; padding: 0 20px 12px; }
-.demo-chip {
-  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
-  border-radius: 20px; padding: 5px 13px;
-  font-size: .75rem; color: var(--text); cursor: pointer;
-  transition: all .2s;
-}
-.demo-chip:hover { border-color: var(--pu-l); color: var(--pu-l); }
-.demo-input-row {
-  padding: 12px 16px; border-top: 1px solid var(--border);
-  display: flex; gap: 8px;
-}
-.demo-inp {
-  flex: 1; background: rgba(255,255,255,.05);
-  border: 1px solid var(--border); border-radius: 8px;
-  padding: 8px 12px; color: var(--text); font-size: .82rem;
-  font-family: inherit;
-}
-.demo-send {
-  width: 36px; height: 36px; background: var(--purple);
-  border: none; border-radius: 8px; cursor: pointer;
-  color: var(--white); font-size: .9rem;
-  display: flex; align-items: center; justify-content: center;
-}
+/* CHIPS */
+.chip-row{display:flex;gap:8px;margin-bottom:8px}
+.chip-row .inp{flex:1}
+.chips-wrap{display:flex;flex-wrap:wrap;gap:6px}
+.chip-tag{display:flex;align-items:center;gap:6px;background:rgba(108,92,231,.12);border:1px solid rgba(108,92,231,.25);border-radius:20px;padding:4px 12px;font-size:.77rem;color:var(--purple-l)}
+.chip-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;line-height:1;transition:color .2s}
+.chip-del:hover{color:var(--red)}
 
-/* Typing animation */
-.typing-dots { display: flex; gap: 4px; padding: 10px 14px; background: rgba(108,92,231,.15); border: 1px solid rgba(108,92,231,.2); border-radius: 14px; border-bottom-left-radius: 3px; }
-.typing-dots span { width: 6px; height: 6px; background: var(--pu-l); border-radius: 50%; animation: typeBounce .8s infinite; }
-.typing-dots span:nth-child(2) { animation-delay: .15s; }
-.typing-dots span:nth-child(3) { animation-delay: .3s; }
-@keyframes typeBounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-7px)} }
+/* COLOR PICKER */
+.color-grid{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.color-opt{width:32px;height:32px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .15s,border-color .15s}
+.color-opt:hover{transform:scale(1.15)}
+.color-opt.active{border-color:var(--white);transform:scale(1.1)}
 
-/* SECTIONS */
-section { padding: 100px 52px; position: relative; }
-.container { max-width: 1140px; margin: 0 auto; }
-.sec-label {
-  font-size: .7rem; letter-spacing: .22em; text-transform: uppercase;
-  color: var(--pu-l); display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
-}
-.sec-label::before { content: ''; width: 24px; height: 1px; background: var(--pu-l); }
-.sec-title {
-  font-family: 'Syne', sans-serif;
-  font-size: clamp(2rem, 4.5vw, 3.5rem);
-  font-weight: 800; letter-spacing: -.02em;
-  color: var(--white); line-height: 1.1; margin-bottom: 14px;
-}
-.sec-sub { font-size: 1rem; color: var(--muted); max-width: 520px; line-height: 1.75; }
-
-/* FEATURES */
-.features { background: var(--bg2); }
-.feat-grid {
-  display: grid; grid-template-columns: repeat(3,1fr);
-  gap: 2px; margin-top: 56px;
-}
-.feat-card {
-  background: var(--card); padding: 36px 30px;
-  border: 1px solid var(--border);
-  position: relative; overflow: hidden;
-  transition: border-color .25s, transform .25s;
-}
-.feat-card:hover { border-color: rgba(108,92,231,.35); transform: translateY(-4px); }
-.feat-card::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, var(--purple), var(--teal));
-  opacity: 0; transition: opacity .25s;
-}
-.feat-card:hover::before { opacity: 1; }
-.feat-icon {
-  width: 48px; height: 48px; border-radius: 12px;
-  background: rgba(108,92,231,.12); border: 1px solid rgba(108,92,231,.2);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.3rem; margin-bottom: 18px;
-}
-.feat-card h3 { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--white); margin-bottom: 8px; }
-.feat-card p { font-size: .86rem; color: var(--muted); line-height: 1.65; }
-
-/* HOW IT WORKS */
-.how { background: var(--bg); }
-.steps {
-  display: grid; grid-template-columns: repeat(3,1fr);
-  gap: 0; margin-top: 60px; position: relative;
-}
-.steps::after {
-  content: '';
-  position: absolute; top: 28px; left: 16.6%; right: 16.6%; height: 1px;
-  background: linear-gradient(to right, transparent, rgba(108,92,231,.4), rgba(108,92,231,.4), transparent);
-}
-.step { text-align: center; padding: 0 28px; }
-.step-n {
-  width: 56px; height: 56px; border-radius: 50%;
-  background: var(--bg3); border: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: center;
-  margin: 0 auto 20px;
-  font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800;
-  color: var(--pu-l); position: relative; z-index: 1;
-  transition: all .25s;
-}
-.step:hover .step-n { background: rgba(108,92,231,.15); border-color: var(--purple); box-shadow: 0 0 20px rgba(108,92,231,.25); }
-.step h3 { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--white); margin-bottom: 8px; }
-.step p { font-size: .84rem; color: var(--muted); line-height: 1.6; }
+/* PREVIEW */
+.preview-window{background:#0f0f1e;border:1px solid rgba(255,255,255,.1);border-radius:14px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.4)}
+.pw-header{padding:12px 16px;display:flex;align-items:center;gap:10px}
+.pw-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px}
+.pw-name{font-size:.88rem;font-weight:700;color:#fff}
+.pw-status{font-size:.7rem;color:var(--green);display:flex;align-items:center;gap:4px}
+.pw-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+.pw-body{padding:12px 14px;display:flex;flex-direction:column;gap:8px;min-height:120px}
+.pw-bubble{padding:8px 12px;border-radius:12px;font-size:.82rem;line-height:1.5;max-width:88%}
+.pw-bubble.assistant{background:#1e1e38;color:#e0e0f0;border-bottom-left-radius:3px;align-self:flex-start}
+.pw-bubble.user{color:#fff;border-bottom-right-radius:3px;align-self:flex-end}
+.pw-input-row{padding:10px 14px;border-top:1px solid rgba(255,255,255,.06);display:flex;gap:8px}
+.pw-inp{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:7px 12px;color:#e0e0f0;font-size:.8rem}
+.pw-send{width:32px;height:32px;border-radius:8px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85rem}
 
 /* INTEGRATIONS */
-.integrations { background: var(--bg2); }
-.integ-grid {
-  display: grid; grid-template-columns: repeat(2,1fr);
-  gap: 16px; margin-top: 56px;
-}
-.integ-card {
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: 14px; padding: 28px;
-  display: flex; align-items: flex-start; gap: 18px;
-  transition: border-color .25s, transform .2s;
-}
-.integ-card:hover { border-color: rgba(108,92,231,.3); transform: translateY(-3px); }
-.integ-icon {
-  width: 52px; height: 52px; border-radius: 14px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.4rem; flex-shrink: 0;
-}
-.integ-card h3 { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--white); margin-bottom: 5px; }
-.integ-card p { font-size: .83rem; color: var(--muted); line-height: 1.6; }
-.integ-badge {
-  display: inline-block; margin-top: 10px;
-  font-size: .68rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
-  padding: 3px 10px; border-radius: 100px;
-}
+.integ-item{display:flex;align-items:flex-start;gap:16px;padding:18px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.02);margin-bottom:10px}
+.integ-icon{font-size:1.6rem;flex-shrink:0;width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center}
+.integ-info{flex:1}
+.integ-name{font-size:.92rem;font-weight:600;color:var(--white);margin-bottom:2px}
+.integ-desc{font-size:.78rem;color:var(--muted);margin-bottom:10px}
+.toggle{position:relative;display:inline-block;width:42px;height:22px}
+.toggle input{opacity:0;width:0;height:0}
+.slider{position:absolute;inset:0;background:rgba(255,255,255,.1);border-radius:22px;transition:.3s;cursor:pointer}
+.slider:before{position:absolute;content:"";width:16px;height:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+input:checked+.slider{background:var(--purple)}
+input:checked+.slider:before{transform:translateX(20px)}
 
-/* BUILDER PREVIEW */
-.builder { background: var(--bg); }
-.builder-inner {
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 56px; align-items: center;
-}
-.builder-steps { list-style: none; display: flex; flex-direction: column; gap: 20px; }
-.builder-step {
-  display: flex; gap: 16px; align-items: flex-start;
-  padding: 18px 20px;
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: 12px; transition: border-color .2s;
-}
-.builder-step:hover { border-color: rgba(108,92,231,.3); }
-.bs-num {
-  width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
-  background: rgba(108,92,231,.15); border: 1px solid rgba(108,92,231,.25);
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Syne', sans-serif; font-size: .9rem; font-weight: 800; color: var(--pu-l);
-}
-.bs-title { font-size: .9rem; font-weight: 600; color: var(--white); margin-bottom: 3px; }
-.bs-desc { font-size: .8rem; color: var(--muted); line-height: 1.5; }
+/* CODE BLOCK */
+.code-block{background:#0a0a18;border:1px solid var(--border);border-radius:8px;padding:14px;font-family:'Courier New',monospace;font-size:.78rem;color:#a29bfe;overflow-x:auto;position:relative;white-space:pre-wrap;word-break:break-all}
+.copy-btn{position:absolute;top:8px;right:8px;background:rgba(108,92,231,.2);border:1px solid rgba(108,92,231,.3);border-radius:6px;padding:4px 10px;font-size:.72rem;color:var(--purple-l);cursor:pointer;transition:background .2s}
+.copy-btn:hover{background:rgba(108,92,231,.4)}
 
-/* PRICING */
-.pricing { background: var(--bg2); }
-.pricing-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 56px; }
-.price-card {
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: 16px; padding: 36px 28px;
-  position: relative; transition: border-color .25s, transform .25s;
-}
-.price-card:hover { transform: translateY(-5px); }
-.price-card.featured {
-  border-color: rgba(108,92,231,.4);
-  background: linear-gradient(135deg, rgba(108,92,231,.08), var(--card));
-}
-.price-card.featured::before {
-  content: '★ Beliebt';
-  position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-  background: var(--purple); color: var(--white);
-  font-size: .72rem; font-weight: 700; letter-spacing: .08em;
-  padding: 3px 14px; border-radius: 100px;
-}
-.price-plan { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--pu-l); margin-bottom: 6px; }
-.price-amount {
-  font-family: 'Syne', sans-serif;
-  font-size: 3rem; font-weight: 800; color: var(--white);
-  line-height: 1; margin-bottom: 4px;
-}
-.price-amount sup { font-size: 1.2rem; margin-right: 2px; }
-.price-period { font-size: .78rem; color: var(--muted); margin-bottom: 20px; }
-.price-features { list-style: none; margin-bottom: 28px; display: flex; flex-direction: column; gap: 9px; }
-.price-features li { display: flex; align-items: center; gap: 9px; font-size: .84rem; color: var(--text); }
-.price-features li::before { content: '✓'; color: var(--teal); font-weight: 700; font-size: .8rem; flex-shrink: 0; }
-.price-features li.off { color: var(--muted); }
-.price-features li.off::before { content: '—'; color: var(--muted); }
-.price-btn {
-  display: block; width: 100%; padding: 12px;
-  border-radius: 8px; font-size: .88rem; font-weight: 600;
-  text-align: center; text-decoration: none; border: none; cursor: pointer;
-  transition: all .2s;
-}
-.price-btn-outline { background: transparent; border: 1px solid rgba(108,92,231,.3); color: var(--pu-l); }
-.price-btn-outline:hover { background: rgba(108,92,231,.1); }
-.price-btn-fill { background: var(--purple); color: var(--white); }
-.price-btn-fill:hover { background: var(--pu-l); box-shadow: 0 8px 24px rgba(108,92,231,.35); }
+/* STATS */
+.stat-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;text-align:center}
+.stat-num{font-size:2rem;font-weight:700;color:var(--purple-l);line-height:1;margin-bottom:4px}
+.stat-label{font-size:.75rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
 
-/* CTA */
-.cta-section { background: var(--bg); padding: 100px 52px; }
-.cta-box {
-  max-width: 760px; margin: 0 auto; text-align: center;
-  background: var(--card); border: 1px solid rgba(108,92,231,.25);
-  border-radius: 24px; padding: 80px 60px; position: relative; overflow: hidden;
-}
-.cta-box::before {
-  content: '';
-  position: absolute; inset: 0;
-  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(108,92,231,.12), transparent 70%);
-  pointer-events: none;
-}
-.cta-box h2 {
-  font-family: 'Syne', sans-serif;
-  font-size: clamp(2rem,4vw,3.2rem); font-weight: 800;
-  color: var(--white); letter-spacing: -.02em; margin-bottom: 12px;
-}
-.cta-box h2 span { color: var(--pu-l); }
-.cta-box p { font-size: 1rem; color: var(--muted); margin-bottom: 36px; }
-.cta-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+/* TOAST */
+.toast-area{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast-item{background:#1e1e38;border:1px solid rgba(108,92,231,.3);border-radius:10px;padding:12px 18px;font-size:.84rem;color:var(--white);box-shadow:0 8px 24px rgba(0,0,0,.3);animation:slideIn .3s ease;display:flex;align-items:center;gap:10px}
+.toast-item.success{border-color:rgba(0,206,201,.3)}
+.toast-item.error{border-color:rgba(233,69,96,.3);color:var(--red)}
+@keyframes slideIn{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
 
-/* FOOTER */
-footer {
-  background: var(--bg2); border-top: 1px solid var(--border);
-  padding: 48px 52px 32px;
-}
-.footer-top {
-  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
-  gap: 48px; margin-bottom: 48px;
-}
-.footer-brand h3 {
-  font-family: 'Syne', sans-serif;
-  font-size: 1.2rem; font-weight: 800; color: var(--white); margin-bottom: 10px;
-}
-.footer-brand h3 span { color: var(--pu-l); }
-.footer-brand p { font-size: .82rem; color: var(--muted); line-height: 1.7; max-width: 260px; }
-.footer-col h4 { font-size: .75rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--white); margin-bottom: 14px; }
-.footer-col a { display: block; font-size: .83rem; color: var(--muted); text-decoration: none; margin-bottom: 8px; transition: color .2s; }
-.footer-col a:hover { color: var(--pu-l); }
-.footer-bottom {
-  display: flex; align-items: center; justify-content: space-between;
-  border-top: 1px solid var(--border); padding-top: 24px;
-  font-size: .75rem; color: var(--muted); flex-wrap: wrap; gap: 12px;
-}
+/* API KEYS */
+.key-row{display:flex;align-items:center;gap:12px;padding:14px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;margin-bottom:8px}
+.key-code{font-family:monospace;font-size:.82rem;color:var(--purple-l);flex:1;background:#0a0a18;padding:5px 10px;border-radius:6px}
+.key-label{font-size:.82rem;color:var(--text)}
+.key-date{font-size:.72rem;color:var(--muted);white-space:nowrap}
 
-/* SCROLL REVEAL */
-.reveal { opacity: 0; transform: translateY(28px); transition: opacity .7s ease, transform .7s ease; }
-.reveal.visible { opacity: 1; transform: translateY(0); }
+/* TABS */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:24px}
+.tab{padding:10px 18px;font-size:.85rem;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;margin-bottom:-1px}
+.tab:hover{color:var(--white)}
+.tab.active{color:var(--purple-l);border-bottom-color:var(--purple-l)}
 
-/* ANIMATIONS */
-@keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.modal{background:var(--bg3);border:1px solid var(--border);border-radius:16px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;padding:32px}
+.modal-title{font-size:1.2rem;font-weight:700;color:var(--white);margin-bottom:20px}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
 
-/* TYPING EFFECT for demo */
-.typed::after { content: '|'; animation: blink .8s step-end infinite; }
-@keyframes blink { 50%{opacity:0} }
-
-/* RESPONSIVE */
-@media(max-width:960px) {
-  .feat-grid { grid-template-columns: 1fr 1fr; }
-  .builder-inner { grid-template-columns: 1fr; }
-  .pricing-grid { grid-template-columns: 1fr; max-width: 400px; margin-left: auto; margin-right: auto; }
-  .footer-top { grid-template-columns: 1fr 1fr; }
-  .integ-grid { grid-template-columns: 1fr; }
-}
-@media(max-width:700px) {
-  nav { padding: 14px 20px; }
-  .nav-links .nav-link { display: none; }
-  section { padding: 72px 20px; }
-  .hero { padding: 100px 20px 72px; }
-  .feat-grid { grid-template-columns: 1fr; }
-  .steps { grid-template-columns: 1fr; gap: 24px; }
-  .steps::after { display: none; }
-  .cta-box { padding: 48px 24px; }
-  .footer-top { grid-template-columns: 1fr; gap: 28px; }
-  footer { padding: 40px 20px 24px; }
+@media(max-width:768px){
+  .sidebar{display:none}
+  .page{padding:20px 16px}
+  .inp-row{grid-template-columns:1fr}
+  .grid-2,.grid-3{grid-template-columns:1fr}
 }
 </style>
 </head>
-<body>
+<body x-data="app()" x-init="init()">
 
-<!-- NAV -->
-<nav id="nav">
-  <a class="nav-logo" href="#">Agent<span>Kontor</span></a>
-  <div class="nav-links">
-    <a class="nav-link" href="#features">Features</a>
-    <a class="nav-link" href="#integrations">Integrationen</a>
-    <a class="nav-link" href="#how">Wie es geht</a>
-    <a class="nav-link" href="#pricing">Preise</a>
-    <a class="nav-cta" href="/app">Kostenlos starten</a>
-  </div>
-</nav>
+<!-- AUTH -->
+<div class="auth-wrap" x-show="!user" x-cloak>
+  <div class="auth-box">
+    <div class="auth-logo">Agent<span>Kontor</span></div>
 
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-mesh"></div>
-  <div class="hero-grid"></div>
-
-  <div class="hero-badge"><span class="badge-dot"></span>Kostenlos starten · Kein Abo</div>
-
-  <h1>
-    Baue deinen eigenen<br>
-    <span class="accent">KI-Agenten.</span>
-    <span class="line2">In Minuten. Ohne Code.</span>
-  </h1>
-
-  <p class="hero-desc">
-    AgentKontor gibt dir alles um einen eigenen KI-Agenten zu erstellen — mit Chat-Seite, Website-Widget, WhatsApp, Telegram und API. Für jeden Anwendungsfall.
-  </p>
-
-  <div class="hero-actions">
-    <a href="/app" class="btn-primary">Jetzt kostenlos starten →</a>
-    <a href="#features" class="btn-outline">Mehr erfahren</a>
-  </div>
-
-  <!-- LIVE DEMO -->
-  <div class="hero-demo">
-    <div class="demo-window">
-      <div class="demo-bar">
-        <div class="demo-dots">
-          <div class="demo-dot" style="background:#ff5f56"></div>
-          <div class="demo-dot" style="background:#ffbd2e"></div>
-          <div class="demo-dot" style="background:#27c93f"></div>
-        </div>
-        <div class="demo-title">agentkontor.de/chat/dein-agent</div>
-      </div>
-      <div class="demo-chat" id="demoChat">
-        <div class="demo-msg bot">
-          <div class="demo-av">🤖</div>
-          <div class="demo-bubble">Hallo! Ich bin Mia, dein KI-Assistent. Wie kann ich dir heute helfen?</div>
+    <!-- LOGIN -->
+    <template x-if="authMode === 'login'">
+      <div>
+        <h2 class="auth-title" x-text="lang==='de'?'Willkommen zurück':'Welcome back'"></h2>
+        <p class="auth-sub" x-text="lang==='de'?'Melde dich an um deine Agenten zu verwalten':'Sign in to manage your agents'"></p>
+        <div class="err" x-show="authError" x-text="authError"></div>
+        <div class="field"><label x-text="lang==='de'?'E-Mail':'Email'"></label><input class="inp" type="email" x-model="loginForm.email" placeholder="name@beispiel.de"></div>
+        <div class="field"><label x-text="lang==='de'?'Passwort':'Password'"></label><input class="inp" type="password" x-model="loginForm.password" @keydown.enter="login()" placeholder="••••••••"></div>
+        <button class="btn btn-primary btn-full" @click="login()" :disabled="loading">
+          <span x-text="loading?(lang==='de'?'Anmelden...':'Signing in...'):(lang==='de'?'Anmelden':'Sign in')"></span>
+        </button>
+        <div class="auth-switch" x-text="lang==='de'?'Noch kein Konto?':'No account yet?'"> <a @click="authMode='register'" x-text="lang==='de'?' Registrieren':' Register'"></a></div>
+        <div style="text-align:center;margin-top:12px">
+          <button @click="lang=lang==='de'?'en':'de'" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.78rem" x-text="lang==='de'?'🇬🇧 English':'🇩🇪 Deutsch'"></button>
         </div>
       </div>
-      <div class="demo-chips" id="demoChips">
-        <span class="demo-chip" onclick="demoSend('Was kannst du?')">Was kannst du?</span>
-        <span class="demo-chip" onclick="demoSend('Wie richte ich dich ein?')">Wie richte ich dich ein?</span>
-        <span class="demo-chip" onclick="demoSend('Welche Sprachen?')">Welche Sprachen?</span>
+    </template>
+
+    <!-- REGISTER -->
+    <template x-if="authMode === 'register'">
+      <div>
+        <h2 class="auth-title" x-text="lang==='de'?'Konto erstellen':'Create account'"></h2>
+        <p class="auth-sub" x-text="lang==='de'?'Kostenlos starten — keine Kreditkarte nötig':'Start free — no credit card needed'"></p>
+        <div class="err" x-show="authError" x-text="authError"></div>
+        <div class="field"><label x-text="lang==='de'?'Name':'Name'"></label><input class="inp" type="text" x-model="regForm.name" placeholder="Max Mustermann"></div>
+        <div class="field"><label>E-Mail</label><input class="inp" type="email" x-model="regForm.email" placeholder="name@beispiel.de"></div>
+        <div class="field"><label x-text="lang==='de'?'Passwort':'Password'"></label><input class="inp" type="password" x-model="regForm.password" placeholder="Min. 8 Zeichen"></div>
+        <button class="btn btn-primary btn-full" @click="register()" :disabled="loading">
+          <span x-text="loading?(lang==='de'?'Wird erstellt...':'Creating...'):(lang==='de'?'Kostenlos starten':'Start for free')"></span>
+        </button>
+        <div class="auth-switch"><span x-text="lang==='de'?'Bereits ein Konto?':'Already have an account?'"></span> <a @click="authMode='login'" x-text="lang==='de'?' Anmelden':' Sign in'"></a></div>
       </div>
-      <div class="demo-input-row">
-        <input class="demo-inp" id="demoInp" placeholder="Nachricht eingeben..." onkeydown="if(event.key==='Enter'){demoSend(this.value);this.value=''}">
-        <button class="demo-send" onclick="demoSend(document.getElementById('demoInp').value);document.getElementById('demoInp').value=''">➤</button>
+    </template>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" x-show="user" x-cloak>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo">Agent<span>Kontor</span></div>
+    <nav class="sidebar-nav">
+      <div class="nav-item" :class="{active:page==='dashboard'}" @click="page='dashboard'"><span class="nav-icon">🏠</span><span x-text="lang==='de'?'Dashboard':'Dashboard'"></span></div>
+      <div class="nav-item" :class="{active:page==='agents'}" @click="page='agents';loadAgents()"><span class="nav-icon">🤖</span><span x-text="lang==='de'?'Meine Agenten':'My Agents'"></span></div>
+      <div class="nav-item" :class="{active:page==='keys'}" @click="page='keys';loadKeys()"><span class="nav-icon">🔑</span><span x-text="lang==='de'?'API Keys':'API Keys'"></span></div>
+      <div class="nav-item" :class="{active:page==='docs'}" @click="page='docs'"><span class="nav-icon">📖</span><span x-text="lang==='de'?'Dokumentation':'Documentation'"></span></div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-av" x-text="user?.name?.[0]?.toUpperCase()??'U'"></div>
+        <div>
+          <div class="user-name" x-text="user?.name"></div>
+          <div style="font-size:.7rem" x-text="'Plan: '+(user?.plan||'Free')"></div>
+        </div>
       </div>
+      <span class="logout-btn" @click="logout()" x-text="lang==='de'?'Abmelden':'Logout'"></span>
     </div>
   </div>
-</section>
 
-<!-- FEATURES -->
-<section class="features" id="features">
-  <div class="container">
-    <div class="sec-label reveal">Features</div>
-    <h2 class="sec-title reveal">Alles was du brauchst.</h2>
-    <p class="sec-sub reveal">Von der Konfiguration bis zur Auslieferung — AgentKontor deckt den kompletten Workflow ab.</p>
+  <!-- MAIN -->
+  <div class="main">
 
-    <div class="feat-grid reveal">
-      <div class="feat-card">
-        <div class="feat-icon">🎨</div>
-        <h3>Agent Builder</h3>
-        <p>Name, Emoji, Farbe, System-Prompt, Ton, Sprache, Schnellantworten — alles in einem visuellen Editor konfigurierbar.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon">🌐</div>
-        <h3>Öffentliche Chat-Seite</h3>
-        <p>Jeder Agent bekommt automatisch eine eigene URL. Einfach teilen — kein Login für Nutzer nötig.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon">🔧</div>
-        <h3>Website Widget</h3>
-        <p>Ein Script-Tag reicht. Chat-Widget läuft auf jeder Website, in jeder Farbe, vollständig anpassbar.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon">📱</div>
-        <h3>WhatsApp & Telegram</h3>
-        <p>Verbinde deinen Agenten mit WhatsApp Business oder als Telegram-Bot. Einfach Token eingeben, fertig.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon">⚡</div>
-        <h3>REST API</h3>
-        <p>API Key generieren, in eigene Apps einbinden. Vollständige Dokumentation, multi-turn Gespräche, JSON.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon">📊</div>
-        <h3>Analytics</h3>
-        <p>Wie viele Nachrichten, welche Kanäle, welche Tage — alles auf einen Blick im Dashboard.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- HOW IT WORKS -->
-<section class="how" id="how">
-  <div class="container">
-    <div class="sec-label reveal">So geht's</div>
-    <h2 class="sec-title reveal">In 3 Schritten live.</h2>
-    <div class="steps reveal">
-      <div class="step">
-        <div class="step-n">1</div>
-        <h3>Agent konfigurieren</h3>
-        <p>Name, Persönlichkeit, Fokusbereich und Kommunikationsstil — im visuellen Builder ohne Code.</p>
-      </div>
-      <div class="step">
-        <div class="step-n">2</div>
-        <h3>Kanal aktivieren</h3>
-        <p>Chat-Seite teilen, Widget einbinden, WhatsApp verbinden oder API Key generieren — alles mit einem Klick.</p>
-      </div>
-      <div class="step">
-        <div class="step-n">3</div>
-        <h3>Live gehen</h3>
-        <p>Dein Agent ist sofort erreichbar. Nutzer chatten, du siehst Statistiken — vollautomatisch.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- INTEGRATIONS -->
-<section class="integrations" id="integrations">
-  <div class="container">
-    <div class="sec-label reveal">Integrationen</div>
-    <h2 class="sec-title reveal">Überall präsent.</h2>
-    <p class="sec-sub reveal">Dein Agent arbeitet auf den Kanälen wo deine Kunden bereits sind.</p>
-
-    <div class="integ-grid reveal">
-      <div class="integ-card">
-        <div class="integ-icon" style="background:rgba(108,92,231,.1)">🌐</div>
+    <!-- DASHBOARD -->
+    <div class="page" x-show="page==='dashboard'">
+      <div class="page-header">
         <div>
-          <h3>Chat-Seite</h3>
-          <p>Automatisch generierte Chat-URL für jeden Agenten. Teilen per Link, QR-Code oder Social Media. Kein Login für Nutzer.</p>
-          <span class="integ-badge" style="background:rgba(108,92,231,.1);color:var(--pu-l);border:1px solid rgba(108,92,231,.2)">agentkontor.de/chat/ID</span>
+          <div class="page-title" x-text="lang==='de'?'Dashboard':'Dashboard'"></div>
+          <div class="page-sub" x-text="lang==='de'?'Übersicht deiner Agenten':'Overview of your agents'"></div>
         </div>
+        <button class="btn btn-primary" @click="openNewAgent()">+ <span x-text="lang==='de'?'Neuer Agent':'New Agent'"></span></button>
       </div>
-      <div class="integ-card">
-        <div class="integ-icon" style="background:rgba(162,155,254,.1)">🔧</div>
-        <div>
-          <h3>Website Widget</h3>
-          <p>Schwebendes Chat-Widget mit deinen Farben und deinem Branding. Zwei Zeilen Code, überall einbettbar.</p>
-          <span class="integ-badge" style="background:rgba(162,155,254,.1);color:var(--pu-l);border:1px solid rgba(162,155,254,.2)">&lt;script&gt; Widget</span>
+      <div class="grid-3" style="margin-bottom:28px">
+        <div class="stat-box"><div class="stat-num" x-text="agents.length"></div><div class="stat-label" x-text="lang==='de'?'Agenten':'Agents'"></div></div>
+        <div class="stat-box"><div class="stat-num" x-text="agents.filter(a=>a.is_active).length"></div><div class="stat-label" x-text="lang==='de'?'Aktiv':'Active'"></div></div>
+        <div class="stat-box"><div class="stat-num" x-text="agents.reduce((s,a)=>s+a.total_messages,0)"></div><div class="stat-label" x-text="lang==='de'?'Nachrichten':'Messages'"></div></div>
+      </div>
+      <div style="margin-bottom:20px;display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:.9rem;font-weight:600;color:var(--white)" x-text="lang==='de'?'Deine Agenten':'Your Agents'"></div>
+      </div>
+      <template x-if="agents.length===0">
+        <div class="empty">
+          <div class="empty-icon">🤖</div>
+          <h3 x-text="lang==='de'?'Noch kein Agent':'No agents yet'"></h3>
+          <p x-text="lang==='de'?'Erstelle deinen ersten KI-Agenten in wenigen Minuten.':'Create your first AI agent in minutes.'"></p>
+          <button class="btn btn-primary" @click="openNewAgent()" x-text="lang==='de'?'Ersten Agenten erstellen':'Create first agent'"></button>
         </div>
-      </div>
-      <div class="integ-card">
-        <div class="integ-icon" style="background:rgba(37,211,102,.1)">📱</div>
-        <div>
-          <h3>WhatsApp Business</h3>
-          <p>Verbinde über die Meta Cloud API. Dein Agent antwortet automatisch auf WhatsApp-Nachrichten — 24/7.</p>
-          <span class="integ-badge" style="background:rgba(37,211,102,.1);color:#25d366;border:1px solid rgba(37,211,102,.2)">Meta Cloud API</span>
-        </div>
-      </div>
-      <div class="integ-card">
-        <div class="integ-icon" style="background:rgba(0,136,204,.1)">✈️</div>
-        <div>
-          <h3>Telegram Bot</h3>
-          <p>Bot-Token von @BotFather einfügen — dein Agent ist sofort als Telegram-Bot erreichbar.</p>
-          <span class="integ-badge" style="background:rgba(0,136,204,.1);color:#0088cc;border:1px solid rgba(0,136,204,.2)">@BotFather Token</span>
-        </div>
-      </div>
-      <div class="integ-card">
-        <div class="integ-icon" style="background:rgba(240,192,64,.1)">⚡</div>
-        <div>
-          <h3>REST API</h3>
-          <p>API Key generieren und deinen Agenten in eigene Apps, Tools oder Workflows einbinden. Multi-turn, JSON, einfach.</p>
-          <span class="integ-badge" style="background:rgba(240,192,64,.1);color:var(--gold);border:1px solid rgba(240,192,64,.2)">x-api-key Header</span>
-        </div>
-      </div>
-      <div class="integ-card">
-        <div class="integ-icon" style="background:rgba(0,206,201,.1)">🔔</div>
-        <div>
-          <h3>Webhooks</h3>
-          <p>Alle Nachrichten automatisch an eigene Systeme weiterleiten. Kompatibel mit Zapier, Make, n8n und mehr.</p>
-          <span class="integ-badge" style="background:rgba(0,206,201,.1);color:var(--teal);border:1px solid rgba(0,206,201,.2)">Bald verfügbar</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- BUILDER PREVIEW -->
-<section class="builder">
-  <div class="container">
-    <div class="builder-inner">
-      <div class="reveal">
-        <div class="sec-label">Builder</div>
-        <h2 class="sec-title">Konfiguriere alles.<br>Ohne Code.</h2>
-        <p class="sec-sub" style="margin-bottom:32px">Der Agent-Builder führt dich Schritt für Schritt — von der Persönlichkeit bis zur Integration.</p>
-        <ul class="builder-steps">
-          <li class="builder-step">
-            <div class="bs-num">✦</div>
-            <div><div class="bs-title">Name, Emoji & Farbe</div><div class="bs-desc">Gib deinem Agenten eine Identität die zu dir und deiner Marke passt.</div></div>
-          </li>
-          <li class="builder-step">
-            <div class="bs-num">✦</div>
-            <div><div class="bs-title">System-Prompt & Ton</div><div class="bs-desc">Bestimme Fokus, Persönlichkeit und Kommunikationsstil — professionell, freundlich, direkt oder locker.</div></div>
-          </li>
-          <li class="builder-step">
-            <div class="bs-num">✦</div>
-            <div><div class="bs-title">Schnellantworten</div><div class="bs-desc">Bis zu 5 vordefinierte Themen die Nutzer per Klick auswählen können.</div></div>
-          </li>
-          <li class="builder-step">
-            <div class="bs-num">✦</div>
-            <div><div class="bs-title">Live-Vorschau</div><div class="bs-desc">Sieh vor dem Speichern genau wie dein Agent für Nutzer aussieht.</div></div>
-          </li>
-        </ul>
-        <a href="/app" class="btn-primary" style="display:inline-block;margin-top:24px">Jetzt ausprobieren →</a>
-      </div>
-
-      <!-- Mini builder preview -->
-      <div class="reveal">
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:28px;box-shadow:0 24px 60px rgba(0,0,0,.4)">
-          <div style="font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--pu-l);margin-bottom:18px">✦ Agent Builder</div>
-
-          <div style="margin-bottom:14px">
-            <div style="font-size:.75rem;color:var(--muted);margin-bottom:5px">Name</div>
-            <div style="background:rgba(255,255,255,.05);border:1px solid rgba(108,92,231,.3);border-radius:8px;padding:9px 12px;font-size:.86rem;color:var(--white)">Mia — Kundenservice Bot</div>
-          </div>
-
-          <div style="margin-bottom:14px">
-            <div style="font-size:.75rem;color:var(--muted);margin-bottom:5px">Emoji</div>
-            <div style="display:flex;gap:7px">
-              <span style="width:36px;height:36px;border-radius:8px;background:rgba(108,92,231,.2);border:1px solid var(--purple);display:flex;align-items:center;justify-content:center;font-size:1.1rem">🤖</span>
-              <span style="width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.1rem">💬</span>
-              <span style="width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.1rem">⭐</span>
-              <span style="width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.1rem">🎯</span>
+      </template>
+      <div class="agent-grid">
+        <template x-for="a in agents" :key="a.id">
+          <div class="agent-card" @click="editAgent(a)">
+            <div class="agent-stripe" :style="`background:${a.color}`"></div>
+            <div class="agent-body">
+              <div class="agent-header">
+                <div class="agent-av" :style="`background:${a.color}22;border:1px solid ${a.color}44`" x-text="a.emoji"></div>
+                <div>
+                  <div class="agent-name" x-text="a.name"></div>
+                  <div class="agent-desc" x-text="a.description||'Kein Beschreibungstext'"></div>
+                </div>
+              </div>
+              <div class="agent-badges">
+                <span class="badge" :class="a.is_active?'badge-active':'badge-inactive'" x-text="a.is_active?(lang==='de'?'Aktiv':'Active'):(lang==='de'?'Inaktiv':'Inactive')"></span>
+                <span class="badge badge-widget" x-show="a.widget_enabled">Widget</span>
+                <span class="badge badge-api" x-show="a.api_enabled">API</span>
+                <span class="badge badge-wa" x-show="a.whatsapp_enabled">WhatsApp</span>
+                <span class="badge badge-tg" x-show="a.telegram_enabled">Telegram</span>
+              </div>
+              <div class="agent-stats">
+                <span><strong x-text="a.total_messages"></strong> <span x-text="lang==='de'?'Nachrichten':'Messages'"></span></span>
+                <span x-text="'ID: '+a.public_id.slice(0,8)+'...'"></span>
+              </div>
             </div>
           </div>
+        </template>
+      </div>
+    </div>
 
-          <div style="margin-bottom:14px">
-            <div style="font-size:.75rem;color:var(--muted);margin-bottom:5px">Ton</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
-              <div style="padding:9px 12px;border-radius:8px;background:rgba(108,92,231,.12);border:1px solid var(--purple);font-size:.8rem;color:var(--white)"><strong>Freundlich</strong><br><span style="color:var(--muted);font-size:.72rem">Warm & offen</span></div>
-              <div style="padding:9px 12px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid var(--border);font-size:.8rem;color:var(--muted)">Direkt<br><span style="font-size:.72rem">Präzise</span></div>
+    <!-- AGENTS PAGE -->
+    <div class="page" x-show="page==='agents'">
+      <div class="page-header">
+        <div>
+          <div class="page-title" x-text="lang==='de'?'Meine Agenten':'My Agents'"></div>
+          <div class="page-sub" x-text="lang==='de'?'Erstelle und verwalte deine KI-Agenten':'Create and manage your AI agents'"></div>
+        </div>
+        <button class="btn btn-primary" @click="openNewAgent()">+ <span x-text="lang==='de'?'Neuer Agent':'New Agent'"></span></button>
+      </div>
+      <template x-if="agents.length===0">
+        <div class="empty"><div class="empty-icon">🤖</div><h3 x-text="lang==='de'?'Noch kein Agent':'No agents yet'"></h3><p x-text="lang==='de'?'Erstelle deinen ersten KI-Agenten.':'Create your first AI agent.'"></p><button class="btn btn-primary" @click="openNewAgent()">+ <span x-text="lang==='de'?'Neuer Agent':'New Agent'"></span></button></div>
+      </template>
+      <div class="agent-grid">
+        <template x-for="a in agents" :key="a.id">
+          <div class="agent-card" @click="editAgent(a)">
+            <div class="agent-stripe" :style="`background:${a.color}`"></div>
+            <div class="agent-body">
+              <div class="agent-header">
+                <div class="agent-av" :style="`background:${a.color}22;border:1px solid ${a.color}44`" x-text="a.emoji"></div>
+                <div><div class="agent-name" x-text="a.name"></div><div class="agent-desc" x-text="a.description"></div></div>
+              </div>
+              <div class="agent-badges">
+                <span class="badge" :class="a.is_active?'badge-active':'badge-inactive'" x-text="a.is_active?'Aktiv':'Inaktiv'"></span>
+                <span class="badge badge-widget" x-show="a.widget_enabled">Widget</span>
+                <span class="badge badge-api" x-show="a.api_enabled">API</span>
+                <span class="badge badge-wa" x-show="a.whatsapp_enabled">WhatsApp</span>
+                <span class="badge badge-tg" x-show="a.telegram_enabled">Telegram</span>
+              </div>
+              <div class="agent-stats">
+                <span><strong x-text="a.total_messages"></strong> Nachrichten</span>
+              </div>
             </div>
           </div>
+        </template>
+      </div>
+    </div>
 
-          <div style="margin-bottom:18px">
-            <div style="font-size:.75rem;color:var(--muted);margin-bottom:5px">Integrationen</div>
-            <div style="display:flex;gap:7px;flex-wrap:wrap">
-              <span style="background:rgba(108,92,231,.1);border:1px solid rgba(108,92,231,.25);border-radius:6px;padding:4px 10px;font-size:.72rem;color:var(--pu-l)">🌐 Chat-Seite</span>
-              <span style="background:rgba(37,211,102,.08);border:1px solid rgba(37,211,102,.2);border-radius:6px;padding:4px 10px;font-size:.72rem;color:#25d366">📱 WhatsApp</span>
-              <span style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.72rem;color:var(--muted)">✈️ Telegram</span>
+    <!-- API KEYS -->
+    <div class="page" x-show="page==='keys'">
+      <div class="page-header">
+        <div><div class="page-title">API Keys</div><div class="page-sub" x-text="lang==='de'?'Für Entwickler und externe Integrationen':'For developers and external integrations'"></div></div>
+        <button class="btn btn-primary" @click="showNewKey=true">+ <span x-text="lang==='de'?'Neuer Key':'New Key'"></span></button>
+      </div>
+
+      <!-- New key revealed -->
+      <template x-if="newKeyRevealed">
+        <div class="card" style="border-color:rgba(0,206,201,.3);margin-bottom:20px">
+          <div style="color:var(--green);font-weight:600;margin-bottom:8px">✓ <span x-text="lang==='de'?'Key erstellt — nur einmal sichtbar!':'Key created — visible only once!'"></span></div>
+          <div class="code-block" x-text="newKeyRevealed"><button class="copy-btn" @click="copy(newKeyRevealed)">Copy</button></div>
+          <div style="font-size:.78rem;color:var(--muted);margin-top:8px" x-text="lang==='de'?'Speichere diesen Key jetzt. Er wird nicht erneut angezeigt.':'Save this key now. It will not be shown again.'"></div>
+        </div>
+      </template>
+
+      <template x-if="apiKeys.length===0">
+        <div class="empty"><div class="empty-icon">🔑</div><h3 x-text="lang==='de'?'Keine API Keys':'No API Keys'"></h3><p x-text="lang==='de'?'Erstelle einen Key um die API zu nutzen.':'Create a key to use the API.'"></p></div>
+      </template>
+      <template x-for="k in apiKeys" :key="k.id">
+        <div class="key-row">
+          <div style="flex:1">
+            <div class="key-label" x-text="k.label"></div>
+            <div style="font-size:.72rem;color:var(--muted)" x-text="(k.agent_name?'Agent: '+k.agent_name+' · ':'')+k.key_prefix+'••••••••••••'"></div>
+          </div>
+          <div class="key-date" x-text="k.last_used?'Last used: '+new Date(k.last_used).toLocaleDateString():(lang==='de'?'Noch nicht genutzt':'Not used yet')"></div>
+          <button class="btn btn-sm btn-danger" @click="deleteKey(k.id)" x-text="lang==='de'?'Löschen':'Delete'"></button>
+        </div>
+      </template>
+    </div>
+
+    <!-- DOCS -->
+    <div class="page" x-show="page==='docs'">
+      <div class="page-header"><div><div class="page-title" x-text="lang==='de'?'API Dokumentation':'API Documentation'"></div><div class="page-sub">REST API · Webhooks · Widget</div></div></div>
+
+      <div class="tabs">
+        <div class="tab" :class="{active:docsTab==='api'}" @click="docsTab='api'">REST API</div>
+        <div class="tab" :class="{active:docsTab==='widget'}" @click="docsTab='widget'">Widget</div>
+        <div class="tab" :class="{active:docsTab==='webhook'}" @click="docsTab='webhook'">Webhooks</div>
+      </div>
+
+      <template x-if="docsTab==='api'">
+        <div>
+          <div class="card" style="margin-bottom:16px">
+            <div style="font-weight:600;color:var(--white);margin-bottom:8px">Chat mit Agent (POST)</div>
+            <div class="code-block">POST /api/chat/api/:agentId
+
+Headers:
+  x-api-key: ak_live_xxxxxxxxxx
+  Content-Type: application/json
+
+Body:
+{
+  "messages": [
+    {"role": "user", "content": "Hallo, wie geht's?"}
+  ],
+  "sessionId": "optional-session-id"
+}
+
+Response:
+{
+  "reply": "Hallo! Mir geht es gut. Wie kann ich helfen?",
+  "sessionId": "uuid-session-id"
+}</div>
+          </div>
+          <div class="card">
+            <div style="font-weight:600;color:var(--white);margin-bottom:8px">Multi-turn Gespräch</div>
+            <div class="code-block">// Sende immer alle vorherigen Nachrichten mit
+{
+  "sessionId": "deine-session-id",
+  "messages": [
+    {"role": "user", "content": "Erste Frage"},
+    {"role": "assistant", "content": "Erste Antwort"},
+    {"role": "user", "content": "Folge-Frage"}
+  ]
+}</div>
+          </div>
+        </div>
+      </template>
+
+      <template x-if="docsTab==='widget'">
+        <div>
+          <div class="card">
+            <div style="font-weight:600;color:var(--white);margin-bottom:8px">Widget einbinden</div>
+            <p style="font-size:.84rem;color:var(--muted);margin-bottom:12px" x-text="lang==='de'?'Füge diese zwei Zeilen vor dem &lt;/body&gt; Tag deiner Website ein:':'Add these two lines before the &lt;/body&gt; tag of your website:'"></p>
+            <div class="code-block" x-html="'&lt;script&gt;\n  window.AK_AGENT_ID = &quot;DEINE_AGENT_ID&quot;;\n&lt;/script&gt;\n&lt;script src=&quot;'+window.location.origin+'/widget.js&quot;&gt;&lt;/script&gt;'"></div>
+            <p style="font-size:.78rem;color:var(--muted);margin-top:10px" x-text="lang==='de'?'Die Agent ID findest du im Agent-Editor.':'Find the Agent ID in the agent editor.'"></p>
+          </div>
+        </div>
+      </template>
+
+      <template x-if="docsTab==='webhook'">
+        <div>
+          <div class="card" style="margin-bottom:16px">
+            <div style="font-weight:600;color:var(--white);margin-bottom:8px">Telegram Webhook</div>
+            <div class="code-block" x-html="'Webhook URL:\n'+window.location.origin+'/webhook/telegram/DEIN_BOT_TOKEN\n\nSetup:\nhttps://api.telegram.org/botTOKEN/setWebhook?url='+window.location.origin+'/webhook/telegram/TOKEN'"></div>
+          </div>
+          <div class="card">
+            <div style="font-weight:600;color:var(--white);margin-bottom:8px">WhatsApp (Meta Cloud API)</div>
+            <div class="code-block" x-html="'Webhook URL:\n'+window.location.origin+'/webhook/whatsapp\n\nVerify Token: Im .env setzen als WHATSAPP_VERIFY_TOKEN'"></div>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- AGENT MODAL (New/Edit) -->
+<div class="modal-bg" x-show="showAgentModal" @click.self="showAgentModal=false" x-cloak>
+  <div class="modal">
+    <div class="modal-title" x-text="editingAgent?(lang==='de'?'Agent bearbeiten':'Edit Agent'):(lang==='de'?'Neuen Agenten erstellen':'Create New Agent')"></div>
+
+    <div class="tabs" style="margin-bottom:16px">
+      <div class="tab" :class="{active:agentTab==='basics'}" @click="agentTab='basics'" x-text="lang==='de'?'Grundlagen':'Basics'"></div>
+      <div class="tab" :class="{active:agentTab==='behavior'}" @click="agentTab='behavior'" x-text="lang==='de'?'Verhalten':'Behavior'"></div>
+      <div class="tab" :class="{active:agentTab==='integrations'}" @click="agentTab='integrations'" x-text="lang==='de'?'Integrationen':'Integrations'"></div>
+      <div class="tab" :class="{active:agentTab==='preview'}" @click="agentTab='preview'" x-text="lang==='de'?'Vorschau':'Preview'"></div>
+      <template x-if="editingAgent">
+        <div class="tab" :class="{active:agentTab==='embed'}" @click="agentTab='embed'" x-text="lang==='de'?'Einbetten':'Embed'"></div>
+      </template>
+    </div>
+
+    <!-- BASICS TAB -->
+    <template x-if="agentTab==='basics'">
+      <div>
+        <div class="form-section">
+          <div class="form-section-title" x-text="lang==='de'?'Identität':'Identity'"></div>
+          <div class="inp-row" style="margin-bottom:14px">
+            <div class="field" style="margin:0">
+              <label x-text="lang==='de'?'Name des Agenten':'Agent Name'"></label>
+              <input class="inp" type="text" x-model="agentForm.name" :placeholder="lang==='de'?'z.B. Max, Mia, Support-Bot...':'e.g. Max, Mia, Support Bot...'">
+            </div>
+            <div class="field" style="margin:0">
+              <label x-text="lang==='de'?'Sprache':'Language'"></label>
+              <select class="inp" x-model="agentForm.language">
+                <option value="de">🇩🇪 Deutsch</option>
+                <option value="en">🇬🇧 English</option>
+              </select>
             </div>
           </div>
-
-          <button style="width:100%;padding:12px;background:var(--purple);border:none;border-radius:8px;color:#fff;font-size:.88rem;font-weight:600;cursor:pointer">💾 Agent speichern</button>
+          <div class="field">
+            <label x-text="lang==='de'?'Beschreibung (intern)':'Description (internal)'"></label>
+            <input class="inp" type="text" x-model="agentForm.description" :placeholder="lang==='de'?'Wofür ist dieser Agent?':'What is this agent for?'">
+          </div>
+          <div class="field">
+            <label>Emoji</label>
+            <div class="emoji-grid">
+              <template x-for="e in emojis" :key="e">
+                <div class="emo" :class="{active:agentForm.emoji===e}" @click="agentForm.emoji=e" x-text="e"></div>
+              </template>
+            </div>
+          </div>
+          <div class="field">
+            <label x-text="lang==='de'?'Farbe':'Color'"></label>
+            <div class="color-grid">
+              <template x-for="c in colors" :key="c">
+                <div class="color-opt" :class="{active:agentForm.color===c}" :style="`background:${c}`" @click="agentForm.color=c"></div>
+              </template>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
-</section>
+    </template>
 
-<!-- PRICING -->
-<section class="pricing" id="pricing">
-  <div class="container">
-    <div class="sec-label reveal">Preise</div>
-    <h2 class="sec-title reveal">Einfach. Transparent.</h2>
-    <p class="sec-sub reveal">Starte kostenlos — skaliere wenn du bereit bist. Kein Abo-Zwang, keine versteckten Kosten.</p>
-
-    <div class="pricing-grid reveal">
-      <!-- FREE -->
-      <div class="price-card">
-        <div class="price-plan">Free</div>
-        <div class="price-amount"><sup>€</sup>0</div>
-        <div class="price-period">für immer kostenlos</div>
-        <ul class="price-features">
-          <li>3 Agenten</li>
-          <li>Öffentliche Chat-Seite</li>
-          <li>Website Widget</li>
-          <li>500 Nachrichten/Monat</li>
-          <li class="off">API Zugang</li>
-          <li class="off">WhatsApp & Telegram</li>
-          <li class="off">Analytics</li>
-        </ul>
-        <a href="/app" class="price-btn price-btn-outline">Kostenlos starten</a>
+    <!-- BEHAVIOR TAB -->
+    <template x-if="agentTab==='behavior'">
+      <div>
+        <div class="field">
+          <label x-text="lang==='de'?'System-Prompt (Anweisungen für den Agenten)':'System Prompt (Instructions for the agent)'"></label>
+          <div class="hint" x-text="lang==='de'?'Beschreibe die Persönlichkeit, den Fokus und die Regeln des Agenten.':'Describe the personality, focus, and rules of the agent.'"></div>
+          <textarea class="inp" rows="5" x-model="agentForm.system_prompt" :placeholder="lang==='de'?'Du bist [Name], ein KI-Assistent für [Unternehmen]. Deine Aufgabe ist es...':'You are [Name], an AI assistant for [Company]. Your task is to...'"></textarea>
+        </div>
+        <div class="field">
+          <label x-text="lang==='de'?'Begrüßungsnachricht':'Greeting Message'"></label>
+          <textarea class="inp" rows="2" x-model="agentForm.greeting" :placeholder="lang==='de'?'Hallo! Wie kann ich dir helfen?':'Hello! How can I help you?'"></textarea>
+        </div>
+        <div class="field">
+          <label x-text="lang==='de'?'Kommunikationsstil':'Communication Style'"></label>
+          <div class="tone-grid">
+            <template x-for="t in tones" :key="t.key">
+              <div class="tone-opt" :class="{active:agentForm.tone===t.key}" @click="agentForm.tone=t.key">
+                <h4 x-text="lang==='de'?t.de:t.en"></h4>
+                <p x-text="lang==='de'?t.desc_de:t.desc_en"></p>
+              </div>
+            </template>
+          </div>
+        </div>
+        <div class="field">
+          <label x-text="lang==='de'?'Schnellantworten (max. 5)':'Quick Replies (max. 5)'"></label>
+          <div class="chip-row">
+            <input class="inp" type="text" x-model="chipInput" :placeholder="lang==='de'?'Vorschlag eingeben...':'Enter suggestion...'" @keydown.enter.prevent="addChip()">
+            <button class="btn btn-ghost btn-sm" @click="addChip()" x-text="lang==='de'?'+ Hinzufügen':'+ Add'"></button>
+          </div>
+          <div class="chips-wrap">
+            <template x-for="(chip,i) in agentForm.quick_chips" :key="i">
+              <div class="chip-tag"><span x-text="chip"></span><button class="chip-del" @click="agentForm.quick_chips.splice(i,1)">✕</button></div>
+            </template>
+          </div>
+        </div>
       </div>
+    </template>
 
-      <!-- PRO -->
-      <div class="price-card featured">
-        <div class="price-plan">Pro</div>
-        <div class="price-amount"><sup>€</sup>19</div>
-        <div class="price-period">pro Monat</div>
-        <ul class="price-features">
-          <li>Unbegrenzte Agenten</li>
-          <li>Öffentliche Chat-Seite</li>
-          <li>Website Widget</li>
-          <li>10.000 Nachrichten/Monat</li>
-          <li>REST API + API Keys</li>
-          <li>WhatsApp & Telegram</li>
-          <li>Analytics Dashboard</li>
-        </ul>
-        <a href="/app" class="price-btn price-btn-fill">Pro starten</a>
+    <!-- INTEGRATIONS TAB -->
+    <template x-if="agentTab==='integrations'">
+      <div>
+        <!-- Status -->
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;padding:14px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px">
+          <div style="flex:1"><div style="font-size:.9rem;font-weight:600;color:var(--white)" x-text="lang==='de'?'Agent aktiv':'Agent active'"></div><div style="font-size:.75rem;color:var(--muted)" x-text="lang==='de'?'Agent ist für Nutzer verfügbar':'Agent is available to users'"></div></div>
+          <label class="toggle"><input type="checkbox" x-model="agentForm.is_active"><span class="slider"></span></label>
+        </div>
+
+        <!-- Chat Page -->
+        <div class="integ-item">
+          <div class="integ-icon" style="background:rgba(108,92,231,.1)">🌐</div>
+          <div class="integ-info">
+            <div class="integ-name" x-text="lang==='de'?'Öffentliche Chat-Seite':'Public Chat Page'"></div>
+            <div class="integ-desc" x-text="lang==='de'?'Teile einen Link — jeder kann mit deinem Agenten chatten.':'Share a link — anyone can chat with your agent.'"></div>
+            <template x-if="editingAgent">
+              <div style="font-size:.78rem;color:var(--purple-l)" x-text="window.location.origin+'/chat/'+editingAgent.public_id"></div>
+            </template>
+          </div>
+          <label class="toggle"><input type="checkbox" x-model="agentForm.chatpage_enabled"><span class="slider"></span></label>
+        </div>
+
+        <!-- Widget -->
+        <div class="integ-item">
+          <div class="integ-icon" style="background:rgba(162,155,254,.1)">🔧</div>
+          <div class="integ-info">
+            <div class="integ-name">Widget</div>
+            <div class="integ-desc" x-text="lang==='de'?'Chat-Widget auf deiner eigenen Website einbinden.':'Embed a chat widget on your own website.'"></div>
+          </div>
+          <label class="toggle"><input type="checkbox" x-model="agentForm.widget_enabled"><span class="slider"></span></label>
+        </div>
+
+        <!-- API -->
+        <div class="integ-item">
+          <div class="integ-icon" style="background:rgba(240,192,64,.1)">⚡</div>
+          <div class="integ-info">
+            <div class="integ-name">REST API</div>
+            <div class="integ-desc" x-text="lang==='de'?'Zugriff über API Key für Entwickler.':'Access via API key for developers.'"></div>
+          </div>
+          <label class="toggle"><input type="checkbox" x-model="agentForm.api_enabled"><span class="slider"></span></label>
+        </div>
+
+        <!-- WhatsApp -->
+        <div class="integ-item">
+          <div class="integ-icon" style="background:rgba(37,211,102,.1)">📱</div>
+          <div class="integ-info">
+            <div class="integ-name">WhatsApp</div>
+            <div class="integ-desc" x-text="lang==='de'?'Agent antwortet auf WhatsApp-Nachrichten (Meta Cloud API).':'Agent responds to WhatsApp messages (Meta Cloud API).'"></div>
+            <template x-if="agentForm.whatsapp_enabled">
+              <input class="inp" type="text" x-model="agentForm.whatsapp_number" :placeholder="lang==='de'?'Deine WhatsApp-Nummer (z.B. 4915123456789)':'Your WhatsApp number (e.g. 4915123456789)'" style="margin-top:8px">
+            </template>
+          </div>
+          <label class="toggle"><input type="checkbox" x-model="agentForm.whatsapp_enabled"><span class="slider"></span></label>
+        </div>
+
+        <!-- Telegram -->
+        <div class="integ-item">
+          <div class="integ-icon" style="background:rgba(0,136,204,.1)">✈️</div>
+          <div class="integ-info">
+            <div class="integ-name">Telegram</div>
+            <div class="integ-desc" x-text="lang==='de'?'Agent als Telegram-Bot. Bot-Token von @BotFather eingeben.':'Agent as Telegram bot. Enter bot token from @BotFather.'"></div>
+            <template x-if="agentForm.telegram_enabled">
+              <input class="inp" type="text" x-model="agentForm.telegram_token" placeholder="123456:ABCdefGHIjklMNOpqrSTUvwxYZ" style="margin-top:8px">
+            </template>
+          </div>
+          <label class="toggle"><input type="checkbox" x-model="agentForm.telegram_enabled"><span class="slider"></span></label>
+        </div>
       </div>
+    </template>
 
-      <!-- ENTERPRISE -->
-      <div class="price-card">
-        <div class="price-plan">Enterprise</div>
-        <div class="price-amount" style="font-size:2rem">Auf Anfrage</div>
-        <div class="price-period">individuelles Angebot</div>
-        <ul class="price-features">
-          <li>Alles aus Pro</li>
-          <li>Unbegrenzte Nachrichten</li>
-          <li>Custom Domain</li>
-          <li>White-Label</li>
-          <li>Dedicated Support</li>
-          <li>SLA Garantie</li>
-          <li>On-Premise Option</li>
-        </ul>
-        <a href="mailto:info@agentkontor.de" class="price-btn price-btn-outline">Kontakt aufnehmen</a>
+    <!-- PREVIEW TAB -->
+    <template x-if="agentTab==='preview'">
+      <div>
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:16px" x-text="lang==='de'?'So sieht dein Agent für Nutzer aus:':'This is how your agent looks to users:'"></p>
+        <div class="preview-window">
+          <div class="pw-header" :style="`background:${agentForm.color}`">
+            <div class="pw-av" x-text="agentForm.emoji"></div>
+            <div>
+              <div class="pw-name" x-text="agentForm.name||'Agent'"></div>
+              <div class="pw-status"><span class="pw-dot"></span> Online</div>
+            </div>
+          </div>
+          <div class="pw-body">
+            <div class="pw-bubble assistant" x-text="agentForm.greeting||(lang==='de'?'Hallo! Wie kann ich helfen?':'Hello! How can I help?')"></div>
+            <template x-if="agentForm.quick_chips.length">
+              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+                <template x-for="chip in agentForm.quick_chips" :key="chip">
+                  <span style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:4px 12px;font-size:.74rem;color:#e0e0f0;cursor:pointer" x-text="chip"></span>
+                </template>
+              </div>
+            </template>
+            <div class="pw-bubble user" :style="`background:${agentForm.color}`" x-text="lang==='de'?'Was kannst du für mich tun?':'What can you do for me?'"></div>
+            <div class="pw-bubble assistant" x-text="lang==='de'?'Ich helfe dir gerne! Stell mir eine Frage oder wähle einen der Vorschläge oben.':'I\'m happy to help! Ask me a question or choose one of the suggestions above.'"></div>
+          </div>
+          <div class="pw-input-row">
+            <input class="pw-inp" :placeholder="lang==='de'?'Nachricht eingeben...':'Type a message...'">
+            <div class="pw-send" :style="`background:${agentForm.color}`">➤</div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-</section>
+    </template>
 
-<!-- CTA -->
-<div class="cta-section">
-  <div class="cta-box reveal">
-    <h2>Starte jetzt.<br><span>Kostenlos.</span></h2>
-    <p>Kein Abo, keine Kreditkarte. Dein erster Agent ist in weniger als 5 Minuten live.</p>
-    <div class="cta-btns">
-      <a href="/app" class="btn-primary">Kostenlos registrieren →</a>
-      <a href="#features" class="btn-outline">Mehr erfahren</a>
+    <!-- EMBED TAB -->
+    <template x-if="agentTab==='embed' && editingAgent">
+      <div>
+        <div class="card" style="margin-bottom:16px">
+          <div style="font-weight:600;color:var(--white);margin-bottom:4px">🌐 <span x-text="lang==='de'?'Chat-Seite':'Chat Page'"></span></div>
+          <div style="font-size:.8rem;color:var(--muted);margin-bottom:10px" x-text="lang==='de'?'Direkt teilbarer Link:':'Directly shareable link:'"></div>
+          <div style="display:flex;gap:8px">
+            <div class="code-block" style="flex:1;padding:10px" x-text="window.location.origin+'/chat/'+editingAgent.public_id"></div>
+            <button class="btn btn-ghost btn-sm" @click="copy(window.location.origin+'/chat/'+editingAgent.public_id)" x-text="lang==='de'?'Kopieren':'Copy'"></button>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:16px">
+          <div style="font-weight:600;color:var(--white);margin-bottom:4px">🔧 Widget Code</div>
+          <div style="font-size:.8rem;color:var(--muted);margin-bottom:10px" x-text="lang==='de'?'Vor &lt;/body&gt; auf deiner Website einfügen:':'Insert before &lt;/body&gt; on your website:'"></div>
+          <div class="code-block" x-html="'&lt;script&gt;window.AK_AGENT_ID=&quot;'+editingAgent.public_id+'&quot;;&lt;/script&gt;\n&lt;script src=&quot;'+window.location.origin+'/widget.js&quot;&gt;&lt;/script&gt;'"></div>
+          <button class="btn btn-ghost btn-sm" style="margin-top:8px" @click="copy(`<script>window.AK_AGENT_ID=&quot;${editingAgent.public_id}&quot;;</script>\n<script src='${window.location.origin}/widget.js'></script>`)" x-text="lang==='de'?'Code kopieren':'Copy code'"></button>
+        </div>
+        <div class="card">
+          <div style="font-weight:600;color:var(--white);margin-bottom:4px">⚡ API Endpoint</div>
+          <div class="code-block" x-html="'POST '+window.location.origin+'/api/chat/api/'+editingAgent.id+'\nHeader: x-api-key: ak_live_...'"></div>
+        </div>
+      </div>
+    </template>
+
+    <div class="modal-footer">
+      <template x-if="editingAgent">
+        <button class="btn btn-danger" @click="deleteAgent()" x-text="lang==='de'?'Agent löschen':'Delete Agent'"></button>
+      </template>
+      <button class="btn btn-ghost" @click="showAgentModal=false" x-text="lang==='de'?'Abbrechen':'Cancel'"></button>
+      <button class="btn btn-primary" @click="saveAgent()" :disabled="saving">
+        <span x-text="saving?(lang==='de'?'Speichern...':'Saving...'):(lang==='de'?'Speichern':'Save')"></span>
+      </button>
     </div>
   </div>
 </div>
 
-<!-- FOOTER -->
-<footer>
-  <div class="footer-top">
-    <div class="footer-brand">
-      <h3>Agent<span>Kontor</span></h3>
-      <p>Baue, konfiguriere und deploye eigene KI-Agenten — ohne Code, ohne Komplexität.</p>
+<!-- NEW KEY MODAL -->
+<div class="modal-bg" x-show="showNewKey" @click.self="showNewKey=false" x-cloak>
+  <div class="modal" style="max-width:420px">
+    <div class="modal-title" x-text="lang==='de'?'Neuen API Key erstellen':'Create New API Key'"></div>
+    <div class="field"><label x-text="lang==='de'?'Bezeichnung':'Label'"></label><input class="inp" type="text" x-model="newKeyForm.label" :placeholder="lang==='de'?'z.B. Produktionskey':'e.g. Production key'"></div>
+    <div class="field">
+      <label x-text="lang==='de'?'Agent (optional)':'Agent (optional)'"></label>
+      <select class="inp" x-model="newKeyForm.agentId">
+        <option value="" x-text="lang==='de'?'Alle Agenten':'All agents'"></option>
+        <template x-for="a in agents" :key="a.id"><option :value="a.id" x-text="a.emoji+' '+a.name"></option></template>
+      </select>
     </div>
-    <div class="footer-col">
-      <h4>Produkt</h4>
-      <a href="#features">Features</a>
-      <a href="#integrations">Integrationen</a>
-      <a href="#pricing">Preise</a>
-      <a href="/app">Dashboard</a>
-    </div>
-    <div class="footer-col">
-      <h4>Entwickler</h4>
-      <a href="#integrations">REST API</a>
-      <a href="/app">API Keys</a>
-      <a href="/app">Webhook Docs</a>
-      <a href="/app">Widget Embed</a>
-    </div>
-    <div class="footer-col">
-      <h4>Rechtliches</h4>
-      <a href="#">Impressum</a>
-      <a href="#">Datenschutz</a>
-      <a href="#">AGB</a>
-      <a href="mailto:info@agentkontor.de">Kontakt</a>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" @click="showNewKey=false" x-text="lang==='de'?'Abbrechen':'Cancel'"></button>
+      <button class="btn btn-primary" @click="createKey()" x-text="lang==='de'?'Key erstellen':'Create Key'"></button>
     </div>
   </div>
-  <div class="footer-bottom">
-    <div>© 2025 AgentKontor · superhecht.ai · Köln</div>
-    <div>Made with ☕ in Deutschland</div>
-  </div>
-</footer>
+</div>
+
+<!-- TOASTS -->
+<div class="toast-area">
+  <template x-for="t in toasts" :key="t.id">
+    <div class="toast-item" :class="t.type" x-text="t.msg"></div>
+  </template>
+</div>
 
 <script>
-// Scroll reveal
-const obs = new IntersectionObserver(entries => {
-  entries.forEach((e,i) => {
-    if (e.isIntersecting) {
-      setTimeout(() => e.target.classList.add('visible'), i * 80);
-      obs.unobserve(e.target);
+function app() {
+  return {
+    // State
+    user: null, token: null, page: 'dashboard', lang: 'de',
+    authMode: 'login', authError: '', loading: false,
+    loginForm: { email:'', password:'' },
+    regForm: { name:'', email:'', password:'' },
+    agents: [], apiKeys: [],
+    showAgentModal: false, showNewKey: false,
+    editingAgent: null, saving: false,
+    agentTab: 'basics', docsTab: 'api',
+    chipInput: '', newKeyForm: { label:'', agentId:'' },
+    newKeyRevealed: null, toasts: [],
+    agentForm: {
+      name:'', emoji:'🤖', description:'', system_prompt:'', greeting:'',
+      tone:'professionell', language:'de', quick_chips:[], color:'#6c5ce7',
+      is_active:true, widget_enabled:true, chatpage_enabled:true,
+      api_enabled:false, whatsapp_enabled:false, whatsapp_number:'',
+      telegram_enabled:false, telegram_token:''
+    },
+    emojis: ['🤖','💬','⭐','🎓','💡','🔥','🦾','🧠','✨','🚀','🏆','💼','🎯','🌟','⚡','🎪'],
+    colors: ['#6c5ce7','#e94560','#00b894','#00aaff','#f39c12','#a29bfe','#fd79a8','#00cec9','#e17055','#74b9ff'],
+    tones: [
+      {key:'professionell',de:'Professionell',en:'Professional',desc_de:'Sachlich & klar',desc_en:'Factual & clear'},
+      {key:'freundlich',de:'Freundlich',en:'Friendly',desc_de:'Warm & motivierend',desc_en:'Warm & motivating'},
+      {key:'direkt',de:'Direkt',en:'Direct',desc_de:'Präzise & effizient',desc_en:'Precise & efficient'},
+      {key:'locker',de:'Locker',en:'Casual',desc_de:'Entspannt & sympathisch',desc_en:'Relaxed & likeable'},
+    ],
+
+    async init() {
+      const t = localStorage.getItem('ak_token');
+      const u = localStorage.getItem('ak_user');
+      if (t && u) { this.token = t; this.user = JSON.parse(u); this.loadAgents(); }
+    },
+
+    async api(path, method='GET', body=null) {
+      const opts = { method, headers: { 'Content-Type':'application/json' } };
+      if (this.token) opts.headers['Authorization'] = 'Bearer '+this.token;
+      if (body) opts.body = JSON.stringify(body);
+      const res = await fetch('/api'+path, opts);
+      return res.json();
+    },
+
+    async login() {
+      this.loading=true; this.authError='';
+      const data = await this.api('/auth/login','POST',this.loginForm);
+      this.loading=false;
+      if (data.error) { this.authError=data.error; return; }
+      this.setUser(data.token, data.user);
+    },
+
+    async register() {
+      this.loading=true; this.authError='';
+      const data = await this.api('/auth/register','POST', {...this.regForm, lang:this.lang});
+      this.loading=false;
+      if (data.error) { this.authError=data.error; return; }
+      this.setUser(data.token, data.user);
+    },
+
+    setUser(token, user) {
+      this.token=token; this.user=user;
+      localStorage.setItem('ak_token',token);
+      localStorage.setItem('ak_user',JSON.stringify(user));
+      this.lang = user.lang || 'de';
+      this.loadAgents();
+    },
+
+    logout() {
+      this.token=null; this.user=null;
+      localStorage.removeItem('ak_token'); localStorage.removeItem('ak_user');
+    },
+
+    async loadAgents() {
+      const data = await this.api('/agents');
+      if (data.agents) this.agents = data.agents;
+    },
+
+    openNewAgent() {
+      this.editingAgent=null; this.agentTab='basics';
+      this.agentForm = {
+        name:'', emoji:'🤖', description:'', system_prompt:'', greeting:'',
+        tone:'professionell', language:this.lang, quick_chips:[], color:'#6c5ce7',
+        is_active:true, widget_enabled:true, chatpage_enabled:true,
+        api_enabled:false, whatsapp_enabled:false, whatsapp_number:'',
+        telegram_enabled:false, telegram_token:''
+      };
+      this.showAgentModal=true;
+    },
+
+    async editAgent(a) {
+      const data = await this.api('/agents/'+a.id);
+      if (!data.agent) return;
+      this.editingAgent = data.agent;
+      this.agentForm = {
+        name:data.agent.name, emoji:data.agent.emoji,
+        description:data.agent.description, system_prompt:data.agent.system_prompt,
+        greeting:data.agent.greeting, tone:data.agent.tone, language:data.agent.language,
+        quick_chips:data.agent.quick_chips||[], color:data.agent.color,
+        is_active:data.agent.is_active, widget_enabled:data.agent.widget_enabled,
+        chatpage_enabled:data.agent.chatpage_enabled, api_enabled:data.agent.api_enabled,
+        whatsapp_enabled:data.agent.whatsapp_enabled, whatsapp_number:data.agent.whatsapp_number||'',
+        telegram_enabled:data.agent.telegram_enabled, telegram_token:data.agent.telegram_token||''
+      };
+      this.agentTab='basics'; this.showAgentModal=true;
+    },
+
+    async saveAgent() {
+      if (!this.agentForm.name) { this.toast(this.lang==='de'?'Name erforderlich':'Name required','error'); return; }
+      if (!this.agentForm.system_prompt) { this.toast(this.lang==='de'?'System-Prompt erforderlich':'System prompt required','error'); return; }
+      this.saving=true;
+      let data;
+      if (this.editingAgent) {
+        data = await this.api('/agents/'+this.editingAgent.id,'PUT',this.agentForm);
+      } else {
+        data = await this.api('/agents','POST',this.agentForm);
+      }
+      this.saving=false;
+      if (data.error) { this.toast(data.error,'error'); return; }
+      this.toast(this.lang==='de'?'Agent gespeichert ✓':'Agent saved ✓','success');
+      await this.loadAgents();
+      if (!this.editingAgent) {
+        this.editingAgent = data.agent;
+        this.agentTab='embed';
+      }
+    },
+
+    async deleteAgent() {
+      if (!confirm(this.lang==='de'?'Agent wirklich löschen?':'Delete agent?')) return;
+      await this.api('/agents/'+this.editingAgent.id,'DELETE');
+      this.showAgentModal=false; this.editingAgent=null;
+      await this.loadAgents();
+      this.toast(this.lang==='de'?'Agent gelöscht':'Agent deleted');
+    },
+
+    addChip() {
+      const v=this.chipInput.trim();
+      if (!v||this.agentForm.quick_chips.length>=5) return;
+      this.agentForm.quick_chips.push(v); this.chipInput='';
+    },
+
+    async loadKeys() {
+      const data = await this.api('/keys');
+      if (data.keys) this.apiKeys = data.keys;
+    },
+
+    async createKey() {
+      const data = await this.api('/keys','POST',this.newKeyForm);
+      if (data.error) { this.toast(data.error,'error'); return; }
+      this.newKeyRevealed = data.key;
+      this.showNewKey=false;
+      await this.loadKeys();
+      this.toast(this.lang==='de'?'API Key erstellt!':'API key created!','success');
+    },
+
+    async deleteKey(id) {
+      if (!confirm(this.lang==='de'?'Key löschen?':'Delete key?')) return;
+      await this.api('/keys/'+id,'DELETE');
+      await this.loadKeys();
+      this.toast(this.lang==='de'?'Key gelöscht':'Key deleted');
+    },
+
+    copy(text) {
+      navigator.clipboard.writeText(text).then(()=>this.toast(this.lang==='de'?'Kopiert!':'Copied!'));
+    },
+
+    toast(msg, type='success') {
+      const id=Date.now();
+      this.toasts.push({id,msg,type});
+      setTimeout(()=>this.toasts=this.toasts.filter(t=>t.id!==id),3500);
     }
-  });
-}, { threshold: 0.08 });
-document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
-
-// Nav scroll
-window.addEventListener('scroll', () => {
-  document.getElementById('nav').style.borderBottomColor =
-    window.scrollY > 50 ? 'rgba(108,92,231,0.15)' : 'rgba(255,255,255,0.05)';
-});
-
-// Demo chat
-const demoReplies = {
-  'was kannst du?': 'Ich kann Fragen beantworten, Aufgaben erledigen, Informationen erklären und vieles mehr — ganz auf deinen Anwendungsfall zugeschnitten. Konfiguriere mich wie du möchtest!',
-  'wie richte ich dich ein?': 'Ganz einfach: 1. Account erstellen 2. Agent konfigurieren (Name, Persönlichkeit, Fokus) 3. Kanal wählen (Chat-Seite, Widget, WhatsApp...) 4. Live gehen ✓',
-  'welche sprachen?': 'Ich bin auf Deutsch und Englisch verfügbar — du kannst die Sprache pro Agent individuell einstellen. Weitere Sprachen sind möglich.',
-};
-const defaultReplies = [
-  'Das ist eine gute Frage! Als KI-Agent kann ich auf deinen speziellen Anwendungsfall zugeschnitten werden.',
-  'Interessant! In AgentKontor kannst du mich genau für solche Fragen trainieren.',
-  'Gerne helfe ich dabei. Konfiguriere mich über den Builder und ich bin auf deine Bedürfnisse optimiert.',
-];
-let demoReplyIdx = 0;
-
-async function demoSend(text) {
-  if (!text.trim()) return;
-  const chat = document.getElementById('demoChat');
-  document.getElementById('demoChips').innerHTML = '';
-
-  // User msg
-  const userDiv = document.createElement('div');
-  userDiv.className = 'demo-msg user';
-  userDiv.innerHTML = `<div class="demo-av">👤</div><div class="demo-bubble" style="background:var(--purple);color:#fff">${text}</div>`;
-  chat.appendChild(userDiv);
-
-  // Typing
-  const typDiv = document.createElement('div');
-  typDiv.className = 'demo-msg bot';
-  typDiv.id = 'demo-typing';
-  typDiv.innerHTML = `<div class="demo-av">🤖</div><div class="typing-dots"><span></span><span></span><span></span></div>`;
-  chat.appendChild(typDiv);
-  chat.scrollTop = chat.scrollHeight;
-
-  await new Promise(r => setTimeout(r, 1200));
-  typDiv.remove();
-
-  const reply = demoReplies[text.toLowerCase()] || defaultReplies[demoReplyIdx++ % defaultReplies.length];
-  const botDiv = document.createElement('div');
-  botDiv.className = 'demo-msg bot';
-  botDiv.innerHTML = `<div class="demo-av">🤖</div><div class="demo-bubble">${reply}</div>`;
-  chat.appendChild(botDiv);
-  chat.scrollTop = chat.scrollHeight;
+  }
 }
 </script>
 </body>

@@ -45,22 +45,9 @@ app.get('/chat/:publicId', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'chat.html'));
 });
 
-// App dashboard
-app.get('/app', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'app.html'));
-});
-app.get('/app/*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'app.html'));
-});
-
-// Landing page (root)
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// 404
+// SPA fallback
 app.get('*', (req, res) => {
-  res.redirect('/');
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 initDb().then(() => {
