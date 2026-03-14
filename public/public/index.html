@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentKontor – Baue deinen eigenen KI-Agenten</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #050510;
+  --bg2:    #09091a;
+  --bg3:    #0e0e22;
+  --card:   #0c0c1e;
+  --border: rgba(255,255,255,0.07);
+  --purple: #6c5ce7;
+  --pu-l:   #a29bfe;
+  --pu-d:   #3d2fa0;
+  --teal:   #00cec9;
+  --white:  #ffffff;
+  --muted:  #5a5a80;
+  --text:   #c8c8e8;
+  --red:    #e94560;
+  --gold:   #f0c040;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* Noise overlay */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 1000; opacity: .25;
+}
+
+/* NAV */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 52px;
+  backdrop-filter: blur(20px);
+  background: rgba(5,5,16,0.85);
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  transition: border-color .3s;
+}
+.nav-logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.45rem; font-weight: 800;
+  color: var(--white); text-decoration: none;
+  letter-spacing: -.01em;
+}
+.nav-logo span { color: var(--pu-l); }
+.nav-links { display: flex; gap: 32px; align-items: center; }
+.nav-link {
+  font-size: .82rem; font-weight: 500;
+  letter-spacing: .04em; text-transform: uppercase;
+  color: var(--muted); text-decoration: none; transition: color .2s;
+}
+.nav-link:hover { color: var(--white); }
+.nav-cta {
+  background: var(--purple); color: var(--white);
+  padding: 9px 22px; border-radius: 8px;
+  font-size: .82rem; font-weight: 600;
+  text-decoration: none; transition: all .2s;
+}
+.nav-cta:hover { background: var(--pu-l); transform: translateY(-1px); }
+
+/* HERO */
+.hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 120px 52px 80px;
+  position: relative; overflow: hidden; text-align: center;
+}
+
+.hero-mesh {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(108,92,231,.18) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 20% 80%, rgba(0,206,201,.07) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 80% 70%, rgba(233,69,96,.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.hero-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(108,92,231,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(108,92,231,.04) 1px, transparent 1px);
+  background-size: 52px 52px;
+  animation: gridFlow 30s linear infinite;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent);
+}
+@keyframes gridFlow { to { transform: translateY(52px); } }
+
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(108,92,231,.1);
+  border: 1px solid rgba(108,92,231,.3);
+  padding: 5px 16px; border-radius: 100px;
+  font-size: .72rem; font-weight: 600;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: var(--pu-l); margin-bottom: 28px;
+  animation: fadeUp .6s ease both;
+}
+.badge-dot { width: 6px; height: 6px; background: var(--teal); border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(3.2rem, 8vw, 7.5rem);
+  font-weight: 800;
+  line-height: 1.0;
+  color: var(--white);
+  margin-bottom: 6px;
+  letter-spacing: -.03em;
+  animation: fadeUp .6s .1s ease both;
+}
+h1 .accent { color: var(--pu-l); }
+h1 .line2 {
+  display: block;
+  font-size: clamp(1.6rem, 3.5vw, 2.8rem);
+  font-weight: 400; font-family: 'DM Sans', sans-serif;
+  color: var(--muted); letter-spacing: .01em;
+  margin-top: 10px;
+}
+
+.hero-desc {
+  font-size: 1.05rem; color: var(--muted);
+  max-width: 520px; margin: 28px auto 48px;
+  line-height: 1.75;
+  animation: fadeUp .6s .2s ease both;
+}
+
+.hero-actions {
+  display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
+  animation: fadeUp .6s .3s ease both;
+}
+.btn-primary {
+  background: var(--purple); color: var(--white);
+  padding: 15px 36px; border-radius: 10px;
+  font-size: .9rem; font-weight: 600;
+  text-decoration: none; transition: all .25s;
+  border: 2px solid var(--purple);
+}
+.btn-primary:hover {
+  background: var(--pu-l); border-color: var(--pu-l);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(108,92,231,.35);
+}
+.btn-outline {
+  background: transparent; color: var(--pu-l);
+  padding: 15px 36px; border-radius: 10px;
+  font-size: .9rem; font-weight: 500;
+  text-decoration: none; transition: all .25s;
+  border: 1px solid rgba(108,92,231,.3);
+}
+.btn-outline:hover { border-color: var(--pu-l); background: rgba(108,92,231,.08); transform: translateY(-2px); }
+
+/* HERO DEMO WIDGET */
+.hero-demo {
+  margin-top: 72px;
+  position: relative;
+  animation: fadeUp .7s .4s ease both;
+}
+.hero-demo::before {
+  content: '';
+  position: absolute; inset: -1px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(108,92,231,.4), rgba(0,206,201,.2), rgba(108,92,231,.1));
+  z-index: -1; filter: blur(1px);
+}
+.demo-window {
+  background: var(--bg3);
+  border: 1px solid rgba(108,92,231,.25);
+  border-radius: 18px;
+  width: min(600px, 90vw);
+  overflow: hidden;
+  box-shadow: 0 40px 100px rgba(0,0,0,.6), 0 0 60px rgba(108,92,231,.15);
+}
+.demo-bar {
+  background: rgba(255,255,255,.03);
+  padding: 12px 18px;
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.demo-dots { display: flex; gap: 6px; }
+.demo-dot { width: 10px; height: 10px; border-radius: 50%; }
+.demo-title {
+  flex: 1; text-align: center;
+  font-size: .75rem; color: var(--muted);
+}
+.demo-chat { padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.demo-msg { display: flex; gap: 10px; }
+.demo-msg.user { flex-direction: row-reverse; align-self: flex-end; }
+.demo-av {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .85rem; flex-shrink: 0;
+}
+.demo-msg.bot .demo-av { background: linear-gradient(135deg,var(--purple),var(--pu-l)); }
+.demo-msg.user .demo-av { background: rgba(255,255,255,.08); }
+.demo-bubble {
+  padding: 10px 14px; border-radius: 14px;
+  font-size: .84rem; line-height: 1.5; max-width: 78%;
+}
+.demo-msg.bot .demo-bubble { background: rgba(108,92,231,.15); border: 1px solid rgba(108,92,231,.2); color: var(--text); border-bottom-left-radius: 3px; }
+.demo-msg.user .demo-bubble { background: var(--purple); color: var(--white); border-bottom-right-radius: 3px; }
+.demo-chips { display: flex; gap: 7px; flex-wrap: wrap; padding: 0 20px 12px; }
+.demo-chip {
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+  border-radius: 20px; padding: 5px 13px;
+  font-size: .75rem; color: var(--text); cursor: pointer;
+  transition: all .2s;
+}
+.demo-chip:hover { border-color: var(--pu-l); color: var(--pu-l); }
+.demo-input-row {
+  padding: 12px 16px; border-top: 1px solid var(--border);
+  display: flex; gap: 8px;
+}
+.demo-inp {
+  flex: 1; background: rgba(255,255,255,.05);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 12px; color: var(--text); font-size: .82rem;
+  font-family: inherit;
+}
+.demo-send {
+  width: 36px; height: 36px; background: var(--purple);
+  border: none; border-radius: 8px; cursor: pointer;
+  color: var(--white); font-size: .9rem;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Typing animation */
+.typing-dots { display: flex; gap: 4px; padding: 10px 14px; background: rgba(108,92,231,.15); border: 1px solid rgba(108,92,231,.2); border-radius: 14px; border-bottom-left-radius: 3px; }
+.typing-dots span { width: 6px; height: 6px; background: var(--pu-l); border-radius: 50%; animation: typeBounce .8s infinite; }
+.typing-dots span:nth-child(2) { animation-delay: .15s; }
+.typing-dots span:nth-child(3) { animation-delay: .3s; }
+@keyframes typeBounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-7px)} }
+
+/* SECTIONS */
+section { padding: 100px 52px; position: relative; }
+.container { max-width: 1140px; margin: 0 auto; }
+.sec-label {
+  font-size: .7rem; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--pu-l); display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+}
+.sec-label::before { content: ''; width: 24px; height: 1px; background: var(--pu-l); }
+.sec-title {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(2rem, 4.5vw, 3.5rem);
+  font-weight: 800; letter-spacing: -.02em;
+  color: var(--white); line-height: 1.1; margin-bottom: 14px;
+}
+.sec-sub { font-size: 1rem; color: var(--muted); max-width: 520px; line-height: 1.75; }
+
+/* FEATURES */
+.features { background: var(--bg2); }
+.feat-grid {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 2px; margin-top: 56px;
+}
+.feat-card {
+  background: var(--card); padding: 36px 30px;
+  border: 1px solid var(--border);
+  position: relative; overflow: hidden;
+  transition: border-color .25s, transform .25s;
+}
+.feat-card:hover { border-color: rgba(108,92,231,.35); transform: translateY(-4px); }
+.feat-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--purple), var(--teal));
+  opacity: 0; transition: opacity .25s;
+}
+.feat-card:hover::before { opacity: 1; }
+.feat-icon {
+  width: 48px; height: 48px; border-radius: 12px;
+  background: rgba(108,92,231,.12); border: 1px solid rgba(108,92,231,.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem; margin-bottom: 18px;
+}
+.feat-card h3 { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--white); margin-bottom: 8px; }
+.feat-card p { font-size: .86rem; color: var(--muted); line-height: 1.65; }
+
+/* HOW IT WORKS */
+.how { background: var(--bg); }
+.steps {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 0; margin-top: 60px; position: relative;
+}
+.steps::after {
+  content: '';
+  position: absolute; top: 28px; left: 16.6%; right: 16.6%; height: 1px;
+  background: linear-gradient(to right, transparent, rgba(108,92,231,.4), rgba(108,92,231,.4), transparent);
+}
+.step { text-align: center; padding: 0 28px; }
+.step-n {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--bg3); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px;
+  font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800;
+  color: var(--pu-l); position: relative; z-index: 1;
+  transition: all .25s;
+}
+.step:hover .step-n { background: rgba(108,92,231,.15); border-color: var(--purple); box-shadow: 0 0 20px rgba(108,92,231,.25); }
+.step h3 { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--white); margin-bottom: 8px; }
+.step p { font-size: .84rem; color: var(--muted); line-height: 1.6; }
+
+/* INTEGRATIONS */
+.integrations { background: var(--bg2); }
+.integ-grid {
+  display: grid; grid-template-columns: repeat(2,1fr);
+  gap: 16px; margin-top: 56px;
+}
+.integ-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 28px;
+  display: flex; align-items: flex-start; gap: 18px;
+  transition: border-color .25s, transform .2s;
+}
+.integ-card:hover { border-color: rgba(108,92,231,.3); transform: translateY(-3px); }
+.integ-icon {
+  width: 52px; height: 52px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; flex-shrink: 0;
+}
+.integ-card h3 { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--white); margin-bottom: 5px; }
+.integ-card p { font-size: .83rem; color: var(--muted); line-height: 1.6; }
+.integ-badge {
+  display: inline-block; margin-top: 10px;
+  font-size: .68rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 100px;
+}
+
+/* BUILDER PREVIEW */
+.builder { background: var(--bg); }
+.builder-inner {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 56px; align-items: center;
+}
+.builder-steps { list-style: none; display: flex; flex-direction: column; gap: 20px; }
+.builder-step {
+  display: flex; gap: 16px; align-items: flex-start;
+  padding: 18px 20px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; transition: border-color .2s;
+}
+.builder-step:hover { border-color: rgba(108,92,231,.3); }
+.bs-num {
+  width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+  background: rgba(108,92,231,.15); border: 1px solid rgba(108,92,231,.25);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-size: .9rem; font-weight: 800; color: var(--pu-l);
+}
+.bs-title { font-size: .9rem; font-weight: 600; color: var(--white); margin-bottom: 3px; }
+.bs-desc { font-size: .8rem; color: var(--muted); line-height: 1.5; }
+
+/* PRICING */
+.pricing { background: var(--bg2); }
+.pricing-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 56px; }
+.price-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 36px 28px;
+  position: relative; transition: border-color .25s, transform .25s;
+}
+.price-card:hover { transform: translateY(-5px); }
+.price-card.featured {
+  border-color: rgba(108,92,231,.4);
+  background: linear-gradient(135deg, rgba(108,92,231,.08), var(--card));
+}
+.price-card.featured::before {
+  content: '★ Beliebt';
+  position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+  background: var(--purple); color: var(--white);
+  font-size: .72rem; font-weight: 700; letter-spacing: .08em;
+  padding: 3px 14px; border-radius: 100px;
+}
+.price-plan { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--pu-l); margin-bottom: 6px; }
+.price-amount {
+  font-family: 'Syne', sans-serif;
+  font-size: 3rem; font-weight: 800; color: var(--white);
+  line-height: 1; margin-bottom: 4px;
+}
+.price-amount sup { font-size: 1.2rem; margin-right: 2px; }
+.price-period { font-size: .78rem; color: var(--muted); margin-bottom: 20px; }
+.price-features { list-style: none; margin-bottom: 28px; display: flex; flex-direction: column; gap: 9px; }
+.price-features li { display: flex; align-items: center; gap: 9px; font-size: .84rem; color: var(--text); }
+.price-features li::before { content: '✓'; color: var(--teal); font-weight: 700; font-size: .8rem; flex-shrink: 0; }
+.price-features li.off { color: var(--muted); }
+.price-features li.off::before { content: '—'; color: var(--muted); }
+.price-btn {
+  display: block; width: 100%; padding: 12px;
+  border-radius: 8px; font-size: .88rem; font-weight: 600;
+  text-align: center; text-decoration: none; border: none; cursor: pointer;
+  transition: all .2s;
+}
+.price-btn-outline { background: transparent; border: 1px solid rgba(108,92,231,.3); color: var(--pu-l); }
+.price-btn-outline:hover { background: rgba(108,92,231,.1); }
+.price-btn-fill { background: var(--purple); color: var(--white); }
+.price-btn-fill:hover { background: var(--pu-l); box-shadow: 0 8px 24px rgba(108,92,231,.35); }
+
+/* CTA */
+.cta-section { background: var(--bg); padding: 100px 52px; }
+.cta-box {
+  max-width: 760px; margin: 0 auto; text-align: center;
+  background: var(--card); border: 1px solid rgba(108,92,231,.25);
+  border-radius: 24px; padding: 80px 60px; position: relative; overflow: hidden;
+}
+.cta-box::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(108,92,231,.12), transparent 70%);
+  pointer-events: none;
+}
+.cta-box h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(2rem,4vw,3.2rem); font-weight: 800;
+  color: var(--white); letter-spacing: -.02em; margin-bottom: 12px;
+}
+.cta-box h2 span { color: var(--pu-l); }
+.cta-box p { font-size: 1rem; color: var(--muted); margin-bottom: 36px; }
+.cta-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+/* FOOTER */
+footer {
+  background: var(--bg2); border-top: 1px solid var(--border);
+  padding: 48px 52px 32px;
+}
+.footer-top {
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 48px; margin-bottom: 48px;
+}
+.footer-brand h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.2rem; font-weight: 800; color: var(--white); margin-bottom: 10px;
+}
+.footer-brand h3 span { color: var(--pu-l); }
+.footer-brand p { font-size: .82rem; color: var(--muted); line-height: 1.7; max-width: 260px; }
+.footer-col h4 { font-size: .75rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--white); margin-bottom: 14px; }
+.footer-col a { display: block; font-size: .83rem; color: var(--muted); text-decoration: none; margin-bottom: 8px; transition: color .2s; }
+.footer-col a:hover { color: var(--pu-l); }
+.footer-bottom {
+  display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px solid var(--border); padding-top: 24px;
+  font-size: .75rem; color: var(--muted); flex-wrap: wrap; gap: 12px;
+}
+
+/* SCROLL REVEAL */
+.reveal { opacity: 0; transform: translateY(28px); transition: opacity .7s ease, transform .7s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* ANIMATIONS */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+/* TYPING EFFECT for demo */
+.typed::after { content: '|'; animation: blink .8s step-end infinite; }
+@keyframes blink { 50%{opacity:0} }
+
+/* RESPONSIVE */
+@media(max-width:960px) {
+  .feat-grid { grid-template-columns: 1fr 1fr; }
+  .builder-inner { grid-template-columns: 1fr; }
+  .pricing-grid { grid-template-columns: 1fr; max-width: 400px; margin-left: auto; margin-right: auto; }
+  .footer-top { grid-template-columns: 1fr 1fr; }
+  .integ-grid { grid-template-columns: 1fr; }
+}
+@media(max-width:700px) {
+  nav { padding: 14px 20px; }
+  .nav-links .nav-link { display: none; }
+  section { padding: 72px 20px; }
+  .hero { padding: 100px 20px 72px; }
+  .feat-grid { grid-template-columns: 1fr; }
+  .steps { grid-template-columns: 1fr; gap: 24px; }
+  .steps::after { display: none; }
+  .cta-box { padding: 48px 24px; }
+  .footer-top { grid-template-columns: 1fr; gap: 28px; }
+  footer { padding: 40px 20px 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <a class="nav-logo" href="#">Agent<span>Kontor</span></a>
+  <div class="nav-links">
+    <a class="nav-link" href="#features">Features</a>
+    <a class="nav-link" href="#integrations">Integrationen</a>
+    <a class="nav-link" href="#how">Wie es geht</a>
+    <a class="nav-link" href="#pricing">Preise</a>
+    <a class="nav-cta" href="/app">Kostenlos starten</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-mesh"></div>
+  <div class="hero-grid"></div>
+
+  <div class="hero-badge"><span class="badge-dot"></span>Kostenlos starten · Kein Abo</div>
+
+  <h1>
+    Baue deinen eigenen<br>
+    <span class="accent">KI-Agenten.</span>
+    <span class="line2">In Minuten. Ohne Code.</span>
+  </h1>
+
+  <p class="hero-desc">
+    AgentKontor gibt dir alles um einen eigenen KI-Agenten zu erstellen — mit Chat-Seite, Website-Widget, WhatsApp, Telegram und API. Für jeden Anwendungsfall.
+  </p>
+
+  <div class="hero-actions">
+    <a href="/app" class="btn-primary">Jetzt kostenlos starten →</a>
+    <a href="#features" class="btn-outline">Mehr erfahren</a>
+  </div>
+
+  <!-- LIVE DEMO -->
+  <div class="hero-demo">
+    <div class="demo-window">
+      <div class="demo-bar">
+        <div class="demo-dots">
+          <div class="demo-dot" style="background:#ff5f56"></div>
+          <div class="demo-dot" style="background:#ffbd2e"></div>
+          <div class="demo-dot" style="background:#27c93f"></div>
+        </div>
+        <div class="demo-title">agentkontor.de/chat/dein-agent</div>
+      </div>
+      <div class="demo-chat" id="demoChat">
+        <div class="demo-msg bot">
+          <div class="demo-av">🤖</div>
+          <div class="demo-bubble">Hallo! Ich bin Mia, dein KI-Assistent. Wie kann ich dir heute helfen?</div>
+        </div>
+      </div>
+      <div class="demo-chips" id="demoChips">
+        <span class="demo-chip" onclick="demoSend('Was kannst du?')">Was kannst du?</span>
+        <span class="demo-chip" onclick="demoSend('Wie richte ich dich ein?')">Wie richte ich dich ein?</span>
+        <span class="demo-chip" onclick="demoSend('Welche Sprachen?')">Welche Sprachen?</span>
+      </div>
+      <div class="demo-input-row">
+        <input class="demo-inp" id="demoInp" placeholder="Nachricht eingeben..." onkeydown="if(event.key==='Enter'){demoSend(this.value);this.value=''}">
+        <button class="demo-send" onclick="demoSend(document.getElementById('demoInp').value);document.getElementById('demoInp').value=''">➤</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="container">
+    <div class="sec-label reveal">Features</div>
+    <h2 class="sec-title reveal">Alles was du brauchst.</h2>
+    <p class="sec-sub reveal">Von der Konfiguration bis zur Auslieferung — AgentKontor deckt den kompletten Workflow ab.</p>
+
+    <div class="feat-grid reveal">
+      <div class="feat-card">
+        <div class="feat-icon">🎨</div>
+        <h3>Agent Builder</h3>
+        <p>Name, Emoji, Farbe, System-Prompt, Ton, Sprache, Schnellantworten — alles in einem visuellen Editor konfigurierbar.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🌐</div>
+        <h3>Öffentliche Chat-Seite</h3>
+        <p>Jeder Agent bekommt automatisch eine eigene URL. Einfach teilen — kein Login für Nutzer nötig.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🔧</div>
+        <h3>Website Widget</h3>
+        <p>Ein Script-Tag reicht. Chat-Widget läuft auf jeder Website, in jeder Farbe, vollständig anpassbar.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">📱</div>
+        <h3>WhatsApp & Telegram</h3>
+        <p>Verbinde deinen Agenten mit WhatsApp Business oder als Telegram-Bot. Einfach Token eingeben, fertig.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">⚡</div>
+        <h3>REST API</h3>
+        <p>API Key generieren, in eigene Apps einbinden. Vollständige Dokumentation, multi-turn Gespräche, JSON.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">📊</div>
+        <h3>Analytics</h3>
+        <p>Wie viele Nachrichten, welche Kanäle, welche Tage — alles auf einen Blick im Dashboard.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="container">
+    <div class="sec-label reveal">So geht's</div>
+    <h2 class="sec-title reveal">In 3 Schritten live.</h2>
+    <div class="steps reveal">
+      <div class="step">
+        <div class="step-n">1</div>
+        <h3>Agent konfigurieren</h3>
+        <p>Name, Persönlichkeit, Fokusbereich und Kommunikationsstil — im visuellen Builder ohne Code.</p>
+      </div>
+      <div class="step">
+        <div class="step-n">2</div>
+        <h3>Kanal aktivieren</h3>
+        <p>Chat-Seite teilen, Widget einbinden, WhatsApp verbinden oder API Key generieren — alles mit einem Klick.</p>
+      </div>
+      <div class="step">
+        <div class="step-n">3</div>
+        <h3>Live gehen</h3>
+        <p>Dein Agent ist sofort erreichbar. Nutzer chatten, du siehst Statistiken — vollautomatisch.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INTEGRATIONS -->
+<section class="integrations" id="integrations">
+  <div class="container">
+    <div class="sec-label reveal">Integrationen</div>
+    <h2 class="sec-title reveal">Überall präsent.</h2>
+    <p class="sec-sub reveal">Dein Agent arbeitet auf den Kanälen wo deine Kunden bereits sind.</p>
+
+    <div class="integ-grid reveal">
+      <div class="integ-card">
+        <div class="integ-icon" style="background:rgba(108,92,231,.1)">🌐</div>
+        <div>
+          <h3>Chat-Seite</h3>
+          <p>Automatisch generierte Chat-URL für jeden Agenten. Teilen per Link, QR-Code oder Social Media. Kein Login für Nutzer.</p>
+          <span class="integ-badge" style="background:rgba(108,92,231,.1);color:var(--pu-l);border:1px solid rgba(108,92,231,.2)">agentkontor.de/chat/ID</span>
+        </div>
+      </div>
+      <div class="integ-card">
+        <div class="integ-icon" style="background:rgba(162,155,254,.1)">🔧</div>
+        <div>
+          <h3>Website Widget</h3>
+          <p>Schwebendes Chat-Widget mit deinen Farben und deinem Branding. Zwei Zeilen Code, überall einbettbar.</p>
+          <span class="integ-badge" style="background:rgba(162,155,254,.1);color:var(--pu-l);border:1px solid rgba(162,155,254,.2)">&lt;script&gt; Widget</span>
+        </div>
+      </div>
+      <div class="integ-card">
+        <div class="integ-icon" style="background:rgba(37,211,102,.1)">📱</div>
+        <div>
+          <h3>WhatsApp Business</h3>
+          <p>Verbinde über die Meta Cloud API. Dein Agent antwortet automatisch auf WhatsApp-Nachrichten — 24/7.</p>
+          <span class="integ-badge" style="background:rgba(37,211,102,.1);color:#25d366;border:1px solid rgba(37,211,102,.2)">Meta Cloud API</span>
+        </div>
+      </div>
+      <div class="integ-card">
+        <div class="integ-icon" style="background:rgba(0,136,204,.1)">✈️</div>
+        <div>
+          <h3>Telegram Bot</h3>
+          <p>Bot-Token von @BotFather einfügen — dein Agent ist sofort als Telegram-Bot erreichbar.</p>
+          <span class="integ-badge" style="background:rgba(0,136,204,.1);color:#0088cc;border:1px solid rgba(0,136,204,.2)">@BotFather Token</span>
+        </div>
+      </div>
+      <div class="integ-card">
+        <div class="integ-icon" style="background:rgba(240,192,64,.1)">⚡</div>
+        <div>
+          <h3>REST API</h3>
+          <p>API Key generieren und deinen Agenten in eigene Apps, Tools oder Workflows einbinden. Multi-turn, JSON, einfach.</p>
+          <span class="integ-badge" style="background:rgba(240,192,64,.1);color:var(--gold);border:1px solid rgba(240,192,64,.2)">x-api-key Header</span>
+        </div>
+      </div>
+      <div class="integ-card">
+        <div class="integ-icon" style="background:rgba(0,206,201,.1)">🔔</div>
+        <div>
+          <h3>Webhooks</h3>
+          <p>Alle Nachrichten automatisch an eigene Systeme weiterleiten. Kompatibel mit Zapier, Make, n8n und mehr.</p>
+          <span class="integ-badge" style="background:rgba(0,206,201,.1);color:var(--teal);border:1px solid rgba(0,206,201,.2)">Bald verfügbar</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BUILDER PREVIEW -->
+<section class="builder">
+  <div class="container">
+    <div class="builder-inner">
+      <div class="reveal">
+        <div class="sec-label">Builder</div>
+        <h2 class="sec-title">Konfiguriere alles.<br>Ohne Code.</h2>
+        <p class="sec-sub" style="margin-bottom:32px">Der Agent-Builder führt dich Schritt für Schritt — von der Persönlichkeit bis zur Integration.</p>
+        <ul class="builder-steps">
+          <li class="builder-step">
+            <div class="bs-num">✦</div>
+            <div><div class="bs-title">Name, Emoji & Farbe</div><div class="bs-desc">Gib deinem Agenten eine Identität die zu dir und deiner Marke passt.</div></div>
+          </li>
+          <li class="builder-step">
+            <div class="bs-num">✦</div>
+            <div><div class="bs-title">System-Prompt & Ton</div><div class="bs-desc">Bestimme Fokus, Persönlichkeit und Kommunikationsstil — professionell, freundlich, direkt oder locker.</div></div>
+          </li>
+          <li class="builder-step">
+            <div class="bs-num">✦</div>
+            <div><div class="bs-title">Schnellantworten</div><div class="bs-desc">Bis zu 5 vordefinierte Themen die Nutzer per Klick auswählen können.</div></div>
+          </li>
+          <li class="builder-step">
+            <div class="bs-num">✦</div>
+            <div><div class="bs-title">Live-Vorschau</div><div class="bs-desc">Sieh vor dem Speichern genau wie dein Agent für Nutzer aussieht.</div></div>
+          </li>
+        </ul>
+        <a href="/app" class="btn-primary" style="display:inline-block;margin-top:24px">Jetzt ausprobieren →</a>
+      </div>
+
+      <!-- Mini builder preview -->
+      <div class="reveal">
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:28px;box-shadow:0 24px 60px rgba(0,0,0,.4)">
+          <div style="font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--pu-l);margin-bottom:18px">✦ Agent Builder</div>
+
+          <div style="margin-bottom:14px">
+            <div style="font-size:.75rem;color:var(--muted);margin-bottom:5px">Name</div>
+            <div style="background:rgba(255,255,255,.05);border:1px solid rgba(108,92,231,.3);border-radius:8px;padding:9px 12px;font-size:.86rem;color:var(--white)">Mia — Kundenservice Bot</div>
+          </div>
+
+          <div style="margin-bottom:14px">
+            <div style="font-size:.75rem;color:var(--muted);margin-bottom:5px">Emoji</div>
+            <div style="display:flex;gap:7px">
+              <span style="width:36px;height:36px;border-radius:8px;background:rgba(108,92,231,.2);border:1px solid var(--purple);display:flex;align-items:center;justify-content:center;font-size:1.1rem">🤖</span>
+              <span style="width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.1rem">💬</span>
+              <span style="width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.1rem">⭐</span>
+              <span style="width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.1rem">🎯</span>
+            </div>
+          </div>
+
+          <div style="margin-bottom:14px">
+            <div style="font-size:.75rem;color:var(--muted);margin-bottom:5px">Ton</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+              <div style="padding:9px 12px;border-radius:8px;background:rgba(108,92,231,.12);border:1px solid var(--purple);font-size:.8rem;color:var(--white)"><strong>Freundlich</strong><br><span style="color:var(--muted);font-size:.72rem">Warm & offen</span></div>
+              <div style="padding:9px 12px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid var(--border);font-size:.8rem;color:var(--muted)">Direkt<br><span style="font-size:.72rem">Präzise</span></div>
+            </div>
+          </div>
+
+          <div style="margin-bottom:18px">
+            <div style="font-size:.75rem;color:var(--muted);margin-bottom:5px">Integrationen</div>
+            <div style="display:flex;gap:7px;flex-wrap:wrap">
+              <span style="background:rgba(108,92,231,.1);border:1px solid rgba(108,92,231,.25);border-radius:6px;padding:4px 10px;font-size:.72rem;color:var(--pu-l)">🌐 Chat-Seite</span>
+              <span style="background:rgba(37,211,102,.08);border:1px solid rgba(37,211,102,.2);border-radius:6px;padding:4px 10px;font-size:.72rem;color:#25d366">📱 WhatsApp</span>
+              <span style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.72rem;color:var(--muted)">✈️ Telegram</span>
+            </div>
+          </div>
+
+          <button style="width:100%;padding:12px;background:var(--purple);border:none;border-radius:8px;color:#fff;font-size:.88rem;font-weight:600;cursor:pointer">💾 Agent speichern</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+  <div class="container">
+    <div class="sec-label reveal">Preise</div>
+    <h2 class="sec-title reveal">Einfach. Transparent.</h2>
+    <p class="sec-sub reveal">Starte kostenlos — skaliere wenn du bereit bist. Kein Abo-Zwang, keine versteckten Kosten.</p>
+
+    <div class="pricing-grid reveal">
+      <!-- FREE -->
+      <div class="price-card">
+        <div class="price-plan">Free</div>
+        <div class="price-amount"><sup>€</sup>0</div>
+        <div class="price-period">für immer kostenlos</div>
+        <ul class="price-features">
+          <li>3 Agenten</li>
+          <li>Öffentliche Chat-Seite</li>
+          <li>Website Widget</li>
+          <li>500 Nachrichten/Monat</li>
+          <li class="off">API Zugang</li>
+          <li class="off">WhatsApp & Telegram</li>
+          <li class="off">Analytics</li>
+        </ul>
+        <a href="/app" class="price-btn price-btn-outline">Kostenlos starten</a>
+      </div>
+
+      <!-- PRO -->
+      <div class="price-card featured">
+        <div class="price-plan">Pro</div>
+        <div class="price-amount"><sup>€</sup>19</div>
+        <div class="price-period">pro Monat</div>
+        <ul class="price-features">
+          <li>Unbegrenzte Agenten</li>
+          <li>Öffentliche Chat-Seite</li>
+          <li>Website Widget</li>
+          <li>10.000 Nachrichten/Monat</li>
+          <li>REST API + API Keys</li>
+          <li>WhatsApp & Telegram</li>
+          <li>Analytics Dashboard</li>
+        </ul>
+        <a href="/app" class="price-btn price-btn-fill">Pro starten</a>
+      </div>
+
+      <!-- ENTERPRISE -->
+      <div class="price-card">
+        <div class="price-plan">Enterprise</div>
+        <div class="price-amount" style="font-size:2rem">Auf Anfrage</div>
+        <div class="price-period">individuelles Angebot</div>
+        <ul class="price-features">
+          <li>Alles aus Pro</li>
+          <li>Unbegrenzte Nachrichten</li>
+          <li>Custom Domain</li>
+          <li>White-Label</li>
+          <li>Dedicated Support</li>
+          <li>SLA Garantie</li>
+          <li>On-Premise Option</li>
+        </ul>
+        <a href="mailto:info@agentkontor.de" class="price-btn price-btn-outline">Kontakt aufnehmen</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-section">
+  <div class="cta-box reveal">
+    <h2>Starte jetzt.<br><span>Kostenlos.</span></h2>
+    <p>Kein Abo, keine Kreditkarte. Dein erster Agent ist in weniger als 5 Minuten live.</p>
+    <div class="cta-btns">
+      <a href="/app" class="btn-primary">Kostenlos registrieren →</a>
+      <a href="#features" class="btn-outline">Mehr erfahren</a>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <h3>Agent<span>Kontor</span></h3>
+      <p>Baue, konfiguriere und deploye eigene KI-Agenten — ohne Code, ohne Komplexität.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Produkt</h4>
+      <a href="#features">Features</a>
+      <a href="#integrations">Integrationen</a>
+      <a href="#pricing">Preise</a>
+      <a href="/app">Dashboard</a>
+    </div>
+    <div class="footer-col">
+      <h4>Entwickler</h4>
+      <a href="#integrations">REST API</a>
+      <a href="/app">API Keys</a>
+      <a href="/app">Webhook Docs</a>
+      <a href="/app">Widget Embed</a>
+    </div>
+    <div class="footer-col">
+      <h4>Rechtliches</h4>
+      <a href="#">Impressum</a>
+      <a href="#">Datenschutz</a>
+      <a href="#">AGB</a>
+      <a href="mailto:info@agentkontor.de">Kontakt</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div>© 2025 AgentKontor · superhecht.ai · Köln</div>
+    <div>Made with ☕ in Deutschland</div>
+  </div>
+</footer>
+
+<script>
+// Scroll reveal
+const obs = new IntersectionObserver(entries => {
+  entries.forEach((e,i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('visible'), i * 80);
+      obs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.08 });
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+// Nav scroll
+window.addEventListener('scroll', () => {
+  document.getElementById('nav').style.borderBottomColor =
+    window.scrollY > 50 ? 'rgba(108,92,231,0.15)' : 'rgba(255,255,255,0.05)';
+});
+
+// Demo chat
+const demoReplies = {
+  'was kannst du?': 'Ich kann Fragen beantworten, Aufgaben erledigen, Informationen erklären und vieles mehr — ganz auf deinen Anwendungsfall zugeschnitten. Konfiguriere mich wie du möchtest!',
+  'wie richte ich dich ein?': 'Ganz einfach: 1. Account erstellen 2. Agent konfigurieren (Name, Persönlichkeit, Fokus) 3. Kanal wählen (Chat-Seite, Widget, WhatsApp...) 4. Live gehen ✓',
+  'welche sprachen?': 'Ich bin auf Deutsch und Englisch verfügbar — du kannst die Sprache pro Agent individuell einstellen. Weitere Sprachen sind möglich.',
+};
+const defaultReplies = [
+  'Das ist eine gute Frage! Als KI-Agent kann ich auf deinen speziellen Anwendungsfall zugeschnitten werden.',
+  'Interessant! In AgentKontor kannst du mich genau für solche Fragen trainieren.',
+  'Gerne helfe ich dabei. Konfiguriere mich über den Builder und ich bin auf deine Bedürfnisse optimiert.',
+];
+let demoReplyIdx = 0;
+
+async function demoSend(text) {
+  if (!text.trim()) return;
+  const chat = document.getElementById('demoChat');
+  document.getElementById('demoChips').innerHTML = '';
+
+  // User msg
+  const userDiv = document.createElement('div');
+  userDiv.className = 'demo-msg user';
+  userDiv.innerHTML = `<div class="demo-av">👤</div><div class="demo-bubble" style="background:var(--purple);color:#fff">${text}</div>`;
+  chat.appendChild(userDiv);
+
+  // Typing
+  const typDiv = document.createElement('div');
+  typDiv.className = 'demo-msg bot';
+  typDiv.id = 'demo-typing';
+  typDiv.innerHTML = `<div class="demo-av">🤖</div><div class="typing-dots"><span></span><span></span><span></span></div>`;
+  chat.appendChild(typDiv);
+  chat.scrollTop = chat.scrollHeight;
+
+  await new Promise(r => setTimeout(r, 1200));
+  typDiv.remove();
+
+  const reply = demoReplies[text.toLowerCase()] || defaultReplies[demoReplyIdx++ % defaultReplies.length];
+  const botDiv = document.createElement('div');
+  botDiv.className = 'demo-msg bot';
+  botDiv.innerHTML = `<div class="demo-av">🤖</div><div class="demo-bubble">${reply}</div>`;
+  chat.appendChild(botDiv);
+  chat.scrollTop = chat.scrollHeight;
+}
+</script>
+</body>
+</html>
