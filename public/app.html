@@ -423,6 +423,7 @@ Response:
       <div class="tab" :class="{active:aTab==='preview'}" @click="aTab='preview'" x-text="lang==='de'?'Vorschau':'Preview'"></div>
       <template x-if="editing">
         <div class="tab" :class="{active:aTab==='embed'}" @click="aTab='embed'" x-text="lang==='de'?'Einbetten':'Embed'"></div>
+        <div class="tab" :class="{active:aTab==='identity'}" @click="aTab='identity';loadIdentity()" x-text="lang==='de'?'🤖 Identität':'🤖 Identity'"></div>
       </template>
     </div>
 
@@ -655,6 +656,91 @@ Response:
       </div>
     </template>
 
+    <!-- IDENTITY TAB -->
+    <template x-if="aTab==='identity'">
+      <div>
+        <div style="padding:14px;background:rgba(108,92,231,.06);border:1px solid rgba(108,92,231,.2);border-radius:10px;margin-bottom:18px">
+          <div style="font-size:.88rem;font-weight:600;color:var(--white);margin-bottom:4px" x-text="lang==='de'?'🤖 Agent-Identität':'🤖 Agent Identity'"></div>
+          <div style="font-size:.78rem;color:var(--muted)" x-text="lang==='de'?'Gib deinem Agenten eine Identität damit er eigenständig Aktionen ausführen kann: Termine buchen, E-Mails senden, Formulare ausfüllen.':'Give your agent an identity so it can autonomously take actions: book appointments, send emails, fill forms.'"></div>
+        </div>
+
+        <!-- Basic identity -->
+        <div class="fs"><div class="fs-title" x-text="lang==='de'?'Identität':'Identity'"></div>
+          <div class="inp-row" style="margin-bottom:12px">
+            <div class="field" style="margin:0"><label x-text="lang==='de'?'Anzeigename':'Display Name'"></label><input class="inp" type="text" x-model="identityForm.display_name" :placeholder="lang==='de'?'z.B. Mia von FirmaXY':'e.g. Mia from CompanyXY'"></div>
+            <div class="field" style="margin:0"><label>E-Mail</label><input class="inp" type="email" x-model="identityForm.email_address" placeholder="agent@firma.de"></div>
+          </div>
+        </div>
+
+        <!-- Google -->
+        <div class="integ-item">
+          <div class="ii-icon" style="background:rgba(66,133,244,.1)">🔵</div>
+          <div class="ii-info">
+            <div class="ii-name">Google (Calendar + Gmail)</div>
+            <div class="ii-desc" x-text="lang==='de'?'Kalender-Einträge erstellen & E-Mails senden als Agent.':'Create calendar events & send emails as the agent.'"></div>
+            <template x-if="identity?.has_google">
+              <div>
+                <div style="font-size:.75rem;color:var(--green);margin-top:5px">✓ <span x-text="lang==='de'?'Verbunden':'Connected'"></span> <span x-text="identity.email_address?'('+identity.email_address+')'":''"></span></div>
+                <div style="margin-top:8px">
+                  <label style="font-size:.74rem;color:var(--muted)" x-text="lang==='de'?'Kalender-ID (leer = primär)':'Calendar ID (empty = primary)'"></label>
+                  <input class="inp" type="text" x-model="identityForm.google_calendar_id" placeholder="primary" style="margin-top:4px">
+                </div>
+              </div>
+            </template>
+          </div>
+          <template x-if="!identity?.has_google">
+            <button class="btn btn-sm" style="background:#4285f4;color:#fff;flex-shrink:0" @click="connectGoogle()" x-text="lang==='de'?'Google verbinden':'Connect Google'"></button>
+          </template>
+          <template x-if="identity?.has_google">
+            <button class="btn btn-sm btn-danger" style="flex-shrink:0" @click="disconnectGoogle()" x-text="lang==='de'?'Trennen':'Disconnect'"></button>
+          </template>
+        </div>
+
+        <!-- Calendly -->
+        <div class="integ-item">
+          <div class="ii-icon" style="background:rgba(0,168,116,.1)">📅</div>
+          <div class="ii-info">
+            <div class="ii-name">Calendly API</div>
+            <div class="ii-desc" x-text="lang==='de'?'Freie Slots abrufen und Termine direkt buchen.':'Retrieve available slots and book appointments directly.'"></div>
+            <template x-if="identity?.has_calendly">
+              <div style="font-size:.75rem;color:var(--green);margin-top:5px">✓ <span x-text="lang==='de'?'API-Token hinterlegt':'API token stored'"></span></div>
+            </template>
+            <template x-if="!identity?.has_calendly || true">
+              <input class="inp" type="password" x-model="identityForm.calendly_token" :placeholder="lang==='de'?'Calendly Personal Access Token':'Calendly personal access token'" style="margin-top:7px">
+            </template>
+          </div>
+        </div>
+
+        <!-- Form Filling note -->
+        <div style="padding:14px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;margin-bottom:14px;display:flex;gap:12px">
+          <div style="font-size:1.3rem">🌐</div>
+          <div>
+            <div style="font-size:.86rem;font-weight:600;color:var(--white);margin-bottom:3px" x-text="lang==='de'?'Formulare ausfüllen':'Fill Forms'"></div>
+            <div style="font-size:.76rem;color:var(--muted)" x-text="lang==='de'?'Der Agent kann externe Websites öffnen und Formulare automatisch ausfüllen. Benötigt Playwright (npm install playwright).':'The agent can open external websites and fill forms automatically. Requires Playwright (npm install playwright).'"></div>
+          </div>
+        </div>
+
+        <button class="btn btn-purple btn-sm" style="width:100%;margin-bottom:20px" @click="saveIdentity()" x-text="lang==='de'?'💾 Identität speichern':'💾 Save Identity'"></button>
+
+        <!-- Action Log -->
+        <div class="fs-title" x-text="lang==='de'?'Aktionsprotokoll (letzte 20)':'Action Log (last 20)'"></div>
+        <template x-if="agentActions.length===0">
+          <div style="text-align:center;padding:20px;font-size:.82rem;color:var(--muted)" x-text="lang==='de'?'Noch keine Aktionen ausgeführt':'No actions executed yet'"></div>
+        </template>
+        <template x-for="a in agentActions" :key="a.id">
+          <div style="display:flex;align-items:center;gap:10px;padding:10px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;margin-bottom:6px">
+            <span x-text="a.action_type==='CALENDAR_CREATE'?'📅':a.action_type==='EMAIL_SEND'?'✉️':a.action_type==='CALENDLY_BOOK'?'🗓️':a.action_type==='FORM_FILL'?'🌐':'⚡'" style="font-size:1.1rem"></span>
+            <div style="flex:1">
+              <div style="font-size:.8rem;font-weight:600;color:var(--white)" x-text="a.action_type.replace(/_/g,' ')"></div>
+              <div style="font-size:.7rem;color:var(--muted)" x-text="new Date(a.created_at).toLocaleString('de-DE')"></div>
+            </div>
+            <span :style="`font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:20px;background:${a.status==='success'?'rgba(0,184,148,.12)':'rgba(233,69,96,.1)'};color:${a.status==='success'?'var(--green)':'var(--red)'};border:1px solid ${a.status==='success'?'rgba(0,184,148,.2)':'rgba(233,69,96,.2)'}`" x-text="a.status"></span>
+          </div>
+        </template>
+      </div>
+    </template>
+
+
     <div class="modal-footer">
       <template x-if="editing"><button class="btn btn-sm btn-danger" @click="delAgent()" x-text="lang==='de'?'Löschen':'Delete'"></button></template>
       <button class="btn btn-sm btn-ghost" @click="showModal=false" x-text="lang==='de'?'Abbrechen':'Cancel'"></button>
@@ -691,6 +777,7 @@ function app() {
     editing:null, aTab:'basics', docsTab:'api',
     chipIn:'', uploading:false, dragging:false,
     newKeyRev:null, nkf:{label:'',agentId:''},
+    identity:null, identityForm:{display_name:'',email_address:'',google_calendar_id:'',calendly_token:''},agentActions:[],
     af:{name:'',emoji:'🤖',description:'',system_prompt:'',greeting:'',tone:'professionell',language:'de',quick_chips:[],color:'#6c5ce7',is_active:true,widget_enabled:true,chatpage_enabled:true,api_enabled:false,whatsapp_enabled:false,whatsapp_number:'',telegram_enabled:false,telegram_token:'',rag_enabled:false,rag_prompt:''},
     emojis:['🤖','💬','⭐','🎓','💡','🔥','🦾','🧠','✨','🚀','🏆','💼','🎯','🌟','⚡','🎪'],
     colors:['#6c5ce7','#e94560','#00b894','#00aaff','#f39c12','#a29bfe','#fd79a8','#00cec9','#e17055','#74b9ff'],
@@ -832,6 +919,36 @@ function app() {
     },
 
     copy(t){navigator.clipboard.writeText(t).then(()=>this.toast(this.lang==='de'?'Kopiert!':'Copied!'));},
+
+    async loadIdentity(){
+      if(!this.editing) return;
+      this.identityLoading=true;
+      const d=await this.api('/identity/'+this.editing.id);
+      this.identityLoading=false;
+      if(d.identity){
+        this.identity=d.identity;
+        this.identityForm={display_name:d.identity.display_name||'',email_address:d.identity.email_address||'',google_calendar_id:d.identity.google_calendar_id||'',calendly_token:''};
+      } else { this.identity=null; }
+      const actions=await this.api('/identity/'+this.editing.id+'/actions');
+      if(actions.actions) this.agentActions=actions.actions.slice(0,20);
+    },
+
+    async saveIdentity(){
+      const d=await this.api('/identity/'+this.editing.id,'POST',this.identityForm);
+      if(d.success){ this.toast(this.lang==='de'?'Identität gespeichert ✓':'Identity saved ✓'); this.loadIdentity(); }
+      else this.toast(d.error,'err');
+    },
+
+    connectGoogle(){
+      window.open('/api/identity/'+this.editing.id+'/google/auth','_blank','width=600,height=700');
+    },
+
+    async disconnectGoogle(){
+      if(!confirm(this.lang==='de'?'Google trennen?':'Disconnect Google?')) return;
+      await this.api('/identity/'+this.editing.id+'/google','DELETE');
+      this.toast(this.lang==='de'?'Google getrennt':'Google disconnected');
+      this.loadIdentity();
+    },
 
     toast(msg,type='ok'){
       const id=Date.now();this.toasts.push({id,msg,type});
