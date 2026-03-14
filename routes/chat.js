@@ -1,10 +1,9 @@
 const router = require('express').Router();
-const Anthropic = require('@anthropic-ai/sdk');
 const { v4: uuidv4 } = require('uuid');
 const { buildCapabilityPrompt, parseAgentActions } = require('./capabilities');
 const { getIdentity, executeActions, buildIdentityPrompt } = require('./actions');
+const { universalChat } = require('./models');
 
-const ai = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 function getPool(req) { return req.app.locals.pool; }
 
 async function getAgent(pool, identifier, byPublicId = true) {
@@ -52,11 +51,13 @@ router.post('/:publicId', async (req, res) => {
     const userMsg = messages[messages.length - 1];
     await pool.query('INSERT INTO chat_messages(agent_id,session_id,role,content,source)VALUES($1,$2,$3,$4,$5)',[agent.id,sid,'user',userMsg.content,source]);
     const system = await buildSystem(agent, userMsg.content, pool);
-    const response = await ai.messages.create({
-      model: 'claude-sonnet-4-20250514', max_tokens: 1024, system,
-      messages: messages.slice(-14).map(m=>({role:m.role==='user'?'user':'assistant',content:m.content}))
+    let reply = await universalChat({
+      model: agent.model || 'claude-sonnet-4-20250514',
+      systemPrompt: system,
+      messages: messages.slice(-14),
+      apiKey: agent.openai_key || null,
+      ollamaUrl: agent.ollama_url || null,
     });
-    let reply = response.content[0]?.text || '...';
 
     // Execute capability actions (leads, email via SMTP)
     reply = await parseAgentActions(reply, agent, pool, sid, source);
@@ -92,8 +93,7 @@ router.post('/api/:agentId', async (req, res) => {
     if(!messages?.length) return res.status(400).json({error:'messages fehlt'});
     const sid=sessionId||uuidv4();
     const system=await buildSystem(agent,messages[messages.length-1].content,pool);
-    const response=await ai.messages.create({model:'claude-sonnet-4-20250514',max_tokens:1024,system,messages:messages.slice(-14).map(m=>({role:m.role==='user'?'user':'assistant',content:m.content}))});
-    let reply=response.content[0]?.text||'...';
+    let reply=await universalChat({model:agent.model||'claude-sonnet-4-20250514',systemPrompt:system,messages:messages.slice(-14),apiKey:agent.openai_key||null,ollamaUrl:agent.ollama_url||null});
     reply=await parseAgentActions(reply,agent,pool,sid,'api');
     if(agent.has_identity){try{const id=await getIdentity(pool,agent.id);reply=await executeActions(reply,agent,id,pool,sid,'api');}catch(e){}}
     await pool.query('UPDATE api_keys SET last_used=NOW() WHERE key_hash=$1',[vk.key_hash]);

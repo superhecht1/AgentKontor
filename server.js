@@ -14,7 +14,7 @@ const pool = new Pool({
 
 async function initDb() {
   const fs = require('fs');
-  const sqls = ['migrations/init.sql','migrations/add_rag.sql','migrations/add_capabilities.sql','migrations/add_identity.sql'];
+  const sqls = ['migrations/init.sql','migrations/add_rag.sql','migrations/add_capabilities.sql','migrations/add_identity.sql','migrations/add_models.sql'];
   for (const file of sqls) {
     try {
       const sql = fs.readFileSync(path.join(__dirname, file), 'utf8');

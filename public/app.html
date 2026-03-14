@@ -416,6 +416,7 @@ Response:
 
     <div class="tabs" style="margin-bottom:16px">
       <div class="tab" :class="{active:aTab==='basics'}" @click="aTab='basics'" x-text="lang==='de'?'Grundlagen':'Basics'"></div>
+      <div class="tab" :class="{active:aTab==='model'}" @click="aTab='model';loadModels()" x-text="'🧠 Modell'"></div>
       <div class="tab" :class="{active:aTab==='behavior'}" @click="aTab='behavior'" x-text="lang==='de'?'Verhalten':'Behavior'"></div>
       <div class="tab" :class="{active:aTab==='rag'}" @click="aTab='rag';if(editing)loadDocs(editing.id)" x-text="'RAG / Wissen'"></div>
       <div class="tab" :class="{active:aTab==='caps'}" @click="aTab='caps'" x-text="lang==='de'?'Fähigkeiten':'Capabilities'"></div>
@@ -514,6 +515,131 @@ Response:
         </template>
       </div>
     </template>
+
+    <!-- MODEL TAB -->
+    <template x-if="aTab==='model'">
+      <div>
+        <!-- Current model selector -->
+        <div class="fs">
+          <div class="fs-title">🧠 <span x-text="lang==='de'?'KI-Modell':'AI Model'"></span></div>
+          <div class="field">
+            <label x-text="lang==='de'?'Aktives Modell für diesen Agenten':'Active model for this agent'"></label>
+            <select class="inp" x-model="af.model">
+              <optgroup label="Anthropic (Claude)">
+                <option value="claude-haiku-4-5-20251001">Claude Haiku 4 — Schnell &amp; günstig</option>
+                <option value="claude-sonnet-4-20250514">Claude Sonnet 4 — Empfohlen ⭐</option>
+                <option value="claude-opus-4-6">Claude Opus 4 — Mächtigste</option>
+              </optgroup>
+              <optgroup label="OpenAI">
+                <option value="gpt-4o-mini">GPT-4o Mini — Schnell</option>
+                <option value="gpt-4o">GPT-4o</option>
+              </optgroup>
+              <template x-if="availableModels.filter(m=>m.provider==='ollama').length>0">
+                <optgroup label="🖥️ Lokal (Ollama)">
+                  <template x-for="m in availableModels.filter(m=>m.provider==='ollama')" :key="m.id">
+                    <option :value="m.id" x-text="m.name"></option>
+                  </template>
+                </optgroup>
+              </template>
+              <template x-if="availableModels.filter(m=>m.isFineTuned).length>0">
+                <optgroup label="🎯 Deine Fine-Tuned Modelle">
+                  <template x-for="m in availableModels.filter(m=>m.isFineTuned)" :key="m.id">
+                    <option :value="m.id" x-text="m.name"></option>
+                  </template>
+                </optgroup>
+              </template>
+            </select>
+          </div>
+          <div class="field">
+            <label x-text="lang==='de'?'OpenAI API Key (optional, überschreibt .env)':'OpenAI API Key (optional, overrides .env)'"></label>
+            <input class="inp" type="password" x-model="openaiKey" placeholder="sk-...">
+          </div>
+        </div>
+
+        <!-- Ollama -->
+        <div class="fs">
+          <div class="fs-title">🖥️ Ollama (Lokale Modelle)</div>
+          <div class="field">
+            <label>Ollama URL</label>
+            <div style="display:flex;gap:8px">
+              <input class="inp" type="text" x-model="ollamaUrl" placeholder="http://localhost:11434">
+              <button class="btn btn-ghost btn-sm" @click="modelsLoaded=false;loadModels()" x-text="lang==='de'?'Prüfen':'Check'"></button>
+            </div>
+            <div class="hint" x-text="lang==='de'?'Ollama lokal installieren: https://ollama.ai':'Install Ollama locally: https://ollama.ai'"></div>
+          </div>
+          <div x-show="availableModels.filter(m=>m.provider==='ollama').length>0">
+            <div style="font-size:.78rem;color:var(--green);margin-bottom:8px">✓ <span x-text="availableModels.filter(m=>m.provider==='ollama').length+' lokale Modelle verfügbar'"></span></div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              <template x-for="m in availableModels.filter(m=>m.provider==='ollama')" :key="m.id">
+                <span style="background:rgba(0,206,201,.1);border:1px solid rgba(0,206,201,.2);border-radius:20px;padding:3px 10px;font-size:.73rem;color:var(--teal);cursor:pointer" @click="af.model=m.id" x-text="m.id"></span>
+              </template>
+            </div>
+          </div>
+          <div x-show="modelsLoaded && availableModels.filter(m=>m.provider==='ollama').length===0" style="font-size:.78rem;color:var(--muted)" x-text="lang==='de'?'Ollama nicht erreichbar oder keine Modelle installiert.':'Ollama not reachable or no models installed.'"></div>
+        </div>
+
+        <button class="btn btn-purple btn-sm" style="width:100%;margin-bottom:24px" @click="saveModel()" x-text="lang==='de'?'💾 Modell speichern':'💾 Save Model'"></button>
+
+        <!-- Fine-Tuning -->
+        <div class="fs">
+          <div class="fs-title">🎯 Fine-Tuning (OpenAI)</div>
+          <div style="padding:12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:9px;margin-bottom:14px">
+            <div style="font-size:.82rem;color:var(--text)" x-text="lang==='de'?'Trainiere ein eigenes Modell auf den echten Gesprächen dieses Agenten. Das Modell lernt den Stil, Ton und die Antworten deines Agenten.':'Train a custom model on this agent\'s real conversations. The model learns the style, tone and responses of your agent.'"></div>
+          </div>
+
+          <template x-if="!ftPrepare">
+            <button class="btn btn-ghost btn-sm" @click="prepareFinetune()" :disabled="ftLoading">
+              <span x-show="ftLoading">⏳</span>
+              <span x-text="lang==='de'?'Trainingsdaten vorbereiten':'Prepare training data'"></span>
+            </button>
+          </template>
+
+          <template x-if="ftPrepare">
+            <div>
+              <div style="padding:12px;border-radius:9px;margin-bottom:12px" :style="ftPrepare.ready?'background:rgba(0,184,148,.08);border:1px solid rgba(0,184,148,.2)':'background:rgba(233,69,96,.08);border:1px solid rgba(233,69,96,.2)'">
+                <div style="font-size:.84rem;font-weight:600" :style="ftPrepare.ready?'color:var(--green)':'color:var(--red)'" x-text="ftPrepare.message"></div>
+                <div style="font-size:.75rem;color:var(--muted);margin-top:4px" x-text="ftPrepare.count+' Trainingspaare gefunden'"></div>
+              </div>
+              <template x-if="ftPrepare.ready">
+                <div>
+                  <div style="font-size:.75rem;color:var(--muted);margin-bottom:4px" x-text="lang==='de'?'Basis-Modell:':'Base model:'"></div>
+                  <select class="inp" x-model="af.model" style="margin-bottom:10px">
+                    <option value="gpt-4o-mini-2024-07-18">GPT-4o Mini (günstig, ~€3–8)</option>
+                    <option value="gpt-4o-2024-08-06">GPT-4o (leistungsstark, ~€15–40)</option>
+                  </select>
+                  <button class="btn btn-purple btn-sm" style="width:100%" @click="startFinetune()" :disabled="ftLoading">
+                    <span x-show="ftLoading">⏳</span>
+                    <span x-text="lang==='de'?'🚀 Fine-Tuning starten':'🚀 Start Fine-Tuning'"></span>
+                  </button>
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
+
+        <!-- Job list -->
+        <template x-if="ftJobs.length>0">
+          <div>
+            <div style="font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px" x-text="lang==='de'?'Fine-Tuning Jobs':'Fine-Tuning Jobs'"></div>
+            <template x-for="job in ftJobs" :key="job.id">
+              <div style="display:flex;align-items:center;gap:10px;padding:12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:9px;margin-bottom:7px">
+                <div style="flex:1">
+                  <div style="font-size:.84rem;font-weight:600;color:var(--white)" x-text="job.name"></div>
+                  <div style="font-size:.72rem;color:var(--muted)" x-text="job.base_model+' · '+job.training_pairs+' Paare · '+new Date(job.created_at).toLocaleDateString('de-DE')"></div>
+                  <div x-show="job.fine_tuned_model" style="font-size:.7rem;color:var(--pu-l);margin-top:2px" x-text="job.fine_tuned_model"></div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+                  <span :style="`font-size:.66rem;font-weight:700;padding:2px 8px;border-radius:20px;background:${job.status==='succeeded'?'rgba(0,184,148,.12)':job.status==='failed'?'rgba(233,69,96,.1)':'rgba(240,192,64,.1)'};color:${job.status==='succeeded'?'var(--green)':job.status==='failed'?'var(--red)':'var(--gold)'};border:1px solid ${job.status==='succeeded'?'rgba(0,184,148,.2)':job.status==='failed'?'rgba(233,69,96,.2)':'rgba(240,192,64,.2)'}`" x-text="job.status"></span>
+                  <button x-show="job.status==='running'||job.status==='validating_files'||job.status==='queued'" class="btn btn-ghost" style="font-size:.68rem;padding:3px 8px" @click="pollFtJob(job.openai_job_id)" x-text="lang==='de'?'Aktualisieren':'Refresh'"></button>
+                  <button x-show="job.status==='succeeded'&&job.fine_tuned_model" class="btn btn-sm" style="font-size:.68rem;padding:3px 10px;background:var(--purple);color:#fff" @click="af.model=job.fine_tuned_model;toast(lang==='de'?'Modell gesetzt!':'Model set!')" x-text="lang==='de'?'Aktivieren':'Activate'"></button>
+                </div>
+              </div>
+            </template>
+          </div>
+        </template>
+      </div>
+    </template>
+
 
     <!-- CAPS -->
     <template x-if="aTab==='caps'">
@@ -777,6 +903,7 @@ function app() {
     editing:null, aTab:'basics', docsTab:'api',
     chipIn:'', uploading:false, dragging:false,
     newKeyRev:null, nkf:{label:'',agentId:''},
+    availableModels:[], modelsLoaded:false, ftJobs:[], ftPrepare:null, ftLoading:false, openaiKey:'', ollamaUrl:'http://localhost:11434',
     identity:null, identityForm:{display_name:'',email_address:'',google_calendar_id:'',calendly_token:''},agentActions:[],
     af:{name:'',emoji:'🤖',description:'',system_prompt:'',greeting:'',tone:'professionell',language:'de',quick_chips:[],color:'#6c5ce7',is_active:true,widget_enabled:true,chatpage_enabled:true,api_enabled:false,whatsapp_enabled:false,whatsapp_number:'',telegram_enabled:false,telegram_token:'',rag_enabled:false,rag_prompt:''},
     emojis:['🤖','💬','⭐','🎓','💡','🔥','🦾','🧠','✨','🚀','🏆','💼','🎯','🌟','⚡','🎪'],
@@ -851,7 +978,7 @@ function app() {
       if(!this.af.name){this.toast(this.lang==='de'?'Name erforderlich':'Name required','err');return;}
       if(!this.af.system_prompt){this.toast(this.lang==='de'?'System-Prompt erforderlich':'System prompt required','err');return;}
       this.saving=true;
-      const d=this.editing?await this.api('/agents/'+this.editing.id,'PUT',this.af):await this.api('/agents','POST',this.af);
+      const payload={...this.af};if(this.openaiKey)payload.openai_key=this.openaiKey;if(this.ollamaUrl&&this.ollamaUrl!=='http://localhost:11434')payload.ollama_url=this.ollamaUrl;const d=this.editing?await this.api('/agents/'+this.editing.id,'PUT',payload):await this.api('/agents','POST',payload);
       this.saving=false;
       if(d.error){this.toast(d.error,'err');return;}
       this.toast(this.lang==='de'?'Gespeichert ✓':'Saved ✓');
@@ -916,6 +1043,45 @@ function app() {
     async delKey(id){
       if(!confirm(this.lang==='de'?'Key löschen?':'Delete key?'))return;
       await this.api('/keys/'+id,'DELETE');await this.loadKeys();
+    },
+
+    async loadModels(){
+      if(this.modelsLoaded) return;
+      const d=await this.api('/models?ollamaUrl='+encodeURIComponent(this.ollamaUrl));
+      if(d.models) this.availableModels=d.models;
+      const fj=await this.api('/models/finetune');
+      if(fj.jobs) this.ftJobs=fj.jobs;
+      this.modelsLoaded=true;
+    },
+
+    async prepareFinetune(){
+      if(!this.editing) return;
+      this.ftLoading=true;
+      const d=await this.api('/models/finetune/prepare','POST',{agentId:this.editing.id});
+      this.ftLoading=false;
+      this.ftPrepare=d;
+    },
+
+    async startFinetune(){
+      if(!this.editing) return;
+      if(!this.openaiKey&&!confirm(this.lang==='de'?'Keinen OpenAI Key angegeben — wird OPENAI_API_KEY aus .env verwendet. Fortfahren?':'No OpenAI key provided — will use OPENAI_API_KEY from .env. Continue?')) return;
+      this.ftLoading=true;
+      const d=await this.api('/models/finetune/start','POST',{agentId:this.editing.id,openaiKey:this.openaiKey||undefined});
+      this.ftLoading=false;
+      if(d.success){this.toast(d.message||'Fine-Tuning gestartet!');const fj=await this.api('/models/finetune');if(fj.jobs)this.ftJobs=fj.jobs;}
+      else this.toast(d.error,'err');
+    },
+
+    async pollFtJob(jobId){
+      const d=await this.api('/models/finetune/'+jobId+'/status');
+      if(d.job){const idx=this.ftJobs.findIndex(j=>j.openai_job_id===jobId);if(idx>-1)this.ftJobs[idx]=d.job;}
+      if(d.job?.status==='succeeded') this.toast(this.lang==='de'?'Fine-Tuning fertig! Modell wird automatisch zugewiesen.':'Fine-tuning done! Model auto-assigned.');
+    },
+
+    async saveModel(){
+      if(!this.editing) return;
+      const d=await this.api('/agents/'+this.editing.id,'PUT',{...this.af,openai_key:this.openaiKey||undefined,ollama_url:this.ollamaUrl||undefined});
+      if(d.agent) this.toast(this.lang==='de'?'Modell gespeichert ✓':'Model saved ✓');
     },
 
     copy(t){navigator.clipboard.writeText(t).then(()=>this.toast(this.lang==='de'?'Kopiert!':'Copied!'));},
