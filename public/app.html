@@ -9,6 +9,7 @@
 :root{--bg:#050510;--bg2:#09091a;--bg3:#0e0e22;--card:#0c0c1e;--border:rgba(255,255,255,.08);--purple:#6c5ce7;--pu-l:#a29bfe;--pu-d:#4a3db0;--teal:#00cec9;--white:#fff;--muted:#5a5a80;--text:#c8c8e8;--red:#e94560;--green:#00b894;--gold:#f0c040}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
+[x-cloak]{display:none!important}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
 /* ─── AUTH ─── */
@@ -929,20 +930,33 @@ function app() {
     },
 
     async login() {
+      if(!this.lf.email||!this.lf.password){this.authErr=this.lang==='de'?'E-Mail und Passwort erforderlich':'Email and password required';return;}
       this.loading=true;this.authErr='';
-      const d=await this.api('/auth/login','POST',this.lf);
-      this.loading=false;
-      if(d.error){this.authErr=d.error;return;}
-      this.setUser(d.token,d.user);
+      try {
+        const d=await this.api('/auth/login','POST',this.lf);
+        this.loading=false;
+        if(d.error){this.authErr=d.error;return;}
+        this.setUser(d.token,d.user);
+      } catch(e) {
+        this.loading=false;
+        this.authErr=this.lang==='de'?'Verbindungsfehler — bitte erneut versuchen':'Connection error — please try again';
+      }
     },
 
     async register() {
+      if(!this.rf.name){this.authErr=this.lang==='de'?'Name erforderlich':'Name required';return;}
+      if(!this.rf.email){this.authErr=this.lang==='de'?'E-Mail erforderlich':'Email required';return;}
       if(this.rf.password.length<8){this.authErr=this.lang==='de'?'Passwort mindestens 8 Zeichen':'Password at least 8 characters';return;}
       this.loading=true;this.authErr='';
-      const d=await this.api('/auth/register','POST',{...this.rf,lang:this.lang});
-      this.loading=false;
-      if(d.error){this.authErr=d.error;return;}
-      this.setUser(d.token,d.user);
+      try {
+        const d=await this.api('/auth/register','POST',{...this.rf,lang:this.lang});
+        this.loading=false;
+        if(d.error){this.authErr=d.error;return;}
+        this.setUser(d.token,d.user);
+      } catch(e) {
+        this.loading=false;
+        this.authErr=this.lang==='de'?'Verbindungsfehler — bitte erneut versuchen':'Connection error — please try again';
+      }
     },
 
     setUser(token,user){
