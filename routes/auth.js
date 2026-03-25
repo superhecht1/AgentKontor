@@ -27,8 +27,8 @@ router.post('/register', async (req, res) => {
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '30d' });
     res.json({ token, user });
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: 'Registrierung fehlgeschlagen' });
+    console.error('REGISTER ERROR:', e.message, e.code, e.detail);
+    res.status(500).json({ error: 'Registrierung fehlgeschlagen: ' + e.message + (e.detail ? ' | ' + e.detail : '') });
   }
 });
 
