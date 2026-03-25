@@ -2,7 +2,11 @@
 -- Run: psql $DATABASE_URL -f migrations/add_rag.sql
 
 -- Enable pgvector if available (falls back to JSONB)
-CREATE EXTENSION IF NOT EXISTS vector;
+DO $$ BEGIN
+  CREATE EXTENSION IF NOT EXISTS vector;
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'pgvector not available, using fallback';
+END $$
 
 -- Documents uploaded per agent
 CREATE TABLE IF NOT EXISTS rag_documents (
@@ -42,12 +46,10 @@ CREATE INDEX IF NOT EXISTS idx_rag_chunks_doc     ON rag_chunks(document_id);
 -- Vector similarity index (only if pgvector available)
 DO $$
 BEGIN
-  IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'vector') THEN
-    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_rag_chunks_embedding ON rag_chunks USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100)';
-  END IF;
+  CREATE INDEX IF NOT EXISTS idx_rag_chunks_embedding ON rag_chunks USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
 EXCEPTION WHEN OTHERS THEN
-  RAISE NOTICE 'pgvector index not created: %', SQLERRM;
-END $$;
+  RAISE NOTICE 'pgvector index skipped';
+END $$
 
 -- Add RAG flag to agents
 ALTER TABLE agents ADD COLUMN IF NOT EXISTS rag_enabled BOOLEAN NOT NULL DEFAULT false;

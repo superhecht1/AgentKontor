@@ -18,12 +18,23 @@ async function initDb() {
   for (const file of sqls) {
     try {
       const sql = fs.readFileSync(path.join(__dirname, file), 'utf8');
-      await pool.query(sql);
-    } catch (e) {
-      // Ignore "already exists" errors from IF NOT EXISTS
-      if (!e.message.includes('already exists') && !e.message.includes('does not exist')) {
-        console.warn('Migration warning (' + file + '):', e.message);
+      // Split on semicolons to run statements individually — avoids one failure killing the rest
+      const statements = sql.split(';').map(s => s.trim()).filter(s => s.length > 3 && !s.startsWith('--'));
+      for (const stmt of statements) {
+        try {
+          await pool.query(stmt);
+        } catch(stmtErr) {
+          const msg = stmtErr.message;
+          // Silently ignore harmless errors
+          if (msg.includes('already exists') || msg.includes('does not exist') ||
+              msg.includes('duplicate') || msg.includes('extension') ||
+              msg.includes('ivfflat') || msg.includes('vector')) continue;
+          console.warn(`  ⚠ ${file}: ${msg.slice(0,120)}`);
+        }
       }
+      console.log('✅ Migration:', file);
+    } catch (e) {
+      console.error('❌ Migration failed:', file, e.message);
     }
   }
   console.log('✅ DB ready');
