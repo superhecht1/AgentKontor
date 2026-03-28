@@ -5,75 +5,84 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AgentKontor – Baue deinen eigenen KI-Agenten</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:     #050510;
-  --bg2:    #09091a;
-  --bg3:    #0e0e22;
-  --card:   #0c0c1e;
-  --border: rgba(255,255,255,0.07);
-  --purple: #6c5ce7;
-  --pu-l:   #a29bfe;
-  --pu-d:   #3d2fa0;
-  --teal:   #00cec9;
-  --white:  #ffffff;
-  --muted:  #5a5a80;
-  --text:   #c8c8e8;
-  --red:    #e94560;
-  --gold:   #f0c040;
+  --bg:       #fafaf8;
+  --bg2:      #f4f3ef;
+  --bg3:      #eceae3;
+  --card:     #ffffff;
+  --border:   #e2e0d8;
+  --border2:  #d0cdc3;
+  --purple:   #5b4fcf;
+  --pu-l:     #7c6fea;
+  --pu-d:     #3d3299;
+  --pu-pale:  #f0eeff;
+  --teal:     #0891b2;
+  --ink:      #1a1916;
+  --ink2:     #3d3b35;
+  --muted:    #7a786e;
+  --muted2:   #a8a49a;
+  --red:      #dc2626;
+  --green:    #16a34a;
+  --gold:     #b45309;
+  --shadow:   0 1px 3px rgba(26,25,22,.06), 0 4px 16px rgba(26,25,22,.08);
+  --shadow-lg: 0 8px 32px rgba(26,25,22,.1), 0 2px 8px rgba(26,25,22,.06);
 }
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
 body {
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Geist', -apple-system, sans-serif;
   background: var(--bg);
-  color: var(--text);
+  color: var(--ink2);
   overflow-x: hidden;
   line-height: 1.6;
+  font-size: 16px;
 }
 
-/* Noise overlay */
-body::after {
+/* ─── NOISE TEXTURE ─── */
+body::before {
   content: '';
   position: fixed; inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-  pointer-events: none; z-index: 1000; opacity: .25;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 9999; opacity: 1;
 }
 
-/* NAV */
+/* ─── NAV ─── */
 nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 100;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 18px 52px;
-  backdrop-filter: blur(20px);
-  background: rgba(5,5,16,0.85);
-  border-bottom: 1px solid rgba(255,255,255,.05);
-  transition: border-color .3s;
+  padding: 0 52px; height: 64px;
+  background: rgba(250,250,248,.92);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+  transition: box-shadow .3s;
 }
-.nav-logo {
-  font-family: 'Syne', sans-serif;
-  font-size: 1.45rem; font-weight: 800;
-  color: var(--white); text-decoration: none;
+nav.scrolled { box-shadow: var(--shadow); }
+.logo {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.5rem; font-weight: 400;
+  color: var(--ink); text-decoration: none;
   letter-spacing: -.01em;
 }
-.nav-logo span { color: var(--pu-l); }
+.logo em { color: var(--purple); font-style: normal; }
 .nav-links { display: flex; gap: 32px; align-items: center; }
-.nav-link {
-  font-size: .82rem; font-weight: 500;
-  letter-spacing: .04em; text-transform: uppercase;
-  color: var(--muted); text-decoration: none; transition: color .2s;
+.nl {
+  font-size: .84rem; font-weight: 500;
+  color: var(--muted); text-decoration: none;
+  transition: color .2s;
 }
-.nav-link:hover { color: var(--white); }
+.nl:hover { color: var(--ink); }
 .nav-cta {
-  background: var(--purple); color: var(--white);
+  background: var(--ink); color: #fff;
   padding: 9px 22px; border-radius: 8px;
-  font-size: .82rem; font-weight: 600;
+  font-size: .84rem; font-weight: 600;
   text-decoration: none; transition: all .2s;
 }
-.nav-cta:hover { background: var(--pu-l); transform: translateY(-1px); }
+.nav-cta:hover { background: var(--purple); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(91,79,207,.3); }
 
-/* HERO */
+/* ─── HERO ─── */
 .hero {
   min-height: 100vh;
   display: flex; flex-direction: column;
@@ -82,474 +91,603 @@ nav {
   position: relative; overflow: hidden; text-align: center;
 }
 
-.hero-mesh {
-  position: absolute; inset: 0;
-  background:
-    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(108,92,231,.18) 0%, transparent 70%),
-    radial-gradient(ellipse 40% 40% at 20% 80%, rgba(0,206,201,.07) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 40% at 80% 70%, rgba(233,69,96,.06) 0%, transparent 60%);
+/* Decorative blobs */
+.hero::before {
+  content: '';
+  position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
+  width: 900px; height: 600px;
+  background: radial-gradient(ellipse at center, rgba(91,79,207,.07) 0%, transparent 70%);
   pointer-events: none;
 }
-
-.hero-grid {
-  position: absolute; inset: 0;
-  background-image:
-    linear-gradient(rgba(108,92,231,.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(108,92,231,.04) 1px, transparent 1px);
-  background-size: 52px 52px;
-  animation: gridFlow 30s linear infinite;
-  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent);
+.hero-orb {
+  position: absolute; border-radius: 50%; pointer-events: none;
 }
-@keyframes gridFlow { to { transform: translateY(52px); } }
+.orb1 {
+  width: 340px; height: 340px;
+  background: radial-gradient(circle, rgba(91,79,207,.09), transparent 70%);
+  top: 15%; left: 8%;
+  animation: drift1 18s ease-in-out infinite;
+}
+.orb2 {
+  width: 280px; height: 280px;
+  background: radial-gradient(circle, rgba(8,145,178,.07), transparent 70%);
+  bottom: 20%; right: 10%;
+  animation: drift2 22s ease-in-out infinite;
+}
+.orb3 {
+  width: 180px; height: 180px;
+  background: radial-gradient(circle, rgba(180,83,9,.05), transparent 70%);
+  top: 60%; left: 20%;
+  animation: drift3 16s ease-in-out infinite;
+}
+@keyframes drift1 { 0%,100%{transform:translate(0,0)} 33%{transform:translate(30px,-20px)} 66%{transform:translate(-20px,30px)} }
+@keyframes drift2 { 0%,100%{transform:translate(0,0)} 33%{transform:translate(-25px,20px)} 66%{transform:translate(20px,-30px)} }
+@keyframes drift3 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(20px,-20px)} }
 
+/* Hero badge */
 .hero-badge {
   display: inline-flex; align-items: center; gap: 8px;
-  background: rgba(108,92,231,.1);
-  border: 1px solid rgba(108,92,231,.3);
-  padding: 5px 16px; border-radius: 100px;
-  font-size: .72rem; font-weight: 600;
-  letter-spacing: .14em; text-transform: uppercase;
-  color: var(--pu-l); margin-bottom: 28px;
-  animation: fadeUp .6s ease both;
+  background: var(--pu-pale);
+  border: 1px solid rgba(91,79,207,.2);
+  padding: 6px 16px 6px 12px;
+  border-radius: 100px;
+  font-size: .75rem; font-weight: 600;
+  letter-spacing: .02em;
+  color: var(--purple);
+  margin-bottom: 36px;
+  animation: fadeUp .5s ease both;
 }
-.badge-dot { width: 6px; height: 6px; background: var(--teal); border-radius: 50%; animation: pulse 2s infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+.badge-dot {
+  width: 7px; height: 7px;
+  background: var(--green); border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(22,163,74,.2);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{box-shadow:0 0 0 2px rgba(22,163,74,.2)} 50%{box-shadow:0 0 0 5px rgba(22,163,74,.08)} }
+.badge-sep { color: rgba(91,79,207,.35); }
 
 h1 {
-  font-family: 'Syne', sans-serif;
-  font-size: clamp(3.2rem, 8vw, 7.5rem);
-  font-weight: 800;
-  line-height: 1.0;
-  color: var(--white);
-  margin-bottom: 6px;
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(3rem, 7.5vw, 7rem);
+  font-weight: 400;
+  line-height: 1.02;
+  color: var(--ink);
   letter-spacing: -.03em;
-  animation: fadeUp .6s .1s ease both;
+  margin-bottom: 6px;
+  animation: fadeUp .55s .05s ease both;
 }
-h1 .accent { color: var(--pu-l); }
-h1 .line2 {
+h1 .accent { color: var(--purple); font-style: italic; }
+h1 .sub {
   display: block;
-  font-size: clamp(1.6rem, 3.5vw, 2.8rem);
-  font-weight: 400; font-family: 'DM Sans', sans-serif;
-  color: var(--muted); letter-spacing: .01em;
-  margin-top: 10px;
+  font-family: 'Geist', sans-serif;
+  font-size: clamp(1.1rem, 2.2vw, 1.75rem);
+  font-weight: 300; font-style: normal;
+  color: var(--muted);
+  letter-spacing: -.01em;
+  margin-top: 14px;
 }
 
 .hero-desc {
-  font-size: 1.05rem; color: var(--muted);
-  max-width: 520px; margin: 28px auto 48px;
-  line-height: 1.75;
-  animation: fadeUp .6s .2s ease both;
+  font-size: 1rem; color: var(--muted);
+  max-width: 500px; margin: 28px auto 44px;
+  line-height: 1.8;
+  animation: fadeUp .55s .1s ease both;
 }
 
 .hero-actions {
-  display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
-  animation: fadeUp .6s .3s ease both;
+  display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+  animation: fadeUp .55s .15s ease both;
 }
 .btn-primary {
-  background: var(--purple); color: var(--white);
-  padding: 15px 36px; border-radius: 10px;
+  background: var(--ink); color: #fff;
+  padding: 13px 32px; border-radius: 9px;
   font-size: .9rem; font-weight: 600;
   text-decoration: none; transition: all .25s;
-  border: 2px solid var(--purple);
+  box-shadow: 0 1px 2px rgba(26,25,22,.15), 0 4px 12px rgba(26,25,22,.1);
 }
-.btn-primary:hover {
-  background: var(--pu-l); border-color: var(--pu-l);
-  transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(108,92,231,.35);
-}
+.btn-primary:hover { background: var(--purple); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(91,79,207,.3); }
 .btn-outline {
-  background: transparent; color: var(--pu-l);
-  padding: 15px 36px; border-radius: 10px;
+  background: transparent; color: var(--ink2);
+  padding: 13px 32px; border-radius: 9px;
   font-size: .9rem; font-weight: 500;
   text-decoration: none; transition: all .25s;
-  border: 1px solid rgba(108,92,231,.3);
+  border: 1px solid var(--border2);
 }
-.btn-outline:hover { border-color: var(--pu-l); background: rgba(108,92,231,.08); transform: translateY(-2px); }
+.btn-outline:hover { border-color: var(--purple); color: var(--purple); background: var(--pu-pale); }
 
-/* HERO DEMO WIDGET */
-.hero-demo {
-  margin-top: 72px;
-  position: relative;
-  animation: fadeUp .7s .4s ease both;
-}
-.hero-demo::before {
-  content: '';
-  position: absolute; inset: -1px;
-  border-radius: 20px;
-  background: linear-gradient(135deg, rgba(108,92,231,.4), rgba(0,206,201,.2), rgba(108,92,231,.1));
-  z-index: -1; filter: blur(1px);
-}
-.demo-window {
-  background: var(--bg3);
-  border: 1px solid rgba(108,92,231,.25);
-  border-radius: 18px;
-  width: min(600px, 90vw);
-  overflow: hidden;
-  box-shadow: 0 40px 100px rgba(0,0,0,.6), 0 0 60px rgba(108,92,231,.15);
-}
-.demo-bar {
-  background: rgba(255,255,255,.03);
-  padding: 12px 18px;
-  display: flex; align-items: center; gap: 8px;
-  border-bottom: 1px solid var(--border);
-}
-.demo-dots { display: flex; gap: 6px; }
-.demo-dot { width: 10px; height: 10px; border-radius: 50%; }
-.demo-title {
-  flex: 1; text-align: center;
-  font-size: .75rem; color: var(--muted);
-}
-.demo-chat { padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-.demo-msg { display: flex; gap: 10px; }
-.demo-msg.user { flex-direction: row-reverse; align-self: flex-end; }
-.demo-av {
-  width: 30px; height: 30px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: .85rem; flex-shrink: 0;
-}
-.demo-msg.bot .demo-av { background: linear-gradient(135deg,var(--purple),var(--pu-l)); }
-.demo-msg.user .demo-av { background: rgba(255,255,255,.08); }
-.demo-bubble {
-  padding: 10px 14px; border-radius: 14px;
-  font-size: .84rem; line-height: 1.5; max-width: 78%;
-}
-.demo-msg.bot .demo-bubble { background: rgba(108,92,231,.15); border: 1px solid rgba(108,92,231,.2); color: var(--text); border-bottom-left-radius: 3px; }
-.demo-msg.user .demo-bubble { background: var(--purple); color: var(--white); border-bottom-right-radius: 3px; }
-.demo-chips { display: flex; gap: 7px; flex-wrap: wrap; padding: 0 20px 12px; }
-.demo-chip {
-  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
-  border-radius: 20px; padding: 5px 13px;
-  font-size: .75rem; color: var(--text); cursor: pointer;
-  transition: all .2s;
-}
-.demo-chip:hover { border-color: var(--pu-l); color: var(--pu-l); }
-.demo-input-row {
-  padding: 12px 16px; border-top: 1px solid var(--border);
-  display: flex; gap: 8px;
-}
-.demo-inp {
-  flex: 1; background: rgba(255,255,255,.05);
-  border: 1px solid var(--border); border-radius: 8px;
-  padding: 8px 12px; color: var(--text); font-size: .82rem;
-  font-family: inherit;
-}
-.demo-send {
-  width: 36px; height: 36px; background: var(--purple);
-  border: none; border-radius: 8px; cursor: pointer;
-  color: var(--white); font-size: .9rem;
-  display: flex; align-items: center; justify-content: center;
-}
-
-/* Typing animation */
-.typing-dots { display: flex; gap: 4px; padding: 10px 14px; background: rgba(108,92,231,.15); border: 1px solid rgba(108,92,231,.2); border-radius: 14px; border-bottom-left-radius: 3px; }
-.typing-dots span { width: 6px; height: 6px; background: var(--pu-l); border-radius: 50%; animation: typeBounce .8s infinite; }
-.typing-dots span:nth-child(2) { animation-delay: .15s; }
-.typing-dots span:nth-child(3) { animation-delay: .3s; }
-@keyframes typeBounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-7px)} }
-
-/* SECTIONS */
-section { padding: 100px 52px; position: relative; }
-.container { max-width: 1140px; margin: 0 auto; }
-.sec-label {
-  font-size: .7rem; letter-spacing: .22em; text-transform: uppercase;
-  color: var(--pu-l); display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
-}
-.sec-label::before { content: ''; width: 24px; height: 1px; background: var(--pu-l); }
-.sec-title {
-  font-family: 'Syne', sans-serif;
-  font-size: clamp(2rem, 4.5vw, 3.5rem);
-  font-weight: 800; letter-spacing: -.02em;
-  color: var(--white); line-height: 1.1; margin-bottom: 14px;
-}
-.sec-sub { font-size: 1rem; color: var(--muted); max-width: 520px; line-height: 1.75; }
-
-/* FEATURES */
-.features { background: var(--bg2); }
-.feat-grid {
-  display: grid; grid-template-columns: repeat(3,1fr);
-  gap: 2px; margin-top: 56px;
-}
-.feat-card {
-  background: var(--card); padding: 36px 30px;
+/* ─── HERO STATS ─── */
+.hero-stats {
+  display: flex; gap: 0; margin-top: 68px;
   border: 1px solid var(--border);
-  position: relative; overflow: hidden;
-  transition: border-color .25s, transform .25s;
+  border-radius: 14px; overflow: hidden;
+  background: var(--card);
+  box-shadow: var(--shadow);
+  animation: fadeUp .6s .2s ease both;
 }
-.feat-card:hover { border-color: rgba(108,92,231,.35); transform: translateY(-4px); }
-.feat-card::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, var(--purple), var(--teal));
-  opacity: 0; transition: opacity .25s;
+.hstat { padding: 20px 36px; text-align: center; border-right: 1px solid var(--border); }
+.hstat:last-child { border-right: none; }
+.hstat-n {
+  font-family: 'Instrument Serif', serif;
+  font-size: 2.2rem; color: var(--ink); line-height: 1;
 }
-.feat-card:hover::before { opacity: 1; }
-.feat-icon {
+.hstat-l { font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted2); margin-top: 3px; }
+
+/* ─── TICKER ─── */
+.ticker {
+  background: var(--ink); padding: 10px 0;
+  overflow: hidden; white-space: nowrap;
+}
+.tk-track { display: inline-block; animation: tick 30s linear infinite; }
+.tk-track span { font-size: .78rem; letter-spacing: .14em; color: rgba(255,255,255,.7); margin: 0 24px; font-weight: 500; }
+.tk-track .sep { color: rgba(255,255,255,.25); }
+@keyframes tick { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+/* ─── SECTIONS ─── */
+section { padding: 96px 52px; position: relative; }
+.container { max-width: 1140px; margin: 0 auto; }
+.sec-eyebrow {
+  font-size: .7rem; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--purple); font-weight: 600;
+  display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+}
+.sec-eyebrow::before { content: ''; width: 20px; height: 1.5px; background: var(--purple); }
+.sec-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 400; color: var(--ink); line-height: 1.1;
+  letter-spacing: -.02em; margin-bottom: 14px;
+}
+.sec-sub { font-size: .95rem; color: var(--muted); max-width: 480px; line-height: 1.75; }
+
+/* ─── USE CASES ─── */
+.usecases { background: var(--bg2); }
+.uc-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; margin-top: 52px; background: var(--border); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+.uc-card {
+  background: var(--card); padding: 28px 24px;
+  transition: all .25s; cursor: default; position: relative;
+}
+.uc-card:hover { background: var(--pu-pale); z-index: 1; }
+.uc-card:hover::after { content: ''; position: absolute; inset: 0; border: 1.5px solid rgba(91,79,207,.25); pointer-events: none; }
+.uc-tag {
+  font-size: .63rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 100px;
+  background: var(--bg2); color: var(--muted);
+  border: 1px solid var(--border); display: inline-block; margin-bottom: 12px;
+}
+.uc-card:hover .uc-tag { background: rgba(91,79,207,.1); color: var(--purple); border-color: rgba(91,79,207,.2); }
+.uc-icon { font-size: 1.6rem; margin-bottom: 10px; display: block; }
+.uc-card h3 { font-size: .92rem; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.uc-card p { font-size: .8rem; color: var(--muted); line-height: 1.65; margin-bottom: 12px; }
+.uc-bullets { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.uc-bullets li { font-size: .76rem; color: var(--ink2); display: flex; align-items: flex-start; gap: 7px; }
+.uc-bullets li::before { content: '→'; color: var(--purple); flex-shrink: 0; }
+
+/* ─── CAPABILITIES ─── */
+.caps { background: var(--bg); }
+.caps-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; margin-top: 52px; }
+.cap-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 26px;
+  display: flex; gap: 18px; align-items: flex-start;
+  transition: all .25s; box-shadow: var(--shadow);
+}
+.cap-card:hover { border-color: rgba(91,79,207,.3); transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.cap-icon {
   width: 48px; height: 48px; border-radius: 12px;
-  background: rgba(108,92,231,.12); border: 1px solid rgba(108,92,231,.2);
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.3rem; margin-bottom: 18px;
+  font-size: 1.3rem; flex-shrink: 0;
+  background: var(--bg2); border: 1px solid var(--border);
 }
-.feat-card h3 { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--white); margin-bottom: 8px; }
-.feat-card p { font-size: .86rem; color: var(--muted); line-height: 1.65; }
+.cap-card:hover .cap-icon { background: var(--pu-pale); border-color: rgba(91,79,207,.2); }
+.cap-card h3 { font-size: .9rem; font-weight: 600; color: var(--ink); margin-bottom: 5px; }
+.cap-card p { font-size: .8rem; color: var(--muted); line-height: 1.65; margin-bottom: 10px; }
+.cap-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.ctag {
+  font-size: .65rem; padding: 2px 8px; border-radius: 100px;
+  font-weight: 600; background: var(--bg2);
+  border: 1px solid var(--border); color: var(--muted);
+}
 
-/* HOW IT WORKS */
-.how { background: var(--bg); }
-.steps {
-  display: grid; grid-template-columns: repeat(3,1fr);
-  gap: 0; margin-top: 60px; position: relative;
-}
-.steps::after {
-  content: '';
-  position: absolute; top: 28px; left: 16.6%; right: 16.6%; height: 1px;
-  background: linear-gradient(to right, transparent, rgba(108,92,231,.4), rgba(108,92,231,.4), transparent);
-}
-.step { text-align: center; padding: 0 28px; }
-.step-n {
-  width: 56px; height: 56px; border-radius: 50%;
-  background: var(--bg3); border: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: center;
-  margin: 0 auto 20px;
-  font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800;
-  color: var(--pu-l); position: relative; z-index: 1;
-  transition: all .25s;
-}
-.step:hover .step-n { background: rgba(108,92,231,.15); border-color: var(--purple); box-shadow: 0 0 20px rgba(108,92,231,.25); }
-.step h3 { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--white); margin-bottom: 8px; }
-.step p { font-size: .84rem; color: var(--muted); line-height: 1.6; }
-
-/* INTEGRATIONS */
-.integrations { background: var(--bg2); }
-.integ-grid {
-  display: grid; grid-template-columns: repeat(2,1fr);
-  gap: 16px; margin-top: 56px;
-}
-.integ-card {
+/* ─── FEATURES ─── */
+.features { background: var(--bg2); }
+.feat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-top: 52px; }
+.feat-card {
   background: var(--card); border: 1px solid var(--border);
   border-radius: 14px; padding: 28px;
-  display: flex; align-items: flex-start; gap: 18px;
-  transition: border-color .25s, transform .2s;
+  transition: all .25s; box-shadow: var(--shadow);
 }
-.integ-card:hover { border-color: rgba(108,92,231,.3); transform: translateY(-3px); }
-.integ-icon {
-  width: 52px; height: 52px; border-radius: 14px;
+.feat-card:hover { border-color: rgba(91,79,207,.25); transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.feat-ic {
+  width: 44px; height: 44px; border-radius: 11px;
+  background: var(--pu-pale); border: 1px solid rgba(91,79,207,.15);
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.4rem; flex-shrink: 0;
+  font-size: 1.15rem; margin-bottom: 16px;
 }
-.integ-card h3 { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--white); margin-bottom: 5px; }
-.integ-card p { font-size: .83rem; color: var(--muted); line-height: 1.6; }
-.integ-badge {
-  display: inline-block; margin-top: 10px;
-  font-size: .68rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
-  padding: 3px 10px; border-radius: 100px;
+.feat-card h3 { font-size: .9rem; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.feat-card p { font-size: .8rem; color: var(--muted); line-height: 1.65; }
+
+/* ─── HOW ─── */
+.how { background: var(--bg); }
+.steps { display: grid; grid-template-columns: repeat(4,1fr); gap: 0; margin-top: 56px; position: relative; }
+.steps::after {
+  content: ''; position: absolute; top: 22px; left: 12.5%; right: 12.5%; height: 1px;
+  background: linear-gradient(to right, transparent, var(--border2), var(--border2), transparent);
+}
+.step { text-align: center; padding: 0 20px; }
+.sn {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--card); border: 1.5px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px;
+  font-size: .9rem; font-weight: 700; color: var(--purple);
+  position: relative; z-index: 1;
+  transition: all .25s; box-shadow: var(--shadow);
+}
+.step:hover .sn { background: var(--purple); color: #fff; border-color: var(--purple); box-shadow: 0 4px 16px rgba(91,79,207,.3); }
+.step h3 { font-size: .88rem; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.step p { font-size: .78rem; color: var(--muted); line-height: 1.6; }
+
+/* ─── INTEGRATIONS ─── */
+.integ { background: var(--bg2); }
+.integ-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-top: 52px; }
+.ig {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 22px;
+  display: flex; align-items: flex-start; gap: 14px;
+  transition: all .2s; box-shadow: var(--shadow);
+}
+.ig:hover { border-color: rgba(91,79,207,.25); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.ig-ic {
+  width: 42px; height: 42px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; flex-shrink: 0;
+  background: var(--bg2); border: 1px solid var(--border);
+}
+.ig h3 { font-size: .86rem; font-weight: 600; color: var(--ink); margin-bottom: 3px; }
+.ig p { font-size: .76rem; color: var(--muted); line-height: 1.5; }
+.ig-badge {
+  display: inline-block; margin-top: 7px;
+  font-size: .62rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 100px;
+  background: var(--bg2); color: var(--muted); border: 1px solid var(--border);
 }
 
-/* BUILDER PREVIEW */
-.builder { background: var(--bg); }
-.builder-inner {
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 56px; align-items: center;
-}
-.builder-steps { list-style: none; display: flex; flex-direction: column; gap: 20px; }
-.builder-step {
-  display: flex; gap: 16px; align-items: flex-start;
-  padding: 18px 20px;
+/* ─── PRICING ─── */
+.pricing { background: var(--bg); }
+.price-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-top: 52px; }
+.pc {
   background: var(--card); border: 1px solid var(--border);
-  border-radius: 12px; transition: border-color .2s;
+  border-radius: 16px; padding: 32px 26px;
+  position: relative; transition: all .25s; box-shadow: var(--shadow);
 }
-.builder-step:hover { border-color: rgba(108,92,231,.3); }
-.bs-num {
-  width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
-  background: rgba(108,92,231,.15); border: 1px solid rgba(108,92,231,.25);
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Syne', sans-serif; font-size: .9rem; font-weight: 800; color: var(--pu-l);
+.pc:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+.pc.featured {
+  border-color: var(--purple);
+  background: linear-gradient(160deg, var(--pu-pale), var(--card));
+  box-shadow: 0 4px 24px rgba(91,79,207,.15);
 }
-.bs-title { font-size: .9rem; font-weight: 600; color: var(--white); margin-bottom: 3px; }
-.bs-desc { font-size: .8rem; color: var(--muted); line-height: 1.5; }
-
-/* PRICING */
-.pricing { background: var(--bg2); }
-.pricing-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 56px; }
-.price-card {
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: 16px; padding: 36px 28px;
-  position: relative; transition: border-color .25s, transform .25s;
-}
-.price-card:hover { transform: translateY(-5px); }
-.price-card.featured {
-  border-color: rgba(108,92,231,.4);
-  background: linear-gradient(135deg, rgba(108,92,231,.08), var(--card));
-}
-.price-card.featured::before {
+.pc.featured::before {
   content: '★ Beliebt';
   position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-  background: var(--purple); color: var(--white);
-  font-size: .72rem; font-weight: 700; letter-spacing: .08em;
+  background: var(--purple); color: #fff;
+  font-size: .68rem; font-weight: 700; letter-spacing: .06em;
   padding: 3px 14px; border-radius: 100px;
 }
-.price-plan { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--pu-l); margin-bottom: 6px; }
-.price-amount {
-  font-family: 'Syne', sans-serif;
-  font-size: 3rem; font-weight: 800; color: var(--white);
-  line-height: 1; margin-bottom: 4px;
-}
-.price-amount sup { font-size: 1.2rem; margin-right: 2px; }
-.price-period { font-size: .78rem; color: var(--muted); margin-bottom: 20px; }
-.price-features { list-style: none; margin-bottom: 28px; display: flex; flex-direction: column; gap: 9px; }
-.price-features li { display: flex; align-items: center; gap: 9px; font-size: .84rem; color: var(--text); }
-.price-features li::before { content: '✓'; color: var(--teal); font-weight: 700; font-size: .8rem; flex-shrink: 0; }
-.price-features li.off { color: var(--muted); }
-.price-features li.off::before { content: '—'; color: var(--muted); }
-.price-btn {
-  display: block; width: 100%; padding: 12px;
-  border-radius: 8px; font-size: .88rem; font-weight: 600;
+.plan { font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--purple); margin-bottom: 4px; }
+.amount { font-family: 'Instrument Serif', serif; font-size: 3rem; color: var(--ink); line-height: 1; margin-bottom: 3px; }
+.amount sup { font-size: 1.1rem; font-family: 'Geist', sans-serif; }
+.period { font-size: .74rem; color: var(--muted); margin-bottom: 20px; }
+.pf { list-style: none; margin-bottom: 24px; display: flex; flex-direction: column; gap: 8px; }
+.pf li { display: flex; align-items: flex-start; gap: 8px; font-size: .82rem; color: var(--ink2); }
+.pf li::before { content: '✓'; color: var(--green); font-weight: 700; font-size: .76rem; flex-shrink: 0; margin-top: 2px; }
+.pf li.off { color: var(--muted2); }
+.pf li.off::before { content: '—'; color: var(--muted2); }
+.pbtn {
+  display: block; width: 100%; padding: 11px;
+  border-radius: 8px; font-size: .86rem; font-weight: 600;
   text-align: center; text-decoration: none; border: none; cursor: pointer;
   transition: all .2s;
 }
-.price-btn-outline { background: transparent; border: 1px solid rgba(108,92,231,.3); color: var(--pu-l); }
-.price-btn-outline:hover { background: rgba(108,92,231,.1); }
-.price-btn-fill { background: var(--purple); color: var(--white); }
-.price-btn-fill:hover { background: var(--pu-l); box-shadow: 0 8px 24px rgba(108,92,231,.35); }
+.pbtn-fill { background: var(--ink); color: #fff; }
+.pbtn-fill:hover { background: var(--purple); box-shadow: 0 4px 16px rgba(91,79,207,.3); }
+.pbtn-out { background: transparent; border: 1.5px solid var(--border2); color: var(--ink2); }
+.pbtn-out:hover { border-color: var(--purple); color: var(--purple); background: var(--pu-pale); }
 
-/* CTA */
-.cta-section { background: var(--bg); padding: 100px 52px; }
-.cta-box {
-  max-width: 760px; margin: 0 auto; text-align: center;
-  background: var(--card); border: 1px solid rgba(108,92,231,.25);
-  border-radius: 24px; padding: 80px 60px; position: relative; overflow: hidden;
+/* ─── TESTIMONIALS ─── */
+.testi { background: var(--bg2); }
+.testi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-top: 52px; }
+.tcard {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 26px;
+  box-shadow: var(--shadow); transition: all .25s;
 }
-.cta-box::before {
-  content: '';
-  position: absolute; inset: 0;
-  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(108,92,231,.12), transparent 70%);
-  pointer-events: none;
+.tcard:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.tcard-stars { color: var(--gold); font-size: .8rem; margin-bottom: 12px; letter-spacing: 2px; }
+.tcard-quote { font-size: .86rem; color: var(--ink2); line-height: 1.7; margin-bottom: 18px; font-style: italic; }
+.tcard-author { display: flex; align-items: center; gap: 10px; }
+.tcard-av {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .84rem; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.tcard-name { font-size: .82rem; font-weight: 600; color: var(--ink); }
+.tcard-role { font-size: .72rem; color: var(--muted); }
+
+/* ─── CTA ─── */
+.cta-sec { background: var(--ink); padding: 96px 52px; }
+.cta-box {
+  max-width: 700px; margin: 0 auto; text-align: center;
 }
 .cta-box h2 {
-  font-family: 'Syne', sans-serif;
-  font-size: clamp(2rem,4vw,3.2rem); font-weight: 800;
-  color: var(--white); letter-spacing: -.02em; margin-bottom: 12px;
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(2rem, 4vw, 3.2rem); font-weight: 400;
+  color: #fff; letter-spacing: -.02em; margin-bottom: 12px;
 }
-.cta-box h2 span { color: var(--pu-l); }
-.cta-box p { font-size: 1rem; color: var(--muted); margin-bottom: 36px; }
-.cta-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.cta-box h2 em { color: rgba(255,255,255,.55); font-style: italic; }
+.cta-box p { font-size: .95rem; color: rgba(255,255,255,.55); margin-bottom: 36px; }
+.cta-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.btn-cta-white {
+  background: #fff; color: var(--ink);
+  padding: 13px 32px; border-radius: 9px;
+  font-size: .9rem; font-weight: 600;
+  text-decoration: none; transition: all .25s;
+}
+.btn-cta-white:hover { background: var(--pu-pale); color: var(--purple); }
+.btn-cta-ghost {
+  background: transparent; color: rgba(255,255,255,.7);
+  padding: 13px 32px; border-radius: 9px;
+  font-size: .9rem; font-weight: 500;
+  text-decoration: none; transition: all .25s;
+  border: 1px solid rgba(255,255,255,.2);
+}
+.btn-cta-ghost:hover { border-color: rgba(255,255,255,.5); color: #fff; }
 
-/* FOOTER */
+/* ─── FOOTER ─── */
 footer {
   background: var(--bg2); border-top: 1px solid var(--border);
-  padding: 48px 52px 32px;
+  padding: 52px 52px 32px;
 }
-.footer-top {
-  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
-  gap: 48px; margin-bottom: 48px;
+.ft { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; margin-bottom: 44px; }
+.fb h3 {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.2rem; font-weight: 400; color: var(--ink); margin-bottom: 8px;
 }
-.footer-brand h3 {
-  font-family: 'Syne', sans-serif;
-  font-size: 1.2rem; font-weight: 800; color: var(--white); margin-bottom: 10px;
-}
-.footer-brand h3 span { color: var(--pu-l); }
-.footer-brand p { font-size: .82rem; color: var(--muted); line-height: 1.7; max-width: 260px; }
-.footer-col h4 { font-size: .75rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--white); margin-bottom: 14px; }
-.footer-col a { display: block; font-size: .83rem; color: var(--muted); text-decoration: none; margin-bottom: 8px; transition: color .2s; }
-.footer-col a:hover { color: var(--pu-l); }
-.footer-bottom {
+.fb h3 em { color: var(--purple); font-style: normal; }
+.fb p { font-size: .8rem; color: var(--muted); line-height: 1.7; max-width: 240px; }
+.fc h4 { font-size: .68rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ink2); margin-bottom: 12px; }
+.fc a { display: block; font-size: .8rem; color: var(--muted); text-decoration: none; margin-bottom: 7px; transition: color .2s; }
+.fc a:hover { color: var(--purple); }
+.fbot {
   display: flex; align-items: center; justify-content: space-between;
-  border-top: 1px solid var(--border); padding-top: 24px;
-  font-size: .75rem; color: var(--muted); flex-wrap: wrap; gap: 12px;
+  border-top: 1px solid var(--border); padding-top: 22px;
+  font-size: .72rem; color: var(--muted2); flex-wrap: wrap; gap: 10px;
 }
 
-/* SCROLL REVEAL */
-.reveal { opacity: 0; transform: translateY(28px); transition: opacity .7s ease, transform .7s ease; }
+/* ─── DEMO WIDGET ─── */
+.hero-demo-wrap {
+  margin-top: 68px;
+  position: relative;
+  animation: fadeUp .65s .2s ease both;
+}
+.demo-win {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 18px; width: min(580px, 92vw);
+  overflow: hidden; box-shadow: var(--shadow-lg), 0 0 0 1px rgba(91,79,207,.06);
+}
+.demo-bar {
+  background: var(--bg2); padding: 10px 16px;
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.demo-dots { display: flex; gap: 5px; }
+.demo-dot { width: 9px; height: 9px; border-radius: 50%; }
+.demo-bar-title { flex: 1; text-align: center; font-size: .72rem; color: var(--muted2); }
+.demo-chat { padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.dmsg { display: flex; gap: 9px; }
+.dmsg.u { flex-direction: row-reverse; align-self: flex-end; }
+.dav {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .78rem; flex-shrink: 0;
+}
+.dmsg.b .dav { background: var(--pu-pale); border: 1px solid rgba(91,79,207,.15); }
+.dmsg.u .dav { background: var(--bg3); border: 1px solid var(--border); }
+.dbl {
+  padding: 9px 13px; border-radius: 12px;
+  font-size: .82rem; line-height: 1.5; max-width: 78%;
+}
+.dmsg.b .dbl { background: var(--bg2); border: 1px solid var(--border); color: var(--ink2); border-bottom-left-radius: 3px; }
+.dmsg.u .dbl { background: var(--purple); color: #fff; border-bottom-right-radius: 3px; }
+.dchips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 18px 10px; }
+.dchip {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 100px; padding: 4px 12px;
+  font-size: .72rem; cursor: pointer; transition: all .2s;
+  color: var(--ink2);
+}
+.dchip:hover { border-color: var(--purple); color: var(--purple); background: var(--pu-pale); }
+.dinp-row {
+  padding: 10px 14px; border-top: 1px solid var(--border);
+  display: flex; gap: 8px;
+}
+.di {
+  flex: 1; background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 12px; color: var(--ink2);
+  font-size: .8rem; font-family: inherit;
+  transition: border-color .2s;
+}
+.di:focus { outline: none; border-color: var(--purple); }
+.ds {
+  width: 34px; height: 34px; background: var(--purple);
+  border: none; border-radius: 8px; cursor: pointer;
+  color: #fff; font-size: .85rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+}
+.ds:hover { background: var(--pu-d); }
+.typ-dots {
+  display: flex; gap: 3px; padding: 9px 13px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; border-bottom-left-radius: 3px;
+}
+.typ-dots span {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--purple); opacity: .5;
+  animation: typB .8s infinite;
+}
+.typ-dots span:nth-child(2) { animation-delay: .15s; }
+.typ-dots span:nth-child(3) { animation-delay: .3s; }
+@keyframes typB { 0%,80%,100%{transform:translateY(0);opacity:.5} 40%{transform:translateY(-6px);opacity:1} }
+
+/* ─── REVEAL ─── */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity .65s ease, transform .65s ease; }
 .reveal.visible { opacity: 1; transform: translateY(0); }
 
-/* ANIMATIONS */
-@keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
 
-/* TYPING EFFECT for demo */
-.typed::after { content: '|'; animation: blink .8s step-end infinite; }
-@keyframes blink { 50%{opacity:0} }
-
-/* RESPONSIVE */
-@media(max-width:960px) {
-  .feat-grid { grid-template-columns: 1fr 1fr; }
-  .builder-inner { grid-template-columns: 1fr; }
-  .pricing-grid { grid-template-columns: 1fr; max-width: 400px; margin-left: auto; margin-right: auto; }
-  .footer-top { grid-template-columns: 1fr 1fr; }
-  .integ-grid { grid-template-columns: 1fr; }
+/* ─── RESPONSIVE ─── */
+@media(max-width:960px){
+  .uc-grid,.feat-grid,.integ-grid,.price-grid,.testi-grid{grid-template-columns:1fr 1fr}
+  .caps-grid{grid-template-columns:1fr}
+  .steps{grid-template-columns:1fr 1fr;gap:24px}
+  .steps::after{display:none}
+  .ft{grid-template-columns:1fr 1fr}
 }
-@media(max-width:700px) {
-  nav { padding: 14px 20px; }
-  .nav-links .nav-link { display: none; }
-  section { padding: 72px 20px; }
-  .hero { padding: 100px 20px 72px; }
-  .feat-grid { grid-template-columns: 1fr; }
-  .steps { grid-template-columns: 1fr; gap: 24px; }
-  .steps::after { display: none; }
-  .cta-box { padding: 48px 24px; }
-  .footer-top { grid-template-columns: 1fr; gap: 28px; }
-  footer { padding: 40px 20px 24px; }
+@media(max-width:700px){
+  nav{padding:0 18px}
+  .nav-links .nl{display:none}
+  section{padding:64px 18px}
+  .hero{padding:96px 18px 64px}
+  .hero-stats{flex-wrap:wrap}
+  .hstat{min-width:120px}
+  .uc-grid,.feat-grid,.integ-grid,.price-grid,.testi-grid,.caps-grid{grid-template-columns:1fr}
+  .cta-box{padding:48px 20px}
+  .ft{grid-template-columns:1fr;gap:24px}
+  footer{padding:40px 18px 24px}
 }
 </style>
 </head>
 <body>
 
-<!-- NAV -->
 <nav id="nav">
-  <a class="nav-logo" href="#">Agent<span>Kontor</span></a>
+  <a class="logo" href="#">Agent<em>Kontor</em></a>
   <div class="nav-links">
-    <a class="nav-link" href="#features">Features</a>
-    <a class="nav-link" href="#integrations">Integrationen</a>
-    <a class="nav-link" href="#how">Wie es geht</a>
-    <a class="nav-link" href="#pricing">Preise</a>
+    <a class="nl" href="#usecases">Use Cases</a>
+    <a class="nl" href="#capabilities">Fähigkeiten</a>
+    <a class="nl" href="#integrations">Integrationen</a>
+    <a class="nl" href="#pricing">Preise</a>
     <a class="nav-cta" href="/app">Kostenlos starten</a>
   </div>
 </nav>
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-mesh"></div>
-  <div class="hero-grid"></div>
+  <div class="hero-orb orb1"></div>
+  <div class="hero-orb orb2"></div>
+  <div class="hero-orb orb3"></div>
 
-  <div class="hero-badge"><span class="badge-dot"></span>Kostenlos starten · Kein Abo</div>
+  <div class="hero-badge">
+    <span class="badge-dot"></span>
+    Kostenlos starten
+    <span class="badge-sep">·</span>
+    Kein Abo nötig
+    <span class="badge-sep">·</span>
+    In 5 Minuten live
+  </div>
 
   <h1>
     Baue deinen eigenen<br>
     <span class="accent">KI-Agenten.</span>
-    <span class="line2">In Minuten. Ohne Code.</span>
+    <span class="sub">In Minuten. Ohne Code.</span>
   </h1>
 
   <p class="hero-desc">
-    AgentKontor gibt dir alles um einen eigenen KI-Agenten zu erstellen — mit Chat-Seite, Website-Widget, WhatsApp, Telegram und API. Für jeden Anwendungsfall.
+    AgentKontor gibt dir alles um einen leistungsstarken KI-Agenten zu erstellen — der Termine bucht, Leads sammelt, Dokumente kennt, mehrsprachig spricht und auf WhatsApp, Telegram & deiner Website erreichbar ist.
   </p>
 
   <div class="hero-actions">
     <a href="/app" class="btn-primary">Jetzt kostenlos starten →</a>
-    <a href="#features" class="btn-outline">Mehr erfahren</a>
+    <a href="#usecases" class="btn-outline">Use Cases ansehen</a>
   </div>
 
-  <!-- LIVE DEMO -->
-  <div class="hero-demo">
-    <div class="demo-window">
+  <div class="hero-stats">
+    <div class="hstat"><div class="hstat-n">9+</div><div class="hstat-l">Branchen</div></div>
+    <div class="hstat"><div class="hstat-n">6</div><div class="hstat-l">Fähigkeiten</div></div>
+    <div class="hstat"><div class="hstat-n">5</div><div class="hstat-l">Kanäle</div></div>
+    <div class="hstat"><div class="hstat-n">∞</div><div class="hstat-l">Nutzer</div></div>
+  </div>
+
+  <!-- DEMO -->
+  <div class="hero-demo-wrap">
+    <div class="demo-win">
       <div class="demo-bar">
         <div class="demo-dots">
           <div class="demo-dot" style="background:#ff5f56"></div>
           <div class="demo-dot" style="background:#ffbd2e"></div>
           <div class="demo-dot" style="background:#27c93f"></div>
         </div>
-        <div class="demo-title">agentkontor.de/chat/dein-agent</div>
+        <div class="demo-bar-title">agentkontor.de/chat/dein-agent</div>
       </div>
       <div class="demo-chat" id="demoChat">
-        <div class="demo-msg bot">
-          <div class="demo-av">🤖</div>
-          <div class="demo-bubble">Hallo! Ich bin Mia, dein KI-Assistent. Wie kann ich dir heute helfen?</div>
+        <div class="dmsg b">
+          <div class="dav">🤖</div>
+          <div class="dbl">Hallo! Ich bin Mia, dein KI-Assistent. Wie kann ich dir heute helfen?</div>
         </div>
       </div>
-      <div class="demo-chips" id="demoChips">
-        <span class="demo-chip" onclick="demoSend('Was kannst du?')">Was kannst du?</span>
-        <span class="demo-chip" onclick="demoSend('Wie richte ich dich ein?')">Wie richte ich dich ein?</span>
-        <span class="demo-chip" onclick="demoSend('Welche Sprachen?')">Welche Sprachen?</span>
+      <div class="dchips" id="demoChips">
+        <span class="dchip" onclick="demoSend('Was kannst du?')">Was kannst du?</span>
+        <span class="dchip" onclick="demoSend('Wie richte ich dich ein?')">Wie richte ich dich ein?</span>
+        <span class="dchip" onclick="demoSend('Welche Sprachen?')">Welche Sprachen?</span>
       </div>
-      <div class="demo-input-row">
-        <input class="demo-inp" id="demoInp" placeholder="Nachricht eingeben..." onkeydown="if(event.key==='Enter'){demoSend(this.value);this.value=''}">
-        <button class="demo-send" onclick="demoSend(document.getElementById('demoInp').value);document.getElementById('demoInp').value=''">➤</button>
+      <div class="dinp-row">
+        <input class="di" id="demoInp" placeholder="Nachricht eingeben…" onkeydown="if(event.key==='Enter'){demoSend(this.value);this.value=''}">
+        <button class="ds" onclick="demoSend(document.getElementById('demoInp').value);document.getElementById('demoInp').value=''">➤</button>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="tk-track">
+    <span>KUNDENSERVICE</span><span class="sep">✦</span><span>LEAD-GENERIERUNG</span><span class="sep">✦</span><span>HR & RECRUITING</span><span class="sep">✦</span><span>E-LEARNING</span><span class="sep">✦</span><span>GASTRONOMIE</span><span class="sep">✦</span><span>GESUNDHEIT</span><span class="sep">✦</span><span>RECHT & BERATUNG</span><span class="sep">✦</span><span>IMMOBILIEN</span><span class="sep">✦</span><span>E-COMMERCE</span><span class="sep">✦</span>
+    <span>KUNDENSERVICE</span><span class="sep">✦</span><span>LEAD-GENERIERUNG</span><span class="sep">✦</span><span>HR & RECRUITING</span><span class="sep">✦</span><span>E-LEARNING</span><span class="sep">✦</span><span>GASTRONOMIE</span><span class="sep">✦</span><span>GESUNDHEIT</span><span class="sep">✦</span><span>RECHT & BERATUNG</span><span class="sep">✦</span><span>IMMOBILIEN</span><span class="sep">✦</span><span>E-COMMERCE</span><span class="sep">✦</span>
+  </div>
+</div>
+
+<!-- USE CASES -->
+<section class="usecases" id="usecases">
+  <div class="container">
+    <div class="sec-eyebrow reveal">Anwendungsfälle</div>
+    <h2 class="sec-title reveal">Für jede Branche.</h2>
+    <p class="sec-sub reveal">Egal ob du Kunden berätst, Kandidaten screenst oder Produkte verkaufst — dein Agent spricht die Sprache deiner Branche.</p>
+    <div class="uc-grid">
+      <div class="uc-card reveal"><span class="uc-tag">Kundenservice</span><span class="uc-icon">🎧</span><h3>Support & Service</h3><p>Beantworte Kundenanfragen rund um die Uhr — ohne Wartezeit.</p><ul class="uc-bullets"><li>FAQ automatisch beantworten</li><li>Bestellstatus & Retouren</li><li>Eskalation an Menschen</li></ul></div>
+      <div class="uc-card reveal"><span class="uc-tag">Vertrieb</span><span class="uc-icon">📈</span><h3>Lead-Generierung</h3><p>Qualifiziere Interessenten und sammle Kontaktdaten im Gespräch.</p><ul class="uc-bullets"><li>Leads im Chat erfassen</li><li>E-Mail-Benachrichtigung</li><li>Termine direkt buchen</li></ul></div>
+      <div class="uc-card reveal"><span class="uc-tag">HR</span><span class="uc-icon">👥</span><h3>HR & Recruiting</h3><p>Kandidatenfragen beantworten und Gespräche vereinbaren.</p><ul class="uc-bullets"><li>Kandidaten vorqualifizieren</li><li>Jobdetails erklären</li><li>Interview-Termine buchen</li></ul></div>
+      <div class="uc-card reveal"><span class="uc-tag">Bildung</span><span class="uc-icon">🎓</span><h3>Bildung & E-Learning</h3><p>Dein Agent kennt alle Kursinhalte aus deinen Dokumenten.</p><ul class="uc-bullets"><li>Kursinhalt aus PDFs</li><li>Prüfungsvorbereitung</li><li>Mehrsprachig</li></ul></div>
+      <div class="uc-card reveal"><span class="uc-tag">Gastro</span><span class="uc-icon">🍽️</span><h3>Gastronomie & Hotel</h3><p>Reservierungen, Speisekarte, Öffnungszeiten — automatisch.</p><ul class="uc-bullets"><li>Reservierungen via Link</li><li>Menü & Allergene</li><li>WhatsApp-Anbindung</li></ul></div>
+      <div class="uc-card reveal"><span class="uc-tag">Gesundheit</span><span class="uc-icon">🏥</span><h3>Gesundheit & Medizin</h3><p>Terminbuchung und Praxisinformationen — 24/7 verfügbar.</p><ul class="uc-bullets"><li>Termine buchen</li><li>Praxisinformationen</li><li>DSGVO-konform</li></ul></div>
+      <div class="uc-card reveal"><span class="uc-tag">Recht</span><span class="uc-icon">⚖️</span><h3>Recht & Beratung</h3><p>Erstberatung automatisieren, Mandanten vorqualifizieren.</p><ul class="uc-bullets"><li>Aus eigenen Dokumenten (RAG)</li><li>Erstberatung strukturieren</li><li>Kontaktdaten sammeln</li></ul></div>
+      <div class="uc-card reveal"><span class="uc-tag">Immobilien</span><span class="uc-icon">🏡</span><h3>Immobilien</h3><p>Interessenten qualifizieren und Besichtigungen terminieren.</p><ul class="uc-bullets"><li>Exposé-Fragen beantworten</li><li>Besichtigungstermine</li><li>Leads per E-Mail</li></ul></div>
+      <div class="uc-card reveal"><span class="uc-tag">E-Commerce</span><span class="uc-icon">🛒</span><h3>E-Commerce & Shop</h3><p>Produktempfehlungen, Versandinfos, Retouren — automatisch.</p><ul class="uc-bullets"><li>Produkte empfehlen</li><li>Bestellstatus</li><li>Upsell & Cross-Sell</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- CAPABILITIES -->
+<section class="caps" id="capabilities">
+  <div class="container">
+    <div class="sec-eyebrow reveal">Fähigkeiten</div>
+    <h2 class="sec-title reveal">Was dein Agent kann.</h2>
+    <p class="sec-sub reveal">Aktiviere im Builder genau die Fähigkeiten, die du brauchst — per Klick, ohne Code.</p>
+    <div class="caps-grid reveal">
+      <div class="cap-card"><div class="cap-icon">📅</div><div><h3>Termine buchen</h3><p>Dein Agent verlinkt Nutzer direkt zu deinem Calendly, Cal.com oder jedem anderen Buchungssystem — zum richtigen Zeitpunkt im Gespräch.</p><div class="cap-tags"><span class="ctag">Calendly</span><span class="ctag">Cal.com</span><span class="ctag">Jeder Link</span></div></div></div>
+      <div class="cap-card"><div class="cap-icon">📋</div><div><h3>Leads erfassen</h3><p>Name, E-Mail, Telefon — natürlich im Gespräch gesammelt. Sofortige E-Mail-Benachrichtigung an dich.</p><div class="cap-tags"><span class="ctag">Formular-freies Sammeln</span><span class="ctag">E-Mail-Notification</span></div></div></div>
+      <div class="cap-card"><div class="cap-icon">🛒</div><div><h3>Produkte empfehlen</h3><p>Pflege deine Produktliste direkt im Builder ein — der Agent empfiehlt passende Produkte basierend auf Nutzerfragen.</p><div class="cap-tags"><span class="ctag">Personalisiert</span><span class="ctag">Kein Shop-System</span></div></div></div>
+      <div class="cap-card"><div class="cap-icon">📚</div><div><h3>Dokumente kennen (RAG)</h3><p>PDFs, Texte oder CSV hochladen — der Agent liest sie und antwortet präzise aus deinen Inhalten. Für Handbücher, FAQs und Wissen.</p><div class="cap-tags"><span class="ctag">PDF</span><span class="ctag">TXT/MD</span><span class="ctag">CSV</span></div></div></div>
+      <div class="cap-card"><div class="cap-icon">🌍</div><div><h3>Mehrsprachig</h3><p>Der Agent erkennt automatisch die Sprache des Nutzers und antwortet entsprechend — Deutsch, Englisch, Spanisch und mehr.</p><div class="cap-tags"><span class="ctag">Auto-Erkennung</span><span class="ctag">100+ Sprachen</span></div></div></div>
+      <div class="cap-card"><div class="cap-icon">✉️</div><div><h3>E-Mails senden</h3><p>Dein Agent kann auf Wunsch automatisch E-Mails versenden — Zusammenfassungen, Angebote, Bestätigungen — direkt aus dem Chat.</p><div class="cap-tags"><span class="ctag">SMTP</span><span class="ctag">Gmail</span><span class="ctag">Outlook</span></div></div></div>
     </div>
   </div>
 </section>
@@ -557,199 +695,45 @@ footer {
 <!-- FEATURES -->
 <section class="features" id="features">
   <div class="container">
-    <div class="sec-label reveal">Features</div>
-    <h2 class="sec-title reveal">Alles was du brauchst.</h2>
-    <p class="sec-sub reveal">Von der Konfiguration bis zur Auslieferung — AgentKontor deckt den kompletten Workflow ab.</p>
-
+    <div class="sec-eyebrow reveal">Plattform</div>
+    <h2 class="sec-title reveal">Alles inklusive.</h2>
     <div class="feat-grid reveal">
-      <div class="feat-card">
-        <div class="feat-icon">🎨</div>
-        <h3>Agent Builder</h3>
-        <p>Name, Emoji, Farbe, System-Prompt, Ton, Sprache, Schnellantworten — alles in einem visuellen Editor konfigurierbar.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon">🌐</div>
-        <h3>Öffentliche Chat-Seite</h3>
-        <p>Jeder Agent bekommt automatisch eine eigene URL. Einfach teilen — kein Login für Nutzer nötig.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon">🔧</div>
-        <h3>Website Widget</h3>
-        <p>Ein Script-Tag reicht. Chat-Widget läuft auf jeder Website, in jeder Farbe, vollständig anpassbar.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon">📱</div>
-        <h3>WhatsApp & Telegram</h3>
-        <p>Verbinde deinen Agenten mit WhatsApp Business oder als Telegram-Bot. Einfach Token eingeben, fertig.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon">⚡</div>
-        <h3>REST API</h3>
-        <p>API Key generieren, in eigene Apps einbinden. Vollständige Dokumentation, multi-turn Gespräche, JSON.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon">📊</div>
-        <h3>Analytics</h3>
-        <p>Wie viele Nachrichten, welche Kanäle, welche Tage — alles auf einen Blick im Dashboard.</p>
-      </div>
+      <div class="feat-card"><div class="feat-ic">🎨</div><h3>Visueller Builder</h3><p>Agent konfigurieren, Live-Vorschau sehen, Änderungen speichern — alles ohne eine Zeile Code.</p></div>
+      <div class="feat-card"><div class="feat-ic">🌐</div><h3>Öffentliche Chat-Seite</h3><p>Jeder Agent bekommt eine eigene URL. Einfach teilen — kein Login für Nutzer nötig.</p></div>
+      <div class="feat-card"><div class="feat-ic">🔧</div><h3>Website Widget</h3><p>Ein Script-Tag. Dein Agent als schwebendes Chat-Widget auf jeder Website.</p></div>
+      <div class="feat-card"><div class="feat-ic">📱</div><h3>WhatsApp & Telegram</h3><p>Verbinde deinen Agenten mit WhatsApp Business oder als Telegram-Bot in unter 2 Minuten.</p></div>
+      <div class="feat-card"><div class="feat-ic">⚡</div><h3>REST API</h3><p>Integriere deinen Agenten in eigene Apps, Workflows und Tools per API Key.</p></div>
+      <div class="feat-card"><div class="feat-ic">📊</div><h3>Analytics</h3><p>Nachrichten, Kanäle, Leads — alle Daten auf einen Blick im Dashboard.</p></div>
     </div>
   </div>
 </section>
 
-<!-- HOW IT WORKS -->
-<section class="how" id="how">
+<!-- HOW -->
+<section id="how">
   <div class="container">
-    <div class="sec-label reveal">So geht's</div>
-    <h2 class="sec-title reveal">In 3 Schritten live.</h2>
+    <div class="sec-eyebrow reveal">So geht's</div>
+    <h2 class="sec-title reveal">In 4 Schritten live.</h2>
     <div class="steps reveal">
-      <div class="step">
-        <div class="step-n">1</div>
-        <h3>Agent konfigurieren</h3>
-        <p>Name, Persönlichkeit, Fokusbereich und Kommunikationsstil — im visuellen Builder ohne Code.</p>
-      </div>
-      <div class="step">
-        <div class="step-n">2</div>
-        <h3>Kanal aktivieren</h3>
-        <p>Chat-Seite teilen, Widget einbinden, WhatsApp verbinden oder API Key generieren — alles mit einem Klick.</p>
-      </div>
-      <div class="step">
-        <div class="step-n">3</div>
-        <h3>Live gehen</h3>
-        <p>Dein Agent ist sofort erreichbar. Nutzer chatten, du siehst Statistiken — vollautomatisch.</p>
-      </div>
+      <div class="step"><div class="sn">1</div><h3>Agent bauen</h3><p>Name, Persönlichkeit, Fokus, Fähigkeiten aktivieren — alles im visuellen Builder.</p></div>
+      <div class="step"><div class="sn">2</div><h3>Kanal wählen</h3><p>Chat-Seite, Widget, WhatsApp, Telegram oder API — alles per Klick aktivierbar.</p></div>
+      <div class="step"><div class="sn">3</div><h3>Wissen laden</h3><p>PDFs, Texte oder CSV hochladen — dein Agent liest sie und antwortet daraus.</p></div>
+      <div class="step"><div class="sn">4</div><h3>Live gehen</h3><p>Sofort erreichbar. Nutzer chatten, Leads werden gesammelt, Termine gebucht.</p></div>
     </div>
   </div>
 </section>
 
 <!-- INTEGRATIONS -->
-<section class="integrations" id="integrations">
+<section class="integ" id="integrations">
   <div class="container">
-    <div class="sec-label reveal">Integrationen</div>
-    <h2 class="sec-title reveal">Überall präsent.</h2>
-    <p class="sec-sub reveal">Dein Agent arbeitet auf den Kanälen wo deine Kunden bereits sind.</p>
-
+    <div class="sec-eyebrow reveal">Integrationen</div>
+    <h2 class="sec-title reveal">Überall verfügbar.</h2>
     <div class="integ-grid reveal">
-      <div class="integ-card">
-        <div class="integ-icon" style="background:rgba(108,92,231,.1)">🌐</div>
-        <div>
-          <h3>Chat-Seite</h3>
-          <p>Automatisch generierte Chat-URL für jeden Agenten. Teilen per Link, QR-Code oder Social Media. Kein Login für Nutzer.</p>
-          <span class="integ-badge" style="background:rgba(108,92,231,.1);color:var(--pu-l);border:1px solid rgba(108,92,231,.2)">agentkontor.de/chat/ID</span>
-        </div>
-      </div>
-      <div class="integ-card">
-        <div class="integ-icon" style="background:rgba(162,155,254,.1)">🔧</div>
-        <div>
-          <h3>Website Widget</h3>
-          <p>Schwebendes Chat-Widget mit deinen Farben und deinem Branding. Zwei Zeilen Code, überall einbettbar.</p>
-          <span class="integ-badge" style="background:rgba(162,155,254,.1);color:var(--pu-l);border:1px solid rgba(162,155,254,.2)">&lt;script&gt; Widget</span>
-        </div>
-      </div>
-      <div class="integ-card">
-        <div class="integ-icon" style="background:rgba(37,211,102,.1)">📱</div>
-        <div>
-          <h3>WhatsApp Business</h3>
-          <p>Verbinde über die Meta Cloud API. Dein Agent antwortet automatisch auf WhatsApp-Nachrichten — 24/7.</p>
-          <span class="integ-badge" style="background:rgba(37,211,102,.1);color:#25d366;border:1px solid rgba(37,211,102,.2)">Meta Cloud API</span>
-        </div>
-      </div>
-      <div class="integ-card">
-        <div class="integ-icon" style="background:rgba(0,136,204,.1)">✈️</div>
-        <div>
-          <h3>Telegram Bot</h3>
-          <p>Bot-Token von @BotFather einfügen — dein Agent ist sofort als Telegram-Bot erreichbar.</p>
-          <span class="integ-badge" style="background:rgba(0,136,204,.1);color:#0088cc;border:1px solid rgba(0,136,204,.2)">@BotFather Token</span>
-        </div>
-      </div>
-      <div class="integ-card">
-        <div class="integ-icon" style="background:rgba(240,192,64,.1)">⚡</div>
-        <div>
-          <h3>REST API</h3>
-          <p>API Key generieren und deinen Agenten in eigene Apps, Tools oder Workflows einbinden. Multi-turn, JSON, einfach.</p>
-          <span class="integ-badge" style="background:rgba(240,192,64,.1);color:var(--gold);border:1px solid rgba(240,192,64,.2)">x-api-key Header</span>
-        </div>
-      </div>
-      <div class="integ-card">
-        <div class="integ-icon" style="background:rgba(0,206,201,.1)">🔔</div>
-        <div>
-          <h3>Webhooks</h3>
-          <p>Alle Nachrichten automatisch an eigene Systeme weiterleiten. Kompatibel mit Zapier, Make, n8n und mehr.</p>
-          <span class="integ-badge" style="background:rgba(0,206,201,.1);color:var(--teal);border:1px solid rgba(0,206,201,.2)">Bald verfügbar</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- BUILDER PREVIEW -->
-<section class="builder">
-  <div class="container">
-    <div class="builder-inner">
-      <div class="reveal">
-        <div class="sec-label">Builder</div>
-        <h2 class="sec-title">Konfiguriere alles.<br>Ohne Code.</h2>
-        <p class="sec-sub" style="margin-bottom:32px">Der Agent-Builder führt dich Schritt für Schritt — von der Persönlichkeit bis zur Integration.</p>
-        <ul class="builder-steps">
-          <li class="builder-step">
-            <div class="bs-num">✦</div>
-            <div><div class="bs-title">Name, Emoji & Farbe</div><div class="bs-desc">Gib deinem Agenten eine Identität die zu dir und deiner Marke passt.</div></div>
-          </li>
-          <li class="builder-step">
-            <div class="bs-num">✦</div>
-            <div><div class="bs-title">System-Prompt & Ton</div><div class="bs-desc">Bestimme Fokus, Persönlichkeit und Kommunikationsstil — professionell, freundlich, direkt oder locker.</div></div>
-          </li>
-          <li class="builder-step">
-            <div class="bs-num">✦</div>
-            <div><div class="bs-title">Schnellantworten</div><div class="bs-desc">Bis zu 5 vordefinierte Themen die Nutzer per Klick auswählen können.</div></div>
-          </li>
-          <li class="builder-step">
-            <div class="bs-num">✦</div>
-            <div><div class="bs-title">Live-Vorschau</div><div class="bs-desc">Sieh vor dem Speichern genau wie dein Agent für Nutzer aussieht.</div></div>
-          </li>
-        </ul>
-        <a href="/app" class="btn-primary" style="display:inline-block;margin-top:24px">Jetzt ausprobieren →</a>
-      </div>
-
-      <!-- Mini builder preview -->
-      <div class="reveal">
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:28px;box-shadow:0 24px 60px rgba(0,0,0,.4)">
-          <div style="font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--pu-l);margin-bottom:18px">✦ Agent Builder</div>
-
-          <div style="margin-bottom:14px">
-            <div style="font-size:.75rem;color:var(--muted);margin-bottom:5px">Name</div>
-            <div style="background:rgba(255,255,255,.05);border:1px solid rgba(108,92,231,.3);border-radius:8px;padding:9px 12px;font-size:.86rem;color:var(--white)">Mia — Kundenservice Bot</div>
-          </div>
-
-          <div style="margin-bottom:14px">
-            <div style="font-size:.75rem;color:var(--muted);margin-bottom:5px">Emoji</div>
-            <div style="display:flex;gap:7px">
-              <span style="width:36px;height:36px;border-radius:8px;background:rgba(108,92,231,.2);border:1px solid var(--purple);display:flex;align-items:center;justify-content:center;font-size:1.1rem">🤖</span>
-              <span style="width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.1rem">💬</span>
-              <span style="width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.1rem">⭐</span>
-              <span style="width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.1rem">🎯</span>
-            </div>
-          </div>
-
-          <div style="margin-bottom:14px">
-            <div style="font-size:.75rem;color:var(--muted);margin-bottom:5px">Ton</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
-              <div style="padding:9px 12px;border-radius:8px;background:rgba(108,92,231,.12);border:1px solid var(--purple);font-size:.8rem;color:var(--white)"><strong>Freundlich</strong><br><span style="color:var(--muted);font-size:.72rem">Warm & offen</span></div>
-              <div style="padding:9px 12px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid var(--border);font-size:.8rem;color:var(--muted)">Direkt<br><span style="font-size:.72rem">Präzise</span></div>
-            </div>
-          </div>
-
-          <div style="margin-bottom:18px">
-            <div style="font-size:.75rem;color:var(--muted);margin-bottom:5px">Integrationen</div>
-            <div style="display:flex;gap:7px;flex-wrap:wrap">
-              <span style="background:rgba(108,92,231,.1);border:1px solid rgba(108,92,231,.25);border-radius:6px;padding:4px 10px;font-size:.72rem;color:var(--pu-l)">🌐 Chat-Seite</span>
-              <span style="background:rgba(37,211,102,.08);border:1px solid rgba(37,211,102,.2);border-radius:6px;padding:4px 10px;font-size:.72rem;color:#25d366">📱 WhatsApp</span>
-              <span style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.72rem;color:var(--muted)">✈️ Telegram</span>
-            </div>
-          </div>
-
-          <button style="width:100%;padding:12px;background:var(--purple);border:none;border-radius:8px;color:#fff;font-size:.88rem;font-weight:600;cursor:pointer">💾 Agent speichern</button>
-        </div>
-      </div>
+      <div class="ig"><div class="ig-ic">🌐</div><div><h3>Chat-Seite</h3><p>Automatisch generierte URL. Teilen per Link oder QR-Code.</p><span class="ig-badge">/chat/agent-id</span></div></div>
+      <div class="ig"><div class="ig-ic">🔧</div><div><h3>Website Widget</h3><p>Zwei Zeilen Code. Überall einbettbar.</p><span class="ig-badge">&lt;script&gt; Tag</span></div></div>
+      <div class="ig"><div class="ig-ic">📱</div><div><h3>WhatsApp Business</h3><p>Meta Cloud API. Dein Agent antwortet 24/7.</p><span class="ig-badge">Meta Cloud API</span></div></div>
+      <div class="ig"><div class="ig-ic">✈️</div><div><h3>Telegram Bot</h3><p>@BotFather Token eingeben — sofort aktiv.</p><span class="ig-badge">@BotFather</span></div></div>
+      <div class="ig"><div class="ig-ic">⚡</div><div><h3>REST API</h3><p>API Key generieren. In eigene Apps integrieren.</p><span class="ig-badge">x-api-key</span></div></div>
+      <div class="ig"><div class="ig-ic">🔔</div><div><h3>Webhooks</h3><p>Zapier, Make, n8n — alle Nachrichten weiterleiten.</p><span class="ig-badge" style="background:rgba(8,145,178,.07);color:var(--teal);border-color:rgba(8,145,178,.15)">Bald verfügbar</span></div></div>
     </div>
   </div>
 </section>
@@ -757,171 +741,120 @@ footer {
 <!-- PRICING -->
 <section class="pricing" id="pricing">
   <div class="container">
-    <div class="sec-label reveal">Preise</div>
-    <h2 class="sec-title reveal">Einfach. Transparent.</h2>
-    <p class="sec-sub reveal">Starte kostenlos — skaliere wenn du bereit bist. Kein Abo-Zwang, keine versteckten Kosten.</p>
-
-    <div class="pricing-grid reveal">
-      <!-- FREE -->
-      <div class="price-card">
-        <div class="price-plan">Free</div>
-        <div class="price-amount"><sup>€</sup>0</div>
-        <div class="price-period">für immer kostenlos</div>
-        <ul class="price-features">
-          <li>3 Agenten</li>
-          <li>Öffentliche Chat-Seite</li>
-          <li>Website Widget</li>
-          <li>500 Nachrichten/Monat</li>
-          <li class="off">API Zugang</li>
-          <li class="off">WhatsApp & Telegram</li>
-          <li class="off">Analytics</li>
+    <div class="sec-eyebrow reveal">Preise</div>
+    <h2 class="sec-title reveal">Klar und fair.</h2>
+    <p class="sec-sub reveal">Starte kostenlos. Skaliere wenn du bereit bist.</p>
+    <div class="price-grid reveal">
+      <div class="pc">
+        <div class="plan">Free</div>
+        <div class="amount"><sup>€</sup>0</div>
+        <div class="period">für immer kostenlos</div>
+        <ul class="pf">
+          <li>3 Agenten</li><li>Chat-Seite & Widget</li><li>500 Nachrichten/Monat</li><li>RAG (2 Dokumente)</li><li>Mehrsprachigkeit</li>
+          <li class="off">Leads & Kalender</li><li class="off">WhatsApp & Telegram</li><li class="off">API Zugang</li>
         </ul>
-        <a href="/app" class="price-btn price-btn-outline">Kostenlos starten</a>
+        <a href="/app" class="pbtn pbtn-out">Kostenlos starten</a>
       </div>
-
-      <!-- PRO -->
-      <div class="price-card featured">
-        <div class="price-plan">Pro</div>
-        <div class="price-amount"><sup>€</sup>19</div>
-        <div class="price-period">pro Monat</div>
-        <ul class="price-features">
-          <li>Unbegrenzte Agenten</li>
-          <li>Öffentliche Chat-Seite</li>
-          <li>Website Widget</li>
-          <li>10.000 Nachrichten/Monat</li>
-          <li>REST API + API Keys</li>
-          <li>WhatsApp & Telegram</li>
-          <li>Analytics Dashboard</li>
+      <div class="pc featured">
+        <div class="plan">Pro</div>
+        <div class="amount"><sup>€</sup>19</div>
+        <div class="period">pro Monat · jederzeit kündbar</div>
+        <ul class="pf">
+          <li>Unbegrenzte Agenten</li><li>Alle Kanäle</li><li>10.000 Nachrichten/Monat</li><li>RAG (unbegrenzt)</li><li>Alle 6 Fähigkeiten</li><li>Lead-Erfassung & E-Mail</li><li>WhatsApp & Telegram</li><li>REST API + Keys</li>
         </ul>
-        <a href="/app" class="price-btn price-btn-fill">Pro starten</a>
+        <a href="/app" class="pbtn pbtn-fill">Pro starten</a>
       </div>
-
-      <!-- ENTERPRISE -->
-      <div class="price-card">
-        <div class="price-plan">Enterprise</div>
-        <div class="price-amount" style="font-size:2rem">Auf Anfrage</div>
-        <div class="price-period">individuelles Angebot</div>
-        <ul class="price-features">
-          <li>Alles aus Pro</li>
-          <li>Unbegrenzte Nachrichten</li>
-          <li>Custom Domain</li>
-          <li>White-Label</li>
-          <li>Dedicated Support</li>
-          <li>SLA Garantie</li>
-          <li>On-Premise Option</li>
+      <div class="pc">
+        <div class="plan">Enterprise</div>
+        <div class="amount" style="font-size:1.8rem;margin-top:8px">Auf Anfrage</div>
+        <div class="period">individuell</div>
+        <ul class="pf">
+          <li>Alles aus Pro</li><li>Unbegrenzte Nachrichten</li><li>Custom Domain</li><li>White-Label</li><li>Dedicated Support</li><li>SLA Garantie</li><li>On-Premise Option</li>
         </ul>
-        <a href="mailto:info@agentkontor.de" class="price-btn price-btn-outline">Kontakt aufnehmen</a>
+        <a href="mailto:info@agentkontor.de" class="pbtn pbtn-out">Kontakt aufnehmen</a>
       </div>
     </div>
   </div>
 </section>
 
+<!-- TESTIMONIALS -->
+<section class="testi">
+  <div class="container">
+    <div class="sec-eyebrow reveal">Stimmen</div>
+    <h2 class="sec-title reveal">Was andere sagen.</h2>
+    <div class="testi-grid reveal">
+      <div class="tcard"><div class="tcard-stars">★★★★★</div><p class="tcard-quote">Wir haben unseren Kundenservice-Agenten in 20 Minuten aufgesetzt. Er beantwortet jetzt 80% der Anfragen automatisch — auf Deutsch und Englisch.</p><div class="tcard-author"><div class="tcard-av" style="background:#5b4fcf">S</div><div><div class="tcard-name">Sarah M.</div><div class="tcard-role">E-Commerce, München</div></div></div></div>
+      <div class="tcard"><div class="tcard-stars">★★★★★</div><p class="tcard-quote">Der Lead-Agent qualifiziert Interessenten auf unserer Website und schickt mir sofort eine Mail. Das spart uns täglich 2 Stunden Arbeit.</p><div class="tcard-author"><div class="tcard-av" style="background:#dc2626">T</div><div><div class="tcard-name">Thomas K.</div><div class="tcard-role">Immobilien, Hamburg</div></div></div></div>
+      <div class="tcard"><div class="tcard-stars">★★★★★</div><p class="tcard-quote">Wir haben unsere Kursunterlagen hochgeladen und jetzt antwortet der Agent präzise auf alle Lernerfragen — 24/7 verfügbar.</p><div class="tcard-author"><div class="tcard-av" style="background:#0891b2">A</div><div><div class="tcard-name">Anna L.</div><div class="tcard-role">E-Learning-Plattform, Berlin</div></div></div></div>
+    </div>
+  </div>
+</section>
+
 <!-- CTA -->
-<div class="cta-section">
+<div class="cta-sec">
   <div class="cta-box reveal">
-    <h2>Starte jetzt.<br><span>Kostenlos.</span></h2>
-    <p>Kein Abo, keine Kreditkarte. Dein erster Agent ist in weniger als 5 Minuten live.</p>
+    <h2>Starte heute.<br><em>Kostenlos.</em></h2>
+    <p>Kein Abo, keine Kreditkarte. Dein erster Agent ist in 5 Minuten live.</p>
     <div class="cta-btns">
-      <a href="/app" class="btn-primary">Kostenlos registrieren →</a>
-      <a href="#features" class="btn-outline">Mehr erfahren</a>
+      <a href="/app" class="btn-cta-white">Kostenlos registrieren →</a>
+      <a href="#usecases" class="btn-cta-ghost">Use Cases ansehen</a>
     </div>
   </div>
 </div>
 
 <!-- FOOTER -->
 <footer>
-  <div class="footer-top">
-    <div class="footer-brand">
-      <h3>Agent<span>Kontor</span></h3>
-      <p>Baue, konfiguriere und deploye eigene KI-Agenten — ohne Code, ohne Komplexität.</p>
-    </div>
-    <div class="footer-col">
-      <h4>Produkt</h4>
-      <a href="#features">Features</a>
-      <a href="#integrations">Integrationen</a>
-      <a href="#pricing">Preise</a>
-      <a href="/app">Dashboard</a>
-    </div>
-    <div class="footer-col">
-      <h4>Entwickler</h4>
-      <a href="#integrations">REST API</a>
-      <a href="/app">API Keys</a>
-      <a href="/app">Webhook Docs</a>
-      <a href="/app">Widget Embed</a>
-    </div>
-    <div class="footer-col">
-      <h4>Rechtliches</h4>
-      <a href="#">Impressum</a>
-      <a href="#">Datenschutz</a>
-      <a href="#">AGB</a>
-      <a href="mailto:info@agentkontor.de">Kontakt</a>
-    </div>
+  <div class="ft">
+    <div class="fb"><h3>Agent<em>Kontor</em></h3><p>Baue, konfiguriere und deploye eigene KI-Agenten — ohne Code, ohne Komplexität. Für jede Branche.</p></div>
+    <div class="fc"><h4>Produkt</h4><a href="#usecases">Use Cases</a><a href="#capabilities">Fähigkeiten</a><a href="#integrations">Integrationen</a><a href="#pricing">Preise</a><a href="/app">Dashboard</a></div>
+    <div class="fc"><h4>Entwickler</h4><a href="/app">REST API</a><a href="/app">API Keys</a><a href="/app">Widget</a><a href="/app">Webhooks</a><a href="/app">Dokumentation</a></div>
+    <div class="fc"><h4>Rechtliches</h4><a href="#">Impressum</a><a href="#">Datenschutz</a><a href="#">AGB</a><a href="mailto:info@agentkontor.de">Kontakt</a></div>
   </div>
-  <div class="footer-bottom">
-    <div>© 2025 AgentKontor · superhecht.ai · Köln</div>
-    <div>Made with ☕ in Deutschland</div>
-  </div>
+  <div class="fbot"><div>© 2025 AgentKontor · superhecht.ai · Köln</div><div>Made with ☕ in Deutschland</div></div>
 </footer>
 
 <script>
 // Scroll reveal
 const obs = new IntersectionObserver(entries => {
   entries.forEach((e,i) => {
-    if (e.isIntersecting) {
-      setTimeout(() => e.target.classList.add('visible'), i * 80);
-      obs.unobserve(e.target);
-    }
+    if(e.isIntersecting){ setTimeout(()=>e.target.classList.add('visible'),i*60); obs.unobserve(e.target); }
   });
-}, { threshold: 0.08 });
-document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+},{threshold:0.07});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
 
 // Nav scroll
-window.addEventListener('scroll', () => {
-  document.getElementById('nav').style.borderBottomColor =
-    window.scrollY > 50 ? 'rgba(108,92,231,0.15)' : 'rgba(255,255,255,0.05)';
+window.addEventListener('scroll',()=>{
+  document.getElementById('nav').classList.toggle('scrolled',window.scrollY>40);
 });
 
 // Demo chat
 const demoReplies = {
-  'was kannst du?': 'Ich kann Fragen beantworten, Aufgaben erledigen, Informationen erklären und vieles mehr — ganz auf deinen Anwendungsfall zugeschnitten. Konfiguriere mich wie du möchtest!',
-  'wie richte ich dich ein?': 'Ganz einfach: 1. Account erstellen 2. Agent konfigurieren (Name, Persönlichkeit, Fokus) 3. Kanal wählen (Chat-Seite, Widget, WhatsApp...) 4. Live gehen ✓',
-  'welche sprachen?': 'Ich bin auf Deutsch und Englisch verfügbar — du kannst die Sprache pro Agent individuell einstellen. Weitere Sprachen sind möglich.',
+  'was kannst du?': 'Ich kann Fragen beantworten, Leads sammeln, Termine buchen und Dokumente auswerten — ganz auf deinen Anwendungsfall zugeschnitten!',
+  'wie richte ich dich ein?': '1. Account erstellen ✓\n2. Agent konfigurieren\n3. Kanal wählen (Chat-Seite, Widget, WhatsApp…)\n4. Live gehen 🚀',
+  'welche sprachen?': 'Ich erkenne automatisch die Sprache des Nutzers und antworte entsprechend — Deutsch, Englisch, Spanisch, Türkisch und viele mehr.',
 };
 const defaultReplies = [
-  'Das ist eine gute Frage! Als KI-Agent kann ich auf deinen speziellen Anwendungsfall zugeschnitten werden.',
-  'Interessant! In AgentKontor kannst du mich genau für solche Fragen trainieren.',
-  'Gerne helfe ich dabei. Konfiguriere mich über den Builder und ich bin auf deine Bedürfnisse optimiert.',
+  'Interessante Frage! Du kannst mich über den AgentKontor-Builder genau für solche Anfragen konfigurieren.',
+  'Das mache ich gerne. Konfiguriere mich im Builder und ich bin auf deine Bedürfnisse zugeschnitten.',
 ];
-let demoReplyIdx = 0;
+let demoIdx = 0;
 
-async function demoSend(text) {
-  if (!text.trim()) return;
-  const chat = document.getElementById('demoChat');
-  document.getElementById('demoChips').innerHTML = '';
-
-  // User msg
-  const userDiv = document.createElement('div');
-  userDiv.className = 'demo-msg user';
-  userDiv.innerHTML = `<div class="demo-av">👤</div><div class="demo-bubble" style="background:var(--purple);color:#fff">${text}</div>`;
-  chat.appendChild(userDiv);
-
-  // Typing
-  const typDiv = document.createElement('div');
-  typDiv.className = 'demo-msg bot';
-  typDiv.id = 'demo-typing';
-  typDiv.innerHTML = `<div class="demo-av">🤖</div><div class="typing-dots"><span></span><span></span><span></span></div>`;
-  chat.appendChild(typDiv);
-  chat.scrollTop = chat.scrollHeight;
-
-  await new Promise(r => setTimeout(r, 1200));
-  typDiv.remove();
-
-  const reply = demoReplies[text.toLowerCase()] || defaultReplies[demoReplyIdx++ % defaultReplies.length];
-  const botDiv = document.createElement('div');
-  botDiv.className = 'demo-msg bot';
-  botDiv.innerHTML = `<div class="demo-av">🤖</div><div class="demo-bubble">${reply}</div>`;
-  chat.appendChild(botDiv);
-  chat.scrollTop = chat.scrollHeight;
+async function demoSend(text){
+  if(!text.trim()) return;
+  const chat=document.getElementById('demoChat');
+  document.getElementById('demoChips').innerHTML='';
+  const u=document.createElement('div'); u.className='dmsg u';
+  u.innerHTML=`<div class="dav">👤</div><div class="dbl">${text}</div>`;
+  chat.appendChild(u);
+  const tp=document.createElement('div'); tp.className='dmsg b'; tp.id='demo-typing';
+  tp.innerHTML=`<div class="dav">🤖</div><div class="typ-dots"><span></span><span></span><span></span></div>`;
+  chat.appendChild(tp); chat.scrollTop=chat.scrollHeight;
+  await new Promise(r=>setTimeout(r,1100));
+  tp.remove();
+  const reply=demoReplies[text.toLowerCase()]||defaultReplies[demoIdx++%defaultReplies.length];
+  const b=document.createElement('div'); b.className='dmsg b';
+  b.innerHTML=`<div class="dav">🤖</div><div class="dbl">${reply.replace(/\n/g,'<br>')}</div>`;
+  chat.appendChild(b); chat.scrollTop=chat.scrollHeight;
 }
 </script>
 </body>
