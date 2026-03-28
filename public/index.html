@@ -5,210 +5,572 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AgentKontor – Baue deinen eigenen KI-Agenten</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#050510;--bg2:#09091a;--bg3:#0e0e22;--card:#0c0c1e;--border:rgba(255,255,255,0.07);--purple:#6c5ce7;--pu-l:#a29bfe;--pu-d:#4a3db0;--teal:#00cec9;--white:#ffffff;--muted:#5a5a80;--text:#c8c8e8;--red:#e94560;--gold:#f0c040;--green:#00b894}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;line-height:1.6}
-body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:1000;opacity:.25}
+:root {
+  --bg:       #fafaf8;
+  --bg2:      #f4f3ef;
+  --bg3:      #eceae3;
+  --card:     #ffffff;
+  --border:   #e2e0d8;
+  --border2:  #d0cdc3;
+  --purple:   #5b4fcf;
+  --pu-l:     #7c6fea;
+  --pu-d:     #3d3299;
+  --pu-pale:  #f0eeff;
+  --teal:     #0891b2;
+  --ink:      #1a1916;
+  --ink2:     #3d3b35;
+  --muted:    #7a786e;
+  --muted2:   #a8a49a;
+  --red:      #dc2626;
+  --green:    #16a34a;
+  --gold:     #b45309;
+  --shadow:   0 1px 3px rgba(26,25,22,.06), 0 4px 16px rgba(26,25,22,.08);
+  --shadow-lg: 0 8px 32px rgba(26,25,22,.1), 0 2px 8px rgba(26,25,22,.06);
+}
 
-/* NAV */
-nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:16px 52px;backdrop-filter:blur(20px);background:rgba(5,5,16,0.88);border-bottom:1px solid rgba(255,255,255,.04);transition:border-color .3s}
-.logo{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;color:var(--white);text-decoration:none;letter-spacing:-.01em}
-.logo span{color:var(--pu-l)}
-.nav-links{display:flex;gap:28px;align-items:center}
-.nl{font-size:.8rem;font-weight:500;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s}
-.nl:hover{color:var(--white)}
-.nav-cta{background:var(--purple);color:#fff;padding:8px 20px;border-radius:8px;font-size:.8rem;font-weight:600;text-decoration:none;transition:all .2s}
-.nav-cta:hover{background:var(--pu-l);transform:translateY(-1px)}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Geist', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--ink2);
+  overflow-x: hidden;
+  line-height: 1.6;
+  font-size: 16px;
+}
 
-/* HERO */
-.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:110px 52px 80px;position:relative;overflow:hidden;text-align:center}
-.hero-mesh{position:absolute;inset:0;background:radial-gradient(ellipse 90% 65% at 50% -5%,rgba(108,92,231,.16),transparent 70%),radial-gradient(ellipse 40% 40% at 15% 85%,rgba(0,206,201,.07),transparent 60%),radial-gradient(ellipse 40% 40% at 85% 75%,rgba(233,69,96,.06),transparent 60%);pointer-events:none}
-.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(108,92,231,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(108,92,231,.04) 1px,transparent 1px);background-size:52px 52px;animation:gd 28s linear infinite;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black,transparent)}
-@keyframes gd{to{transform:translateY(52px)}}
-.hero-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(108,92,231,.1);border:1px solid rgba(108,92,231,.3);padding:5px 16px;border-radius:100px;font-size:.7rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--pu-l);margin-bottom:24px;animation:fu .6s ease both}
-.bdot{width:6px;height:6px;background:var(--teal);border-radius:50%;animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-h1{font-family:'Syne',sans-serif;font-size:clamp(2.8rem,7.5vw,7rem);font-weight:800;line-height:1.0;color:var(--white);letter-spacing:-.03em;margin-bottom:8px;animation:fu .6s .1s ease both}
-h1 .acc{color:var(--pu-l)}
-h1 .sub{display:block;font-size:clamp(1.2rem,2.5vw,2rem);font-weight:400;font-family:'DM Sans',sans-serif;color:var(--muted);letter-spacing:.01em;margin-top:10px}
-.hero-desc{font-size:1rem;color:var(--muted);max-width:520px;margin:24px auto 44px;line-height:1.75;animation:fu .6s .2s ease both}
-.cta-group{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;animation:fu .6s .3s ease both}
-.btn-p{background:var(--purple);color:#fff;padding:14px 34px;border-radius:10px;font-size:.88rem;font-weight:600;text-decoration:none;border:2px solid var(--purple);transition:all .25s}
-.btn-p:hover{background:var(--pu-l);border-color:var(--pu-l);transform:translateY(-2px);box-shadow:0 12px 40px rgba(108,92,231,.35)}
-.btn-o{background:transparent;color:var(--pu-l);padding:14px 34px;border-radius:10px;font-size:.88rem;font-weight:500;text-decoration:none;border:1px solid rgba(108,92,231,.3);transition:all .25s}
-.btn-o:hover{border-color:var(--pu-l);background:rgba(108,92,231,.07);transform:translateY(-2px)}
+/* ─── NOISE TEXTURE ─── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 9999; opacity: 1;
+}
 
-/* HERO STATS ROW */
-.hero-stats{display:flex;gap:0;justify-content:center;margin-top:72px;border:1px solid var(--border);border-radius:14px;overflow:hidden;animation:fu .6s .4s ease both;background:rgba(255,255,255,.02)}
-.hstat{padding:20px 36px;text-align:center;border-right:1px solid var(--border)}
-.hstat:last-child{border-right:none}
-.hstat-n{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;color:var(--pu-l);line-height:1}
-.hstat-l{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+/* ─── NAV ─── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 52px; height: 64px;
+  background: rgba(250,250,248,.92);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+  transition: box-shadow .3s;
+}
+nav.scrolled { box-shadow: var(--shadow); }
+.logo {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.5rem; font-weight: 400;
+  color: var(--ink); text-decoration: none;
+  letter-spacing: -.01em;
+}
+.logo em { color: var(--purple); font-style: normal; }
+.nav-links { display: flex; gap: 32px; align-items: center; }
+.nl {
+  font-size: .84rem; font-weight: 500;
+  color: var(--muted); text-decoration: none;
+  transition: color .2s;
+}
+.nl:hover { color: var(--ink); }
+.nav-cta {
+  background: var(--ink); color: #fff;
+  padding: 9px 22px; border-radius: 8px;
+  font-size: .84rem; font-weight: 600;
+  text-decoration: none; transition: all .2s;
+}
+.nav-cta:hover { background: var(--purple); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(91,79,207,.3); }
 
-/* TICKER */
-.ticker{background:var(--purple);padding:10px 0;overflow:hidden;white-space:nowrap}
-.tk-track{display:inline-block;animation:tick 28s linear infinite}
-.tk-track span{font-family:'Syne',sans-serif;font-size:.9rem;letter-spacing:.14em;color:rgba(255,255,255,.85);margin:0 28px}
-.tk-track .sep{color:rgba(255,255,255,.3);margin:0 4px}
-@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+/* ─── HERO ─── */
+.hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 120px 52px 80px;
+  position: relative; overflow: hidden; text-align: center;
+}
 
-/* SECTIONS */
-section{padding:96px 52px;position:relative}
-.container{max-width:1160px;margin:0 auto}
-.slbl{font-size:.68rem;letter-spacing:.22em;text-transform:uppercase;color:var(--pu-l);display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.slbl::before{content:'';width:22px;height:1px;background:var(--pu-l)}
-.stitle{font-family:'Syne',sans-serif;font-size:clamp(1.8rem,4vw,3.2rem);font-weight:800;letter-spacing:-.02em;color:var(--white);line-height:1.1;margin-bottom:12px}
-.ssub{font-size:.95rem;color:var(--muted);max-width:520px;line-height:1.75}
+/* Decorative blobs */
+.hero::before {
+  content: '';
+  position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
+  width: 900px; height: 600px;
+  background: radial-gradient(ellipse at center, rgba(91,79,207,.07) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-orb {
+  position: absolute; border-radius: 50%; pointer-events: none;
+}
+.orb1 {
+  width: 340px; height: 340px;
+  background: radial-gradient(circle, rgba(91,79,207,.09), transparent 70%);
+  top: 15%; left: 8%;
+  animation: drift1 18s ease-in-out infinite;
+}
+.orb2 {
+  width: 280px; height: 280px;
+  background: radial-gradient(circle, rgba(8,145,178,.07), transparent 70%);
+  bottom: 20%; right: 10%;
+  animation: drift2 22s ease-in-out infinite;
+}
+.orb3 {
+  width: 180px; height: 180px;
+  background: radial-gradient(circle, rgba(180,83,9,.05), transparent 70%);
+  top: 60%; left: 20%;
+  animation: drift3 16s ease-in-out infinite;
+}
+@keyframes drift1 { 0%,100%{transform:translate(0,0)} 33%{transform:translate(30px,-20px)} 66%{transform:translate(-20px,30px)} }
+@keyframes drift2 { 0%,100%{transform:translate(0,0)} 33%{transform:translate(-25px,20px)} 66%{transform:translate(20px,-30px)} }
+@keyframes drift3 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(20px,-20px)} }
 
-/* USE CASES */
-.usecases{background:var(--bg2)}
-.uc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:52px}
-.uc-card{background:var(--card);border:1px solid var(--border);padding:32px 26px;position:relative;overflow:hidden;transition:all .25s;cursor:default}
-.uc-card:hover{border-color:rgba(108,92,231,.3);transform:translateY(-3px)}
-.uc-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:2px;transition:background .25s}
-.uc-card:hover::before{background:linear-gradient(90deg,var(--purple),var(--teal))}
-.uc-tag{font-size:.65rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:3px 10px;border-radius:20px;display:inline-block;margin-bottom:14px}
-.uc-icon{font-size:2rem;margin-bottom:12px;display:block}
-.uc-card h3{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700;color:var(--white);margin-bottom:7px}
-.uc-card p{font-size:.82rem;color:var(--muted);line-height:1.65;margin-bottom:14px}
-.uc-bullets{list-style:none;display:flex;flex-direction:column;gap:5px}
-.uc-bullets li{font-size:.78rem;color:var(--text);display:flex;align-items:flex-start;gap:7px}
-.uc-bullets li::before{content:'→';color:var(--pu-l);flex-shrink:0;margin-top:1px}
+/* Hero badge */
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--pu-pale);
+  border: 1px solid rgba(91,79,207,.2);
+  padding: 6px 16px 6px 12px;
+  border-radius: 100px;
+  font-size: .75rem; font-weight: 600;
+  letter-spacing: .02em;
+  color: var(--purple);
+  margin-bottom: 36px;
+  animation: fadeUp .5s ease both;
+}
+.badge-dot {
+  width: 7px; height: 7px;
+  background: var(--green); border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(22,163,74,.2);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{box-shadow:0 0 0 2px rgba(22,163,74,.2)} 50%{box-shadow:0 0 0 5px rgba(22,163,74,.08)} }
+.badge-sep { color: rgba(91,79,207,.35); }
 
-/* CAPABILITIES */
-.caps{background:var(--bg)}
-.caps-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:52px}
-.cap-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:28px;display:flex;gap:18px;align-items:flex-start;transition:all .25s}
-.cap-card:hover{border-color:rgba(108,92,231,.3);transform:translateY(-3px)}
-.cap-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0}
-.cap-card h3{font-family:'Syne',sans-serif;font-size:.98rem;font-weight:700;color:var(--white);margin-bottom:6px}
-.cap-card p{font-size:.82rem;color:var(--muted);line-height:1.6;margin-bottom:10px}
-.cap-tags{display:flex;flex-wrap:wrap;gap:5px}
-.ctag{font-size:.66rem;padding:2px 8px;border-radius:20px;font-weight:600}
+h1 {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(3rem, 7.5vw, 7rem);
+  font-weight: 400;
+  line-height: 1.02;
+  color: var(--ink);
+  letter-spacing: -.03em;
+  margin-bottom: 6px;
+  animation: fadeUp .55s .05s ease both;
+}
+h1 .accent { color: var(--purple); font-style: italic; }
+h1 .sub {
+  display: block;
+  font-family: 'Geist', sans-serif;
+  font-size: clamp(1.1rem, 2.2vw, 1.75rem);
+  font-weight: 300; font-style: normal;
+  color: var(--muted);
+  letter-spacing: -.01em;
+  margin-top: 14px;
+}
 
-/* FEATURES */
-.features{background:var(--bg2)}
-.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:52px}
-.feat{background:var(--card);border:1px solid var(--border);padding:28px;transition:all .2s}
-.feat:hover{border-color:rgba(108,92,231,.25)}
-.feat-ic{width:44px;height:44px;border-radius:12px;background:rgba(108,92,231,.1);border:1px solid rgba(108,92,231,.2);display:flex;align-items:center;justify-content:center;font-size:1.2rem;margin-bottom:16px}
-.feat h3{font-family:'Syne',sans-serif;font-size:.98rem;font-weight:700;color:var(--white);margin-bottom:7px}
-.feat p{font-size:.82rem;color:var(--muted);line-height:1.6}
+.hero-desc {
+  font-size: 1rem; color: var(--muted);
+  max-width: 500px; margin: 28px auto 44px;
+  line-height: 1.8;
+  animation: fadeUp .55s .1s ease both;
+}
 
-/* HOW */
-.how{background:var(--bg)}
-.steps{display:grid;grid-template-columns:repeat(4,1fr);margin-top:56px;position:relative}
-.steps::after{content:'';position:absolute;top:26px;left:12.5%;right:12.5%;height:1px;background:linear-gradient(to right,transparent,rgba(108,92,231,.4),rgba(108,92,231,.4),transparent)}
-.step{text-align:center;padding:0 24px}
-.sn{width:52px;height:52px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;color:var(--pu-l);position:relative;z-index:1;transition:all .25s}
-.step:hover .sn{background:rgba(108,92,231,.12);border-color:var(--purple);box-shadow:0 0 18px rgba(108,92,231,.25)}
-.step h3{font-family:'Syne',sans-serif;font-size:.92rem;font-weight:700;color:var(--white);margin-bottom:7px}
-.step p{font-size:.8rem;color:var(--muted);line-height:1.55}
+.hero-actions {
+  display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+  animation: fadeUp .55s .15s ease both;
+}
+.btn-primary {
+  background: var(--ink); color: #fff;
+  padding: 13px 32px; border-radius: 9px;
+  font-size: .9rem; font-weight: 600;
+  text-decoration: none; transition: all .25s;
+  box-shadow: 0 1px 2px rgba(26,25,22,.15), 0 4px 12px rgba(26,25,22,.1);
+}
+.btn-primary:hover { background: var(--purple); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(91,79,207,.3); }
+.btn-outline {
+  background: transparent; color: var(--ink2);
+  padding: 13px 32px; border-radius: 9px;
+  font-size: .9rem; font-weight: 500;
+  text-decoration: none; transition: all .25s;
+  border: 1px solid var(--border2);
+}
+.btn-outline:hover { border-color: var(--purple); color: var(--purple); background: var(--pu-pale); }
 
-/* INTEGRATIONS */
-.integ{background:var(--bg2)}
-.integ-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:52px}
-.ig{background:var(--card);border:1px solid var(--border);padding:24px;display:flex;align-items:flex-start;gap:14px;transition:all .2s}
-.ig:hover{border-color:rgba(108,92,231,.25)}
-.ig-ic{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
-.ig h3{font-size:.88rem;font-weight:700;color:var(--white);margin-bottom:4px}
-.ig p{font-size:.78rem;color:var(--muted);line-height:1.5}
-.ig-badge{display:inline-block;margin-top:8px;font-size:.64rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:100px}
+/* ─── HERO STATS ─── */
+.hero-stats {
+  display: flex; gap: 0; margin-top: 68px;
+  border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden;
+  background: var(--card);
+  box-shadow: var(--shadow);
+  animation: fadeUp .6s .2s ease both;
+}
+.hstat { padding: 20px 36px; text-align: center; border-right: 1px solid var(--border); }
+.hstat:last-child { border-right: none; }
+.hstat-n {
+  font-family: 'Instrument Serif', serif;
+  font-size: 2.2rem; color: var(--ink); line-height: 1;
+}
+.hstat-l { font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted2); margin-top: 3px; }
 
-/* PRICING */
-.pricing{background:var(--bg)}
-.price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:52px}
-.pc{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:34px 26px;position:relative;transition:all .25s}
-.pc:hover{transform:translateY(-4px)}
-.pc.featured{border-color:rgba(108,92,231,.4);background:linear-gradient(160deg,rgba(108,92,231,.07),var(--card))}
-.pc.featured::before{content:'★ Beliebt';position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--purple);color:#fff;font-size:.7rem;font-weight:700;letter-spacing:.08em;padding:2px 13px;border-radius:100px}
-.plan{font-family:'Syne',sans-serif;font-size:.9rem;font-weight:700;color:var(--pu-l);margin-bottom:5px}
-.amount{font-family:'Syne',sans-serif;font-size:2.8rem;font-weight:800;color:var(--white);line-height:1;margin-bottom:3px}
-.amount sup{font-size:1.1rem;margin-right:2px}
-.period{font-size:.75rem;color:var(--muted);margin-bottom:18px}
-.pf{list-style:none;margin-bottom:26px;display:flex;flex-direction:column;gap:8px}
-.pf li{display:flex;align-items:flex-start;gap:8px;font-size:.82rem;color:var(--text)}
-.pf li::before{content:'✓';color:var(--teal);font-weight:700;font-size:.78rem;flex-shrink:0;margin-top:1px}
-.pf li.off{color:var(--muted)}
-.pf li.off::before{content:'—';color:var(--muted)}
-.pbtn{display:block;width:100%;padding:11px;border-radius:8px;font-size:.86rem;font-weight:600;text-align:center;text-decoration:none;border:none;cursor:pointer;transition:all .2s}
-.pbtn-fill{background:var(--purple);color:#fff}
-.pbtn-fill:hover{background:var(--pu-l);box-shadow:0 8px 24px rgba(108,92,231,.35)}
-.pbtn-out{background:transparent;border:1px solid rgba(108,92,231,.3);color:var(--pu-l)}
-.pbtn-out:hover{background:rgba(108,92,231,.08)}
+/* ─── TICKER ─── */
+.ticker {
+  background: var(--ink); padding: 10px 0;
+  overflow: hidden; white-space: nowrap;
+}
+.tk-track { display: inline-block; animation: tick 30s linear infinite; }
+.tk-track span { font-size: .78rem; letter-spacing: .14em; color: rgba(255,255,255,.7); margin: 0 24px; font-weight: 500; }
+.tk-track .sep { color: rgba(255,255,255,.25); }
+@keyframes tick { from{transform:translateX(0)} to{transform:translateX(-50%)} }
 
-/* TESTIMONIALS */
-.testi{background:var(--bg2)}
-.testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:52px}
-.tcard{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:26px}
-.tcard-quote{font-size:.88rem;color:var(--text);line-height:1.65;margin-bottom:18px;font-style:italic}
-.tcard-quote::before{content:'"';font-size:1.4rem;color:var(--purple);font-style:normal;line-height:1}
-.tcard-author{display:flex;align-items:center;gap:11px}
-.tcard-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;color:#fff;flex-shrink:0}
-.tcard-name{font-size:.84rem;font-weight:600;color:var(--white)}
-.tcard-role{font-size:.73rem;color:var(--muted)}
+/* ─── SECTIONS ─── */
+section { padding: 96px 52px; position: relative; }
+.container { max-width: 1140px; margin: 0 auto; }
+.sec-eyebrow {
+  font-size: .7rem; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--purple); font-weight: 600;
+  display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+}
+.sec-eyebrow::before { content: ''; width: 20px; height: 1.5px; background: var(--purple); }
+.sec-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 400; color: var(--ink); line-height: 1.1;
+  letter-spacing: -.02em; margin-bottom: 14px;
+}
+.sec-sub { font-size: .95rem; color: var(--muted); max-width: 480px; line-height: 1.75; }
 
-/* CTA */
-.cta-sec{background:var(--bg);padding:96px 52px}
-.cta-box{max-width:740px;margin:0 auto;text-align:center;background:var(--card);border:1px solid rgba(108,92,231,.25);border-radius:22px;padding:72px 56px;position:relative;overflow:hidden}
-.cta-box::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(108,92,231,.1),transparent 70%);pointer-events:none}
-.cta-box h2{font-family:'Syne',sans-serif;font-size:clamp(1.8rem,4vw,3rem);font-weight:800;color:var(--white);letter-spacing:-.02em;margin-bottom:10px}
-.cta-box h2 span{color:var(--pu-l)}
-.cta-box p{font-size:.95rem;color:var(--muted);margin-bottom:34px}
+/* ─── USE CASES ─── */
+.usecases { background: var(--bg2); }
+.uc-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; margin-top: 52px; background: var(--border); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+.uc-card {
+  background: var(--card); padding: 28px 24px;
+  transition: all .25s; cursor: default; position: relative;
+}
+.uc-card:hover { background: var(--pu-pale); z-index: 1; }
+.uc-card:hover::after { content: ''; position: absolute; inset: 0; border: 1.5px solid rgba(91,79,207,.25); pointer-events: none; }
+.uc-tag {
+  font-size: .63rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 100px;
+  background: var(--bg2); color: var(--muted);
+  border: 1px solid var(--border); display: inline-block; margin-bottom: 12px;
+}
+.uc-card:hover .uc-tag { background: rgba(91,79,207,.1); color: var(--purple); border-color: rgba(91,79,207,.2); }
+.uc-icon { font-size: 1.6rem; margin-bottom: 10px; display: block; }
+.uc-card h3 { font-size: .92rem; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.uc-card p { font-size: .8rem; color: var(--muted); line-height: 1.65; margin-bottom: 12px; }
+.uc-bullets { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.uc-bullets li { font-size: .76rem; color: var(--ink2); display: flex; align-items: flex-start; gap: 7px; }
+.uc-bullets li::before { content: '→'; color: var(--purple); flex-shrink: 0; }
 
-/* FOOTER */
-footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 52px 32px}
-.ft{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:48px}
-.fb h3{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;color:var(--white);margin-bottom:10px}
-.fb h3 span{color:var(--pu-l)}
-.fb p{font-size:.8rem;color:var(--muted);line-height:1.7;max-width:240px}
-.fc h4{font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--white);margin-bottom:12px}
-.fc a{display:block;font-size:.8rem;color:var(--muted);text-decoration:none;margin-bottom:7px;transition:color .2s}
-.fc a:hover{color:var(--pu-l)}
-.fbot{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);padding-top:22px;font-size:.73rem;color:var(--muted);flex-wrap:wrap;gap:10px}
+/* ─── CAPABILITIES ─── */
+.caps { background: var(--bg); }
+.caps-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; margin-top: 52px; }
+.cap-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 26px;
+  display: flex; gap: 18px; align-items: flex-start;
+  transition: all .25s; box-shadow: var(--shadow);
+}
+.cap-card:hover { border-color: rgba(91,79,207,.3); transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.cap-icon {
+  width: 48px; height: 48px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem; flex-shrink: 0;
+  background: var(--bg2); border: 1px solid var(--border);
+}
+.cap-card:hover .cap-icon { background: var(--pu-pale); border-color: rgba(91,79,207,.2); }
+.cap-card h3 { font-size: .9rem; font-weight: 600; color: var(--ink); margin-bottom: 5px; }
+.cap-card p { font-size: .8rem; color: var(--muted); line-height: 1.65; margin-bottom: 10px; }
+.cap-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.ctag {
+  font-size: .65rem; padding: 2px 8px; border-radius: 100px;
+  font-weight: 600; background: var(--bg2);
+  border: 1px solid var(--border); color: var(--muted);
+}
 
-/* SCROLL REVEAL */
-.reveal{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s ease}
-.reveal.visible{opacity:1;transform:translateY(0)}
+/* ─── FEATURES ─── */
+.features { background: var(--bg2); }
+.feat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-top: 52px; }
+.feat-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 28px;
+  transition: all .25s; box-shadow: var(--shadow);
+}
+.feat-card:hover { border-color: rgba(91,79,207,.25); transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.feat-ic {
+  width: 44px; height: 44px; border-radius: 11px;
+  background: var(--pu-pale); border: 1px solid rgba(91,79,207,.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.15rem; margin-bottom: 16px;
+}
+.feat-card h3 { font-size: .9rem; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.feat-card p { font-size: .8rem; color: var(--muted); line-height: 1.65; }
 
-/* DEMO CHAT */
-.demo-win{background:var(--bg3);border:1px solid rgba(108,92,231,.2);border-radius:16px;width:min(560px,90vw);overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,.5),0 0 50px rgba(108,92,231,.12);margin-top:56px;animation:fu .7s .4s ease both}
-.dbar{background:rgba(255,255,255,.03);padding:10px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
-.ddots{display:flex;gap:5px}
-.ddot{width:9px;height:9px;border-radius:50%}
-.dtitle{flex:1;text-align:center;font-size:.72rem;color:var(--muted)}
-.dchat{padding:18px;display:flex;flex-direction:column;gap:10px;min-height:160px}
-.dmsg{display:flex;gap:9px}
-.dmsg.u{flex-direction:row-reverse;align-self:flex-end}
-.dav{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0}
-.dmsg.b .dav{background:linear-gradient(135deg,var(--purple),var(--pu-l))}
-.dmsg.u .dav{background:rgba(255,255,255,.08)}
-.dbl{padding:8px 12px;border-radius:12px;font-size:.82rem;line-height:1.5;max-width:80%}
-.dmsg.b .dbl{background:rgba(108,92,231,.14);border:1px solid rgba(108,92,231,.2);color:var(--text);border-bottom-left-radius:2px}
-.dmsg.u .dbl{background:var(--purple);color:#fff;border-bottom-right-radius:2px}
-.dchips{display:flex;flex-wrap:wrap;gap:6px;padding:0 18px 10px}
-.dchip{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:.73rem;color:var(--text);cursor:pointer;transition:all .2s}
-.dchip:hover{border-color:var(--pu-l);color:var(--pu-l)}
-.dinp{padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:8px}
-.di{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;padding:8px 11px;color:var(--text);font-size:.8rem;font-family:inherit}
-.ds{width:33px;height:33px;background:var(--purple);border:none;border-radius:8px;cursor:pointer;color:#fff;font-size:.85rem;display:flex;align-items:center;justify-content:center}
-.typ{display:flex;gap:3px;padding:8px 12px;background:rgba(108,92,231,.12);border:1px solid rgba(108,92,231,.2);border-radius:12px;border-bottom-left-radius:2px}
-.typ span{width:6px;height:6px;border-radius:50%;background:var(--pu-l);animation:tb .8s infinite}
-.typ span:nth-child(2){animation-delay:.15s}.typ span:nth-child(3){animation-delay:.3s}
-@keyframes tb{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-7px)}}
-@keyframes fu{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+/* ─── HOW ─── */
+.how { background: var(--bg); }
+.steps { display: grid; grid-template-columns: repeat(4,1fr); gap: 0; margin-top: 56px; position: relative; }
+.steps::after {
+  content: ''; position: absolute; top: 22px; left: 12.5%; right: 12.5%; height: 1px;
+  background: linear-gradient(to right, transparent, var(--border2), var(--border2), transparent);
+}
+.step { text-align: center; padding: 0 20px; }
+.sn {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--card); border: 1.5px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px;
+  font-size: .9rem; font-weight: 700; color: var(--purple);
+  position: relative; z-index: 1;
+  transition: all .25s; box-shadow: var(--shadow);
+}
+.step:hover .sn { background: var(--purple); color: #fff; border-color: var(--purple); box-shadow: 0 4px 16px rgba(91,79,207,.3); }
+.step h3 { font-size: .88rem; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.step p { font-size: .78rem; color: var(--muted); line-height: 1.6; }
 
-@media(max-width:960px){.uc-grid,.feat-grid,.integ-grid,.price-grid,.testi-grid{grid-template-columns:1fr 1fr}.caps-grid{grid-template-columns:1fr}.ft{grid-template-columns:1fr 1fr}}
-@media(max-width:700px){nav{padding:12px 18px}.nav-links .nl{display:none}section{padding:64px 18px}.hero{padding:96px 18px 64px}.hero-stats{flex-wrap:wrap}.hstat{min-width:120px}.steps{grid-template-columns:1fr 1fr;gap:24px}.steps::after{display:none}.uc-grid,.feat-grid,.integ-grid,.price-grid,.testi-grid,.caps-grid{grid-template-columns:1fr}.cta-box{padding:44px 22px}.ft{grid-template-columns:1fr;gap:24px}footer{padding:36px 18px 22px}}
+/* ─── INTEGRATIONS ─── */
+.integ { background: var(--bg2); }
+.integ-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-top: 52px; }
+.ig {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 22px;
+  display: flex; align-items: flex-start; gap: 14px;
+  transition: all .2s; box-shadow: var(--shadow);
+}
+.ig:hover { border-color: rgba(91,79,207,.25); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.ig-ic {
+  width: 42px; height: 42px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; flex-shrink: 0;
+  background: var(--bg2); border: 1px solid var(--border);
+}
+.ig h3 { font-size: .86rem; font-weight: 600; color: var(--ink); margin-bottom: 3px; }
+.ig p { font-size: .76rem; color: var(--muted); line-height: 1.5; }
+.ig-badge {
+  display: inline-block; margin-top: 7px;
+  font-size: .62rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 100px;
+  background: var(--bg2); color: var(--muted); border: 1px solid var(--border);
+}
+
+/* ─── PRICING ─── */
+.pricing { background: var(--bg); }
+.price-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-top: 52px; }
+.pc {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 32px 26px;
+  position: relative; transition: all .25s; box-shadow: var(--shadow);
+}
+.pc:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+.pc.featured {
+  border-color: var(--purple);
+  background: linear-gradient(160deg, var(--pu-pale), var(--card));
+  box-shadow: 0 4px 24px rgba(91,79,207,.15);
+}
+.pc.featured::before {
+  content: '★ Beliebt';
+  position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+  background: var(--purple); color: #fff;
+  font-size: .68rem; font-weight: 700; letter-spacing: .06em;
+  padding: 3px 14px; border-radius: 100px;
+}
+.plan { font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--purple); margin-bottom: 4px; }
+.amount { font-family: 'Instrument Serif', serif; font-size: 3rem; color: var(--ink); line-height: 1; margin-bottom: 3px; }
+.amount sup { font-size: 1.1rem; font-family: 'Geist', sans-serif; }
+.period { font-size: .74rem; color: var(--muted); margin-bottom: 20px; }
+.pf { list-style: none; margin-bottom: 24px; display: flex; flex-direction: column; gap: 8px; }
+.pf li { display: flex; align-items: flex-start; gap: 8px; font-size: .82rem; color: var(--ink2); }
+.pf li::before { content: '✓'; color: var(--green); font-weight: 700; font-size: .76rem; flex-shrink: 0; margin-top: 2px; }
+.pf li.off { color: var(--muted2); }
+.pf li.off::before { content: '—'; color: var(--muted2); }
+.pbtn {
+  display: block; width: 100%; padding: 11px;
+  border-radius: 8px; font-size: .86rem; font-weight: 600;
+  text-align: center; text-decoration: none; border: none; cursor: pointer;
+  transition: all .2s;
+}
+.pbtn-fill { background: var(--ink); color: #fff; }
+.pbtn-fill:hover { background: var(--purple); box-shadow: 0 4px 16px rgba(91,79,207,.3); }
+.pbtn-out { background: transparent; border: 1.5px solid var(--border2); color: var(--ink2); }
+.pbtn-out:hover { border-color: var(--purple); color: var(--purple); background: var(--pu-pale); }
+
+/* ─── TESTIMONIALS ─── */
+.testi { background: var(--bg2); }
+.testi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-top: 52px; }
+.tcard {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 26px;
+  box-shadow: var(--shadow); transition: all .25s;
+}
+.tcard:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.tcard-stars { color: var(--gold); font-size: .8rem; margin-bottom: 12px; letter-spacing: 2px; }
+.tcard-quote { font-size: .86rem; color: var(--ink2); line-height: 1.7; margin-bottom: 18px; font-style: italic; }
+.tcard-author { display: flex; align-items: center; gap: 10px; }
+.tcard-av {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .84rem; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.tcard-name { font-size: .82rem; font-weight: 600; color: var(--ink); }
+.tcard-role { font-size: .72rem; color: var(--muted); }
+
+/* ─── CTA ─── */
+.cta-sec { background: var(--ink); padding: 96px 52px; }
+.cta-box {
+  max-width: 700px; margin: 0 auto; text-align: center;
+}
+.cta-box h2 {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(2rem, 4vw, 3.2rem); font-weight: 400;
+  color: #fff; letter-spacing: -.02em; margin-bottom: 12px;
+}
+.cta-box h2 em { color: rgba(255,255,255,.55); font-style: italic; }
+.cta-box p { font-size: .95rem; color: rgba(255,255,255,.55); margin-bottom: 36px; }
+.cta-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.btn-cta-white {
+  background: #fff; color: var(--ink);
+  padding: 13px 32px; border-radius: 9px;
+  font-size: .9rem; font-weight: 600;
+  text-decoration: none; transition: all .25s;
+}
+.btn-cta-white:hover { background: var(--pu-pale); color: var(--purple); }
+.btn-cta-ghost {
+  background: transparent; color: rgba(255,255,255,.7);
+  padding: 13px 32px; border-radius: 9px;
+  font-size: .9rem; font-weight: 500;
+  text-decoration: none; transition: all .25s;
+  border: 1px solid rgba(255,255,255,.2);
+}
+.btn-cta-ghost:hover { border-color: rgba(255,255,255,.5); color: #fff; }
+
+/* ─── FOOTER ─── */
+footer {
+  background: var(--bg2); border-top: 1px solid var(--border);
+  padding: 52px 52px 32px;
+}
+.ft { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; margin-bottom: 44px; }
+.fb h3 {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.2rem; font-weight: 400; color: var(--ink); margin-bottom: 8px;
+}
+.fb h3 em { color: var(--purple); font-style: normal; }
+.fb p { font-size: .8rem; color: var(--muted); line-height: 1.7; max-width: 240px; }
+.fc h4 { font-size: .68rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ink2); margin-bottom: 12px; }
+.fc a { display: block; font-size: .8rem; color: var(--muted); text-decoration: none; margin-bottom: 7px; transition: color .2s; }
+.fc a:hover { color: var(--purple); }
+.fbot {
+  display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px solid var(--border); padding-top: 22px;
+  font-size: .72rem; color: var(--muted2); flex-wrap: wrap; gap: 10px;
+}
+
+/* ─── DEMO WIDGET ─── */
+.hero-demo-wrap {
+  margin-top: 68px;
+  position: relative;
+  animation: fadeUp .65s .2s ease both;
+}
+.demo-win {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 18px; width: min(580px, 92vw);
+  overflow: hidden; box-shadow: var(--shadow-lg), 0 0 0 1px rgba(91,79,207,.06);
+}
+.demo-bar {
+  background: var(--bg2); padding: 10px 16px;
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.demo-dots { display: flex; gap: 5px; }
+.demo-dot { width: 9px; height: 9px; border-radius: 50%; }
+.demo-bar-title { flex: 1; text-align: center; font-size: .72rem; color: var(--muted2); }
+.demo-chat { padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.dmsg { display: flex; gap: 9px; }
+.dmsg.u { flex-direction: row-reverse; align-self: flex-end; }
+.dav {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .78rem; flex-shrink: 0;
+}
+.dmsg.b .dav { background: var(--pu-pale); border: 1px solid rgba(91,79,207,.15); }
+.dmsg.u .dav { background: var(--bg3); border: 1px solid var(--border); }
+.dbl {
+  padding: 9px 13px; border-radius: 12px;
+  font-size: .82rem; line-height: 1.5; max-width: 78%;
+}
+.dmsg.b .dbl { background: var(--bg2); border: 1px solid var(--border); color: var(--ink2); border-bottom-left-radius: 3px; }
+.dmsg.u .dbl { background: var(--purple); color: #fff; border-bottom-right-radius: 3px; }
+.dchips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 18px 10px; }
+.dchip {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 100px; padding: 4px 12px;
+  font-size: .72rem; cursor: pointer; transition: all .2s;
+  color: var(--ink2);
+}
+.dchip:hover { border-color: var(--purple); color: var(--purple); background: var(--pu-pale); }
+.dinp-row {
+  padding: 10px 14px; border-top: 1px solid var(--border);
+  display: flex; gap: 8px;
+}
+.di {
+  flex: 1; background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 12px; color: var(--ink2);
+  font-size: .8rem; font-family: inherit;
+  transition: border-color .2s;
+}
+.di:focus { outline: none; border-color: var(--purple); }
+.ds {
+  width: 34px; height: 34px; background: var(--purple);
+  border: none; border-radius: 8px; cursor: pointer;
+  color: #fff; font-size: .85rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+}
+.ds:hover { background: var(--pu-d); }
+.typ-dots {
+  display: flex; gap: 3px; padding: 9px 13px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; border-bottom-left-radius: 3px;
+}
+.typ-dots span {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--purple); opacity: .5;
+  animation: typB .8s infinite;
+}
+.typ-dots span:nth-child(2) { animation-delay: .15s; }
+.typ-dots span:nth-child(3) { animation-delay: .3s; }
+@keyframes typB { 0%,80%,100%{transform:translateY(0);opacity:.5} 40%{transform:translateY(-6px);opacity:1} }
+
+/* ─── REVEAL ─── */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity .65s ease, transform .65s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:960px){
+  .uc-grid,.feat-grid,.integ-grid,.price-grid,.testi-grid{grid-template-columns:1fr 1fr}
+  .caps-grid{grid-template-columns:1fr}
+  .steps{grid-template-columns:1fr 1fr;gap:24px}
+  .steps::after{display:none}
+  .ft{grid-template-columns:1fr 1fr}
+}
+@media(max-width:700px){
+  nav{padding:0 18px}
+  .nav-links .nl{display:none}
+  section{padding:64px 18px}
+  .hero{padding:96px 18px 64px}
+  .hero-stats{flex-wrap:wrap}
+  .hstat{min-width:120px}
+  .uc-grid,.feat-grid,.integ-grid,.price-grid,.testi-grid,.caps-grid{grid-template-columns:1fr}
+  .cta-box{padding:48px 20px}
+  .ft{grid-template-columns:1fr;gap:24px}
+  footer{padding:40px 18px 24px}
+}
 </style>
 </head>
 <body>
 
 <nav id="nav">
-  <a class="logo" href="#">Agent<span>Kontor</span></a>
+  <a class="logo" href="#">Agent<em>Kontor</em></a>
   <div class="nav-links">
     <a class="nl" href="#usecases">Use Cases</a>
     <a class="nl" href="#capabilities">Fähigkeiten</a>
@@ -220,20 +582,68 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 52p
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-mesh"></div>
-  <div class="hero-grid"></div>
-  <div class="hero-badge"><span class="bdot"></span>Kostenlos starten · Kein Abo nötig</div>
-  <h1>Baue deinen eigenen<br><span class="acc">KI-Agenten.</span><span class="sub">In Minuten. Ohne Code.</span></h1>
-  <p class="hero-desc">AgentKontor gibt dir alles um einen leistungsstarken KI-Agenten zu erstellen — der Termine bucht, Leads sammelt, Dokumente kennt, mehrsprachig spricht und auf WhatsApp, Telegram & deiner Website erreichbar ist.</p>
-  <div class="cta-group">
-    <a href="/app" class="btn-p">Jetzt kostenlos starten →</a>
-    <a href="#usecases" class="btn-o">Use Cases ansehen</a>
+  <div class="hero-orb orb1"></div>
+  <div class="hero-orb orb2"></div>
+  <div class="hero-orb orb3"></div>
+
+  <div class="hero-badge">
+    <span class="badge-dot"></span>
+    Kostenlos starten
+    <span class="badge-sep">·</span>
+    Kein Abo nötig
+    <span class="badge-sep">·</span>
+    In 5 Minuten live
   </div>
+
+  <h1>
+    Baue deinen eigenen<br>
+    <span class="accent">KI-Agenten.</span>
+    <span class="sub">In Minuten. Ohne Code.</span>
+  </h1>
+
+  <p class="hero-desc">
+    AgentKontor gibt dir alles um einen leistungsstarken KI-Agenten zu erstellen — der Termine bucht, Leads sammelt, Dokumente kennt, mehrsprachig spricht und auf WhatsApp, Telegram & deiner Website erreichbar ist.
+  </p>
+
+  <div class="hero-actions">
+    <a href="/app" class="btn-primary">Jetzt kostenlos starten →</a>
+    <a href="#usecases" class="btn-outline">Use Cases ansehen</a>
+  </div>
+
   <div class="hero-stats">
     <div class="hstat"><div class="hstat-n">9+</div><div class="hstat-l">Branchen</div></div>
     <div class="hstat"><div class="hstat-n">6</div><div class="hstat-l">Fähigkeiten</div></div>
     <div class="hstat"><div class="hstat-n">5</div><div class="hstat-l">Kanäle</div></div>
     <div class="hstat"><div class="hstat-n">∞</div><div class="hstat-l">Nutzer</div></div>
+  </div>
+
+  <!-- DEMO -->
+  <div class="hero-demo-wrap">
+    <div class="demo-win">
+      <div class="demo-bar">
+        <div class="demo-dots">
+          <div class="demo-dot" style="background:#ff5f56"></div>
+          <div class="demo-dot" style="background:#ffbd2e"></div>
+          <div class="demo-dot" style="background:#27c93f"></div>
+        </div>
+        <div class="demo-bar-title">agentkontor.de/chat/dein-agent</div>
+      </div>
+      <div class="demo-chat" id="demoChat">
+        <div class="dmsg b">
+          <div class="dav">🤖</div>
+          <div class="dbl">Hallo! Ich bin Mia, dein KI-Assistent. Wie kann ich dir heute helfen?</div>
+        </div>
+      </div>
+      <div class="dchips" id="demoChips">
+        <span class="dchip" onclick="demoSend('Was kannst du?')">Was kannst du?</span>
+        <span class="dchip" onclick="demoSend('Wie richte ich dich ein?')">Wie richte ich dich ein?</span>
+        <span class="dchip" onclick="demoSend('Welche Sprachen?')">Welche Sprachen?</span>
+      </div>
+      <div class="dinp-row">
+        <input class="di" id="demoInp" placeholder="Nachricht eingeben…" onkeydown="if(event.key==='Enter'){demoSend(this.value);this.value=''}">
+        <button class="ds" onclick="demoSend(document.getElementById('demoInp').value);document.getElementById('demoInp').value=''">➤</button>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -248,83 +658,19 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 52p
 <!-- USE CASES -->
 <section class="usecases" id="usecases">
   <div class="container">
-    <div class="slbl reveal">Anwendungsfälle</div>
-    <h2 class="stitle reveal">Für jede Branche.</h2>
-    <p class="ssub reveal">Egal ob du Kunden berätst, Kandidaten screenst oder Produkte verkaufst — dein Agent spricht die Sprache deiner Branche.</p>
+    <div class="sec-eyebrow reveal">Anwendungsfälle</div>
+    <h2 class="sec-title reveal">Für jede Branche.</h2>
+    <p class="sec-sub reveal">Egal ob du Kunden berätst, Kandidaten screenst oder Produkte verkaufst — dein Agent spricht die Sprache deiner Branche.</p>
     <div class="uc-grid">
-
-      <div class="uc-card reveal">
-        <span class="uc-tag" style="background:rgba(108,92,231,.1);color:var(--pu-l);border:1px solid rgba(108,92,231,.2)">Kundenservice</span>
-        <span class="uc-icon">🎧</span>
-        <h3>Support & Service</h3>
-        <p>Beantworte Kundenanfragen rund um die Uhr — ohne Wartezeit, ohne Ticket-Chaos.</p>
-        <ul class="uc-bullets"><li>FAQ automatisch beantworten</li><li>Bestellstatus & Retouren</li><li>Eskalation an Menschen</li></ul>
-      </div>
-
-      <div class="uc-card reveal">
-        <span class="uc-tag" style="background:rgba(233,69,96,.1);color:var(--red);border:1px solid rgba(233,69,96,.2)">Vertrieb</span>
-        <span class="uc-icon">📈</span>
-        <h3>Lead-Generierung</h3>
-        <p>Qualifiziere Interessenten automatisch und sammle Kontaktdaten im Gespräch.</p>
-        <ul class="uc-bullets"><li>Leads im Chat erfassen</li><li>Automatisch per E-Mail benachrichtigen</li><li>Termine direkt buchen</li></ul>
-      </div>
-
-      <div class="uc-card reveal">
-        <span class="uc-tag" style="background:rgba(0,206,201,.1);color:var(--teal);border:1px solid rgba(0,206,201,.2)">HR</span>
-        <span class="uc-icon">👥</span>
-        <h3>HR & Recruiting</h3>
-        <p>Beantworte Kandidatenfragen, sammelst Bewerbungsinfos und vereinbare Vorstellungsgespräche.</p>
-        <ul class="uc-bullets"><li>Kandidaten vorqualifizieren</li><li>Jobdetails erklären</li><li>Interview-Termine buchen</li></ul>
-      </div>
-
-      <div class="uc-card reveal">
-        <span class="uc-tag" style="background:rgba(240,192,64,.1);color:var(--gold);border:1px solid rgba(240,192,64,.2)">Bildung</span>
-        <span class="uc-icon">🎓</span>
-        <h3>Bildung & E-Learning</h3>
-        <p>Dein Agent kennt alle Kursinhalte aus deinen Dokumenten und erklärt sie individuell.</p>
-        <ul class="uc-bullets"><li>Kursinhalt aus PDFs</li><li>Prüfungsvorbereitung</li><li>Mehrsprachige Unterstützung</li></ul>
-      </div>
-
-      <div class="uc-card reveal">
-        <span class="uc-tag" style="background:rgba(0,184,148,.1);color:var(--green);border:1px solid rgba(0,184,148,.2)">Gastro</span>
-        <span class="uc-icon">🍽️</span>
-        <h3>Gastronomie & Hotel</h3>
-        <p>Tisch- und Zimmerreservierungen, Speisekarte erklären, Öffnungszeiten — alles automatisch.</p>
-        <ul class="uc-bullets"><li>Reservierungen via Link</li><li>Menü & Allergene erklären</li><li>WhatsApp-Anbindung</li></ul>
-      </div>
-
-      <div class="uc-card reveal">
-        <span class="uc-tag" style="background:rgba(255,107,107,.1);color:#ff6b6b;border:1px solid rgba(255,107,107,.2)">Gesundheit</span>
-        <span class="uc-icon">🏥</span>
-        <h3>Gesundheit & Medizin</h3>
-        <p>Terminbuchung, Patienteninformationen und FAQ — 24/7 verfügbar, DSGVO-konform.</p>
-        <ul class="uc-bullets"><li>Termine buchen</li><li>Praxisinformationen</li><li>Formulare vorab ausfüllen</li></ul>
-      </div>
-
-      <div class="uc-card reveal">
-        <span class="uc-tag" style="background:rgba(74,58,186,.15);color:#8b7cf8;border:1px solid rgba(74,58,186,.25)">Recht</span>
-        <span class="uc-icon">⚖️</span>
-        <h3>Recht & Beratung</h3>
-        <p>Erstberatung automatisieren, Dokumente erklären, Mandanten vorqualifizieren.</p>
-        <ul class="uc-bullets"><li>Aus eigenen Dokumenten antworten (RAG)</li><li>Erstberatung strukturieren</li><li>Mandanteninfos sammeln</li></ul>
-      </div>
-
-      <div class="uc-card reveal">
-        <span class="uc-tag" style="background:rgba(212,175,55,.1);color:#d4af37;border:1px solid rgba(212,175,55,.2)">Immobilien</span>
-        <span class="uc-icon">🏡</span>
-        <h3>Immobilien</h3>
-        <p>Interessenten qualifizieren, Besichtigungen terminieren, Exposés erklären.</p>
-        <ul class="uc-bullets"><li>Exposé-Fragen beantworten</li><li>Besichtigungstermine buchen</li><li>Leads direkt per Mail</li></ul>
-      </div>
-
-      <div class="uc-card reveal">
-        <span class="uc-tag" style="background:rgba(0,136,204,.1);color:#0088cc;border:1px solid rgba(0,136,204,.2)">E-Commerce</span>
-        <span class="uc-icon">🛒</span>
-        <h3>E-Commerce & Shop</h3>
-        <p>Produktempfehlungen, Versandinfos, Retouren — dein Agent kennt deinen Shop.</p>
-        <ul class="uc-bullets"><li>Produkte empfehlen</li><li>Bestellstatus erklären</li><li>Upsell & Cross-Sell</li></ul>
-      </div>
-
+      <div class="uc-card reveal"><span class="uc-tag">Kundenservice</span><span class="uc-icon">🎧</span><h3>Support & Service</h3><p>Beantworte Kundenanfragen rund um die Uhr — ohne Wartezeit.</p><ul class="uc-bullets"><li>FAQ automatisch beantworten</li><li>Bestellstatus & Retouren</li><li>Eskalation an Menschen</li></ul></div>
+      <div class="uc-card reveal"><span class="uc-tag">Vertrieb</span><span class="uc-icon">📈</span><h3>Lead-Generierung</h3><p>Qualifiziere Interessenten und sammle Kontaktdaten im Gespräch.</p><ul class="uc-bullets"><li>Leads im Chat erfassen</li><li>E-Mail-Benachrichtigung</li><li>Termine direkt buchen</li></ul></div>
+      <div class="uc-card reveal"><span class="uc-tag">HR</span><span class="uc-icon">👥</span><h3>HR & Recruiting</h3><p>Kandidatenfragen beantworten und Gespräche vereinbaren.</p><ul class="uc-bullets"><li>Kandidaten vorqualifizieren</li><li>Jobdetails erklären</li><li>Interview-Termine buchen</li></ul></div>
+      <div class="uc-card reveal"><span class="uc-tag">Bildung</span><span class="uc-icon">🎓</span><h3>Bildung & E-Learning</h3><p>Dein Agent kennt alle Kursinhalte aus deinen Dokumenten.</p><ul class="uc-bullets"><li>Kursinhalt aus PDFs</li><li>Prüfungsvorbereitung</li><li>Mehrsprachig</li></ul></div>
+      <div class="uc-card reveal"><span class="uc-tag">Gastro</span><span class="uc-icon">🍽️</span><h3>Gastronomie & Hotel</h3><p>Reservierungen, Speisekarte, Öffnungszeiten — automatisch.</p><ul class="uc-bullets"><li>Reservierungen via Link</li><li>Menü & Allergene</li><li>WhatsApp-Anbindung</li></ul></div>
+      <div class="uc-card reveal"><span class="uc-tag">Gesundheit</span><span class="uc-icon">🏥</span><h3>Gesundheit & Medizin</h3><p>Terminbuchung und Praxisinformationen — 24/7 verfügbar.</p><ul class="uc-bullets"><li>Termine buchen</li><li>Praxisinformationen</li><li>DSGVO-konform</li></ul></div>
+      <div class="uc-card reveal"><span class="uc-tag">Recht</span><span class="uc-icon">⚖️</span><h3>Recht & Beratung</h3><p>Erstberatung automatisieren, Mandanten vorqualifizieren.</p><ul class="uc-bullets"><li>Aus eigenen Dokumenten (RAG)</li><li>Erstberatung strukturieren</li><li>Kontaktdaten sammeln</li></ul></div>
+      <div class="uc-card reveal"><span class="uc-tag">Immobilien</span><span class="uc-icon">🏡</span><h3>Immobilien</h3><p>Interessenten qualifizieren und Besichtigungen terminieren.</p><ul class="uc-bullets"><li>Exposé-Fragen beantworten</li><li>Besichtigungstermine</li><li>Leads per E-Mail</li></ul></div>
+      <div class="uc-card reveal"><span class="uc-tag">E-Commerce</span><span class="uc-icon">🛒</span><h3>E-Commerce & Shop</h3><p>Produktempfehlungen, Versandinfos, Retouren — automatisch.</p><ul class="uc-bullets"><li>Produkte empfehlen</li><li>Bestellstatus</li><li>Upsell & Cross-Sell</li></ul></div>
     </div>
   </div>
 </section>
@@ -332,65 +678,16 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 52p
 <!-- CAPABILITIES -->
 <section class="caps" id="capabilities">
   <div class="container">
-    <div class="slbl reveal">Fähigkeiten</div>
-    <h2 class="stitle reveal">Was dein Agent kann.</h2>
-    <p class="ssub reveal">Aktiviere im Builder genau die Fähigkeiten, die du brauchst — per Klick, ohne Code.</p>
+    <div class="sec-eyebrow reveal">Fähigkeiten</div>
+    <h2 class="sec-title reveal">Was dein Agent kann.</h2>
+    <p class="sec-sub reveal">Aktiviere im Builder genau die Fähigkeiten, die du brauchst — per Klick, ohne Code.</p>
     <div class="caps-grid reveal">
-
-      <div class="cap-card">
-        <div class="cap-icon" style="background:rgba(108,92,231,.1)">📅</div>
-        <div>
-          <h3>Termine buchen</h3>
-          <p>Dein Agent verlinkt Nutzer direkt zu deinem Calendly, Cal.com oder einem anderen Buchungssystem — zum richtigen Zeitpunkt im Gespräch.</p>
-          <div class="cap-tags"><span class="ctag" style="background:rgba(108,92,231,.1);color:var(--pu-l);border:1px solid rgba(108,92,231,.2)">Calendly</span><span class="ctag" style="background:rgba(108,92,231,.1);color:var(--pu-l);border:1px solid rgba(108,92,231,.2)">Cal.com</span><span class="ctag" style="background:rgba(108,92,231,.1);color:var(--pu-l);border:1px solid rgba(108,92,231,.2)">Jeder Link</span></div>
-        </div>
-      </div>
-
-      <div class="cap-card">
-        <div class="cap-icon" style="background:rgba(233,69,96,.1)">📋</div>
-        <div>
-          <h3>Leads erfassen</h3>
-          <p>Der Agent sammelt Name, E-Mail, Telefon oder beliebige andere Felder natürlich im Gespräch — und benachrichtigt dich sofort per E-Mail.</p>
-          <div class="cap-tags"><span class="ctag" style="background:rgba(233,69,96,.1);color:var(--red);border:1px solid rgba(233,69,96,.2)">Formular-freies Sammeln</span><span class="ctag" style="background:rgba(233,69,96,.1);color:var(--red);border:1px solid rgba(233,69,96,.2)">E-Mail-Notification</span></div>
-        </div>
-      </div>
-
-      <div class="cap-card">
-        <div class="cap-icon" style="background:rgba(0,184,148,.1)">🛒</div>
-        <div>
-          <h3>Produkte empfehlen</h3>
-          <p>Pflege deine Produktliste direkt im Builder ein — der Agent empfiehlt passende Produkte basierend auf den Anfragen und Bedürfnissen der Nutzer.</p>
-          <div class="cap-tags"><span class="ctag" style="background:rgba(0,184,148,.1);color:var(--green);border:1px solid rgba(0,184,148,.2)">Personalisiert</span><span class="ctag" style="background:rgba(0,184,148,.1);color:var(--green);border:1px solid rgba(0,184,148,.2)">Kein Shop-System nötig</span></div>
-        </div>
-      </div>
-
-      <div class="cap-card">
-        <div class="cap-icon" style="background:rgba(0,206,201,.1)">📚</div>
-        <div>
-          <h3>Dokumente kennen (RAG)</h3>
-          <p>Lade PDFs, Texte oder CSV-Dateien hoch — der Agent liest sie und antwortet präzise aus deinen eigenen Inhalten. Perfekt für Handbücher, FAQs und Wissensdatenbanken.</p>
-          <div class="cap-tags"><span class="ctag" style="background:rgba(0,206,201,.1);color:var(--teal);border:1px solid rgba(0,206,201,.2)">PDF</span><span class="ctag" style="background:rgba(0,206,201,.1);color:var(--teal);border:1px solid rgba(0,206,201,.2)">TXT/MD</span><span class="ctag" style="background:rgba(0,206,201,.1);color:var(--teal);border:1px solid rgba(0,206,201,.2)">CSV</span></div>
-        </div>
-      </div>
-
-      <div class="cap-card">
-        <div class="cap-icon" style="background:rgba(240,192,64,.1)">🌍</div>
-        <div>
-          <h3>Mehrsprachig</h3>
-          <p>Der Agent erkennt automatisch die Sprache des Nutzers und antwortet in derselben Sprache — Deutsch, Englisch, Spanisch, Türkisch und mehr.</p>
-          <div class="cap-tags"><span class="ctag" style="background:rgba(240,192,64,.1);color:var(--gold);border:1px solid rgba(240,192,64,.2)">Auto-Erkennung</span><span class="ctag" style="background:rgba(240,192,64,.1);color:var(--gold);border:1px solid rgba(240,192,64,.2)">100+ Sprachen</span></div>
-        </div>
-      </div>
-
-      <div class="cap-card">
-        <div class="cap-icon" style="background:rgba(162,155,254,.1)">✉️</div>
-        <div>
-          <h3>E-Mails senden</h3>
-          <p>Dein Agent kann auf Wunsch des Nutzers automatisch E-Mails versenden — Zusammenfassungen, Angebote, Bestätigungen — direkt aus dem Chat.</p>
-          <div class="cap-tags"><span class="ctag" style="background:rgba(162,155,254,.1);color:var(--pu-l);border:1px solid rgba(162,155,254,.2)">SMTP</span><span class="ctag" style="background:rgba(162,155,254,.1);color:var(--pu-l);border:1px solid rgba(162,155,254,.2)">Gmail</span><span class="ctag" style="background:rgba(162,155,254,.1);color:var(--pu-l);border:1px solid rgba(162,155,254,.2)">Outlook</span></div>
-        </div>
-      </div>
-
+      <div class="cap-card"><div class="cap-icon">📅</div><div><h3>Termine buchen</h3><p>Dein Agent verlinkt Nutzer direkt zu deinem Calendly, Cal.com oder jedem anderen Buchungssystem — zum richtigen Zeitpunkt im Gespräch.</p><div class="cap-tags"><span class="ctag">Calendly</span><span class="ctag">Cal.com</span><span class="ctag">Jeder Link</span></div></div></div>
+      <div class="cap-card"><div class="cap-icon">📋</div><div><h3>Leads erfassen</h3><p>Name, E-Mail, Telefon — natürlich im Gespräch gesammelt. Sofortige E-Mail-Benachrichtigung an dich.</p><div class="cap-tags"><span class="ctag">Formular-freies Sammeln</span><span class="ctag">E-Mail-Notification</span></div></div></div>
+      <div class="cap-card"><div class="cap-icon">🛒</div><div><h3>Produkte empfehlen</h3><p>Pflege deine Produktliste direkt im Builder ein — der Agent empfiehlt passende Produkte basierend auf Nutzerfragen.</p><div class="cap-tags"><span class="ctag">Personalisiert</span><span class="ctag">Kein Shop-System</span></div></div></div>
+      <div class="cap-card"><div class="cap-icon">📚</div><div><h3>Dokumente kennen (RAG)</h3><p>PDFs, Texte oder CSV hochladen — der Agent liest sie und antwortet präzise aus deinen Inhalten. Für Handbücher, FAQs und Wissen.</p><div class="cap-tags"><span class="ctag">PDF</span><span class="ctag">TXT/MD</span><span class="ctag">CSV</span></div></div></div>
+      <div class="cap-card"><div class="cap-icon">🌍</div><div><h3>Mehrsprachig</h3><p>Der Agent erkennt automatisch die Sprache des Nutzers und antwortet entsprechend — Deutsch, Englisch, Spanisch und mehr.</p><div class="cap-tags"><span class="ctag">Auto-Erkennung</span><span class="ctag">100+ Sprachen</span></div></div></div>
+      <div class="cap-card"><div class="cap-icon">✉️</div><div><h3>E-Mails senden</h3><p>Dein Agent kann auf Wunsch automatisch E-Mails versenden — Zusammenfassungen, Angebote, Bestätigungen — direkt aus dem Chat.</p><div class="cap-tags"><span class="ctag">SMTP</span><span class="ctag">Gmail</span><span class="ctag">Outlook</span></div></div></div>
     </div>
   </div>
 </section>
@@ -398,15 +695,15 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 52p
 <!-- FEATURES -->
 <section class="features" id="features">
   <div class="container">
-    <div class="slbl reveal">Plattform</div>
-    <h2 class="stitle reveal">Alles inklusive.</h2>
+    <div class="sec-eyebrow reveal">Plattform</div>
+    <h2 class="sec-title reveal">Alles inklusive.</h2>
     <div class="feat-grid reveal">
-      <div class="feat"><div class="feat-ic">🎨</div><h3>Visueller Builder</h3><p>Agent konfigurieren, Live-Vorschau sehen, Änderungen speichern — alles in einem Editor ohne eine Zeile Code.</p></div>
-      <div class="feat"><div class="feat-ic">🌐</div><h3>Öffentliche Chat-Seite</h3><p>Jeder Agent bekommt eine eigene URL. Einfach teilen — kein Login für Nutzer nötig.</p></div>
-      <div class="feat"><div class="feat-ic">🔧</div><h3>Website Widget</h3><p>Ein Script-Tag. Dein Agent als schwebendes Chat-Widget auf jeder Website.</p></div>
-      <div class="feat"><div class="feat-ic">📱</div><h3>WhatsApp & Telegram</h3><p>Verbinde deinen Agenten mit WhatsApp Business oder als Telegram-Bot in unter 2 Minuten.</p></div>
-      <div class="feat"><div class="feat-ic">⚡</div><h3>REST API</h3><p>Integriere deinen Agenten in eigene Apps, Workflows und Tools per API Key.</p></div>
-      <div class="feat"><div class="feat-ic">📊</div><h3>Analytics</h3><p>Nachrichten, Kanäle, Leads — alle Daten auf einen Blick im Dashboard.</p></div>
+      <div class="feat-card"><div class="feat-ic">🎨</div><h3>Visueller Builder</h3><p>Agent konfigurieren, Live-Vorschau sehen, Änderungen speichern — alles ohne eine Zeile Code.</p></div>
+      <div class="feat-card"><div class="feat-ic">🌐</div><h3>Öffentliche Chat-Seite</h3><p>Jeder Agent bekommt eine eigene URL. Einfach teilen — kein Login für Nutzer nötig.</p></div>
+      <div class="feat-card"><div class="feat-ic">🔧</div><h3>Website Widget</h3><p>Ein Script-Tag. Dein Agent als schwebendes Chat-Widget auf jeder Website.</p></div>
+      <div class="feat-card"><div class="feat-ic">📱</div><h3>WhatsApp & Telegram</h3><p>Verbinde deinen Agenten mit WhatsApp Business oder als Telegram-Bot in unter 2 Minuten.</p></div>
+      <div class="feat-card"><div class="feat-ic">⚡</div><h3>REST API</h3><p>Integriere deinen Agenten in eigene Apps, Workflows und Tools per API Key.</p></div>
+      <div class="feat-card"><div class="feat-ic">📊</div><h3>Analytics</h3><p>Nachrichten, Kanäle, Leads — alle Daten auf einen Blick im Dashboard.</p></div>
     </div>
   </div>
 </section>
@@ -414,12 +711,12 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 52p
 <!-- HOW -->
 <section id="how">
   <div class="container">
-    <div class="slbl reveal">So geht's</div>
-    <h2 class="stitle reveal">In 3 Schritten live.</h2>
+    <div class="sec-eyebrow reveal">So geht's</div>
+    <h2 class="sec-title reveal">In 4 Schritten live.</h2>
     <div class="steps reveal">
       <div class="step"><div class="sn">1</div><h3>Agent bauen</h3><p>Name, Persönlichkeit, Fokus, Fähigkeiten aktivieren — alles im visuellen Builder.</p></div>
-      <div class="step"><div class="sn">2</div><h3>Kanal wählen</h3><p>Chat-Seite, Widget, WhatsApp, Telegram oder API — alles mit einem Klick aktivierbar.</p></div>
-      <div class="step"><div class="sn">3</div><h3>Dokumente laden</h3><p>PDFs, Texte oder CSV hochladen — dein Agent liest sie und antwortet daraus.</p></div>
+      <div class="step"><div class="sn">2</div><h3>Kanal wählen</h3><p>Chat-Seite, Widget, WhatsApp, Telegram oder API — alles per Klick aktivierbar.</p></div>
+      <div class="step"><div class="sn">3</div><h3>Wissen laden</h3><p>PDFs, Texte oder CSV hochladen — dein Agent liest sie und antwortet daraus.</p></div>
       <div class="step"><div class="sn">4</div><h3>Live gehen</h3><p>Sofort erreichbar. Nutzer chatten, Leads werden gesammelt, Termine gebucht.</p></div>
     </div>
   </div>
@@ -428,15 +725,15 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 52p
 <!-- INTEGRATIONS -->
 <section class="integ" id="integrations">
   <div class="container">
-    <div class="slbl reveal">Integrationen</div>
-    <h2 class="stitle reveal">Überall verfügbar.</h2>
+    <div class="sec-eyebrow reveal">Integrationen</div>
+    <h2 class="sec-title reveal">Überall verfügbar.</h2>
     <div class="integ-grid reveal">
-      <div class="ig"><div class="ig-ic" style="background:rgba(108,92,231,.1)">🌐</div><div><h3>Chat-Seite</h3><p>Automatisch generierte URL. Teilen per Link oder QR-Code.</p><span class="ig-badge" style="background:rgba(108,92,231,.1);color:var(--pu-l);border:1px solid rgba(108,92,231,.2)">/chat/agent-id</span></div></div>
-      <div class="ig"><div class="ig-ic" style="background:rgba(162,155,254,.1)">🔧</div><div><h3>Website Widget</h3><p>Zwei Zeilen Code. Überall einbettbar.</p><span class="ig-badge" style="background:rgba(162,155,254,.1);color:var(--pu-l);border:1px solid rgba(162,155,254,.2)">&lt;script&gt; Tag</span></div></div>
-      <div class="ig"><div class="ig-ic" style="background:rgba(37,211,102,.1)">📱</div><div><h3>WhatsApp Business</h3><p>Meta Cloud API. Dein Agent antwortet 24/7.</p><span class="ig-badge" style="background:rgba(37,211,102,.1);color:#25d366;border:1px solid rgba(37,211,102,.2)">Meta Cloud API</span></div></div>
-      <div class="ig"><div class="ig-ic" style="background:rgba(0,136,204,.1)">✈️</div><div><h3>Telegram Bot</h3><p>@BotFather Token eingeben — sofort aktiv.</p><span class="ig-badge" style="background:rgba(0,136,204,.1);color:#0088cc;border:1px solid rgba(0,136,204,.2)">@BotFather</span></div></div>
-      <div class="ig"><div class="ig-ic" style="background:rgba(240,192,64,.1)">⚡</div><div><h3>REST API</h3><p>API Key generieren. In eigene Apps integrieren.</p><span class="ig-badge" style="background:rgba(240,192,64,.1);color:var(--gold);border:1px solid rgba(240,192,64,.2)">x-api-key</span></div></div>
-      <div class="ig"><div class="ig-ic" style="background:rgba(0,206,201,.1)">🔔</div><div><h3>Webhooks</h3><p>Zapier, Make, n8n — alle Nachrichten weiterleiten.</p><span class="ig-badge" style="background:rgba(0,206,201,.1);color:var(--teal);border:1px solid rgba(0,206,201,.2)">Bald verfügbar</span></div></div>
+      <div class="ig"><div class="ig-ic">🌐</div><div><h3>Chat-Seite</h3><p>Automatisch generierte URL. Teilen per Link oder QR-Code.</p><span class="ig-badge">/chat/agent-id</span></div></div>
+      <div class="ig"><div class="ig-ic">🔧</div><div><h3>Website Widget</h3><p>Zwei Zeilen Code. Überall einbettbar.</p><span class="ig-badge">&lt;script&gt; Tag</span></div></div>
+      <div class="ig"><div class="ig-ic">📱</div><div><h3>WhatsApp Business</h3><p>Meta Cloud API. Dein Agent antwortet 24/7.</p><span class="ig-badge">Meta Cloud API</span></div></div>
+      <div class="ig"><div class="ig-ic">✈️</div><div><h3>Telegram Bot</h3><p>@BotFather Token eingeben — sofort aktiv.</p><span class="ig-badge">@BotFather</span></div></div>
+      <div class="ig"><div class="ig-ic">⚡</div><div><h3>REST API</h3><p>API Key generieren. In eigene Apps integrieren.</p><span class="ig-badge">x-api-key</span></div></div>
+      <div class="ig"><div class="ig-ic">🔔</div><div><h3>Webhooks</h3><p>Zapier, Make, n8n — alle Nachrichten weiterleiten.</p><span class="ig-badge" style="background:rgba(8,145,178,.07);color:var(--teal);border-color:rgba(8,145,178,.15)">Bald verfügbar</span></div></div>
     </div>
   </div>
 </section>
@@ -444,24 +741,17 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 52p
 <!-- PRICING -->
 <section class="pricing" id="pricing">
   <div class="container">
-    <div class="slbl reveal">Preise</div>
-    <h2 class="stitle reveal">Klar und fair.</h2>
-    <p class="ssub reveal">Starte kostenlos. Skaliere wenn du bereit bist.</p>
+    <div class="sec-eyebrow reveal">Preise</div>
+    <h2 class="sec-title reveal">Klar und fair.</h2>
+    <p class="sec-sub reveal">Starte kostenlos. Skaliere wenn du bereit bist.</p>
     <div class="price-grid reveal">
       <div class="pc">
         <div class="plan">Free</div>
         <div class="amount"><sup>€</sup>0</div>
         <div class="period">für immer kostenlos</div>
         <ul class="pf">
-          <li>3 Agenten</li>
-          <li>Chat-Seite & Widget</li>
-          <li>500 Nachrichten/Monat</li>
-          <li>RAG (2 Dokumente)</li>
-          <li>Mehrsprachigkeit</li>
-          <li class="off">Leads & Kalender</li>
-          <li class="off">WhatsApp & Telegram</li>
-          <li class="off">API Zugang</li>
-          <li class="off">E-Mail versenden</li>
+          <li>3 Agenten</li><li>Chat-Seite & Widget</li><li>500 Nachrichten/Monat</li><li>RAG (2 Dokumente)</li><li>Mehrsprachigkeit</li>
+          <li class="off">Leads & Kalender</li><li class="off">WhatsApp & Telegram</li><li class="off">API Zugang</li>
         </ul>
         <a href="/app" class="pbtn pbtn-out">Kostenlos starten</a>
       </div>
@@ -470,31 +760,16 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 52p
         <div class="amount"><sup>€</sup>19</div>
         <div class="period">pro Monat · jederzeit kündbar</div>
         <ul class="pf">
-          <li>Unbegrenzte Agenten</li>
-          <li>Alle Kanäle</li>
-          <li>10.000 Nachrichten/Monat</li>
-          <li>RAG (unbegrenzt)</li>
-          <li>Alle 6 Fähigkeiten</li>
-          <li>Lead-Erfassung & E-Mail</li>
-          <li>WhatsApp & Telegram</li>
-          <li>REST API + Keys</li>
-          <li>Analytics Dashboard</li>
+          <li>Unbegrenzte Agenten</li><li>Alle Kanäle</li><li>10.000 Nachrichten/Monat</li><li>RAG (unbegrenzt)</li><li>Alle 6 Fähigkeiten</li><li>Lead-Erfassung & E-Mail</li><li>WhatsApp & Telegram</li><li>REST API + Keys</li>
         </ul>
         <a href="/app" class="pbtn pbtn-fill">Pro starten</a>
       </div>
       <div class="pc">
         <div class="plan">Enterprise</div>
-        <div class="amount" style="font-size:1.9rem;margin-top:8px">Auf Anfrage</div>
+        <div class="amount" style="font-size:1.8rem;margin-top:8px">Auf Anfrage</div>
         <div class="period">individuell</div>
         <ul class="pf">
-          <li>Alles aus Pro</li>
-          <li>Unbegrenzte Nachrichten</li>
-          <li>Custom Domain</li>
-          <li>White-Label</li>
-          <li>Dedicated Support</li>
-          <li>SLA Garantie</li>
-          <li>On-Premise Option</li>
-          <li>Custom Integrationen</li>
+          <li>Alles aus Pro</li><li>Unbegrenzte Nachrichten</li><li>Custom Domain</li><li>White-Label</li><li>Dedicated Support</li><li>SLA Garantie</li><li>On-Premise Option</li>
         </ul>
         <a href="mailto:info@agentkontor.de" class="pbtn pbtn-out">Kontakt aufnehmen</a>
       </div>
@@ -503,23 +778,14 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 52p
 </section>
 
 <!-- TESTIMONIALS -->
-<section class="testi" style="background:var(--bg2)">
+<section class="testi">
   <div class="container">
-    <div class="slbl reveal">Stimmen</div>
-    <h2 class="stitle reveal">Was andere sagen.</h2>
+    <div class="sec-eyebrow reveal">Stimmen</div>
+    <h2 class="sec-title reveal">Was andere sagen.</h2>
     <div class="testi-grid reveal">
-      <div class="tcard">
-        <div class="tcard-quote">Wir haben unseren Kundenservice-Agenten in 20 Minuten aufgesetzt. Er beantwortet jetzt 80% der Anfragen automatisch — auf Deutsch und Englisch.</div>
-        <div class="tcard-author"><div class="tcard-av" style="background:var(--purple)">S</div><div><div class="tcard-name">Sarah M.</div><div class="tcard-role">E-Commerce, München</div></div></div>
-      </div>
-      <div class="tcard">
-        <div class="tcard-quote">Der Lead-Agent qualifiziert Interessenten direkt auf unserer Website und schickt mir sofort eine Mail. Das spart uns täglich 2 Stunden Arbeit.</div>
-        <div class="tcard-author"><div class="tcard-av" style="background:var(--red)">T</div><div><div class="tcard-name">Thomas K.</div><div class="tcard-role">Immobilien, Hamburg</div></div></div>
-      </div>
-      <div class="tcard">
-        <div class="tcard-quote">Wir haben unsere Kursunterlagen hochgeladen und jetzt antwortet der Agent präzise auf alle Lernerfragen — 24/7 verfügbar.</div>
-        <div class="tcard-author"><div class="tcard-av" style="background:var(--teal)">A</div><div><div class="tcard-name">Anna L.</div><div class="tcard-role">E-Learning-Plattform, Berlin</div></div></div>
-      </div>
+      <div class="tcard"><div class="tcard-stars">★★★★★</div><p class="tcard-quote">Wir haben unseren Kundenservice-Agenten in 20 Minuten aufgesetzt. Er beantwortet jetzt 80% der Anfragen automatisch — auf Deutsch und Englisch.</p><div class="tcard-author"><div class="tcard-av" style="background:#5b4fcf">S</div><div><div class="tcard-name">Sarah M.</div><div class="tcard-role">E-Commerce, München</div></div></div></div>
+      <div class="tcard"><div class="tcard-stars">★★★★★</div><p class="tcard-quote">Der Lead-Agent qualifiziert Interessenten auf unserer Website und schickt mir sofort eine Mail. Das spart uns täglich 2 Stunden Arbeit.</p><div class="tcard-author"><div class="tcard-av" style="background:#dc2626">T</div><div><div class="tcard-name">Thomas K.</div><div class="tcard-role">Immobilien, Hamburg</div></div></div></div>
+      <div class="tcard"><div class="tcard-stars">★★★★★</div><p class="tcard-quote">Wir haben unsere Kursunterlagen hochgeladen und jetzt antwortet der Agent präzise auf alle Lernerfragen — 24/7 verfügbar.</p><div class="tcard-author"><div class="tcard-av" style="background:#0891b2">A</div><div><div class="tcard-name">Anna L.</div><div class="tcard-role">E-Learning-Plattform, Berlin</div></div></div></div>
     </div>
   </div>
 </section>
@@ -527,11 +793,11 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 52p
 <!-- CTA -->
 <div class="cta-sec">
   <div class="cta-box reveal">
-    <h2>Starte heute.<br><span>Kostenlos.</span></h2>
+    <h2>Starte heute.<br><em>Kostenlos.</em></h2>
     <p>Kein Abo, keine Kreditkarte. Dein erster Agent ist in 5 Minuten live.</p>
-    <div class="cta-group">
-      <a href="/app" class="btn-p">Kostenlos registrieren →</a>
-      <a href="#usecases" class="btn-o">Use Cases ansehen</a>
+    <div class="cta-btns">
+      <a href="/app" class="btn-cta-white">Kostenlos registrieren →</a>
+      <a href="#usecases" class="btn-cta-ghost">Use Cases ansehen</a>
     </div>
   </div>
 </div>
@@ -539,7 +805,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 52p
 <!-- FOOTER -->
 <footer>
   <div class="ft">
-    <div class="fb"><h3>Agent<span>Kontor</span></h3><p>Baue, konfiguriere und deploye eigene KI-Agenten — ohne Code, ohne Komplexität. Für jede Branche.</p></div>
+    <div class="fb"><h3>Agent<em>Kontor</em></h3><p>Baue, konfiguriere und deploye eigene KI-Agenten — ohne Code, ohne Komplexität. Für jede Branche.</p></div>
     <div class="fc"><h4>Produkt</h4><a href="#usecases">Use Cases</a><a href="#capabilities">Fähigkeiten</a><a href="#integrations">Integrationen</a><a href="#pricing">Preise</a><a href="/app">Dashboard</a></div>
     <div class="fc"><h4>Entwickler</h4><a href="/app">REST API</a><a href="/app">API Keys</a><a href="/app">Widget</a><a href="/app">Webhooks</a><a href="/app">Dokumentation</a></div>
     <div class="fc"><h4>Rechtliches</h4><a href="#">Impressum</a><a href="#">Datenschutz</a><a href="#">AGB</a><a href="mailto:info@agentkontor.de">Kontakt</a></div>
@@ -548,15 +814,48 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 52p
 </footer>
 
 <script>
+// Scroll reveal
 const obs = new IntersectionObserver(entries => {
   entries.forEach((e,i) => {
-    if(e.isIntersecting){setTimeout(()=>e.target.classList.add('visible'),i*70);obs.unobserve(e.target);}
+    if(e.isIntersecting){ setTimeout(()=>e.target.classList.add('visible'),i*60); obs.unobserve(e.target); }
   });
 },{threshold:0.07});
 document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+// Nav scroll
 window.addEventListener('scroll',()=>{
-  document.getElementById('nav').style.borderBottomColor=window.scrollY>40?'rgba(108,92,231,0.15)':'rgba(255,255,255,0.04)';
+  document.getElementById('nav').classList.toggle('scrolled',window.scrollY>40);
 });
+
+// Demo chat
+const demoReplies = {
+  'was kannst du?': 'Ich kann Fragen beantworten, Leads sammeln, Termine buchen und Dokumente auswerten — ganz auf deinen Anwendungsfall zugeschnitten!',
+  'wie richte ich dich ein?': '1. Account erstellen ✓\n2. Agent konfigurieren\n3. Kanal wählen (Chat-Seite, Widget, WhatsApp…)\n4. Live gehen 🚀',
+  'welche sprachen?': 'Ich erkenne automatisch die Sprache des Nutzers und antworte entsprechend — Deutsch, Englisch, Spanisch, Türkisch und viele mehr.',
+};
+const defaultReplies = [
+  'Interessante Frage! Du kannst mich über den AgentKontor-Builder genau für solche Anfragen konfigurieren.',
+  'Das mache ich gerne. Konfiguriere mich im Builder und ich bin auf deine Bedürfnisse zugeschnitten.',
+];
+let demoIdx = 0;
+
+async function demoSend(text){
+  if(!text.trim()) return;
+  const chat=document.getElementById('demoChat');
+  document.getElementById('demoChips').innerHTML='';
+  const u=document.createElement('div'); u.className='dmsg u';
+  u.innerHTML=`<div class="dav">👤</div><div class="dbl">${text}</div>`;
+  chat.appendChild(u);
+  const tp=document.createElement('div'); tp.className='dmsg b'; tp.id='demo-typing';
+  tp.innerHTML=`<div class="dav">🤖</div><div class="typ-dots"><span></span><span></span><span></span></div>`;
+  chat.appendChild(tp); chat.scrollTop=chat.scrollHeight;
+  await new Promise(r=>setTimeout(r,1100));
+  tp.remove();
+  const reply=demoReplies[text.toLowerCase()]||defaultReplies[demoIdx++%defaultReplies.length];
+  const b=document.createElement('div'); b.className='dmsg b';
+  b.innerHTML=`<div class="dav">🤖</div><div class="dbl">${reply.replace(/\n/g,'<br>')}</div>`;
+  chat.appendChild(b); chat.scrollTop=chat.scrollHeight;
+}
 </script>
 </body>
 </html>
