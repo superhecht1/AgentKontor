@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AGB – AgentKontor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fafaf8;--bg2:#f4f3ef;--border:#e2e0d8;--purple:#5b4fcf;--pu-pale:#f0eeff;--ink:#1a1916;--ink2:#3d3b35;--muted:#7a786e;--muted2:#a8a49a;--warn-bg:rgba(180,83,9,.05);--warn-border:rgba(180,83,9,.18);--warn-text:#92400e}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Geist',-apple-system,sans-serif;background:var(--bg);color:var(--ink2);line-height:1.6;font-size:16px}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");pointer-events:none;z-index:9999}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 52px;height:64px;background:rgba(250,250,248,.92);border-bottom:1px solid var(--border);backdrop-filter:blur(16px)}
+.logo{font-family:'Instrument Serif',serif;font-size:1.5rem;font-weight:400;color:var(--ink);text-decoration:none}
+.logo em{color:var(--purple);font-style:normal}
+.nav-back{font-size:.84rem;font-weight:500;color:var(--muted);text-decoration:none;transition:color .2s}
+.nav-back:hover{color:var(--purple)}
+.main{max-width:760px;margin:0 auto;padding:104px 52px 80px}
+.page-label{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--purple);font-weight:600;display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.page-label::before{content:'';width:20px;height:1.5px;background:var(--purple)}
+h1{font-family:'Instrument Serif',serif;font-size:clamp(2.2rem,4vw,3rem);font-weight:400;color:var(--ink);letter-spacing:-.02em;line-height:1.1;margin-bottom:8px}
+.page-meta{font-size:.8rem;color:var(--muted);margin-bottom:32px;padding-bottom:18px;border-bottom:1px solid var(--border)}
+.notice{background:var(--pu-pale);border:1px solid rgba(91,79,207,.2);border-radius:10px;padding:16px 20px;margin-bottom:16px;font-size:.85rem;color:var(--ink2);line-height:1.65}
+.notice strong{color:var(--purple)}
+.warn{background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:10px;padding:14px 18px;margin:14px 0;font-size:.84rem;color:var(--warn-text);line-height:1.65}
+.warn strong{font-weight:600}
+.toc{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:40px}
+.toc-title{font-size:.68rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.toc-list{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:4px 24px}
+.toc-list li a{font-size:.8rem;color:var(--ink2);text-decoration:none;transition:color .2s;display:flex;gap:6px;align-items:flex-start;line-height:1.4}
+.toc-list li a::before{content:'§';font-size:.7rem;color:var(--purple);font-weight:600;flex-shrink:0;margin-top:1px}
+.toc-list li a:hover{color:var(--purple)}
+section.legal{margin-bottom:40px;scroll-margin-top:80px}
+section.legal h2{font-family:'Instrument Serif',serif;font-size:1.2rem;font-weight:400;color:var(--ink);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+section.legal h3{font-size:.86rem;font-weight:600;color:var(--ink);margin:18px 0 7px;letter-spacing:.01em}
+section.legal p{font-size:.875rem;color:var(--ink2);line-height:1.8;margin-bottom:10px}
+section.legal p:last-child{margin-bottom:0}
+section.legal ul{margin:6px 0 12px;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:5px}
+section.legal ul li{font-size:.875rem;color:var(--ink2);display:flex;gap:8px;align-items:flex-start;line-height:1.65}
+section.legal ul li::before{content:'→';color:var(--purple);flex-shrink:0;margin-top:2px}
+section.legal ol.par{counter-reset:par;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+section.legal ol.par li{counter-increment:par;font-size:.875rem;color:var(--ink2);display:flex;gap:10px;align-items:flex-start;line-height:1.75}
+section.legal ol.par li::before{content:"("counter(par)")";color:var(--purple);font-weight:600;flex-shrink:0;font-size:.8rem;margin-top:2px;min-width:24px}
+section.legal a{color:var(--purple);text-decoration:none}
+section.legal a:hover{text-decoration:underline}
+.iblock{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px 22px;margin-bottom:12px;font-size:.875rem;color:var(--ink2);line-height:1.85}
+.iblock b{color:var(--ink);font-weight:600}
+footer{background:var(--bg2);border-top:1px solid var(--border);padding:26px 52px;display:flex;align-items:center;justify-content:space-between;font-size:.75rem;color:var(--muted2);flex-wrap:wrap;gap:10px}
+footer a{color:var(--muted);text-decoration:none;transition:color .2s}
+footer a:hover{color:var(--purple)}
+.flinks{display:flex;gap:20px}
+@media(max-width:700px){nav{padding:0 18px}.main{padding:88px 20px 60px}.toc-list{grid-template-columns:1fr}footer{padding:20px 18px}}
+</style>
+</head>
+<body>
+<nav>
+  <a class="logo" href="/">Agent<em>Kontor</em></a>
+  <a class="nav-back" href="/">← Startseite</a>
+</nav>
+<div class="main">
+
+  <div class="page-label">Rechtliches</div>
+  <h1>Allgemeine Geschäfts&shy;bedingungen</h1>
+  <p class="page-meta">Stand: März 2025 · Anbieter: Mark Rusniok · Gottesweg 20 · 50969 Köln</p>
+
+  <div class="notice">
+    <strong>Hinweis zum Betriebsstatus:</strong> AgentKontor wird bis zum <strong>1. Juni 2026</strong> ausschließlich als privates, nicht-gewerbliches Projekt ohne Gewinnerzielungsabsicht betrieben. Diese AGB gelten für den gesamten Betriebszeitraum. Ab dem 1. Juni 2026 wird der Betrieb in eine gewerbliche Form überführt; zu diesem Zeitpunkt werden aktualisierte AGB veröffentlicht.
+  </div>
+
+  <div class="toc">
+    <div class="toc-title">Inhalt</div>
+    <ul class="toc-list">
+      <li><a href="#geltung">Geltungsbereich &amp; Vertragsschluss</a></li>
+      <li><a href="#leistungen">Leistungsbeschreibung</a></li>
+      <li><a href="#pflichten">Nutzerpflichten</a></li>
+      <li><a href="#verbote">Verbotene Nutzung</a></li>
+      <li><a href="#ki-hinweis">KI-Dienste &amp; Haftungsausschluss</a></li>
+      <li><a href="#b2b2c">Betrieb von Agenten für Dritte</a></li>
+      <li><a href="#ip">Geistige Eigentumsrechte</a></li>
+      <li><a href="#verfuegbarkeit">Verfügbarkeit &amp; Änderungen</a></li>
+      <li><a href="#haftung">Haftungsbeschränkung</a></li>
+      <li><a href="#preise">Preise &amp; Zahlung</a></li>
+      <li><a href="#kuendigung">Laufzeit &amp; Kündigung</a></li>
+      <li><a href="#sonstiges">Schlussbestimmungen</a></li>
+    </ul>
+  </div>
+
+  <section class="legal" id="geltung">
+    <h2>§ 1 Geltungsbereich &amp; Vertragsschluss</h2>
+    <ol class="par">
+      <li>Diese Allgemeinen Geschäftsbedingungen (AGB) regeln die Nutzung der Online-Plattform AgentKontor (nachfolgend „Dienst" oder „Plattform"), betrieben von Mark Rusniok, Gottesweg 20, 50969 Köln (nachfolgend „Anbieter").</li>
+      <li>Der Dienst richtet sich an volljährige natürliche Personen sowie juristische Personen (nachfolgend jeweils „Nutzer"). Die Nutzung durch Minderjährige ist nur mit ausdrücklicher Einwilligung eines Erziehungsberechtigten gestattet.</li>
+      <li>Ein Nutzungsvertrag kommt durch Registrierung eines Nutzerkontos zustande. Mit dem Abschluss der Registrierung erklärt der Nutzer sein Einverständnis mit diesen AGB und der Datenschutzerklärung in ihrer jeweils aktuellen Fassung.</li>
+      <li>Entgegenstehende oder abweichende Geschäftsbedingungen des Nutzers finden keine Anwendung, sofern der Anbieter ihrer Geltung nicht ausdrücklich schriftlich zugestimmt hat.</li>
+      <li>Der Anbieter behält sich vor, die Registrierung ohne Angabe von Gründen abzulehnen.</li>
+    </ol>
+  </section>
+
+  <section class="legal" id="leistungen">
+    <h2>§ 2 Leistungsbeschreibung</h2>
+    <ol class="par">
+      <li>AgentKontor stellt eine cloudbasierte SaaS-Plattform zur Verfügung, die Nutzern ermöglicht, eigene KI-Agenten zu konfigurieren, zu betreiben und über verschiedene Kanäle bereitzustellen.</li>
+      <li>Der konkrete Leistungsumfang richtet sich nach dem jeweils aktiven Tarif (Free, Pro, Enterprise) und ist auf der Website beschrieben. Zum Zeitpunkt des privaten Betriebs (bis 1. Juni 2026) gelten die auf der Website ausgewiesenen Leistungsmerkmale.</li>
+      <li>Der Dienst umfasst insbesondere: visuellen Agenten-Builder, öffentliche Chat-Seiten, Website-Widget, WhatsApp- und Telegram-Anbindung, REST-API, Wissensbasis (RAG/Dokumentenupload), Lead-Capture, Fine-Tuning-Pipeline und Mehrsprachigkeit — soweit im jeweiligen Tarif enthalten.</li>
+      <li>Für die KI-Antwortgenerierung werden externe Drittdienste (insb. Anthropic Claude, OpenAI GPT) genutzt. Die Qualität dieser Dienste unterliegt den Bedingungen und der Verfügbarkeit der jeweiligen Drittanbieter. Der Anbieter ist nicht verantwortlich für Ausfälle oder Qualitätsschwankungen dieser externen KI-APIs.</li>
+      <li>Der Anbieter ist berechtigt, den Leistungsumfang einzelner Tarife mit angemessener Vorankündigungsfrist anzupassen. Wesentliche Verschlechterungen für bestehende Nutzer werden mindestens 30 Tage im Voraus angekündigt.</li>
+    </ol>
+  </section>
+
+  <section class="legal" id="pflichten">
+    <h2>§ 3 Nutzerpflichten</h2>
+    <ol class="par">
+      <li>Der Nutzer ist verpflichtet, bei der Registrierung und im weiteren Verlauf der Nutzung korrekte, vollständige und aktuelle Angaben zu machen. Änderungen relevanter Daten (insb. E-Mail-Adresse) sind unverzüglich vorzunehmen.</li>
+      <li>Zugangsdaten — insbesondere das Passwort — sind geheim zu halten und vor dem Zugriff Dritter zu schützen. Bei Verdacht auf unbefugten Zugriff oder Kompromittierung der Zugangsdaten ist der Anbieter unverzüglich unter <a href="mailto:info@think-cloud.org">info@think-cloud.org</a> zu informieren.</li>
+      <li>Der Nutzer ist für sämtliche Aktivitäten, die unter seinem Konto stattfinden, verantwortlich und haftet für daraus entstehende Schäden, sofern er diese zu vertreten hat.</li>
+      <li>Nutzer, die über die Plattform eigene KI-Agenten für Dritte (Endnutzer) betreiben, sind vollständig für die rechtskonforme Ausgestaltung und den Betrieb ihrer Agenten verantwortlich — insbesondere hinsichtlich Datenschutz, Impressumspflicht, Kennzeichnung als KI-System und inhaltlicher Rechtmäßigkeit.</li>
+      <li>API-Schlüssel dürfen nicht an Dritte weitergegeben, öffentlich zugänglich gemacht oder in öffentlichen Code-Repositories (z.&thinsp;B. GitHub) gespeichert werden. Kompromittierte Schlüssel sind unverzüglich zu deaktivieren und zu ersetzen.</li>
+    </ol>
+  </section>
+
+  <section class="legal" id="verbote">
+    <h2>§ 4 Verbotene Nutzung</h2>
+    <p>Die Nutzung des Dienstes für folgende Zwecke ist ausdrücklich verboten:</p>
+    <ul>
+      <li>Erstellung, Verbreitung oder Vermittlung von Inhalten, die gegen geltendes Recht verstoßen, insbesondere strafrechtlich relevante, diskriminierende, volksverhetzende, beleidigende oder pornografische Inhalte</li>
+      <li>Betrieb von Agenten ohne Transparenz über deren KI-Natur gegenüber Endnutzern (Irreführungsverbot, § 5a UWG, Art. 52 AI Act)</li>
+      <li>Verarbeitung besonderer Kategorien personenbezogener Daten (Art. 9 DSGVO — z.&thinsp;B. Gesundheitsdaten, biometrische Daten) ohne geeignete Rechtsgrundlage und technische Schutzmaßnahmen</li>
+      <li>Nutzung für automatisierte Massenversendung von Nachrichten (Spam), Phishing oder andere Formen des Missbrauchs</li>
+      <li>Angriffe auf die Infrastruktur des Anbieters oder Dritter, einschließlich DDoS, Scraping ohne Genehmigung oder Umgehung von Sicherheitsmaßnahmen</li>
+      <li>Reverse Engineering, Dekompilierung oder unbefugter Zugriff auf Systeme oder Konten anderer Nutzer</li>
+      <li>Nutzung in Hochrisikobereichen gemäß EU AI Act Anhang III (z.&thinsp;B. biometrische Identifikation, kritische Infrastruktur, Strafverfolgung) ohne entsprechende Konformitätsprüfung</li>
+      <li>Handlungen, die gegen geltendes Wettbewerbsrecht, Urheberrecht oder sonstige Schutzrechte Dritter verstoßen</li>
+    </ul>
+    <div class="warn">
+      <strong>Rechtsfolgen:</strong> Bei Verstößen gegen diese Verbote ist der Anbieter berechtigt, betroffene Agenten oder Konten ohne Vorwarnung zu sperren, ordentlich oder außerordentlich zu kündigen sowie Schadenersatzansprüche geltend zu machen. Strafrechtlich relevante Sachverhalte werden den Behörden gemeldet.
+    </div>
+  </section>
+
+  <section class="legal" id="ki-hinweis">
+    <h2>§ 5 KI-Dienste &amp; Haftungsausschluss</h2>
+    <ol class="par">
+      <li>AgentKontor nutzt externe KI-Sprachmodelle zur Antwortgenerierung. Die Ausgaben dieser Modelle können fehlerhaft, unvollständig, veraltet oder irreführend sein. Eine Garantie für Richtigkeit, Aktualität oder Vollständigkeit KI-generierter Inhalte kann nicht übernommen werden.</li>
+      <li>KI-generierte Antworten stellen in keinem Fall eine Rechts-, Steuer-, Medizin-, Finanz- oder sonstige regulierte Fachberatung dar. Nutzer und deren Endkunden sind verpflichtet, KI-Antworten kritisch zu prüfen und ggf. qualifizierten Fachrat einzuholen.</li>
+      <li>Der Anbieter übernimmt keine Haftung für Schäden, die aus der Verwendung, dem Vertrauen auf oder der Nichtverwendung von KI-generierten Inhalten entstehen — soweit kein Vorsatz oder grobe Fahrlässigkeit des Anbieters vorliegt.</li>
+      <li>Nutzer, die KI-Agenten für Dritte betreiben, haften ihren Endnutzern gegenüber für alle durch den Agentenbetrieb entstehenden Ansprüche und stellen den Anbieter von derartigen Ansprüchen frei.</li>
+    </ol>
+  </section>
+
+  <section class="legal" id="b2b2c">
+    <h2>§ 6 Betrieb von Agenten für Dritte (B2B2C)</h2>
+    <ol class="par">
+      <li>Nutzer, die die Plattform nutzen, um KI-Agenten für eigene Kunden, Endnutzer oder die Allgemeinheit bereitzustellen (nachfolgend „Agenten-Betreiber"), übernehmen gegenüber ihren Endnutzern die vollständige rechtliche Verantwortung als Anbieter des jeweiligen KI-Agenten.</li>
+      <li>Agenten-Betreiber sind verpflichtet, ihre Endnutzer über (a) die KI-Natur des Agenten, (b) die Datenverarbeitung inkl. Übermittlung an KI-APIs, und (c) den jeweiligen Betreiber des Agenten zu informieren — in einer dem Kontext angemessenen, leicht zugänglichen Form.</li>
+      <li>Agenten-Betreiber tragen die Verantwortung für die Einhaltung der DSGVO gegenüber ihren Endnutzern (z.&thinsp;B. Einholung erforderlicher Einwilligungen, Bereitstellung einer Datenschutzerklärung, Benennung eines Datenschutzbeauftragten sofern erforderlich).</li>
+      <li>Agenten-Betreiber stellen den Anbieter von allen Ansprüchen Dritter — insbesondere ihrer Endnutzer — frei, die aus dem Betrieb ihrer Agenten entstehen. Dies gilt insbesondere für Datenschutzverstöße, irreführende KI-Antworten und fehlende Transparenz über den KI-Einsatz.</li>
+      <li>Verstößt ein Agent gegen geltendes Recht oder diese AGB, kann der Anbieter den Agenten ohne Vorankündigung deaktivieren.</li>
+    </ol>
+  </section>
+
+  <section class="legal" id="ip">
+    <h2>§ 7 Geistige Eigentumsrechte &amp; Nutzerdaten</h2>
+    <ol class="par">
+      <li>Der Nutzer räumt dem Anbieter das nicht-exklusive, weltweite, kostenfreie Recht ein, hochgeladene Dokumente, Agentenkonfigurationen und Gesprächsdaten ausschließlich zum Zweck der Erbringung des Dienstes zu verarbeiten und zu speichern. Dieses Recht erlischt mit der Löschung der entsprechenden Inhalte oder des Kontos.</li>
+      <li>Der Anbieter nutzt Nutzerdaten und Konversationsinhalte nicht für das Training eigener oder fremder KI-Modelle und gibt diese nicht zu Marketingzwecken an Dritte weiter.</li>
+      <li>Der Nutzer versichert, dass hochgeladene Inhalte keine Rechte Dritter — insbesondere Urheber-, Marken- oder Persönlichkeitsrechte — verletzen. Der Nutzer stellt den Anbieter von Ansprüchen Dritter frei, die aus rechtsverletzenden Inhalten des Nutzers entstehen.</li>
+      <li>Die Plattform AgentKontor selbst, einschließlich ihres Quellcodes, Designs und ihrer Markennamen, ist urheberrechtlich geschützt und darf nicht ohne ausdrückliche schriftliche Genehmigung kopiert, reproduziert oder für eigene Produkte genutzt werden.</li>
+    </ol>
+  </section>
+
+  <section class="legal" id="verfuegbarkeit">
+    <h2>§ 8 Verfügbarkeit, Wartung &amp; Änderungen</h2>
+    <ol class="par">
+      <li>Der Anbieter strebt eine hohe Verfügbarkeit des Dienstes an, garantiert jedoch — außer bei Enterprise-Verträgen mit gesonderter SLA — keine bestimmte Mindest-Verfügbarkeit.</li>
+      <li>Planmäßige Wartungsarbeiten werden nach Möglichkeit außerhalb der Hauptnutzungszeiten (Montag–Freitag 9–18 Uhr MEZ) durchgeführt. Ungeplante Ausfälle werden schnellstmöglich behoben.</li>
+      <li>Der Anbieter behält sich vor, einzelne Funktionen zu ändern, zu ergänzen oder einzustellen. Wesentliche Funktionsänderungen werden mit einer Ankündigungsfrist von mindestens 14 Tagen mitgeteilt.</li>
+      <li>Änderungen dieser AGB werden dem Nutzer per E-Mail oder durch Hinweis im Dashboard mit einer Frist von mindestens 14 Tagen vor Inkrafttreten mitgeteilt. Widerspricht der Nutzer nicht innerhalb der Frist, gelten die neuen AGB als angenommen. Auf dieses Widerspruchsrecht und seine Folgen wird im Änderungshinweis ausdrücklich hingewiesen. Im Falle des Widerspruchs steht beiden Seiten ein Sonderkündigungsrecht zu.</li>
+    </ol>
+  </section>
+
+  <section class="legal" id="haftung">
+    <h2>§ 9 Haftungsbeschränkung</h2>
+    <ol class="par">
+      <li>Der Anbieter haftet unbeschränkt für Schäden aus der Verletzung des Lebens, des Körpers oder der Gesundheit sowie für Schäden, die auf Vorsatz oder grober Fahrlässigkeit des Anbieters oder seiner Erfüllungsgehilfen beruhen.</li>
+      <li>Bei leicht fahrlässiger Verletzung wesentlicher Vertragspflichten (Kardinalpflichten) ist die Haftung auf den vorhersehbaren, vertragstypischen Schaden beschränkt.</li>
+      <li>Im Übrigen ist die Haftung des Anbieters für leicht fahrlässig verursachte Schäden ausgeschlossen. Dies gilt insbesondere für mittelbare Schäden, entgangenen Gewinn, Datenverlust und Schäden, die durch KI-generierte Inhalte entstehen.</li>
+      <li>Da AgentKontor bis zum 1. Juni 2026 als privates, kostenloses Pilotprojekt betrieben wird und der kostenfreie Tarif unentgeltlich ist, wird die Haftung für den kostenlosen Tarif auf das gesetzlich zwingend vorgeschriebene Minimum beschränkt.</li>
+      <li>Die Haftungsbeschränkungen dieser AGB gelten nicht, soweit der Anbieter einen Mangel arglistig verschwiegen oder eine Beschaffenheitsgarantie übernommen hat, sowie nicht im Anwendungsbereich des Produkthaftungsgesetzes.</li>
+    </ol>
+  </section>
+
+  <section class="legal" id="preise">
+    <h2>§ 10 Preise, Zahlung &amp; Abrechnungszeitraum</h2>
+    <ol class="par">
+      <li>Der Free-Tarif ist dauerhaft kostenlos und umfasst die auf der Website beschriebenen Funktionen. Der Anbieter behält sich vor, Einschränkungen des kostenlosen Tarifs mit einem Monat Vorankündigungsfrist vorzunehmen.</li>
+      <li>Kostenpflichtige Tarife (Pro, Enterprise) werden monatlich im Voraus in Rechnung gestellt. Der Abrechnungszeitraum beginnt mit dem Tag der Aktivierung des kostenpflichtigen Tarifs.</li>
+      <li>Alle Preise verstehen sich — sofern auf der Website nicht anders angegeben — als Bruttopreise inklusive der jeweils geltenden gesetzlichen Mehrwertsteuer. Da der Anbieter derzeit unter die Kleinunternehmerregelung (§ 19 UStG) fällt, wird keine Umsatzsteuer ausgewiesen.</li>
+      <li>Preisanpassungen werden dem Nutzer mindestens 30 Tage vor ihrem Inkrafttreten per E-Mail mitgeteilt. Im Falle einer Preiserhöhung hat der Nutzer ein Sonderkündigungsrecht zum Zeitpunkt des Inkrafttretens der neuen Preise.</li>
+      <li>Rückerstattungen bereits bezahlter Beträge erfolgen nach billigem Ermessen des Anbieters, insbesondere bei berechtigtem Widerruf, nachgewiesenem Fehler des Anbieters oder bei dauerhafter Nichterbringung wesentlicher Leistungen.</li>
+    </ol>
+  </section>
+
+  <section class="legal" id="kuendigung">
+    <h2>§ 11 Laufzeit, Kündigung &amp; Datenlöschung</h2>
+    <ol class="par">
+      <li>Der Nutzungsvertrag wird auf unbestimmte Zeit geschlossen und kann von beiden Seiten jederzeit gekündigt werden.</li>
+      <li>Der Nutzer kann sein Konto jederzeit ohne Angabe von Gründen im Dashboard löschen. Mit der Kontolöschung endet der Vertrag sofort. Alle Daten des Nutzers werden innerhalb von 30 Tagen unwiderruflich gelöscht, sofern keine gesetzlichen Aufbewahrungspflichten entgegenstehen.</li>
+      <li>Der Anbieter kann den Vertrag bei Verstößen gegen diese AGB, insbesondere gegen § 4 (Verbotene Nutzung), ohne Vorwarnung und mit sofortiger Wirkung außerordentlich kündigen.</li>
+      <li>Bei einer ordentlichen Kündigung eines kostenpflichtigen Tarifs durch den Nutzer endet der Vertrag zum Ende des laufenden Abrechnungszeitraums. Bereits geleistete Zahlungen werden grundsätzlich nicht erstattet, es sei denn, ein Sonderkündigungsrecht greift.</li>
+      <li>Der Anbieter behält sich vor, den gesamten Dienst mit einer Ankündigungsfrist von mindestens 60 Tagen einzustellen. Nicht verbrauchte kostenpflichtige Zeiträume werden in diesem Fall anteilig erstattet.</li>
+    </ol>
+  </section>
+
+  <section class="legal" id="sonstiges">
+    <h2>§ 12 Schlussbestimmungen</h2>
+
+    <h3>Anwendbares Recht</h3>
+    <p>Es gilt das Recht der Bundesrepublik Deutschland unter Ausschluss des UN-Kaufrechts (CISG). Für Verbraucher gilt dieses Recht nur, soweit der Verbraucher dadurch nicht den zwingenden Schutzvorschriften seines Heimatstaats entzogen wird.</p>
+
+    <h3>Gerichtsstand</h3>
+    <p>Ausschließlicher Gerichtsstand für Streitigkeiten mit Kaufleuten, juristischen Personen des öffentlichen Rechts und öffentlich-rechtlichen Sondervermögen ist Köln. Gegenüber Verbrauchern gilt der gesetzliche Gerichtsstand.</p>
+
+    <h3>Verbraucherschlichtung</h3>
+    <p>Wir sind nicht verpflichtet und nicht bereit, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen (§ 36 VSBG). EU-Beschwerdeplattform: <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener">ec.europa.eu/consumers/odr</a>.</p>
+
+    <h3>Salvatorische Klausel</h3>
+    <p>Sollten einzelne Bestimmungen dieser AGB ganz oder teilweise unwirksam oder undurchführbar sein oder werden, bleibt die Wirksamkeit der übrigen Bestimmungen unberührt. An die Stelle unwirksamer Bestimmungen tritt die dem wirtschaftlichen Zweck am nächsten kommende wirksame Regelung.</p>
+
+    <h3>Schriftform &amp; Kontakt</h3>
+    <p>Erklärungen, die im Rahmen dieser AGB der Schriftform bedürfen, können per E-Mail an <a href="mailto:info@think-cloud.org">info@think-cloud.org</a> übermittelt werden. Zugang gilt als erfolgt, wenn die E-Mail den Empfangsserver des Empfängers erreicht hat.</p>
+  </section>
+
+</div>
+<footer>
+  <div>© 2025 AgentKontor · Mark Rusniok · Köln</div>
+  <div class="flinks">
+    <a href="/impressum.html">Impressum</a>
+    <a href="/datenschutz.html">Datenschutz</a>
+    <a href="/agb.html">AGB</a>
+  </div>
+</footer>
+</body>
+</html>

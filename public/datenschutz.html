@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Datenschutzerklärung – AgentKontor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fafaf8;--bg2:#f4f3ef;--border:#e2e0d8;--purple:#5b4fcf;--pu-pale:#f0eeff;--ink:#1a1916;--ink2:#3d3b35;--muted:#7a786e;--muted2:#a8a49a}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Geist',-apple-system,sans-serif;background:var(--bg);color:var(--ink2);line-height:1.6;font-size:16px}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");pointer-events:none;z-index:9999}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 52px;height:64px;background:rgba(250,250,248,.92);border-bottom:1px solid var(--border);backdrop-filter:blur(16px)}
+.logo{font-family:'Instrument Serif',serif;font-size:1.5rem;font-weight:400;color:var(--ink);text-decoration:none}
+.logo em{color:var(--purple);font-style:normal}
+.nav-back{font-size:.84rem;font-weight:500;color:var(--muted);text-decoration:none;transition:color .2s}
+.nav-back:hover{color:var(--purple)}
+.main{max-width:760px;margin:0 auto;padding:104px 52px 80px}
+.page-label{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--purple);font-weight:600;display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.page-label::before{content:'';width:20px;height:1.5px;background:var(--purple)}
+h1{font-family:'Instrument Serif',serif;font-size:clamp(2.2rem,4vw,3rem);font-weight:400;color:var(--ink);letter-spacing:-.02em;line-height:1.1;margin-bottom:8px}
+.page-meta{font-size:.8rem;color:var(--muted);margin-bottom:32px;padding-bottom:18px;border-bottom:1px solid var(--border)}
+.notice{background:var(--pu-pale);border:1px solid rgba(91,79,207,.2);border-radius:10px;padding:16px 20px;margin-bottom:28px;font-size:.85rem;color:var(--ink2);line-height:1.65}
+.notice strong{color:var(--purple)}
+.toc{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:40px}
+.toc-title{font-size:.68rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.toc-list{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:4px 24px}
+.toc-list li a{font-size:.8rem;color:var(--ink2);text-decoration:none;transition:color .2s;display:flex;gap:6px;align-items:center}
+.toc-list li a::before{content:'§';font-size:.7rem;color:var(--purple);font-weight:600;flex-shrink:0}
+.toc-list li a:hover{color:var(--purple)}
+section.legal{margin-bottom:40px;scroll-margin-top:80px}
+section.legal h2{font-family:'Instrument Serif',serif;font-size:1.2rem;font-weight:400;color:var(--ink);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+section.legal h3{font-size:.86rem;font-weight:600;color:var(--ink);margin:18px 0 7px;letter-spacing:.01em}
+section.legal p{font-size:.875rem;color:var(--ink2);line-height:1.8;margin-bottom:10px}
+section.legal p:last-child{margin-bottom:0}
+section.legal ul{margin:6px 0 12px;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:5px}
+section.legal ul li{font-size:.875rem;color:var(--ink2);display:flex;gap:8px;align-items:flex-start;line-height:1.65}
+section.legal ul li::before{content:'→';color:var(--purple);flex-shrink:0;margin-top:2px}
+section.legal a{color:var(--purple);text-decoration:none}
+section.legal a:hover{text-decoration:underline}
+.iblock{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px 22px;margin-bottom:12px;font-size:.875rem;color:var(--ink2);line-height:1.85}
+.iblock b{color:var(--ink);font-weight:600}
+table.dt{width:100%;border-collapse:collapse;margin:12px 0;font-size:.82rem}
+table.dt th{background:var(--bg2);border:1px solid var(--border);padding:9px 12px;text-align:left;font-weight:600;color:var(--ink);font-size:.78rem;white-space:nowrap}
+table.dt td{border:1px solid var(--border);padding:8px 12px;color:var(--ink2);vertical-align:top;line-height:1.55}
+table.dt tr:hover td{background:rgba(91,79,207,.025)}
+.badge{display:inline-block;font-size:.68rem;font-weight:600;padding:1px 7px;border-radius:100px;border:1px solid var(--border);color:var(--muted);background:var(--bg2)}
+footer{background:var(--bg2);border-top:1px solid var(--border);padding:26px 52px;display:flex;align-items:center;justify-content:space-between;font-size:.75rem;color:var(--muted2);flex-wrap:wrap;gap:10px}
+footer a{color:var(--muted);text-decoration:none;transition:color .2s}
+footer a:hover{color:var(--purple)}
+.flinks{display:flex;gap:20px}
+@media(max-width:700px){nav{padding:0 18px}.main{padding:88px 20px 60px}.toc-list{grid-template-columns:1fr}footer{padding:20px 18px}}
+</style>
+</head>
+<body>
+<nav>
+  <a class="logo" href="/">Agent<em>Kontor</em></a>
+  <a class="nav-back" href="/">← Startseite</a>
+</nav>
+<div class="main">
+
+  <div class="page-label">Rechtliches</div>
+  <h1>Datenschutz&shy;erklärung</h1>
+  <p class="page-meta">Gemäß DSGVO, BDSG n.F., TMG · Stand: März 2025 · Verantwortlicher: Mark Rusniok, Köln</p>
+
+  <div class="notice">
+    <strong>Kurzversion:</strong> AgentKontor wird bis 1. Juni 2026 als privates Projekt betrieben. Wir erheben nur die für den Betrieb notwendigen Daten, verkaufen keine Daten, schalten keine Werbung und nutzen Deine Konversationsinhalte nicht zum Training eigener Modelle.
+  </div>
+
+  <div class="toc">
+    <div class="toc-title">Inhalt dieser Erklärung</div>
+    <ul class="toc-list">
+      <li><a href="#verantwortlicher">Verantwortlicher</a></li>
+      <li><a href="#grundsaetze">Grundsätze &amp; Rechtsgrundlagen</a></li>
+      <li><a href="#registrierung">Registrierung &amp; Konto</a></li>
+      <li><a href="#chatdaten">Chat- &amp; Agentendaten</a></li>
+      <li><a href="#logs">Server-Logs</a></li>
+      <li><a href="#drittanbieter">Drittanbieter &amp; KI-APIs</a></li>
+      <li><a href="#hosting">Hosting &amp; Datenbank</a></li>
+      <li><a href="#cookies">Cookies &amp; localStorage</a></li>
+      <li><a href="#drittlaender">Drittlandübermittlung</a></li>
+      <li><a href="#rechte">Deine Rechte (DSGVO)</a></li>
+      <li><a href="#behoerde">Aufsichtsbehörde</a></li>
+      <li><a href="#aenderungen">Änderungen</a></li>
+    </ul>
+  </div>
+
+  <section class="legal" id="verantwortlicher">
+    <h2>1. Verantwortlicher (Art. 4 Nr. 7 DSGVO)</h2>
+    <div class="iblock">
+      <b>Mark Rusniok</b><br>
+      Gottesweg 20 · 50969 Köln · Deutschland<br>
+      E-Mail: <a href="mailto:info@think-cloud.org">info@think-cloud.org</a><br>
+      Web: <a href="https://agentkontor.de">agentkontor.de</a>
+    </div>
+    <p>Ein Datenschutzbeauftragter ist nicht bestellt, da die Voraussetzungen nach § 38 BDSG i.V.m. Art. 37 DSGVO nicht erfüllt sind (kein Unternehmen, keine umfangreiche Verarbeitung besonderer Datenkategorien als Kerntätigkeit).</p>
+  </section>
+
+  <section class="legal" id="grundsaetze">
+    <h2>2. Grundsätze &amp; Rechtsgrundlagen</h2>
+    <p>Wir verarbeiten personenbezogene Daten nur, soweit dies für den Betrieb des Dienstes erforderlich ist (Datensparsamkeit, Art. 5 Abs. 1 lit. c DSGVO). Die Verarbeitung erfolgt auf Basis folgender Rechtsgrundlagen:</p>
+    <ul>
+      <li><strong>Art. 6 Abs. 1 lit. b DSGVO</strong> — Vertragserfüllung: Daten, die zur Nutzung des Dienstes notwendig sind (Login, Agentenbetrieb)</li>
+      <li><strong>Art. 6 Abs. 1 lit. f DSGVO</strong> — Berechtigte Interessen: Sicherheit, Missbrauchsprävention, Fehlerdiagnose (Server-Logs)</li>
+      <li><strong>Art. 6 Abs. 1 lit. a DSGVO</strong> — Einwilligung: soweit ausdrücklich eingeholt (z.&thinsp;B. optionale Features)</li>
+    </ul>
+  </section>
+
+  <section class="legal" id="registrierung">
+    <h2>3. Registrierung &amp; Nutzerkonto</h2>
+    <p>Für die Nutzung des Dashboards ist eine Registrierung erforderlich. Dabei verarbeiten wir:</p>
+    <table class="dt">
+      <tr><th>Datum</th><th>Zweck</th><th>Rechtsgrundlage</th><th>Speicherdauer</th></tr>
+      <tr><td>Name</td><td>Anzeige im Dashboard, Identifikation</td><td>Art. 6 (1) b</td><td>Bis Kontolöschung</td></tr>
+      <tr><td>E-Mail-Adresse</td><td>Login, systemische Benachrichtigungen</td><td>Art. 6 (1) b</td><td>Bis Kontolöschung</td></tr>
+      <tr><td>Passwort (bcrypt-Hash)</td><td>Authentifizierung — Klartext wird nie gespeichert</td><td>Art. 6 (1) b</td><td>Bis Kontolöschung</td></tr>
+      <tr><td>Sprachpräferenz (de/en)</td><td>UI-Lokalisierung</td><td>Art. 6 (1) b</td><td>Bis Kontolöschung</td></tr>
+      <tr><td>Registrierungszeitpunkt</td><td>Sicherheit, Support</td><td>Art. 6 (1) f</td><td>Bis Kontolöschung</td></tr>
+      <tr><td>Plan-Status (Free/Pro)</td><td>Leistungssteuerung</td><td>Art. 6 (1) b</td><td>Bis Kontolöschung</td></tr>
+    </table>
+    <p>Passwörter werden ausschließlich als bcrypt-Hash (Kostenfaktor 12) gespeichert. Wir haben keinen Zugriff auf das Klartextpasswort.</p>
+  </section>
+
+  <section class="legal" id="chatdaten">
+    <h2>4. Chat- &amp; Agentendaten</h2>
+    <p>Gespräche, die Endnutzer mit KI-Agenten führen, werden zur Ermöglichung von Konversationskontinuität und zur Anzeige von Statistiken für Agenten-Betreiber gespeichert.</p>
+    <table class="dt">
+      <tr><th>Datum</th><th>Zweck</th><th>Rechtsgrundlage</th><th>Speicherdauer</th></tr>
+      <tr><td>Nachrichteninhalt</td><td>Konversationskontinuität, KI-Verarbeitung</td><td>Art. 6 (1) b/f</td><td>Bis Agent-/Kontolöschung</td></tr>
+      <tr><td>Session-ID (pseudonym)</td><td>Gesprächszuordnung ohne Personenbezug</td><td>Art. 6 (1) f</td><td>Bis Agent-/Kontolöschung</td></tr>
+      <tr><td>Zeitstempel</td><td>Chronologie, Statistik</td><td>Art. 6 (1) f</td><td>Bis Agent-/Kontolöschung</td></tr>
+      <tr><td>Kanal (Web/WhatsApp/TG/API)</td><td>Statistik für Agenten-Betreiber</td><td>Art. 6 (1) f</td><td>Bis Agent-/Kontolöschung</td></tr>
+    </table>
+    <p><strong>Wichtig:</strong> Gesprächsinhalte werden von uns <em>nicht</em> für das Training eigener KI-Modelle verwendet. Nachrichten werden zur Verarbeitung an externe KI-APIs übermittelt — siehe Abschnitt 6.</p>
+
+    <h3>Lead-Captures (optional)</h3>
+    <p>Hat ein Agenten-Betreiber die Lead-Capture-Funktion aktiviert, können Endnutzer freiwillig Kontaktdaten (Name, E-Mail, Telefon o.&thinsp;ä.) angeben. Diese Daten werden ausschließlich für den jeweiligen Agenten-Betreiber gespeichert und auf dessen Wunsch per E-Mail weitergeleitet. <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. a DSGVO (Einwilligung durch aktive Eingabe) in Verbindung mit lit. b (Vertragserfüllung ggü. dem Agenten-Betreiber).</p>
+
+    <h3>Hochgeladene Dokumente (RAG)</h3>
+    <p>Dokumente, die Agenten-Betreiber hochladen, werden zur Erstellung einer Wissensbasis (Retrieval Augmented Generation) verarbeitet. Inhalte werden in Textchunks aufgeteilt und in der Datenbank gespeichert. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO.</p>
+  </section>
+
+  <section class="legal" id="logs">
+    <h2>5. Server-Logs</h2>
+    <p>Unser Hosting-Anbieter Render.com erfasst automatisch Server-Zugriffslogs. Diese enthalten: IP-Adresse des Anfragenden, Datum und Uhrzeit des Zugriffs, aufgerufene URL, HTTP-Statuscode, übertragene Datenmenge sowie den Referrer und User-Agent des Browsers.</p>
+    <p>Diese Daten werden ausschließlich zur Sicherheit, Fehleranalyse und zum Schutz vor Missbrauch genutzt. Eine Zuordnung zu bestimmten Personen erfolgt nur im Ausnahmefall bei konkretem Missbrauchsverdacht. Speicherdauer: maximal 30 Tage. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO.</p>
+  </section>
+
+  <section class="legal" id="drittanbieter">
+    <h2>6. Drittanbieter &amp; KI-APIs</h2>
+    <p>Für die KI-Funktionalität werden Nachrichten an externe Sprachmodell-Anbieter übermittelt. Mit jedem Anbieter bestehen Datenverarbeitungsverträge (DPA/Art. 28 DSGVO):</p>
+    <table class="dt">
+      <tr><th>Anbieter</th><th>Zweck</th><th>Sitz</th><th>Datenschutz</th></tr>
+      <tr><td><b>Anthropic, Inc.</b></td><td>Claude Sprachmodell (Standard)</td><td>USA</td><td><a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener">Privacy Policy</a></td></tr>
+      <tr><td><b>OpenAI, LLC</b></td><td>GPT-Modelle &amp; Fine-Tuning (optional)</td><td>USA</td><td><a href="https://openai.com/privacy" target="_blank" rel="noopener">Privacy Policy</a></td></tr>
+      <tr><td><b>Meta Platforms</b></td><td>WhatsApp-Kanal (optional)</td><td>Irland/USA</td><td><a href="https://www.whatsapp.com/legal/privacy-policy" target="_blank" rel="noopener">Privacy Policy</a></td></tr>
+      <tr><td><b>Telegram Inc.</b></td><td>Telegram-Bot-Kanal (optional)</td><td>Dubai/USA</td><td><a href="https://telegram.org/privacy" target="_blank" rel="noopener">Privacy Policy</a></td></tr>
+    </table>
+    <p>WhatsApp- und Telegram-Kanäle sind optionale Funktionen, die Agenten-Betreiber aktiv einschalten müssen. Endnutzer, die über diese Kanäle kommunizieren, unterliegen zusätzlich den Datenschutzbestimmungen der jeweiligen Plattform.</p>
+  </section>
+
+  <section class="legal" id="hosting">
+    <h2>7. Hosting &amp; Datenbank</h2>
+    <div class="iblock">
+      <b>Render Services, Inc.</b><br>
+      525 Brannan Street, Suite 300 · San Francisco, CA 94107 · USA<br>
+      Dienste: Web-Hosting, PostgreSQL-Datenbank<br>
+      Datenschutz: <a href="https://render.com/privacy" target="_blank" rel="noopener">render.com/privacy</a> · DPA verfügbar
+    </div>
+    <p>Sämtliche Anwendungsdaten — inkl. der PostgreSQL-Datenbank mit Nutzerkonten, Agentenkonfigurationen und Gesprächsverläufen — werden auf Render-Infrastruktur in der Region Frankfurt (EU-West) gespeichert, soweit verfügbar. Render ist nach dem EU-US Data Privacy Framework zertifiziert.</p>
+  </section>
+
+  <section class="legal" id="cookies">
+    <h2>8. Cookies &amp; lokaler Speicher</h2>
+    <p>Wir setzen <strong>keine Tracking-Cookies, keine Analyse-Cookies und keine Werbe-Cookies</strong>. Das Dashboard nutzt ausschließlich den <code>localStorage</code> des Browsers für technisch notwendige Daten:</p>
+    <table class="dt">
+      <tr><th>Schlüssel</th><th>Typ</th><th>Inhalt</th><th>Zweck</th><th>Dauer</th></tr>
+      <tr><td><code>ak_token</code></td><td>localStorage</td><td>JWT-Authentifizierungstoken</td><td>Eingeloggter Zustand</td><td>30 Tage / Logout</td></tr>
+      <tr><td><code>ak_user</code></td><td>localStorage</td><td>Name, E-Mail, Plan (JSON)</td><td>Anzeige ohne Server-Roundtrip</td><td>30 Tage / Logout</td></tr>
+    </table>
+    <p>Diese Daten verlassen den Browser nicht eigenständig — sie werden nur bei API-Anfragen an unseren Server mitgesendet. Es gibt keinen Cookie-Banner, da keine einwilligungspflichtigen Cookies gesetzt werden.</p>
+  </section>
+
+  <section class="legal" id="drittlaender">
+    <h2>9. Drittlandübermittlung (Art. 44 ff. DSGVO)</h2>
+    <p>Bei der Nutzung von KI-APIs (Anthropic, OpenAI) sowie ggf. von WhatsApp/Telegram werden Daten in die USA übermittelt. Die Zulässigkeit ergibt sich aus:</p>
+    <ul>
+      <li><strong>EU-US Data Privacy Framework (DPF)</strong> — soweit der Anbieter zertifiziert ist (Render, OpenAI)</li>
+      <li><strong>Standardvertragsklauseln (SCC)</strong> gem. Art. 46 Abs. 2 lit. c DSGVO — für nicht DPF-zertifizierte Übermittlungen</li>
+      <li><strong>Art. 49 Abs. 1 lit. b DSGVO</strong> — Erforderlichkeit zur Vertragserfüllung (KI-Antwortgenerierung)</li>
+    </ul>
+    <p>Auf Anfrage stellen wir die Kopie der jeweils anwendbaren Standardvertragsklauseln zur Verfügung.</p>
+  </section>
+
+  <section class="legal" id="rechte">
+    <h2>10. Deine Rechte (Art. 15–22 DSGVO)</h2>
+    <p>Dir stehen folgende Rechte zu, die du jederzeit unter <a href="mailto:info@think-cloud.org">info@think-cloud.org</a> geltend machen kannst:</p>
+    <ul>
+      <li><strong>Auskunft (Art. 15)</strong> — Welche Daten verarbeiten wir von dir, zu welchem Zweck und an wen werden sie übermittelt</li>
+      <li><strong>Berichtigung (Art. 16)</strong> — Korrektur unrichtiger oder Vervollständigung unvollständiger Daten</li>
+      <li><strong>Löschung (Art. 17)</strong> — „Recht auf Vergessenwerden", sofern keine gesetzliche Aufbewahrungspflicht entgegensteht</li>
+      <li><strong>Einschränkung (Art. 18)</strong> — Einschränkung der Verarbeitung in bestimmten Fällen (z.&thinsp;B. bei bestrittener Richtigkeit)</li>
+      <li><strong>Datenübertragbarkeit (Art. 20)</strong> — Herausgabe deiner Daten in einem strukturierten, maschinenlesbaren Format (JSON/CSV)</li>
+      <li><strong>Widerspruch (Art. 21)</strong> — Gegen Verarbeitungen, die auf berechtigten Interessen (Art. 6 Abs. 1 lit. f) basieren</li>
+      <li><strong>Widerruf (Art. 7 Abs. 3)</strong> — Jederzeit für erteilte Einwilligungen, ohne Rückwirkung auf bisherige Verarbeitungen</li>
+    </ul>
+    <p>Wir beantworten Anfragen <strong>innerhalb von einem Monat</strong> (Art. 12 Abs. 3 DSGVO). Wir können die Frist bei komplexen Anfragen um weitere zwei Monate verlängern — dies teilen wir dir innerhalb des ersten Monats mit.</p>
+    <p>Die Ausübung deiner Rechte ist kostenlos. Bei offensichtlich unbegründeten oder exzessiven Anfragen können wir ein angemessenes Entgelt verlangen oder die Bearbeitung ablehnen (Art. 12 Abs. 5 DSGVO).</p>
+  </section>
+
+  <section class="legal" id="behoerde">
+    <h2>11. Beschwerderecht bei der Aufsichtsbehörde (Art. 77 DSGVO)</h2>
+    <p>Du hast das Recht, dich bei der für dich oder uns zuständigen Datenschutzaufsichtsbehörde zu beschweren, wenn du der Ansicht bist, dass die Verarbeitung deiner Daten gegen die DSGVO verstößt.</p>
+    <div class="iblock">
+      <b>Zuständige Aufsichtsbehörde für NRW (Sitz des Verantwortlichen):</b><br>
+      Landesbeauftragte für Datenschutz und Informationsfreiheit NRW (LDI NRW)<br>
+      Kavalleriestraße 2–4 · 40213 Düsseldorf<br>
+      Telefon: +49 211 38424-0<br>
+      E-Mail: <a href="mailto:poststelle@ldi.nrw.de">poststelle@ldi.nrw.de</a><br>
+      Web: <a href="https://www.ldi.nrw.de" target="_blank" rel="noopener">www.ldi.nrw.de</a>
+    </div>
+  </section>
+
+  <section class="legal" id="aenderungen">
+    <h2>12. Änderungen dieser Erklärung</h2>
+    <p>Wir behalten uns vor, diese Datenschutzerklärung anzupassen, um sie an geänderte Rechtslage oder Änderungen des Dienstes anzupassen. Bei wesentlichen Änderungen werden registrierte Nutzer per E-Mail informiert. Das Datum der letzten Änderung ist jeweils oben angegeben.</p>
+  </section>
+
+</div>
+<footer>
+  <div>© 2025 AgentKontor · Mark Rusniok · Köln</div>
+  <div class="flinks">
+    <a href="/impressum.html">Impressum</a>
+    <a href="/datenschutz.html">Datenschutz</a>
+    <a href="/agb.html">AGB</a>
+  </div>
+</footer>
+</body>
+</html>
