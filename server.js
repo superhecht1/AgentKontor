@@ -35,6 +35,7 @@ async function initDb() {
     'migrations/add_features2.sql',
     'migrations/add_features3.sql',
     'migrations/add_features4.sql',
+    'migrations/add_features5.sql',
   ];
   for (const file of sqls) {
     const fp = path.join(__dirname, file);
@@ -89,6 +90,16 @@ app.use(cors({ origin: allowedOrigin, credentials: true }));
 app.use(express.json({ limit: '5mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Health check endpoint
+app.get('/health', async (req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.json({ status: 'ok', db: 'connected', uptime: Math.round(process.uptime()), ts: new Date().toISOString() });
+  } catch(e) {
+    res.status(503).json({ status: 'error', db: 'disconnected', error: e.message });
+  }
+});
+
 // Auth rate limiter — fail CLOSED
 const authLimiter = async (req, res, next) => {
   try {
@@ -123,7 +134,11 @@ app.use('/api',               require('./routes/extras'));
 app.use('/api/voice',         require('./routes/voice'));
 app.use('/api/actions',       require('./routes/actions'));
 app.use('/api/workspace',     require('./routes/workspace'));
-app.use('/webhook',           require('./routes/social-webhooks')); // feedback, cron, changelog, handoff, versions
+app.use('/api/auth',          require('./routes/twofa'));
+app.use('/api/referral',      require('./routes/referral'));
+app.use('/api/invoices',      require('./routes/invoices'));
+app.use('/webhook',           require('./routes/social-webhooks'));
+app.use('/webhook',           require('./routes/slack-webhook')); // feedback, cron, changelog, handoff, versions
 
 try {
   app.use('/api/rag', require('./routes/rag'));
