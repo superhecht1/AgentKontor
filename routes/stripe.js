@@ -142,7 +142,32 @@ router.post('/webhook', async (req, res) => {
           const userId = sub.metadata?.userId;
           if (userId) {
             console.warn(`⚠️ Payment failed for user ${userId}`);
-            // Don't downgrade immediately — Stripe retries
+            // Send dunning email
+            setImmediate(async () => {
+              try {
+                const ur = await pool.query('SELECT email, name FROM users WHERE id=$1', [userId]);
+                if (!ur.rows.length || !process.env.SMTP_HOST) return;
+                const { email, name } = ur.rows[0];
+                const nodemailer = require('nodemailer');
+                const t = nodemailer.createTransport({
+                  host: process.env.SMTP_HOST, port: parseInt(process.env.SMTP_PORT||'587'), secure: false,
+                  auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+                });
+                const portalUrl = process.env.APP_URL + '/app';
+                await t.sendMail({
+                  from: `AgentKontor <${process.env.SMTP_FROM||'noreply@agentkontor.de'}>`,
+                  to: email,
+                  subject: 'Zahlung fehlgeschlagen – AgentKontor Pro',
+                  html: `<div style="font-family:sans-serif;max-width:520px;margin:40px auto;padding:32px;background:#fff;border-radius:12px">
+                    <h2 style="color:#1a1916">Hallo ${name},</h2>
+                    <p style="color:#7a786e;line-height:1.7">deine Zahlung für AgentKontor Pro konnte leider nicht verarbeitet werden. Wir versuchen es in den nächsten Tagen erneut.</p>
+                    <p style="color:#7a786e;line-height:1.7">Bitte prüfe deine Zahlungsmethode um eine Unterbrechung deines Pro-Zugangs zu vermeiden.</p>
+                    <a href="${portalUrl}" style="display:inline-block;background:#6c5ce7;color:#fff;padding:11px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:14px">Zahlungsmethode aktualisieren →</a>
+                    <p style="color:#a8a49a;font-size:.76rem;margin-top:20px">Fragen? info@think-cloud.org</p>
+                  </div>`
+                });
+              } catch(e) { console.warn('Dunning email error:', e.message); }
+            });
           }
         }
         break;

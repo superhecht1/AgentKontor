@@ -123,7 +123,11 @@ async function handleChat(pool, agent, owner, messages, sessionId, source, res) 
     setImmediate(() => sendLeadEmail(agent, owner, leadCaptured));
   }
 
-  return { reply, sessionId };
+  // Human handoff detection
+  const handoffTriggers = ['mensch', 'mitarbeiter', 'agent', 'mensch sprechen', 'human', 'real person', 'speak to someone', 'nicht helfen'];
+  const wantsHandoff = handoffTriggers.some(t => userMsg.content.toLowerCase().includes(t));
+
+  return { reply, sessionId, wantsHandoff, agentId: agent.id };
 }
 
 /* ── LEAD CAPTURE ──────────────────────────────────────── */
@@ -227,6 +231,12 @@ async function dispatchWebhooks(pool, agentId, eventType, payload) {
 /* ── WEB / WIDGET CHAT ─────────────────────────────────── */
 router.post('/web/:agentId', async (req, res) => {
   const pool = getPool(req);
+
+  // Rate limit unauthenticated widget requests (FIX: prevent spam)
+  const { rateLimit } = require('../middleware/plan-gate');
+  const ip = req.ip || 'unknown';
+  const wrl = await rateLimit(pool, `widget:${ip}`, 60).catch(() => ({ allowed: true }));
+  if (!wrl.allowed) return res.status(429).json({ error: 'Zu viele Anfragen. Bitte kurz warten.' });
   try {
     const { messages, sessionId, source = 'web' } = req.body;
     if (!messages?.length) return res.status(400).json({ error: 'messages erforderlich' });
@@ -256,7 +266,10 @@ router.post('/web/:agentId', async (req, res) => {
       return res.status(429).json({ error: 'Nachrichtenlimit erreicht.', upgrade: true });
 
     const result = await handleChat(pool, agent, owner, validMessages, sessionId, source, res);
-    res.json(result);
+    res.json({
+      ...result,
+      feedback: { endpoint: `/api/feedback/${agent.id}/${result.sessionId}` },
+    });
   } catch (e) {
     console.error('WEB CHAT ERROR:', e.message);
     res.status(500).json({ error: 'Chat-Fehler' });
