@@ -4,7 +4,6 @@ const cors    = require('cors');
 const path    = require('path');
 const { Pool } = require('pg');
 
-// Fail fast on missing critical env vars
 const REQUIRED_ENV = ['DATABASE_URL', 'JWT_SECRET', 'ANTHROPIC_API_KEY'];
 for (const key of REQUIRED_ENV) {
   if (!process.env[key]) throw new Error(`❌ Env var fehlt: ${key}`);
@@ -32,7 +31,8 @@ async function initDb() {
     'migrations/add_extras.sql',
     'migrations/add_security.sql',
     'migrations/add_reset.sql',
-    'migrations/add_privacy.sql',   // soft-delete + api_key hash
+    'migrations/add_privacy.sql',
+    'migrations/add_features2.sql',
   ];
   for (const file of sqls) {
     const fp = path.join(__dirname, file);
@@ -58,36 +58,32 @@ async function initDb() {
 
 app.locals.pool = pool;
 
-// FIX 5 & 6: Helmet with proper CSP
+// Helmet + CSP
 try {
   const helmet = require('helmet');
   app.use(helmet({
     contentSecurityPolicy: {
       directives: {
         defaultSrc:  ["'self'"],
-        scriptSrc:   ["'self'", "'unsafe-eval'", "unpkg.com", "cdnjs.cloudflare.com"],
-        styleSrc:    ["'self'", "'unsafe-inline'", "unpkg.com", "cdnjs.cloudflare.com", "fonts.googleapis.com"],
+        scriptSrc:   ["'self'", "'unsafe-eval'", "'unsafe-inline'", "unpkg.com", "cdnjs.cloudflare.com"],
+        styleSrc:    ["'self'", "'unsafe-inline'", "fonts.googleapis.com"],
         fontSrc:     ["'self'", "fonts.gstatic.com", "data:"],
         imgSrc:      ["'self'", "data:", "https:"],
-        connectSrc:  ["'self'", "https://api.anthropic.com"],
+        connectSrc:  ["'self'"],
         frameSrc:    ["'none'"],
         objectSrc:   ["'none'"],
-        upgradeInsecureRequests: [],
       },
     },
     crossOriginEmbedderPolicy: false,
   }));
-} catch { console.warn('⚠ helmet nicht installiert — npm install helmet'); }
+} catch { console.warn('⚠ helmet nicht installiert'); }
 
-// Stripe raw body before json parser
+// Stripe raw body before json
 app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
 
-// CORS — production: only own domain
 const allowedOrigin = process.env.CORS_ORIGIN ||
   (process.env.NODE_ENV === 'production' ? 'https://agentkontor.de' : '*');
 app.use(cors({ origin: allowedOrigin, credentials: true }));
-
-// FIX 2: Tighter JSON limit (was 10mb)
 app.use(express.json({ limit: '5mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -121,6 +117,7 @@ app.use('/api/finetune',      require('./routes/finetune'));
 app.use('/api/identity',      require('./routes/identity'));
 app.use('/api/models',        require('./routes/model-api'));
 app.use('/webhook',           require('./routes/webhooks'));
+app.use('/api',               require('./routes/extras')); // feedback, cron, changelog, handoff, versions
 
 try {
   app.use('/api/rag', require('./routes/rag'));
@@ -131,17 +128,19 @@ try {
 }
 
 // ── PAGES ────────────────────────────────────────────────
-app.get('/chat/:publicId',   (req, res) => res.sendFile(path.join(__dirname, 'public', 'chat.html')));
-app.get('/app',              (req, res) => res.sendFile(path.join(__dirname, 'public', 'app.html')));
-app.get('/app/*',            (req, res) => res.sendFile(path.join(__dirname, 'public', 'app.html')));
-app.get('/admin',            (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
-app.get('/docs',             (req, res) => res.sendFile(path.join(__dirname, 'public', 'docs.html')));
-app.get('/docs.html',        (req, res) => res.sendFile(path.join(__dirname, 'public', 'docs.html')));
-app.get('/impressum.html',   (req, res) => res.sendFile(path.join(__dirname, 'public', 'impressum.html')));
-app.get('/datenschutz.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'datenschutz.html')));
-app.get('/agb.html',         (req, res) => res.sendFile(path.join(__dirname, 'public', 'agb.html')));
-app.get('/',                 (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
-app.get('*',                 (req, res) => res.redirect('/'));
+app.get('/chat/:publicId',          (req, res) => res.sendFile(path.join(__dirname, 'public', 'chat.html')));
+app.get('/app',                     (req, res) => res.sendFile(path.join(__dirname, 'public', 'app.html')));
+app.get('/app/*',                   (req, res) => res.sendFile(path.join(__dirname, 'public', 'app.html')));
+app.get('/admin',                   (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
+app.get('/docs',                    (req, res) => res.sendFile(path.join(__dirname, 'public', 'docs.html')));
+app.get('/docs.html',               (req, res) => res.sendFile(path.join(__dirname, 'public', 'docs.html')));
+app.get('/avv.html',                (req, res) => res.sendFile(path.join(__dirname, 'public', 'avv.html')));
+app.get('/cookie-richtlinie.html',  (req, res) => res.sendFile(path.join(__dirname, 'public', 'cookie-richtlinie.html')));
+app.get('/impressum.html',          (req, res) => res.sendFile(path.join(__dirname, 'public', 'impressum.html')));
+app.get('/datenschutz.html',        (req, res) => res.sendFile(path.join(__dirname, 'public', 'datenschutz.html')));
+app.get('/agb.html',                (req, res) => res.sendFile(path.join(__dirname, 'public', 'agb.html')));
+app.get('/',                        (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get('*',                        (req, res) => res.redirect('/'));
 
 initDb().then(() => {
   app.listen(PORT, () => console.log(`🚀 AgentKontor on port ${PORT}`));
