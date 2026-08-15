@@ -101,6 +101,7 @@ app.use('/api/conversations', require('./routes/conversations'));
 app.use('/api/admin',         require('./routes/admin'));
 app.use('/api/identity',      require('./routes/identity'));
 app.use('/api/models',        require('./routes/model-api'));
+app.use('/api/finetune',      require('./routes/finetune'));
 app.use('/webhook',           require('./routes/webhooks'));
 
 try {
@@ -115,6 +116,8 @@ try {
 app.get('/chat/:publicId',   (req, res) => res.sendFile(path.join(__dirname, 'public', 'chat.html')));
 app.get('/app',              (req, res) => res.sendFile(path.join(__dirname, 'public', 'app.html')));
 app.get('/app/*',            (req, res) => res.sendFile(path.join(__dirname, 'public', 'app.html')));
+app.get('/docs.html',         (req, res) => res.sendFile(path.join(__dirname, 'public', 'docs.html')));
+app.get('/docs',              (req, res) => res.sendFile(path.join(__dirname, 'public', 'docs.html')));
 app.get('/admin',            (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 app.get('/impressum.html',   (req, res) => res.sendFile(path.join(__dirname, 'public', 'impressum.html')));
 app.get('/datenschutz.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'datenschutz.html')));
