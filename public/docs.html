@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="AgentKontor API Dokumentation — REST API für Chat, Agenten und Leads.">
+<title>API Docs — AgentKontor</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#050510;--bg2:#09091a;--bg3:#0e0e22;--card:#0c0c1e;--border:rgba(255,255,255,.08);--purple:#6c5ce7;--pu-l:#a29bfe;--teal:#00cec9;--white:#fff;--muted:#5a5a80;--text:#c8c8e8;--green:#00b894;--gold:#f0c040}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex}
+/* SIDEBAR */
+.sidebar{width:260px;background:var(--bg2);border-right:1px solid var(--border);padding:28px 0;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;flex-shrink:0}
+.sb-logo{padding:0 20px 24px;font-size:1.1rem;font-weight:800;color:var(--white);border-bottom:1px solid var(--border);margin-bottom:16px}
+.sb-logo span{color:var(--pu-l)}
+.sb-logo .tag{font-size:.62rem;background:rgba(108,92,231,.2);color:var(--pu-l);padding:2px 6px;border-radius:4px;margin-left:7px;font-weight:600;letter-spacing:.04em}
+.sb-section{font-size:.64rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding:10px 20px 5px}
+.sb-link{display:block;padding:7px 20px;font-size:.83rem;color:var(--muted);cursor:pointer;transition:all .2s;border-left:2px solid transparent;text-decoration:none}
+.sb-link:hover,.sb-link.active{color:var(--pu-l);border-left-color:var(--purple);background:rgba(108,92,231,.06)}
+/* MAIN */
+.main{margin-left:260px;flex:1;padding:48px;max-width:900px}
+h1{font-size:1.8rem;font-weight:800;color:var(--white);margin-bottom:10px}
+h2{font-size:1.2rem;font-weight:700;color:var(--white);margin:44px 0 14px;padding-top:44px;border-top:1px solid var(--border)}
+h2:first-of-type{margin-top:0;padding-top:0;border-top:none}
+h3{font-size:.95rem;font-weight:600;color:var(--white);margin:24px 0 10px}
+p{font-size:.86rem;color:var(--text);line-height:1.75;margin-bottom:12px}
+/* ENDPOINT */
+.endpoint{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:18px}
+.ep-header{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.02)}
+.method{font-size:.74rem;font-weight:700;padding:3px 9px;border-radius:5px;font-family:monospace;flex-shrink:0}
+.m-get{background:rgba(0,184,148,.15);color:var(--green)}
+.m-post{background:rgba(108,92,231,.15);color:var(--pu-l)}
+.m-put{background:rgba(240,192,64,.12);color:var(--gold)}
+.m-delete{background:rgba(233,69,96,.12);color:#e94560}
+.ep-path{font-family:monospace;font-size:.85rem;color:var(--white)}
+.ep-desc{font-size:.78rem;color:var(--muted);margin-left:auto}
+.ep-body{padding:18px}
+/* CODE */
+.code{background:#07070f;border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-family:"Courier New",monospace;font-size:.78rem;color:var(--pu-l);overflow-x:auto;white-space:pre;margin:10px 0;line-height:1.6;position:relative}
+.copy-btn{position:absolute;top:8px;right:8px;background:rgba(108,92,231,.2);border:1px solid rgba(108,92,231,.3);border-radius:5px;padding:2px 8px;font-size:.68rem;color:var(--pu-l);cursor:pointer;font-family:inherit}
+.copy-btn:hover{background:rgba(108,92,231,.35)}
+/* PARAMS */
+table{width:100%;border-collapse:collapse;font-size:.8rem;margin:10px 0}
+th{padding:8px 12px;text-align:left;color:var(--muted);font-weight:600;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid var(--border)}
+td{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text);vertical-align:top}
+td:first-child{font-family:monospace;color:var(--pu-l)}
+td .req{font-size:.64rem;background:rgba(233,69,96,.12);color:#e94560;padding:1px 5px;border-radius:3px;margin-left:5px}
+td .opt{font-size:.64rem;background:rgba(255,255,255,.06);color:var(--muted);padding:1px 5px;border-radius:3px;margin-left:5px}
+/* BADGE */
+.badge{display:inline-block;font-size:.66rem;font-weight:700;padding:2px 7px;border-radius:4px}
+.b-auth{background:rgba(240,192,64,.12);color:var(--gold);border:1px solid rgba(240,192,64,.2)}
+.b-pro{background:rgba(108,92,231,.12);color:var(--pu-l);border:1px solid rgba(108,92,231,.2)}
+.b-pub{background:rgba(0,184,148,.1);color:var(--green);border:1px solid rgba(0,184,148,.2)}
+.badges{display:flex;gap:6px;margin-bottom:10px}
+/* ALERT */
+.alert{padding:12px 16px;border-radius:9px;font-size:.82rem;margin:14px 0;line-height:1.6}
+.alert-info{background:rgba(108,92,231,.08);border:1px solid rgba(108,92,231,.2);color:var(--text)}
+.alert-warn{background:rgba(240,192,64,.08);border:1px solid rgba(240,192,64,.2);color:var(--gold)}
+.back-btn{display:inline-flex;align-items:center;gap:7px;font-size:.82rem;color:var(--muted);text-decoration:none;margin-bottom:28px;transition:color .2s}
+.back-btn:hover{color:var(--pu-l)}
+@media(max-width:768px){.sidebar{display:none}.main{margin-left:0;padding:24px}}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sb-logo">Agent<span>Kontor</span> <span class="tag">API</span></div>
+  <div class="sb-section">Erste Schritte</div>
+  <a class="sb-link active" href="#intro">Einführung</a>
+  <a class="sb-link" href="#auth">Authentifizierung</a>
+  <a class="sb-link" href="#errors">Fehlerbehandlung</a>
+  <div class="sb-section">Endpoints</div>
+  <a class="sb-link" href="#chat">Chat</a>
+  <a class="sb-link" href="#agents">Agenten</a>
+  <a class="sb-link" href="#leads">Leads</a>
+  <a class="sb-link" href="#webhooks">Webhooks</a>
+  <div class="sb-section">Referenz</div>
+  <a class="sb-link" href="#models">Modelle</a>
+  <a class="sb-link" href="#limits">Rate Limits</a>
+  <div style="padding:20px;margin-top:auto">
+    <a href="/app" style="font-size:.78rem;color:var(--muted);text-decoration:none">← Dashboard</a>
+  </div>
+</div>
+
+<div class="main">
+  <a href="/app" class="back-btn">← Dashboard</a>
+
+  <!-- INTRO -->
+  <h1>API Dokumentation</h1>
+  <p>Die AgentKontor REST API ermöglicht es dir, deine KI-Agenten direkt in eigene Anwendungen zu integrieren — ohne Widget, ohne Frontend.</p>
+
+  <div class="alert alert-info">
+    <strong>Base URL:</strong> <code>https://agentkontor.de/api</code><br>
+    Alle Requests und Responses sind JSON. Alle geschützten Endpoints erfordern einen API-Key im Header.
+  </div>
+
+  <!-- AUTH -->
+  <h2 id="auth">Authentifizierung</h2>
+  <p>API-Keys erstellst du im Dashboard unter <strong>API Keys</strong>. Übergib den Key im Request-Header:</p>
+  <div class="code">x-api-key: ak_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<button class="copy-btn" onclick="copy(this)">Copy</button></div>
+
+  <div class="alert alert-warn">⚠ API-Zugang erfordert den <strong>Pro-Plan</strong>. Free-Accounts erhalten HTTP 403.</div>
+
+  <!-- ERRORS -->
+  <h2 id="errors">Fehlerbehandlung</h2>
+  <table>
+    <tr><th>Status</th><th>Bedeutung</th></tr>
+    <tr><td>200</td><td>Erfolg</td></tr>
+    <tr><td>400</td><td>Ungültige Anfrage — Parameter fehlen oder sind falsch</td></tr>
+    <tr><td>401</td><td>Kein oder ungültiger API-Key</td></tr>
+    <tr><td>403</td><td>Plan-Limit — Pro-Plan erforderlich</td></tr>
+    <tr><td>404</td><td>Agent nicht gefunden oder inaktiv</td></tr>
+    <tr><td>429</td><td>Rate Limit oder Monatskontingent überschritten</td></tr>
+    <tr><td>500</td><td>Server-Fehler</td></tr>
+  </table>
+  <p>Fehler-Response immer im Format:</p>
+  <div class="code">{ "error": "Fehlerbeschreibung", "upgrade": true }</div>
+
+  <!-- CHAT -->
+  <h2 id="chat">Chat</h2>
+
+  <div class="endpoint">
+    <div class="ep-header">
+      <span class="method m-post">POST</span>
+      <span class="ep-path">/chat/api/:agentId</span>
+      <span class="ep-desc">Nachricht an Agent senden</span>
+    </div>
+    <div class="ep-body">
+      <div class="badges"><span class="badge b-auth">API-Key</span><span class="badge b-pro">Pro</span></div>
+      <p>Sendet eine Nachricht an deinen Agenten und erhält eine Antwort. Unterstützt Multi-Turn-Konversationen über <code>sessionId</code>.</p>
+      <h3>Request Body</h3>
+      <table>
+        <tr><th>Parameter</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td>messages<span class="req">required</span></td><td>array</td><td>Array von <code>{role, content}</code> Objekten. Role: <code>user</code> oder <code>assistant</code>.</td></tr>
+        <tr><td>sessionId<span class="opt">optional</span></td><td>string</td><td>Session-ID für Multi-Turn. Wird bei erstem Request automatisch vergeben.</td></tr>
+      </table>
+      <h3>Beispiel Request</h3>
+      <div class="code">POST /api/chat/api/42
+x-api-key: ak_live_xxxx
+Content-Type: application/json
+
+{
+  "messages": [
+    { "role": "user", "content": "Hallo, wie sind eure Öffnungszeiten?" }
+  ],
+  "sessionId": "optional-session-uuid"
+}<button class="copy-btn" onclick="copy(this)">Copy</button></div>
+      <h3>Response</h3>
+      <div class="code">{
+  "reply": "Unsere Öffnungszeiten sind Mo–Fr 9–18 Uhr.",
+  "sessionId": "550e8400-e29b-41d4-a716-446655440000"
+}<button class="copy-btn" onclick="copy(this)">Copy</button></div>
+      <h3>Multi-Turn Konversation</h3>
+      <div class="code">// Zweite Nachricht in gleicher Session
+{
+  "messages": [
+    { "role": "user",      "content": "Wie sind eure Öffnungszeiten?" },
+    { "role": "assistant", "content": "Mo–Fr 9–18 Uhr." },
+    { "role": "user",      "content": "Und samstags?" }
+  ],
+  "sessionId": "550e8400-e29b-41d4-a716-446655440000"
+}<button class="copy-btn" onclick="copy(this)">Copy</button></div>
+    </div>
+  </div>
+
+  <!-- AGENTS -->
+  <h2 id="agents">Agenten</h2>
+  <div class="alert alert-info">Diese Endpoints nutzen den JWT-Token aus dem Dashboard-Login, nicht den API-Key. Für serverseitige Integrationen nutze den Chat-Endpoint.</div>
+
+  <div class="endpoint">
+    <div class="ep-header">
+      <span class="method m-get">GET</span>
+      <span class="ep-path">/chat/widget-config/:publicId</span>
+      <span class="ep-desc">Agent-Konfiguration für Widget</span>
+    </div>
+    <div class="ep-body">
+      <div class="badges"><span class="badge b-pub">Öffentlich</span></div>
+      <p>Gibt die öffentliche Konfiguration eines Agenten zurück — wird von widget.js verwendet.</p>
+      <div class="code">GET /api/chat/widget-config/agent-public-id-here
+
+Response:
+{
+  "name": "Mia",
+  "emoji": "🎧",
+  "color": "#6c5ce7",
+  "greeting": "Hallo! Wie kann ich helfen?",
+  "quick_chips": ["Öffnungszeiten", "Kontakt"],
+  "widget_position": "right",
+  "widget_delay": 5,
+  "widget_theme": "dark",
+  "widget_size": 56
+}<button class="copy-btn" onclick="copy(this)">Copy</button></div>
+    </div>
+  </div>
+
+  <!-- LEADS -->
+  <h2 id="leads">Leads</h2>
+  <p>Leads werden automatisch erfasst wenn ein Agent Kontaktdaten im Gespräch sammelt. Du kannst sie per CSV exportieren oder per Webhook empfangen.</p>
+
+  <div class="endpoint">
+    <div class="ep-header">
+      <span class="method m-get">GET</span>
+      <span class="ep-path">/conversations/:agentId/leads/csv</span>
+      <span class="ep-desc">Leads als CSV exportieren</span>
+    </div>
+    <div class="ep-body">
+      <div class="badges"><span class="badge b-auth">JWT</span></div>
+      <div class="code">GET /api/conversations/42/leads/csv
+Authorization: Bearer eyJhbGci...
+
+→ Download: agent-name-leads.csv<button class="copy-btn" onclick="copy(this)">Copy</button></div>
+    </div>
+  </div>
+
+  <!-- WEBHOOKS -->
+  <h2 id="webhooks">Webhooks</h2>
+  <p>Outgoing Webhooks senden einen HMAC-signierten POST-Request an deine URL sobald ein Event eintritt.</p>
+  <h3>Events</h3>
+  <table>
+    <tr><th>Event</th><th>Wann</th></tr>
+    <tr><td>message.received</td><td>Nutzer sendet eine Nachricht</td></tr>
+    <tr><td>message.sent</td><td>Agent antwortet</td></tr>
+    <tr><td>lead.captured</td><td>Lead wurde erfasst</td></tr>
+    <tr><td>session.started</td><td>Neue Konversation gestartet</td></tr>
+  </table>
+  <h3>Signatur-Verifikation</h3>
+  <p>Jeder Webhook enthält den Header <code>X-AgentKontor-Signature</code> — ein HMAC-SHA256-Hash des Bodys mit deinem Webhook-Secret.</p>
+  <div class="code">// Node.js Beispiel
+const crypto = require('crypto');
+
+function verifyWebhook(body, signature, secret) {
+  const expected = 'sha256=' + crypto
+    .createHmac('sha256', secret)
+    .update(body)
+    .digest('hex');
+  return crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(expected)
+  );
+}
+
+app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+  const sig = req.headers['x-agentkontor-signature'];
+  if (!verifyWebhook(req.body, sig, process.env.WEBHOOK_SECRET)) {
+    return res.status(401).send('Invalid signature');
+  }
+  const event = JSON.parse(req.body);
+  console.log(event.type, event.data);
+  res.json({ received: true });
+});<button class="copy-btn" onclick="copy(this)">Copy</button></div>
+  <h3>Payload Beispiel</h3>
+  <div class="code">{
+  "type": "lead.captured",
+  "agentId": 42,
+  "agentName": "Mia",
+  "sessionId": "550e8400-...",
+  "source": "widget",
+  "lead": {
+    "Name": "Max Mustermann",
+    "E-Mail": "max@beispiel.de",
+    "Telefon": "+49 123 456789"
+  },
+  "timestamp": "2025-03-15T14:23:00Z"
+}<button class="copy-btn" onclick="copy(this)">Copy</button></div>
+
+  <!-- MODELS -->
+  <h2 id="models">Modelle</h2>
+  <table>
+    <tr><th>Model ID</th><th>Anbieter</th><th>Stärken</th><th>Plan</th></tr>
+    <tr><td>claude-sonnet-4-6</td><td>Anthropic</td><td>Standard — ausgewogen, schnell</td><td>Free + Pro</td></tr>
+    <tr><td>claude-opus-4-6</td><td>Anthropic</td><td>Komplex, langer Kontext</td><td>Pro</td></tr>
+    <tr><td>gpt-4o</td><td>OpenAI</td><td>Multimodal, Code</td><td>Pro</td></tr>
+    <tr><td>gpt-4o-mini</td><td>OpenAI</td><td>Schnell, günstig</td><td>Pro</td></tr>
+    <tr><td>ft:gpt-4o-mini-...</td><td>OpenAI</td><td>Fine-tuned auf eigene Daten</td><td>Pro</td></tr>
+  </table>
+
+  <!-- LIMITS -->
+  <h2 id="limits">Rate Limits</h2>
+  <table>
+    <tr><th>Plan</th><th>Nachrichten/Monat</th><th>API-Requests/Stunde</th></tr>
+    <tr><td>Free</td><td>500</td><td>—</td></tr>
+    <tr><td>Pro</td><td>10.000</td><td>1.000</td></tr>
+    <tr><td>Enterprise</td><td>Unbegrenzt</td><td>Unbegrenzt</td></tr>
+  </table>
+  <p>Bei Überschreitung: HTTP 429 mit Header <code>Retry-After</code>.</p>
+
+  <!-- CODE EXAMPLES -->
+  <h2>Code-Beispiele</h2>
+  <h3>Python</h3>
+  <div class="code">import requests
+
+API_KEY  = "ak_live_xxxx"
+AGENT_ID = "42"
+BASE_URL = "https://agentkontor.de/api"
+
+def chat(message, session_id=None):
+    resp = requests.post(
+        f"{BASE_URL}/chat/api/{AGENT_ID}",
+        headers={"x-api-key": API_KEY},
+        json={
+            "messages": [{"role": "user", "content": message}],
+            "sessionId": session_id,
+        }
+    )
+    data = resp.json()
+    return data["reply"], data["sessionId"]
+
+reply, session_id = chat("Hallo!")
+print(reply)<button class="copy-btn" onclick="copy(this)">Copy</button></div>
+  <h3>JavaScript / Node.js</h3>
+  <div class="code">const API_KEY  = 'ak_live_xxxx';
+const AGENT_ID = '42';
+
+async function chat(message, sessionId) {
+  const res = await fetch(`https://agentkontor.de/api/chat/api/${AGENT_ID}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': API_KEY,
+    },
+    body: JSON.stringify({
+      messages: [{ role: 'user', content: message }],
+      sessionId,
+    }),
+  });
+  return res.json();
+}
+
+const { reply, sessionId } = await chat('Hallo!');
+console.log(reply);<button class="copy-btn" onclick="copy(this)">Copy</button></div>
+  <h3>cURL</h3>
+  <div class="code">curl -X POST https://agentkontor.de/api/chat/api/42 \
+  -H "x-api-key: ak_live_xxxx" \
+  -H "Content-Type: application/json" \
+  -d '{"messages":[{"role":"user","content":"Hallo!"}]}'<button class="copy-btn" onclick="copy(this)">Copy</button></div>
+
+</div>
+
+<script>
+// Sidebar active link on scroll
+const sections = document.querySelectorAll('h2[id]');
+const links    = document.querySelectorAll('.sb-link[href^="#"]');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 100) current = s.id; });
+  links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + current));
+});
+
+// Copy buttons
+function copy(btn) {
+  const code = btn.parentElement;
+  const text = code.innerText.replace('Copy', '').trim();
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Kopiert!';
+    setTimeout(() => btn.textContent = 'Copy', 2000);
+  });
+}
+</script>
+</body>
+</html>

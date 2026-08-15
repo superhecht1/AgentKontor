@@ -284,7 +284,8 @@ input:checked+.slider:before{transform:translateX(18px)}
       <div class="nav-item" :class="{active:page==='analytics'}" @click="page='analytics';loadAnalytics()"><span>📊</span>Analytics</div>
       <div class="nav-section" x-text="T.dev"></div>
       <div class="nav-item" :class="{active:page==='keys'}" @click="page='keys';loadKeys()"><span>🔑</span>API Keys</div>
-      <div class="nav-item" :class="{active:page==='docs'}" @click="page='docs'"><span>📖</span><span x-text="T.docs"></span></div>
+      <div class="nav-item" :class="{active:page==='finetune'}" @click="page='finetune'"><span>🧬</span>Fine-Tuning</div>
+      <div class="nav-item" @click="location.href='/docs.html'"><span>📖</span><span x-text="T.docs"></span></div>
       <div class="nav-section" x-text="T.account_nav"></div>
       <div class="nav-item" :class="{active:page==='settings'}" @click="page='settings';loadPlan()"><span>⚙️</span><span x-text="T.settings"></span></div>
       <template x-if="user?.is_admin"><div class="nav-item" @click="location.href='/admin'"><span>🔴</span>Admin</div></template>
@@ -542,6 +543,112 @@ Response:
 
   </div><!-- /main -->
 </div><!-- /app -->
+
+
+    <!-- FINE-TUNING -->
+    <div class="page" x-show="page='finetune'">
+      <div class="ph">
+        <div><div class="ph-title">🧬 Fine-Tuning</div><div class="ph-sub">Trainiere ein Modell auf deinen eigenen Gesprächen</div></div>
+      </div>
+      <template x-if="user?.plan==='free'">
+        <div class="empty">
+          <div class="empty-icon">🧬</div>
+          <h3>Pro-Feature</h3>
+          <p style="margin-bottom:18px">Fine-Tuning ist im Pro-Plan verfügbar.</p>
+          <button class="btn btn-purple btn-sm" @click="showUpgrade=true">⚡ Upgraden</button>
+        </div>
+      </template>
+      <template x-if="user?.plan!=='free'">
+        <div>
+          <div class="card" style="margin-bottom:14px">
+            <div style="font-size:.82rem;color:var(--text);line-height:1.7;margin-bottom:14px">
+              Fine-Tuning trainiert ein OpenAI-Modell (GPT-4o mini) auf deinen Gesprächen. Das Modell lernt den Stil und die Antwortmuster deines Agenten — ideal wenn du hunderte Gespräche gesammelt hast.
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <div style="flex:1;min-width:160px;padding:14px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:9px;text-align:center">
+                <div style="font-size:1.4rem;font-weight:700;color:var(--pu-l)" x-text="agents.length">0</div>
+                <div style="font-size:.72rem;color:var(--muted);margin-top:2px">Agenten</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 1: Agent wählen -->
+          <div class="card" style="margin-bottom:12px">
+            <div style="font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--pu-l);margin-bottom:12px">Schritt 1 — Agent wählen</div>
+            <select class="inp" x-model="ftAgentId" @change="ftJobs=[];ftData=null">
+              <option value="">Agent auswählen…</option>
+              <template x-for="a in agents" :key="a.id">
+                <option :value="a.id" x-text="a.emoji+' '+a.name"></option>
+              </template>
+            </select>
+          </div>
+
+          <!-- Step 2: Daten vorbereiten -->
+          <div class="card" style="margin-bottom:12px">
+            <div style="font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--pu-l);margin-bottom:12px">Schritt 2 — Trainingsdaten vorbereiten</div>
+            <p style="font-size:.8rem;color:var(--muted);margin-bottom:12px">Gespräche aus der Datenbank werden in das OpenAI-Trainingsformat (JSONL) konvertiert. Mindestens 10 Sessions nötig.</p>
+            <button class="btn btn-ghost btn-sm" @click="ftPrepare()" :disabled="!ftAgentId||ftLoading">
+              <span x-show="ftLoading">⏳</span> Daten vorbereiten
+            </button>
+            <template x-if="ftData">
+              <div style="margin-top:12px;padding:12px;background:rgba(0,184,148,.06);border:1px solid rgba(0,184,148,.15);border-radius:9px">
+                <div style="font-size:.82rem;color:var(--green);font-weight:600;margin-bottom:4px">✓ <span x-text="ftData.examples"></span> Trainingsbeispiele · <span x-text="ftData.sizeKB"></span> KB</div>
+                <div style="font-size:.72rem;color:var(--muted)">Bereit zum Training</div>
+              </div>
+            </template>
+          </div>
+
+          <!-- Step 3: Training starten -->
+          <div class="card" style="margin-bottom:12px">
+            <div style="font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--pu-l);margin-bottom:12px">Schritt 3 — Training starten</div>
+            <div class="inp-row" style="margin-bottom:10px">
+              <div>
+                <label style="font-size:.76rem;color:var(--text);display:block;margin-bottom:4px">Basis-Modell</label>
+                <select class="inp" x-model="ftBaseModel">
+                  <option value="gpt-4o-mini-2024-07-18">GPT-4o mini (empfohlen · günstig)</option>
+                  <option value="gpt-4o-2024-08-06">GPT-4o (leistungsstärker · teurer)</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:.76rem;color:var(--text);display:block;margin-bottom:4px">Modell-Suffix (optional)</label>
+                <input class="inp" type="text" x-model="ftSuffix" placeholder="mein-agent">
+              </div>
+            </div>
+            <div class="alert-info" style="padding:10px 13px;border-radius:8px;background:rgba(108,92,231,.07);border:1px solid rgba(108,92,231,.15);font-size:.78rem;color:var(--text);margin-bottom:12px">
+              ⚠ Fine-Tuning kostet OpenAI-Credits (~$0.008/1k Training-Tokens). Das wird direkt über deinen OpenAI-Account abgerechnet.
+            </div>
+            <button class="btn btn-purple btn-sm" @click="ftStart()" :disabled="!ftData||ftLoading||!ftAgentId">
+              <span x-show="ftLoading">⏳</span> Training starten
+            </button>
+          </div>
+
+          <!-- Jobs -->
+          <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+              <div style="font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--pu-l)">Trainings-Jobs</div>
+              <button class="btn btn-ghost btn-xs" @click="ftLoadJobs()" x-show="ftAgentId">↺ Aktualisieren</button>
+            </div>
+            <template x-if="ftJobs.length===0"><div style="text-align:center;padding:20px;color:var(--muted);font-size:.82rem">Noch keine Jobs</div></template>
+            <template x-for="job in ftJobs" :key="job.id">
+              <div style="display:flex;align-items:center;gap:12px;padding:10px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;margin-bottom:6px">
+                <div style="flex:1">
+                  <div style="font-size:.8rem;font-weight:600;color:var(--white);font-family:monospace" x-text="job.job_id?.slice(0,24)+'…'||'—'"></div>
+                  <div style="font-size:.71rem;color:var(--muted)" x-text="job.base_model+' · '+job.examples+' Beispiele'"></div>
+                  <div x-show="job.fine_tuned_model" style="font-size:.71rem;color:var(--teal);margin-top:2px;font-family:monospace" x-text="job.fine_tuned_model"></div>
+                </div>
+                <span style="font-size:.7rem;font-weight:600;padding:2px 8px;border-radius:20px" :style="job.status==='succeeded'?'background:rgba(0,184,148,.12);color:var(--green)':job.status==='failed'?'background:rgba(233,69,96,.1);color:#e94560':'background:rgba(240,192,64,.1);color:var(--gold)'" x-text="job.status"></span>
+                <template x-if="job.status==='succeeded'&&job.fine_tuned_model">
+                  <button class="btn btn-xs btn-green" @click="ftApply(job.fine_tuned_model)">Anwenden</button>
+                </template>
+                <template x-if="job.status==='running'||job.status==='queued'">
+                  <button class="btn btn-xs btn-ghost" @click="ftPollJob(job.job_id)">Status</button>
+                </template>
+              </div>
+            </template>
+          </div>
+        </div>
+      </template>
+    </div>
 
 <!-- ─── TEMPLATE PICKER ─── -->
 <div class="modal-bg" x-show="showTemplates" @click.self="showTemplates=false;selectedTemplate=null" x-cloak>
@@ -1096,6 +1203,8 @@ newWebhook:{url:'',events:['message.received','lead.captured']},
 webhookEvents:['message.received','message.sent','lead.captured','session.started'],
 showUpgrade:false,showOnboarding:false,onboardStep:1,checkoutLoading:false,
 showWaWizard:false,waStep:1,
+// Fine-Tuning
+ftAgentId:'',ftData:null,ftLoading:false,ftJobs:[],ftBaseModel:'gpt-4o-mini-2024-07-18',ftSuffix:'',
 // Forgot/Reset password
 forgotOk:false,resetOk:false,resetPw:'',resetPw2:'',resetToken:null,
 emojis:['🤖','💬','⭐','🎓','💡','🔥','🦾','🧠','✨','🚀','🏆','💼','🎯','🌟','⚡','🎪','🍽️','🏡','👥','🛒','🏥','⚖️','🎧','📞'],
@@ -1247,6 +1356,41 @@ async testWebhookOut(id){const d=await this.api('/webhooks-out/'+this.editing.id
 async deleteWebhookOut(id){if(!confirm('Webhook löschen?'))return;await this.api('/webhooks-out/'+this.editing.id+'/'+id,'DELETE');this.webhooksOut=this.webhooksOut.filter(w=>w.id!==id);},
 
 async dismissOnboarding(){this.showOnboarding=false;await this.api('/account/onboarding-done','POST');},
+
+async ftPrepare(){
+  if(!this.ftAgentId)return;
+  this.ftLoading=true;this.ftData=null;
+  const d=await this.api('/finetune/'+this.ftAgentId+'/prepare','POST');
+  this.ftLoading=false;
+  if(d.error){this.toast(d.error,'err');return;}
+  this.ftData=d;
+  await this.ftLoadJobs();
+},
+async ftStart(){
+  if(!this.ftData||!this.ftAgentId)return;
+  this.ftLoading=true;
+  const d=await this.api('/finetune/'+this.ftAgentId+'/start','POST',{jsonl:this.ftData.jsonl,baseModel:this.ftBaseModel,suffix:this.ftSuffix});
+  this.ftLoading=false;
+  if(d.error){this.toast(d.error,'err');return;}
+  this.toast('Training gestartet ✓ Job-ID: '+d.jobId.slice(0,20)+'…');
+  await this.ftLoadJobs();
+},
+async ftLoadJobs(){
+  if(!this.ftAgentId)return;
+  const d=await this.api('/finetune/'+this.ftAgentId);
+  if(d.jobs)this.ftJobs=d.jobs;
+},
+async ftPollJob(jobId){
+  const d=await this.api('/finetune/'+this.ftAgentId+'/jobs/'+jobId);
+  if(d.status)this.toast('Status: '+d.status+(d.fineTunedModel?' · '+d.fineTunedModel:''));
+  await this.ftLoadJobs();
+},
+async ftApply(model){
+  if(!confirm('Modell '+model+' auf Agent anwenden?'))return;
+  const d=await this.api('/finetune/'+this.ftAgentId+'/apply','POST',{model});
+  if(d.success)this.toast('Modell angewendet ✓');
+  else this.toast(d.error||'Fehler','err');
+},
 
 copy(t){navigator.clipboard.writeText(t).then(()=>this.toast('Kopiert!')).catch(()=>this.toast('Kopieren fehlgeschlagen','err'));},
 
