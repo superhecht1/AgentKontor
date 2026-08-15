@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AVV — AgentKontor</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f4f3ef;color:#1a1916;line-height:1.7}
+.container{max-width:760px;margin:0 auto;padding:60px 24px}
+h1{font-size:2rem;font-weight:800;margin-bottom:8px}
+.meta{font-size:.82rem;color:#7a786e;margin-bottom:40px}
+h2{font-size:1.1rem;font-weight:700;margin:32px 0 10px}
+h3{font-size:.95rem;font-weight:600;margin:18px 0 7px}
+p,li{font-size:.88rem;color:#3d3b35;margin-bottom:10px;line-height:1.75}
+ul{padding-left:20px;margin-bottom:12px}
+.highlight{background:#fff;border:1px solid #e8e6e0;border-radius:10px;padding:18px 22px;margin:16px 0}
+a{color:#5b4fcf}
+nav{padding:16px 24px;background:#1a1916;display:flex;align-items:center;gap:16px}
+.logo{font-size:1rem;font-weight:800;color:#fff}.logo span{color:#a29bfe}
+nav a{font-size:.82rem;color:rgba(255,255,255,.6);text-decoration:none}
+nav a:hover{color:#fff}
+.sign-block{background:#fff;border:1px solid #e8e6e0;border-radius:10px;padding:22px;margin-top:32px;display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.sign-field{border-top:1px solid #1a1916;padding-top:7px;font-size:.78rem;color:#7a786e;margin-top:40px}
+@media(max-width:600px){.sign-block{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/" class="logo">Agent<span>Kontor</span></a>
+  <a href="/datenschutz.html">Datenschutz</a>
+  <a href="/impressum.html">Impressum</a>
+</nav>
+
+<div class="container">
+  <h1>Auftragsverarbeitungsvertrag (AVV)</h1>
+  <p class="meta">Gemäß Art. 28 DSGVO · Stand: März 2025</p>
+
+  <div class="highlight">
+    <strong>Verantwortlicher (Auftraggeber):</strong> Du als Nutzer der AgentKontor-Plattform (nachfolgend „Auftraggeber")<br>
+    <strong>Auftragsverarbeiter:</strong> Mark Rusniok, superhecht.ai, Gottesweg 20, 50969 Köln, info@think-cloud.org (nachfolgend „Auftragsverarbeiter")
+  </div>
+
+  <h2>§ 1 Gegenstand und Dauer</h2>
+  <p>Dieser Vertrag regelt die Verarbeitung personenbezogener Daten durch den Auftragsverarbeiter im Auftrag des Auftraggebers im Rahmen der Nutzung der SaaS-Plattform „AgentKontor". Die Laufzeit entspricht der Laufzeit des Hauptvertrags (Nutzungsvertrag / AGB).</p>
+
+  <h2>§ 2 Art und Zweck der Verarbeitung</h2>
+  <p>Im Rahmen der Nutzung von AgentKontor verarbeitet der Auftragsverarbeiter folgende Kategorien personenbezogener Daten:</p>
+  <ul>
+    <li>Chat-Inhalte und Gesprächsverläufe der Endnutzer</li>
+    <li>Kontaktdaten (Name, E-Mail, Telefon) die per Lead-Capture erfasst werden</li>
+    <li>IP-Adressen und technische Verbindungsdaten</li>
+    <li>Vom Auftraggeber hochgeladene Dokumente (RAG-Wissensbasis)</li>
+  </ul>
+  <p>Die Verarbeitung erfolgt ausschließlich zum Zweck des Betriebs des KI-Agenten-Dienstes und der damit verbundenen Funktionen (Chat, Lead-Erfassung, Analytics).</p>
+
+  <h2>§ 3 Pflichten des Auftragsverarbeiters</h2>
+  <p>Der Auftragsverarbeiter verpflichtet sich:</p>
+  <ul>
+    <li>Daten nur auf dokumentierte Weisung des Auftraggebers zu verarbeiten</li>
+    <li>Vertraulichkeit der verarbeiteten Daten zu gewährleisten</li>
+    <li>Alle erforderlichen technischen und organisatorischen Maßnahmen nach Art. 32 DSGVO umzusetzen</li>
+    <li>Unterauftragsverarbeiter nur nach vorheriger Information des Auftraggebers einzusetzen</li>
+    <li>Den Auftraggeber bei der Wahrnehmung von Betroffenenrechten zu unterstützen</li>
+    <li>Nach Beendigung der Dienstleistung alle personenbezogenen Daten zu löschen oder zurückzugeben</li>
+  </ul>
+
+  <h2>§ 4 Technische und organisatorische Maßnahmen (TOM)</h2>
+  <h3>Zugangskontrolle</h3>
+  <ul>
+    <li>JWT-Token-Authentifizierung mit kurzlebigen Tokens</li>
+    <li>Passwort-Hashing mit bcrypt (Cost Factor 12)</li>
+    <li>Rate-Limiting auf Auth-Endpoints</li>
+  </ul>
+  <h3>Datentransportschutz</h3>
+  <ul>
+    <li>TLS/HTTPS für alle Verbindungen (Let's Encrypt)</li>
+    <li>Verschlüsselte Datenbankverbindung (SSL)</li>
+  </ul>
+  <h3>Zugriffskontrolle</h3>
+  <ul>
+    <li>Rollenbasierter Zugriff — Nutzer sehen nur eigene Daten</li>
+    <li>Admin-Zugriff nur für explizit autorisierte Accounts</li>
+  </ul>
+  <h3>Datenverfügbarkeit</h3>
+  <ul>
+    <li>Hosting auf Render.com (Frankfurt, Deutschland)</li>
+    <li>Datenbank-Backups durch Neon Inc.</li>
+  </ul>
+
+  <h2>§ 5 Unterauftragsverarbeiter</h2>
+  <p>Folgende Unterauftragsverarbeiter werden eingesetzt:</p>
+  <ul>
+    <li><strong>Anthropic, Inc. (USA)</strong> — KI-Modell-Inferenz. Anthropic verarbeitet Chat-Inhalte zur Antwort-Generierung. <a href="https://www.anthropic.com/privacy" target="_blank">Datenschutzrichtlinie</a></li>
+    <li><strong>Render Services, Inc. (USA)</strong> — Web-Hosting. Angemessenheitsbeschluss / SCCs. <a href="https://render.com/privacy" target="_blank">Datenschutzrichtlinie</a></li>
+    <li><strong>Neon Inc. (USA)</strong> — PostgreSQL-Datenbank-Hosting. SOC 2 zertifiziert. <a href="https://neon.tech/privacy" target="_blank">Datenschutzrichtlinie</a></li>
+    <li><strong>Stripe, Inc. (USA)</strong> — Zahlungsabwicklung. <a href="https://stripe.com/privacy" target="_blank">Datenschutzrichtlinie</a></li>
+  </ul>
+  <p>Der Auftraggeber stimmt dem Einsatz dieser Unterauftragsverarbeiter mit Abschluss des Nutzungsvertrags zu.</p>
+
+  <h2>§ 6 Betroffenenrechte</h2>
+  <p>Betroffene können ihre Rechte (Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit) direkt gegenüber dem Auftraggeber geltend machen. Der Auftragsverarbeiter unterstützt den Auftraggeber bei der Erfüllung dieser Anfragen innerhalb von 72 Stunden.</p>
+
+  <h2>§ 7 Meldung von Datenschutzverletzungen</h2>
+  <p>Der Auftragsverarbeiter meldet Datenschutzverletzungen gemäß Art. 33 DSGVO unverzüglich, spätestens jedoch innerhalb von 72 Stunden nach Bekanntwerden, an den Auftraggeber (info@think-cloud.org).</p>
+
+  <h2>§ 8 Weisungsrecht</h2>
+  <p>Der Auftraggeber erteilt Weisungen per E-Mail an info@think-cloud.org. Der Auftragsverarbeiter ist berechtigt, offensichtlich rechtswidrige Weisungen zurückzuweisen.</p>
+
+  <h2>§ 9 Löschung nach Vertragsende</h2>
+  <p>Nach Beendigung des Nutzungsvertrags werden alle personenbezogenen Daten innerhalb von 30 Tagen gelöscht, sofern keine gesetzlichen Aufbewahrungspflichten entgegenstehen. Auf Wunsch des Auftraggebers kann ein vollständiger Datenexport bereitgestellt werden (DSGVO Art. 20).</p>
+
+  <div class="sign-block">
+    <div>
+      <p style="font-weight:600;margin-bottom:30px">Auftraggeber</p>
+      <div class="sign-field">Ort, Datum, Unterschrift</div>
+    </div>
+    <div>
+      <p style="font-weight:600;margin-bottom:30px">Auftragsverarbeiter</p>
+      <p style="font-size:.82rem;color:#3d3b35">Mark Rusniok<br>superhecht.ai<br>Gottesweg 20, 50969 Köln</p>
+      <div class="sign-field">Ort, Datum, Unterschrift</div>
+    </div>
+  </div>
+
+  <p style="font-size:.76rem;color:#7a786e;margin-top:24px">
+    Dieser AVV wird durch Annahme der AGB bei Registrierung als elektronisch abgeschlossen betrachtet.
+    Für B2B-Kunden mit besonderen Anforderungen: <a href="mailto:info@think-cloud.org">info@think-cloud.org</a>
+  </p>
+</div>
+
+<script src="/cookie-banner.js"></script>
+</body>
+</html>

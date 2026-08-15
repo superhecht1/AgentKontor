@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cookie-Richtlinie — AgentKontor</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f4f3ef;color:#1a1916;line-height:1.7}
+.container{max-width:760px;margin:0 auto;padding:60px 24px}
+h1{font-size:2rem;font-weight:800;margin-bottom:8px}
+.meta{font-size:.82rem;color:#7a786e;margin-bottom:40px}
+h2{font-size:1.1rem;font-weight:700;margin:32px 0 10px;color:#1a1916}
+p,li{font-size:.9rem;color:#3d3b35;margin-bottom:10px}
+ul{padding-left:20px;margin-bottom:12px}
+table{width:100%;border-collapse:collapse;font-size:.85rem;margin:14px 0}
+th{padding:9px 12px;text-align:left;background:#e8e6e0;font-weight:600;font-size:.78rem}
+td{padding:9px 12px;border-bottom:1px solid #e8e6e0;color:#3d3b35;vertical-align:top}
+a{color:#5b4fcf}
+nav{padding:16px 24px;background:#1a1916;display:flex;align-items:center;gap:16px}
+.logo{font-size:1rem;font-weight:800;color:#fff}.logo span{color:#a29bfe}
+nav a{font-size:.82rem;color:rgba(255,255,255,.6);text-decoration:none}
+nav a:hover{color:#fff}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/" class="logo">Agent<span>Kontor</span></a>
+  <a href="/datenschutz.html">Datenschutz</a>
+  <a href="/impressum.html">Impressum</a>
+</nav>
+
+<div class="container">
+  <h1>Cookie-Richtlinie</h1>
+  <p class="meta">Stand: März 2025 · AgentKontor / superhecht.ai, Mark Rusniok, Köln</p>
+
+  <h2>1. Was sind Cookies?</h2>
+  <p>Cookies sind kleine Textdateien, die beim Besuch einer Website auf deinem Gerät gespeichert werden. Sie ermöglichen es, Einstellungen und Sitzungsinformationen zu speichern.</p>
+
+  <h2>2. Welche Cookies nutzen wir?</h2>
+
+  <table>
+    <tr><th>Name</th><th>Anbieter</th><th>Zweck</th><th>Speicherdauer</th><th>Art</th></tr>
+    <tr><td>ak_cookie_consent</td><td>AgentKontor</td><td>Speichert deine Cookie-Einwilligung</td><td>1 Jahr</td><td>Notwendig</td></tr>
+    <tr><td>ak_token</td><td>AgentKontor</td><td>JWT-Authentifizierungs-Token (localStorage)</td><td>30 Tage</td><td>Notwendig</td></tr>
+    <tr><td>ak_user</td><td>AgentKontor</td><td>Nutzerinformationen im Cache (localStorage)</td><td>30 Tage</td><td>Notwendig</td></tr>
+    <tr><td>ak_lang</td><td>AgentKontor</td><td>Spracheinstellung</td><td>Unbegrenzt</td><td>Notwendig</td></tr>
+  </table>
+
+  <h2>3. Externe Dienste (CDN)</h2>
+  <p>Wir laden folgende externe Skripte — diese können technisch bedingt Verbindungsdaten (IP-Adresse) übermitteln:</p>
+
+  <table>
+    <tr><th>Dienst</th><th>URL</th><th>Zweck</th><th>Datenschutz</th></tr>
+    <tr><td>Alpine.js</td><td>unpkg.com</td><td>Frontend-Framework</td><td><a href="https://unpkg.com" target="_blank">unpkg.com</a></td></tr>
+    <tr><td>Chart.js</td><td>cdnjs.cloudflare.com</td><td>Diagramme im Dashboard</td><td><a href="https://www.cloudflare.com/privacypolicy/" target="_blank">Cloudflare</a></td></tr>
+    <tr><td>Stripe.js</td><td>js.stripe.com</td><td>Zahlungsabwicklung</td><td><a href="https://stripe.com/privacy" target="_blank">Stripe</a></td></tr>
+  </table>
+
+  <h2>4. Keine Tracking-Cookies</h2>
+  <p>Wir setzen <strong>keine</strong> Werbe-, Tracking- oder Analyse-Cookies (kein Google Analytics, kein Facebook Pixel, kein Hotjar).</p>
+
+  <h2>5. Notwendige Cookies</h2>
+  <p>Die unter Punkt 2 genannten Cookies sind technisch notwendig für den Betrieb der Plattform. Sie können nicht deaktiviert werden ohne die Funktionsfähigkeit zu beeinträchtigen. Rechtsgrundlage: Art. 6 Abs. 1 lit. f) DSGVO.</p>
+
+  <h2>6. Einwilligung und Widerruf</h2>
+  <p>Für externe CDN-Dienste bitten wir um deine Einwilligung über unser Cookie-Banner. Du kannst deine Einwilligung jederzeit widerrufen indem du die localStorage-Daten deines Browsers leerst (<code>localStorage.clear()</code> in der Browser-Konsole).</p>
+
+  <h2>7. Kontakt</h2>
+  <p>Fragen zu dieser Cookie-Richtlinie: <a href="mailto:info@think-cloud.org">info@think-cloud.org</a></p>
+</div>
+
+<script src="/cookie-banner.js"></script>
+</body>
+</html>

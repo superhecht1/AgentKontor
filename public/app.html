@@ -286,6 +286,7 @@ input:checked+.slider:before{transform:translateX(18px)}
       <div class="nav-item" :class="{active:page==='keys'}" @click="page='keys';loadKeys()"><span>🔑</span>API Keys</div>
       <div class="nav-item" :class="{active:page==='finetune'}" @click="page='finetune'"><span>🧬</span>Fine-Tuning</div>
       <div class="nav-item" @click="location.href='/docs.html'"><span>📖</span><span x-text="T.docs"></span></div>
+      <div class="nav-item" @click="showChangelog=true;loadChangelog()"><span>✨</span>Was ist neu</div>
       <div class="nav-section" x-text="T.account_nav"></div>
       <div class="nav-item" :class="{active:page==='settings'}" @click="page='settings';loadPlan()"><span>⚙️</span><span x-text="T.settings"></span></div>
       <template x-if="user?.is_admin"><div class="nav-item" @click="location.href='/admin'"><span>🔴</span>Admin</div></template>
@@ -663,6 +664,24 @@ Response:
         </div>
       </template>
     </div>
+    <!-- VERSIONS TAB -->
+    <template x-if="aTab==='versions'&&editing">
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <p style="font-size:.82rem;color:var(--muted)">Letzte 10 Versionen. Klick auf "Wiederherstellen" um zurückzurollen.</p>
+          <button class="btn btn-ghost btn-xs" @click="saveVersion()">💾 Aktuelle Version speichern</button>
+        </div>
+        <template x-if="agentVersions.length===0"><div style="text-align:center;padding:20px;color:var(--muted);font-size:.82rem">Noch keine gespeicherten Versionen.</div></template>
+        <template x-for="v in agentVersions" :key="v.id">
+          <div style="display:flex;align-items:center;gap:10px;padding:10px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;margin-bottom:6px">
+            <span style="font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:4px;background:rgba(108,92,231,.12);color:var(--pu-l)" x-text="'v'+v.version_number"></span>
+            <div style="flex:1"><div style="font-size:.78rem;color:var(--text);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="v.prompt_preview+'…'"></div><div style="font-size:.68rem;color:var(--muted)" x-text="new Date(v.created_at).toLocaleString('de-DE')"></div></div>
+            <button class="btn btn-xs btn-ghost" @click="rollback(v.id)">↩ Wiederherstellen</button>
+          </div>
+        </template>
+      </div>
+    </template>
+
     <div class="modal-footer">
       <button class="btn btn-ghost btn-sm" @click="showTemplates=false;selectedTemplate=null" x-text="T.cancel"></button>
       <button class="btn btn-ghost btn-sm" @click="openBlank()" x-text="T.blank_agent"></button>
@@ -685,6 +704,7 @@ Response:
       <div class="tab" :class="{active:aTab==='stats'}" @click="aTab='stats';if(editing)loadAgentStats(editing.id)" x-show="editing">📊 Stats</div>
       <div class="tab" :class="{active:aTab==='preview'}" @click="aTab='preview'">👁 <span x-text="T.preview"></span></div>
       <div class="tab" :class="{active:aTab==='embed'}" @click="aTab='embed'" x-show="editing">🔗 <span x-text="T.embed"></span></div>
+      <div class="tab" :class="{active:aTab==='versions'}" @click="aTab='versions';if(editing)loadVersions(editing.id)" x-show="editing">📜 Versionen</div>
     </div>
 
     <!-- BASICS TAB -->
@@ -1089,6 +1109,14 @@ Header: x-api-key: ak_live_...'"></div>
       <div class="plan-card"><div class="plan-name">Free</div><div class="plan-price">€0</div><ul><li x-text="T.plan_free_1"></li><li x-text="T.plan_free_2"></li><li x-text="T.plan_free_3"></li><li class="no" x-text="T.plan_free_4"></li><li class="no" x-text="T.plan_free_5"></li></ul></div>
       <div class="plan-card featured"><div class="plan-name">Pro</div><div class="plan-price">€19<span style="font-size:.85rem;font-weight:400">/Mo</span></div><ul><li x-text="T.plan_pro_1"></li><li x-text="T.plan_pro_2"></li><li x-text="T.plan_pro_3"></li><li x-text="T.plan_pro_4"></li><li x-text="T.plan_pro_5"></li></ul></div>
     </div>
+    <div style="display:flex;background:rgba(255,255,255,.06);border-radius:30px;padding:3px;gap:0;margin-bottom:14px;width:fit-content;margin-left:auto;margin-right:auto">
+      <button @click="billingCycle='monthly'" :style="billingCycle==='monthly'?'background:var(--purple);color:#fff':'background:transparent;color:var(--muted)'" style="padding:6px 16px;border-radius:26px;border:none;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .2s">Monatlich</button>
+      <button @click="billingCycle='yearly'" :style="billingCycle==='yearly'?'background:var(--purple);color:#fff':'background:transparent;color:var(--muted)'" style="padding:6px 16px;border-radius:26px;border:none;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .2s">Jährlich <span style="font-size:.65rem;color:var(--green)">-17%</span></button>
+    </div>
+    <div style="text-align:center;margin-bottom:14px">
+      <span style="font-size:2rem;font-weight:700;color:var(--white)" x-text="billingCycle==='yearly'?'€190':'€19'"></span>
+      <span style="font-size:.9rem;color:var(--muted)" x-text="billingCycle==='yearly'?'/Jahr (2 Monate gratis)':'/Monat'"></span>
+    </div>
     <button class="btn btn-purple btn-full" @click="createCheckout()" :disabled="checkoutLoading"><span x-text="checkoutLoading?T.redirecting:T.upgrade_now"></span></button>
     <p style="font-size:.7rem;color:var(--muted);text-align:center;margin-top:8px" x-text="T.stripe_note"></p>
   </div>
@@ -1151,6 +1179,24 @@ Header: x-api-key: ak_live_...'"></div>
   </div>
 </div>
 
+<!-- ─── CHANGELOG ─── -->
+<div class="modal-bg" x-show="showChangelog" @click.self="showChangelog=false" x-cloak>
+  <div class="modal modal-sm">
+    <div class="modal-title">✨ Was ist neu</div>
+    <template x-if="changelogEntries.length===0"><div style="text-align:center;padding:20px;color:var(--muted)">⏳ Lade...</div></template>
+    <template x-for="entry in changelogEntries" :key="entry.version">
+      <div style="margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+          <span style="font-size:.64rem;font-weight:700;padding:2px 7px;border-radius:4px;background:rgba(108,92,231,.15);color:var(--pu-l)" x-text="'v'+entry.version"></span>
+          <span style="font-size:.8rem;font-weight:600;color:var(--white)" x-text="entry.title"></span>
+        </div>
+        <p style="font-size:.8rem;color:var(--muted);line-height:1.6" x-text="entry.body"></p>
+      </div>
+    </template>
+    <div class="modal-footer"><button class="btn btn-ghost btn-sm" @click="showChangelog=false">Schließen</button></div>
+  </div>
+</div>
+
 <!-- ─── TOASTS ─── -->
 <div class="toast-area">
   <template x-for="t in toasts" :key="t.id"><div class="toast" :class="t.type" x-text="t.msg"></div></template>
@@ -1205,6 +1251,10 @@ showUpgrade:false,showOnboarding:false,onboardStep:1,checkoutLoading:false,
 showWaWizard:false,waStep:1,
 // Fine-Tuning
 ftAgentId:'',ftData:null,ftLoading:false,ftJobs:[],ftBaseModel:'gpt-4o-mini-2024-07-18',ftSuffix:'',
+// Changelog + Versions
+showChangelog:false,changelogEntries:[],agentVersions:[],
+// Billing
+billingCycle:'monthly',
 // Forgot/Reset password
 forgotOk:false,resetOk:false,resetPw:'',resetPw2:'',resetToken:null,
 emojis:['🤖','💬','⭐','🎓','💡','🔥','🦾','🧠','✨','🚀','🏆','💼','🎯','🌟','⚡','🎪','🍽️','🏡','👥','🛒','🏥','⚖️','🎧','📞'],
@@ -1385,6 +1435,27 @@ async ftPollJob(jobId){
   if(d.status)this.toast('Status: '+d.status+(d.fineTunedModel?' · '+d.fineTunedModel:''));
   await this.ftLoadJobs();
 },
+async loadChangelog(){
+  const d=await this.api('/changelog');
+  if(d.entries)this.changelogEntries=d.entries;
+},
+async loadVersions(id){
+  const d=await this.api('/agents/'+id+'/versions');
+  if(d.versions)this.agentVersions=d.versions;
+},
+async saveVersion(){
+  if(!this.editing)return;
+  const d=await this.api('/agents/'+this.editing.id+'/save-version','POST');
+  if(d.success){this.toast('Version v'+d.version+' gespeichert ✓');this.loadVersions(this.editing.id);}
+  else this.toast(d.error||'Fehler','err');
+},
+async rollback(versionId){
+  if(!this.editing)return;
+  if(!confirm('Wirklich auf diese Version zurückrollen? Aktuelle Einstellungen werden überschrieben.'))return;
+  const d=await this.api('/agents/'+this.editing.id+'/rollback/'+versionId,'POST');
+  if(d.success){this.toast('Wiederhergestellt ✓ — Bitte Seite neu laden');this.showModal=false;}
+  else this.toast(d.error||'Fehler','err');
+},
 async ftApply(model){
   if(!confirm('Modell '+model+' auf Agent anwenden?'))return;
   const d=await this.api('/finetune/'+this.ftAgentId+'/apply','POST',{model});
@@ -1397,5 +1468,6 @@ copy(t){navigator.clipboard.writeText(t).then(()=>this.toast('Kopiert!')).catch(
 toast(msg,type='ok'){const id=Date.now();this.toasts.push({id,msg,type});setTimeout(()=>this.toasts=this.toasts.filter(t=>t.id!==id),3500);}
 };}
 </script>
+<script src="/cookie-banner.js"></script>
 </body>
 </html>

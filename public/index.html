@@ -253,7 +253,13 @@ footer{padding:40px 0;border-top:1px solid var(--border)}
   <section class="section" style="padding-top:0" id="pricing">
     <div class="section-label">Preise</div>
     <div class="section-title" style="text-align:center">Einfach. Transparent.</div>
-    <div class="pricing">
+    <div style="display:flex;justify-content:center;margin-bottom:24px">
+      <div style="display:flex;background:#e8e6e0;border-radius:30px;padding:4px;gap:0">
+        <button id="btn-monthly" onclick="setPlan('monthly')" style="padding:8px 20px;border-radius:26px;border:none;font-size:.85rem;font-weight:600;cursor:pointer;background:#1a1916;color:#fff;transition:all .2s">Monatlich</button>
+        <button id="btn-yearly" onclick="setPlan('yearly')" style="padding:8px 20px;border-radius:26px;border:none;font-size:.85rem;font-weight:600;cursor:pointer;background:transparent;color:#7a786e;transition:all .2s">Jährlich <span style="font-size:.72rem;background:#e8e6e0;padding:1px 6px;border-radius:10px;margin-left:4px;color:#5b4fcf">2 Monate gratis</span></button>
+      </div>
+    </div>
+    <div id="price-monthly" style="display:block"><div class="pricing">
       <div class="plan">
         <div class="plan-name">Free</div>
         <div class="plan-price">€0<span>/Monat</span></div>
@@ -290,6 +296,23 @@ footer{padding:40px 0;border-top:1px solid var(--border)}
         <a href="/app" class="btn btn-purple" style="width:100%;justify-content:center">⚡ Jetzt upgraden</a>
       </div>
     </div>
+    </div></div>
+    <div id="price-yearly" style="display:none"><div class="pricing">
+      <div class="plan">
+        <div class="plan-name">Free</div>
+        <div class="plan-price">€0<span>/Jahr</span></div>
+        <div class="plan-desc">Dauerhaft kostenlos.</div>
+        <ul class="plan-features"><li>3 Agenten</li><li>500 Nachrichten/Mo</li><li>Chat-Seite &amp; Widget</li><li class="no">API / WA / TG</li></ul>
+        <a href="/app" class="btn btn-outline" style="width:100%;justify-content:center">Kostenlos starten</a>
+      </div>
+      <div class="plan featured">
+        <div class="plan-name">Pro — Jährlich</div>
+        <div class="plan-price">€190<span>/Jahr</span></div>
+        <div class="plan-desc" style="color:#5b4fcf;font-weight:600">Statt €228 — 2 Monate gratis 🎉</div>
+        <ul class="plan-features"><li>Unbegrenzte Agenten</li><li>10.000 Nachrichten/Mo</li><li>Alle Kanäle</li><li>Outgoing Webhooks</li><li>Fine-Tuning</li><li>Jährliche Rechnung</li></ul>
+        <a href="/app" class="btn btn-purple" style="width:100%;justify-content:center">⚡ Jetzt upgraden</a>
+      </div>
+    </div></div>
     <p style="text-align:center;font-size:.78rem;color:var(--sub);margin-top:16px">Monatlich kündbar · Sichere Zahlung via Stripe · Rechnungsstellung möglich</p>
   </section>
 
@@ -348,6 +371,8 @@ footer{padding:40px 0;border-top:1px solid var(--border)}
         <a href="/impressum.html">Impressum</a>
         <a href="/datenschutz.html">Datenschutz</a>
         <a href="/agb.html">AGB</a>
+        <a href="/avv.html">AVV</a>
+        <a href="/cookie-richtlinie.html">Cookie-Richtlinie</a>
         <a href="mailto:info@think-cloud.org">Kontakt</a>
       </div>
       <div style="font-size:.76rem;color:var(--sub)">© 2025 superhecht.ai · Köln</div>
@@ -356,6 +381,24 @@ footer{padding:40px 0;border-top:1px solid var(--border)}
 </footer>
 
 <script>
+// Pricing toggle
+function setPlan(type) {
+  document.getElementById('price-monthly').style.display = type==='monthly'?'block':'none';
+  document.getElementById('price-yearly').style.display  = type==='yearly'?'block':'none';
+  document.getElementById('btn-monthly').style.background = type==='monthly'?'#1a1916':'transparent';
+  document.getElementById('btn-monthly').style.color = type==='monthly'?'#fff':'#7a786e';
+  document.getElementById('btn-yearly').style.background  = type==='yearly'?'#1a1916':'transparent';
+  document.getElementById('btn-yearly').style.color  = type==='yearly'?'#fff':'#7a786e';
+}
+
+// Live demo widget (set AK_DEMO_AGENT_ID in index.html to enable)
+if (window.AK_DEMO_AGENT_ID) {
+  window.AK_AGENT_ID = window.AK_DEMO_AGENT_ID;
+  const s = document.createElement('script');
+  s.src = '/widget.js';
+  document.body.appendChild(s);
+}
+
 // FAQ accordion
 document.querySelectorAll('.faq-q').forEach(q => {
   q.addEventListener('click', () => {
@@ -364,5 +407,6 @@ document.querySelectorAll('.faq-q').forEach(q => {
   });
 });
 </script>
+<script src="/cookie-banner.js"></script>
 </body>
 </html>
