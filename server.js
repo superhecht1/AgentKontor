@@ -33,6 +33,7 @@ async function initDb() {
     'migrations/add_reset.sql',
     'migrations/add_privacy.sql',
     'migrations/add_features2.sql',
+    'migrations/add_features3.sql',
   ];
   for (const file of sqls) {
     const fp = path.join(__dirname, file);
@@ -117,7 +118,8 @@ app.use('/api/finetune',      require('./routes/finetune'));
 app.use('/api/identity',      require('./routes/identity'));
 app.use('/api/models',        require('./routes/model-api'));
 app.use('/webhook',           require('./routes/webhooks'));
-app.use('/api',               require('./routes/extras')); // feedback, cron, changelog, handoff, versions
+app.use('/api',               require('./routes/extras'));
+app.use('/webhook',           require('./routes/social-webhooks')); // feedback, cron, changelog, handoff, versions
 
 try {
   app.use('/api/rag', require('./routes/rag'));
