@@ -1,7 +1,7 @@
 {
   "name": "agentkontor",
-  "version": "1.0.0",
-  "description": "AgentKontor \u2013 Baue deinen eigenen KI-Agenten",
+  "version": "2.0.0",
+  "description": "AgentKontor – Baue deinen eigenen KI-Agenten",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -15,9 +15,10 @@
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.9.9",
     "pg": "^8.12.0",
-    "uuid": "^10.0.0",
-    "nodemailer": "^6.9.9"
+    "stripe": "^16.0.0",
+    "uuid": "^10.0.0"
   },
   "optionalDependencies": {
     "playwright": "^1.44.0"
