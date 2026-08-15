@@ -282,6 +282,7 @@ input:checked+.slider:before{transform:translateX(18px)}
       <div class="nav-item" :class="{active:page==='dashboard'}" @click="page='dashboard';loadAgents()"><span>🏠</span><span x-text="T.dashboard"></span></div>
       <div class="nav-item" :class="{active:page==='agents'}" @click="page='agents';loadAgents()"><span>🤖</span><span x-text="T.my_agents"></span></div>
       <div class="nav-item" :class="{active:page==='analytics'}" @click="page='analytics';loadAnalytics()"><span>📊</span>Analytics</div>
+      <div class="nav-item" :class="{active:page==='costs'}" @click="page='costs';loadCosts()"><span>💰</span>Kosten</div>
       <div class="nav-section" x-text="T.dev"></div>
       <div class="nav-item" :class="{active:page==='keys'}" @click="page='keys';loadKeys()"><span>🔑</span>API Keys</div>
       <div class="nav-item" :class="{active:page==='finetune'}" @click="page='finetune'"><span>🧬</span>Fine-Tuning</div>
@@ -545,6 +546,59 @@ Response:
   </div><!-- /main -->
 </div><!-- /app -->
 
+
+
+    <!-- KOSTEN / LLM OBSERVABILITY -->
+    <div class="page" x-show="page==='costs'">
+      <div class="ph">
+        <div><div class="ph-title">💰 LLM Kosten</div><div class="ph-sub">Token-Verbrauch & Kosten pro Agent (OpenAI / Anthropic)</div></div>
+        <button class="btn btn-ghost btn-sm" @click="loadCosts()">↺</button>
+      </div>
+      <template x-if="costsLoading"><div style="text-align:center;padding:60px;color:var(--muted)">⏳ Lade...</div></template>
+      <template x-if="!costsLoading&&costsData">
+        <div>
+          <!-- Summary -->
+          <div class="grid-4" style="margin-bottom:18px">
+            <div class="stat-card"><div class="stat-n" style="font-size:1.4rem" x-text="'$'+parseFloat(costsData.totals?.month_cost||0).toFixed(4)"></div><div class="stat-l">Kosten (30 Tage)</div></div>
+            <div class="stat-card"><div class="stat-n" style="font-size:1.4rem" x-text="'$'+parseFloat(costsData.totals?.total_cost||0).toFixed(4)"></div><div class="stat-l">Kosten gesamt</div></div>
+            <div class="stat-card"><div class="stat-n" x-text="(costsData.totals?.total_tokens||0).toLocaleString()"></div><div class="stat-l">Tokens gesamt</div></div>
+            <div class="stat-card"><div class="stat-n" style="color:var(--green)" x-text="costsData.byAgent?.length||0"></div><div class="stat-l">Agenten</div></div>
+          </div>
+          <!-- By agent -->
+          <div class="card" style="margin-bottom:14px">
+            <div style="font-size:.8rem;font-weight:600;color:var(--white);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Kosten pro Agent</div>
+            <template x-for="a in costsData.byAgent||[]" :key="a.id">
+              <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+                <span x-text="a.emoji" style="font-size:1.1rem"></span>
+                <div style="flex:1">
+                  <div style="font-size:.82rem;font-weight:600;color:var(--white)" x-text="a.name"></div>
+                  <div style="height:4px;background:rgba(255,255,255,.06);border-radius:2px;margin-top:3px;overflow:hidden">
+                    <div :style="'width:'+Math.min(100,((parseFloat(a.cost)||0)/Math.max(0.0001,parseFloat(costsData.byAgent[0]?.cost)||0.0001)*100))+'%;background:'+a.color+';height:100%;border-radius:2px'"></div>
+                  </div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font-size:.78rem;font-weight:700;color:var(--pu-l)" x-text="'$'+parseFloat(a.cost||0).toFixed(5)"></div>
+                  <div style="font-size:.68rem;color:var(--muted)" x-text="(parseInt(a.tokens)||0).toLocaleString()+' Tokens'"></div>
+                </div>
+                <button class="btn btn-xs btn-ghost" @click="loadAgentCosts(a.id)">Details →</button>
+              </div>
+            </template>
+          </div>
+          <!-- Agent detail costs -->
+          <template x-if="agentCostsData">
+            <div class="card">
+              <div style="font-size:.8rem;font-weight:600;color:var(--white);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Aufschlüsselung nach Modell</div>
+              <template x-for="m in agentCostsData.byModel||[]" :key="m.model">
+                <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+                  <div style="flex:1"><div style="font-size:.8rem;font-family:monospace;color:var(--pu-l)" x-text="m.model"></div><div style="font-size:.7rem;color:var(--muted)" x-text="m.calls+' Anfragen'"></div></div>
+                  <div style="font-size:.78rem;color:var(--gold);font-weight:700" x-text="'$'+parseFloat(m.cost||0).toFixed(5)"></div>
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
+      </template>
+    </div>
 
     <!-- FINE-TUNING -->
     <div class="page" x-show="page='finetune'">
@@ -926,6 +980,36 @@ Response:
           </div>
           <label class="toggle"><input type="checkbox" x-model="af.telegram_enabled" @change="if(af.telegram_enabled&&user?.plan==='free'){af.telegram_enabled=false;showUpgrade=true}"><span class="slider"></span></label>
         </div>
+        <div class="integ-item">
+          <div class="ii-icon" style="background:rgba(225,48,108,.1)">📸</div>
+          <div class="ii-info">
+            <div class="ii-name">Instagram DM <span style="color:var(--gold);font-size:.7rem" x-show="user?.plan==='free'">· Pro</span></div>
+            <div class="ii-desc">Meta Business Account erforderlich</div>
+            <template x-if="af.instagram_enabled">
+              <div style="margin-top:7px;display:flex;flex-direction:column;gap:5px">
+                <input class="inp" type="text" x-model="af.instagram_business_id" placeholder="Instagram Business Account ID" style="width:100%">
+                <input class="inp" type="text" x-model="af.instagram_token" placeholder="Page Access Token" style="width:100%">
+                <div style="font-size:.71rem;color:var(--muted)">Webhook: <span x-text="window.location.origin+'/webhook/instagram'" style="font-family:monospace;color:var(--pu-l)"></span></div>
+              </div>
+            </template>
+          </div>
+          <label class="toggle"><input type="checkbox" x-model="af.instagram_enabled" @change="if(af.instagram_enabled&&user?.plan==='free'){af.instagram_enabled=false;showUpgrade=true}"><span class="slider"></span></label>
+        </div>
+        <div class="integ-item">
+          <div class="ii-icon" style="background:rgba(24,119,242,.1)">💬</div>
+          <div class="ii-info">
+            <div class="ii-name">Facebook Messenger <span style="color:var(--gold);font-size:.7rem" x-show="user?.plan==='free'">· Pro</span></div>
+            <div class="ii-desc">Facebook Page Token erforderlich</div>
+            <template x-if="af.facebook_enabled">
+              <div style="margin-top:7px;display:flex;flex-direction:column;gap:5px">
+                <input class="inp" type="text" x-model="af.facebook_page_id" placeholder="Facebook Page ID" style="width:100%">
+                <input class="inp" type="text" x-model="af.facebook_token" placeholder="Page Access Token" style="width:100%">
+                <div style="font-size:.71rem;color:var(--muted)">Webhook: <span x-text="window.location.origin+'/webhook/facebook'" style="font-family:monospace;color:var(--pu-l)"></span></div>
+              </div>
+            </template>
+          </div>
+          <label class="toggle"><input type="checkbox" x-model="af.facebook_enabled" @change="if(af.facebook_enabled&&user?.plan==='free'){af.facebook_enabled=false;showUpgrade=true}"><span class="slider"></span></label>
+        </div>
         <!-- WEBHOOKS OUT -->
         <template x-if="editing">
           <div style="margin-top:18px">
@@ -1224,7 +1308,7 @@ toggleLang(){this.lang=this.lang==='de'?'en':'de';localStorage.setItem('ak_lang'
 agents:[],docs:[],toasts:[],saving:false,
 showModal:false,editing:null,aTab:'basics',chipIn:'',
 uploading:false,dragging:false,docsTab:'api',
-af:{name:'',emoji:'🤖',description:'',system_prompt:'',greeting:'',tone:'professionell',language:'de',quick_chips:[],color:'#6c5ce7',is_active:true,widget_enabled:true,chatpage_enabled:true,api_enabled:false,whatsapp_enabled:false,whatsapp_number:'',telegram_enabled:false,telegram_token:'',rag_enabled:false,rag_prompt:'',cap_calendar:false,cal_link:'',cap_leads:false,lead_fields:[],lead_email:'',cap_products:false,products_data:[],cap_multilang:false,cap_email:false,smtp_host:'',smtp_port:587,smtp_user:'',smtp_pass:'',smtp_from:'',widget_position:'right',widget_delay:0,widget_theme:'dark',widget_size:56},
+af:{name:'',emoji:'🤖',description:'',system_prompt:'',greeting:'',tone:'professionell',language:'de',quick_chips:[],color:'#6c5ce7',is_active:true,widget_enabled:true,chatpage_enabled:true,api_enabled:false,whatsapp_enabled:false,whatsapp_number:'',telegram_enabled:false,telegram_token:'',rag_enabled:false,rag_prompt:'',cap_calendar:false,cal_link:'',cap_leads:false,lead_fields:[],lead_email:'',cap_products:false,products_data:[],cap_multilang:false,cap_email:false,smtp_host:'',smtp_port:587,smtp_user:'',smtp_pass:'',smtp_from:'',widget_position:'right',widget_delay:0,widget_theme:'dark',widget_size:56,instagram_enabled:false,instagram_token:'',instagram_business_id:'',facebook_enabled:false,facebook_token:'',facebook_page_id:''},
 showTemplates:false,selectedTemplate:null,
 agentTemplates:[
 {id:'blank',emoji:'🤖',name:'Leer / Blank',desc_de:'Starte mit einer leeren Vorlage.',desc_en:'Start fresh.',color:'#6c5ce7',system_prompt:'',greeting:'Hallo! Wie kann ich helfen?',tone:'professionell',quick_chips:[],cap_leads:false,lead_fields:[]},
@@ -1255,6 +1339,8 @@ ftAgentId:'',ftData:null,ftLoading:false,ftJobs:[],ftBaseModel:'gpt-4o-mini-2024
 showChangelog:false,changelogEntries:[],agentVersions:[],
 // Billing
 billingCycle:'monthly',
+// Costs
+costsData:null,costsLoading:false,agentCostsData:null,
 // Forgot/Reset password
 forgotOk:false,resetOk:false,resetPw:'',resetPw2:'',resetToken:null,
 emojis:['🤖','💬','⭐','🎓','💡','🔥','🦾','🧠','✨','🚀','🏆','💼','🎯','🌟','⚡','🎪','🍽️','🏡','👥','🛒','🏥','⚖️','🎧','📞'],
@@ -1314,7 +1400,7 @@ applyTemplate(){
 async editAgent(a){
   const d=await this.api('/agents/'+a.id);if(!d.agent)return;
   const ag=d.agent;this.editing=ag;
-  this.af={name:ag.name,emoji:ag.emoji,description:ag.description||'',system_prompt:ag.system_prompt||'',greeting:ag.greeting||'',tone:ag.tone||'professionell',language:ag.language||'de',quick_chips:ag.quick_chips||[],color:ag.color||'#6c5ce7',is_active:ag.is_active!==false,widget_enabled:ag.widget_enabled!==false,chatpage_enabled:ag.chatpage_enabled!==false,api_enabled:!!ag.api_enabled,whatsapp_enabled:!!ag.whatsapp_enabled,whatsapp_number:ag.whatsapp_number||'',telegram_enabled:!!ag.telegram_enabled,telegram_token:ag.telegram_token||'',rag_enabled:!!ag.rag_enabled,rag_prompt:ag.rag_prompt||'',cap_calendar:!!ag.cap_calendar,cal_link:ag.cal_link||'',cap_leads:!!ag.cap_leads,lead_fields:ag.lead_fields||[],lead_email:ag.lead_email||'',cap_products:!!ag.cap_products,products_data:ag.products_data||[],cap_multilang:!!ag.cap_multilang,cap_email:!!ag.cap_email,smtp_host:ag.smtp_host||'',smtp_port:ag.smtp_port||587,smtp_user:ag.smtp_user||'',smtp_pass:ag.smtp_pass||'',smtp_from:ag.smtp_from||'',widget_position:ag.widget_position||'right',widget_delay:ag.widget_delay||0,widget_theme:ag.widget_theme||'dark',widget_size:ag.widget_size||56};
+  this.af={name:ag.name,emoji:ag.emoji,description:ag.description||'',system_prompt:ag.system_prompt||'',greeting:ag.greeting||'',tone:ag.tone||'professionell',language:ag.language||'de',quick_chips:ag.quick_chips||[],color:ag.color||'#6c5ce7',is_active:ag.is_active!==false,widget_enabled:ag.widget_enabled!==false,chatpage_enabled:ag.chatpage_enabled!==false,api_enabled:!!ag.api_enabled,whatsapp_enabled:!!ag.whatsapp_enabled,whatsapp_number:ag.whatsapp_number||'',telegram_enabled:!!ag.telegram_enabled,telegram_token:ag.telegram_token||'',rag_enabled:!!ag.rag_enabled,rag_prompt:ag.rag_prompt||'',cap_calendar:!!ag.cap_calendar,cal_link:ag.cal_link||'',cap_leads:!!ag.cap_leads,lead_fields:ag.lead_fields||[],lead_email:ag.lead_email||'',cap_products:!!ag.cap_products,products_data:ag.products_data||[],cap_multilang:!!ag.cap_multilang,cap_email:!!ag.cap_email,smtp_host:ag.smtp_host||'',smtp_port:ag.smtp_port||587,smtp_user:ag.smtp_user||'',smtp_pass:ag.smtp_pass||'',smtp_from:ag.smtp_from||'',widget_position:ag.widget_position||'right',widget_delay:ag.widget_delay||0,widget_theme:ag.widget_theme||'dark',widget_size:ag.widget_size||56,instagram_enabled:!!ag.instagram_enabled,instagram_token:ag.instagram_token||'',instagram_business_id:ag.instagram_business_id||'',facebook_enabled:!!ag.facebook_enabled,facebook_token:ag.facebook_token||'',facebook_page_id:ag.facebook_page_id||''};
   this.docs=[];this.convSessions=[];this.selectedSession=null;this.aTab='basics';this.showModal=true;
 },
 
@@ -1434,6 +1520,15 @@ async ftPollJob(jobId){
   const d=await this.api('/finetune/'+this.ftAgentId+'/jobs/'+jobId);
   if(d.status)this.toast('Status: '+d.status+(d.fineTunedModel?' · '+d.fineTunedModel:''));
   await this.ftLoadJobs();
+},
+async loadCosts(){
+  this.costsLoading=true;this.costsData=null;
+  const d=await this.api('/analytics/costs/all');
+  this.costsLoading=false;this.costsData=d;
+},
+async loadAgentCosts(agentId){
+  const d=await this.api('/analytics/'+agentId+'/costs');
+  if(d.byModel)this.agentCostsData=d;
 },
 async loadChangelog(){
   const d=await this.api('/changelog');

@@ -210,33 +210,114 @@
       return d;
     }
 
+    // Persistent session identifier (stored in localStorage)
+    const SESSION_KEY = `ak_sid_${AGENT_ID}`;
+    let sessionIdentifier = localStorage.getItem(SESSION_KEY);
+    if (!sessionIdentifier) {
+      sessionIdentifier = 'w_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+      localStorage.setItem(SESSION_KEY, sessionIdentifier);
+    }
+
+    // Image upload support
+    let pendingImage = null;
+    const imgBtn = document.createElement('label');
+    imgBtn.innerHTML = '📎';
+    imgBtn.title = 'Bild senden';
+    imgBtn.style.cssText = 'width:34px;height:34px;border-radius:9px;background:' + inputBg + ';border:1px solid ' + borderClr + ';display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;flex-shrink:0';
+    const imgInput = document.createElement('input');
+    imgInput.type = 'file'; imgInput.accept = 'image/*'; imgInput.style.display = 'none';
+    imgBtn.appendChild(imgInput);
+    frame.querySelector('.ak-foot').insertBefore(imgBtn, send);
+
+    imgInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const b64 = reader.result.split(',')[1];
+        pendingImage = { type: 'image', source: { type: 'base64', media_type: file.type, data: b64 } };
+        imgBtn.innerHTML = '🖼️';
+      };
+      reader.readAsDataURL(file);
+    });
+
     async function doSend() {
       const text = input.value.trim();
-      if (!text) return;
+      if (!text && !pendingImage) return;
       input.value = ''; input.style.height = 'auto';
-      addUser(text);
-      history.push({ role: 'user', content: text });
+
+      // Build message content (multimodal if image present)
+      let content;
+      if (pendingImage && text) {
+        content = [pendingImage, { type: 'text', text }];
+      } else if (pendingImage) {
+        content = [pendingImage, { type: 'text', text: 'Was siehst du auf diesem Bild?' }];
+      } else {
+        content = text;
+      }
+
+      addUser(typeof content === 'string' ? content : '📎 ' + (text || 'Bild'));
+      history.push({ role: 'user', content });
+      pendingImage = null; imgBtn.innerHTML = '📎';
 
       send.disabled = true;
       const typing = showTyping();
 
+      // Try streaming first, fall back to standard
       try {
-        const r = await fetch(`${BASE_URL}/api/chat/web/${AGENT_ID}`, {
+        const r = await fetch(`${BASE_URL}/api/chat/stream/${AGENT_ID}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: history, sessionId, source: 'widget' }),
+          body: JSON.stringify({ messages: history, sessionId, source: 'widget', sessionIdentifier }),
         });
-        const d = await r.json();
+
+        if (!r.ok || !r.headers.get('content-type')?.includes('text/event-stream')) {
+          // Fallback to standard
+          const d = await r.json();
+          typing.remove();
+          const reply = d.reply || d.error || 'Fehler';
+          sessionId = d.sessionId || sessionId;
+          history.push({ role: 'assistant', content: reply });
+          addBot(reply);
+          send.disabled = false;
+          if (!open) badge.style.display = 'block';
+          return;
+        }
+
+        // Stream
         typing.remove();
+        const botEl = document.createElement('div');
+        botEl.className = 'ak-bbl bot';
+        botEl.textContent = '';
+        msgs.appendChild(botEl);
+        msgs.scrollTop = msgs.scrollHeight;
 
-        const reply = d.reply || d.error || 'Fehler beim Laden der Antwort.';
-        sessionId = d.sessionId || sessionId;
-        history.push({ role: 'assistant', content: reply });
-        addBot(reply);
+        const reader = r.body.getReader();
+        const decoder = new TextDecoder();
+        let fullText = '';
+        let buffer = '';
 
-        if (!open) { badge.style.display = 'block'; }
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            try {
+              const ev = JSON.parse(line.slice(6));
+              if (ev.type === 'session') sessionId = ev.sessionId;
+              if (ev.type === 'text') { fullText += ev.text; botEl.textContent = fullText; msgs.scrollTop = msgs.scrollHeight; }
+            } catch {}
+          }
+        }
+
+        history.push({ role: 'assistant', content: fullText });
+        chips.innerHTML = '';
+        if (!open) badge.style.display = 'block';
       } catch {
-        typing.remove();
+        if (typing.parentNode) typing.remove();
         addBot('Verbindungsfehler. Bitte versuche es erneut.');
       }
       send.disabled = false;
