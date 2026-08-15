@@ -1,22 +1,42 @@
 /**
- * AgentKontor — Chat API
+ * AgentKontor — Chat API v3
  *
- * POST /api/chat/web/:agentId       — Web / Widget chat
- * POST /api/chat/api/:agentId       — REST API chat (API key auth)
- * POST /api/chat/widget-config/:pid — Widget config (public)
- * GET  /api/chat/widget-config/:pid — Widget config (public)
+ * Features:
+ * ✅ Streaming SSE (POST /api/chat/stream/:agentId)
+ * ✅ Multimodal (Bilder in Nachrichten)
+ * ✅ Persistente Memory (Facts über Sessions hinweg)
+ * ✅ LLM Cost Tracking
+ * ✅ Widget Rate-Limiting
+ * ✅ Human Handoff Detection
+ * ✅ Outgoing Webhooks
+ * ✅ Lead Capture
  */
 
-const router   = require('express').Router();
+const router    = require('express').Router();
 const Anthropic = require('@anthropic-ai/sdk');
-const { checkMsgQuota, getLimits } = require('../middleware/plan-gate');
+const crypto    = require('crypto');
+const { checkMsgQuota, getLimits, rateLimit } = require('../middleware/plan-gate');
 const { v4: uuid } = require('uuid');
 
 function getPool(req) { return req.app.locals.pool; }
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-/* ── WIDGET CONFIG (public) ────────────────────────────── */
+// ── COST TABLE PER MODEL ──────────────────────────────────
+const MODEL_COSTS = {
+  'claude-sonnet-4-6':      { in: 3.00,   out: 15.00  },
+  'claude-opus-4-6':        { in: 15.00,  out: 75.00  },
+  'claude-haiku-4-5':       { in: 0.80,   out: 4.00   },
+  'gpt-4o':                 { in: 2.50,   out: 10.00  },
+  'gpt-4o-mini':            { in: 0.15,   out: 0.60   },
+};
+
+function calcCost(model, inputTokens, outputTokens) {
+  const base = model.startsWith('ft:') ? MODEL_COSTS['gpt-4o-mini'] : (MODEL_COSTS[model] || MODEL_COSTS['claude-sonnet-4-6']);
+  return ((inputTokens * base.in) + (outputTokens * base.out)) / 1_000_000;
+}
+
+// ── WIDGET CONFIG (public) ────────────────────────────────
 router.get('/widget-config/:publicId', async (req, res) => {
   const pool = getPool(req);
   try {
@@ -29,226 +49,179 @@ router.get('/widget-config/:publicId', async (req, res) => {
     if (!r.rows.length || !r.rows[0].is_active || !r.rows[0].widget_enabled)
       return res.status(404).json({ error: 'Widget nicht verfügbar' });
     res.json(r.rows[0]);
-  } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
-  }
+  } catch(e) { res.status(500).json({ error: 'Fehler' }); }
 });
 
-/* ── SHARED CHAT HANDLER ───────────────────────────────── */
-async function handleChat(pool, agent, owner, messages, sessionId, source, res) {
-  sessionId = sessionId || uuid();
+// ── BUILD SYSTEM PROMPT ───────────────────────────────────
+async function buildSystemPrompt(pool, agent, memory) {
+  let sys = agent.system_prompt || 'Du bist ein hilfreicher KI-Assistent.';
 
-  // Build system prompt
-  let sysPrompt = agent.system_prompt || 'Du bist ein hilfreicher KI-Assistent.';
-
-  // Capabilities context
   if (agent.cap_calendar && agent.cal_link)
-    sysPrompt += `\n\nTerminbuchung: ${agent.cal_link}`;
+    sys += `\n\nTerminbuchung: ${agent.cal_link}`;
   if (agent.cap_leads && agent.lead_fields?.length)
-    sysPrompt += `\n\nSammle diese Informationen vom Nutzer: ${agent.lead_fields.join(', ')}. Sobald du alle hast, bestätige dass du sie notiert hast.`;
+    sys += `\n\nSammle diese Infos: ${agent.lead_fields.join(', ')}. Bestätige wenn du alle hast.`;
   if (agent.cap_products && agent.products_data?.length)
-    sysPrompt += `\n\nProdukte:\n${agent.products_data.map(p => `- ${p.name}: ${p.description} (${p.price})`).join('\n')}`;
+    sys += `\n\nProdukte:\n${agent.products_data.map(p => `- ${p.name}: ${p.description} (${p.price})`).join('\n')}`;
   if (agent.cap_multilang)
-    sysPrompt += `\n\nAntworte immer in der Sprache des Nutzers.`;
+    sys += '\n\nAntworte immer in der Sprache des Nutzers.';
 
-  // RAG context
-  if (agent.rag_enabled) {
-    try {
-      const lastMsg = messages[messages.length - 1]?.content || '';
-      const emb = await client.embeddings?.create({
-        model: 'voyage-3', input: lastMsg,
-      }).catch(() => null);
-
-      if (emb?.data?.[0]?.embedding) {
-        const vec    = JSON.stringify(emb.data[0].embedding);
-        const chunks = await pool.query(
-          `SELECT content FROM document_chunks
-           WHERE agent_id=$1
-           ORDER BY embedding <=> $2::vector LIMIT 4`,
-          [agent.id, vec]
-        );
-        if (chunks.rows.length) {
-          sysPrompt += `\n\nRelevante Wissensbasis:\n${chunks.rows.map(c => c.content).join('\n\n')}`;
-          if (agent.rag_prompt) sysPrompt += `\n\n${agent.rag_prompt}`;
-        }
-      }
-    } catch { /* RAG optional */ }
+  // Persistent memory injection
+  if (memory?.facts?.length) {
+    sys += `\n\nBekannte Informationen über diesen Nutzer:\n${memory.facts.map(f => `- ${f}`).join('\n')}`;
+  }
+  if (memory?.summary) {
+    sys += `\n\nZusammenfassung früherer Gespräche: ${memory.summary}`;
   }
 
-  // Save user message
-  const userMsg = messages[messages.length - 1];
-  await pool.query(
-    'INSERT INTO chat_messages (agent_id, session_id, role, content, source) VALUES ($1,$2,$3,$4,$5)',
-    [agent.id, sessionId, 'user', userMsg.content, source]
-  );
-
-  // Call Anthropic
-  const model = agent.model || 'claude-sonnet-4-6';
-  const response = await client.messages.create({
-    model,
-    max_tokens: 1024,
-    system: sysPrompt,
-    messages: messages.slice(-12), // last 12 for context window
-  });
-
-  const reply = response.content[0]?.text || 'Keine Antwort erhalten.';
-
-  // Save assistant message
-  await pool.query(
-    'INSERT INTO chat_messages (agent_id, session_id, role, content, source) VALUES ($1,$2,$3,$4,$5)',
-    [agent.id, sessionId, 'assistant', reply, source]
-  );
-
-  // Increment message count
-  await pool.query('UPDATE agents SET total_messages=total_messages+1 WHERE id=$1', [agent.id]);
-
-  // Lead capture detection
-  const leadCaptured = await tryCaptureLead(pool, agent, owner, messages, reply, sessionId, source);
-
-  // Dispatch outgoing webhooks (non-blocking)
-  setImmediate(() => dispatchWebhooks(pool, agent.id, 'message.received', {
-    agentId:   agent.id,
-    agentName: agent.name,
-    sessionId,
-    source,
-    message:   userMsg.content,
-    reply,
-    timestamp: new Date().toISOString(),
-  }));
-
-  if (leadCaptured) {
-    setImmediate(() => dispatchWebhooks(pool, agent.id, 'lead.captured', {
-      agentId: agent.id, sessionId, source, lead: leadCaptured,
-    }));
-    setImmediate(() => sendLeadEmail(agent, owner, leadCaptured));
-  }
-
-  // Human handoff detection
-  const handoffTriggers = ['mensch', 'mitarbeiter', 'agent', 'mensch sprechen', 'human', 'real person', 'speak to someone', 'nicht helfen'];
-  const wantsHandoff = handoffTriggers.some(t => userMsg.content.toLowerCase().includes(t));
-
-  return { reply, sessionId, wantsHandoff, agentId: agent.id };
+  return sys;
 }
 
-/* ── LEAD CAPTURE ──────────────────────────────────────── */
-async function tryCaptureLead(pool, agent, owner, messages, reply, sessionId, source) {
+// ── RAG CONTEXT ───────────────────────────────────────────
+async function fetchRagContext(pool, agentId, query) {
+  try {
+    const emb = await client.embeddings?.create({ model: 'voyage-3', input: query }).catch(() => null);
+    if (!emb?.data?.[0]?.embedding) return '';
+    const vec    = JSON.stringify(emb.data[0].embedding);
+    const chunks = await pool.query(
+      `SELECT content FROM document_chunks WHERE agent_id=$1 ORDER BY embedding <=> $2::vector LIMIT 4`,
+      [agentId, vec]
+    );
+    return chunks.rows.length ? '\n\nWissensbasis:\n' + chunks.rows.map(c => c.content).join('\n\n') : '';
+  } catch { return ''; }
+}
+
+// ── LOAD PERSISTENT MEMORY ───────────────────────────────
+async function loadMemory(pool, agentId, sessionIdentifier) {
+  if (!sessionIdentifier) return null;
+  try {
+    const r = await pool.query(
+      'SELECT facts, summary, message_count FROM agent_memory WHERE agent_id=$1 AND session_identifier=$2',
+      [agentId, sessionIdentifier]
+    );
+    return r.rows[0] || null;
+  } catch { return null; }
+}
+
+// ── UPDATE PERSISTENT MEMORY (async) ─────────────────────
+async function updateMemory(pool, agentId, sessionIdentifier, messages, reply) {
+  if (!sessionIdentifier) return;
+  try {
+    // Quick LLM call to extract facts
+    const extraction = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 200,
+      system: 'Extrahiere max. 5 kurze Fakten über den Nutzer aus diesem Gespräch. Nur konkrete Infos (Name, Beruf, Interessen, Ort, etc.). Format: JSON-Array von Strings. Nur Array, keine anderen Zeichen.',
+      messages: [{ role: 'user', content: messages.slice(-6).map(m => `${m.role}: ${typeof m.content === 'string' ? m.content : '[Bild]'}`).join('\n') + `\nassistant: ${reply}` }],
+    });
+    const text = extraction.content[0]?.text?.trim() || '[]';
+    let newFacts = [];
+    try { newFacts = JSON.parse(text.match(/\[.*\]/s)?.[0] || '[]'); } catch {}
+
+    // Merge with existing
+    const existing = await pool.query(
+      'SELECT facts, message_count FROM agent_memory WHERE agent_id=$1 AND session_identifier=$2',
+      [agentId, sessionIdentifier]
+    );
+    const existingFacts = existing.rows[0]?.facts || [];
+    const allFacts = [...new Set([...existingFacts, ...newFacts])].slice(0, 15);
+    const msgCount = (existing.rows[0]?.message_count || 0) + messages.length;
+
+    await pool.query(`
+      INSERT INTO agent_memory (agent_id, session_identifier, facts, message_count, updated_at)
+      VALUES ($1,$2,$3,$4,NOW())
+      ON CONFLICT (agent_id, session_identifier)
+      DO UPDATE SET facts=$3, message_count=$4, updated_at=NOW()
+    `, [agentId, sessionIdentifier, JSON.stringify(allFacts), msgCount]);
+  } catch(e) { console.warn('Memory update error:', e.message); }
+}
+
+// ── TRACK LLM COST ────────────────────────────────────────
+async function trackCost(pool, agentId, sessionId, model, usage, source) {
+  try {
+    const cost = calcCost(model, usage.input_tokens || 0, usage.output_tokens || 0);
+    await pool.query(
+      `INSERT INTO llm_usage (agent_id, session_id, model, source, input_tokens, output_tokens, cost_usd)
+       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+      [agentId, sessionId, model, source, usage.input_tokens||0, usage.output_tokens||0, cost]
+    );
+    // Update daily summary
+    await pool.query(`
+      INSERT INTO agent_cost_daily (agent_id, date, total_cost, total_tokens)
+      VALUES ($1, CURRENT_DATE, $2, $3)
+      ON CONFLICT (agent_id, date)
+      DO UPDATE SET total_cost=agent_cost_daily.total_cost+$2, total_tokens=agent_cost_daily.total_tokens+$3
+    `, [agentId, cost, (usage.input_tokens||0)+(usage.output_tokens||0)]);
+  } catch(e) { console.warn('Cost tracking error:', e.message); }
+}
+
+// ── LEAD CAPTURE ──────────────────────────────────────────
+async function tryCaptureLead(pool, agent, messages, reply, sessionId, source) {
   if (!agent.cap_leads || !agent.lead_fields?.length) return null;
-
-  // Check if reply confirms lead collection
-  const confirmKeywords = ['notiert', 'habe ich', 'gespeichert', 'danke', 'recorded', 'noted', 'got it'];
-  const hasConfirm = confirmKeywords.some(k => reply.toLowerCase().includes(k));
-  if (!hasConfirm) return null;
-
-  // Already captured this session?
-  const existing = await pool.query(
-    'SELECT id FROM lead_captures WHERE agent_id=$1 AND session_id=$2',
-    [agent.id, sessionId]
-  );
+  const keywords = ['notiert','habe ich','gespeichert','danke','recorded','noted','got it','erfasst'];
+  if (!keywords.some(k => reply.toLowerCase().includes(k))) return null;
+  const existing = await pool.query('SELECT id FROM lead_captures WHERE agent_id=$1 AND session_id=$2', [agent.id, sessionId]);
   if (existing.rows.length) return null;
-
-  // Extract data from conversation
-  const fullConv = messages.map(m => m.content).join('\n');
+  const fullConv = messages.map(m => typeof m.content === 'string' ? m.content : '[Bild]').join('\n');
   const data = {};
-  const emailRx = /[\w.-]+@[\w.-]+\.\w+/;
-  const phoneRx = /(\+?[\d\s\-()]{8,})/;
-
-  const emailMatch = fullConv.match(emailRx);
-  if (emailMatch) data['E-Mail'] = emailMatch[0];
-
-  const phoneMatch = fullConv.match(phoneRx);
-  if (phoneMatch) data['Telefon'] = phoneMatch[1].trim();
-
-  // Name heuristic — first capitalized word pair
-  const nameRx = /(?:heiße|bin|name ist|ich bin|my name is|i am|i'm)\s+([A-ZÄÖÜ][a-zäöüß]+(?: [A-ZÄÖÜ][a-zäöüß]+)?)/i;
-  const nameMatch = fullConv.match(nameRx);
-  if (nameMatch) data['Name'] = nameMatch[1];
-
-  if (Object.keys(data).length === 0) return null;
-
-  await pool.query(
-    'INSERT INTO lead_captures (agent_id, session_id, source, data) VALUES ($1,$2,$3,$4)',
-    [agent.id, sessionId, source, JSON.stringify(data)]
-  );
-
+  const emailM = fullConv.match(/[\w.-]+@[\w.-]+\.\w+/); if (emailM) data['E-Mail'] = emailM[0];
+  const phoneM = fullConv.match(/(\+?[\d\s\-()]{8,})/);  if (phoneM) data['Telefon'] = phoneM[1].trim();
+  const nameM  = fullConv.match(/(?:heiße|bin|name ist|my name is)\s+([A-ZÄÖÜ][a-zäöüß]+(?: [A-ZÄÖÜ][a-zäöüß]+)?)/i);
+  if (nameM) data['Name'] = nameM[1];
+  if (!Object.keys(data).length) return null;
+  await pool.query('INSERT INTO lead_captures (agent_id, session_id, source, data) VALUES ($1,$2,$3,$4)', [agent.id, sessionId, source, JSON.stringify(data)]);
   return data;
 }
 
-/* ── LEAD EMAIL NOTIFICATION ───────────────────────────── */
-async function sendLeadEmail(agent, owner, leadData) {
-  // Send to agent-specific email or owner email
-  const to = agent.lead_email || owner?.email;
+// ── SEND LEAD EMAIL ───────────────────────────────────────
+async function sendLeadEmail(agent, ownerEmail, lead) {
+  const to = agent.lead_email || ownerEmail;
   if (!to || !process.env.SMTP_HOST) return;
-
   try {
-    const nodemailer  = require('nodemailer');
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST, port: parseInt(process.env.SMTP_PORT || '587'), secure: false,
-      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-    });
-
-    const rows = Object.entries(leadData)
-      .map(([k, v]) => `<tr><td style="padding:6px 12px;color:#7a786e;font-size:.82rem">${k}</td><td style="padding:6px 12px;color:#1a1916;font-weight:600;font-size:.82rem">${v}</td></tr>`)
-      .join('');
-
-    await transporter.sendMail({
-      from:    `AgentKontor <${process.env.SMTP_FROM || 'noreply@agentkontor.de'}>`,
-      to,
-      subject: `🎯 Neuer Lead: ${agent.name}`,
-      html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f4f3ef;font-family:sans-serif">
-<div style="max-width:520px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden">
-  <div style="background:#1a1916;padding:24px 32px;display:flex;align-items:center;gap:12px">
-    <div style="font-size:1.8rem">${agent.emoji || '🤖'}</div>
-    <div>
-      <div style="font-size:1rem;font-weight:700;color:#fff">${agent.name}</div>
-      <div style="font-size:.74rem;color:#a29bfe">Neuer Lead eingegangen</div>
-    </div>
-  </div>
-  <div style="padding:28px 32px">
-    <table style="width:100%;border-collapse:collapse;border:1px solid #eee;border-radius:8px;overflow:hidden">
-      <thead><tr style="background:#f4f3ef"><th style="padding:8px 12px;text-align:left;font-size:.72rem;color:#888;letter-spacing:.08em;text-transform:uppercase">Feld</th><th style="padding:8px 12px;text-align:left;font-size:.72rem;color:#888;letter-spacing:.08em;text-transform:uppercase">Wert</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-    <div style="margin-top:20px">
-      <a href="${process.env.APP_URL || 'https://agentkontor.de'}/app" style="display:inline-block;background:#6c5ce7;color:#fff;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:600;font-size:.84rem">Im Dashboard ansehen →</a>
-    </div>
-  </div>
-  <div style="background:#f4f3ef;padding:14px 32px;text-align:center;font-size:.7rem;color:#a8a49a">
-    AgentKontor · superhecht.ai · <a href="${process.env.APP_URL || 'https://agentkontor.de'}/app" style="color:#a8a49a">Dashboard</a>
-  </div>
-</div></body></html>`,
-    });
-  } catch (e) { console.warn('Lead email failed:', e.message); }
+    const nodemailer = require('nodemailer');
+    const t = nodemailer.createTransport({ host: process.env.SMTP_HOST, port: parseInt(process.env.SMTP_PORT||'587'), secure:false, auth:{user:process.env.SMTP_USER,pass:process.env.SMTP_PASS} });
+    const rows = Object.entries(lead).map(([k,v]) => `<tr><td style="padding:6px 12px;color:#888">${k}</td><td style="padding:6px 12px;font-weight:600">${v}</td></tr>`).join('');
+    await t.sendMail({ from:`AgentKontor <${process.env.SMTP_FROM||'noreply@agentkontor.de'}>`, to, subject:`🎯 Neuer Lead: ${agent.emoji} ${agent.name}`, html:`<div style="font-family:sans-serif;max-width:500px;margin:32px auto;padding:28px;background:#fff;border-radius:12px;border:1px solid #eee"><h2>${agent.emoji} ${agent.name} — Neuer Lead</h2><table style="width:100%;margin-top:14px;border:1px solid #eee;border-radius:8px;overflow:hidden">${rows}</table><a href="${process.env.APP_URL||'https://agentkontor.de'}/app" style="display:inline-block;margin-top:18px;background:#6c5ce7;color:#fff;padding:10px 22px;border-radius:8px;text-decoration:none">Im Dashboard →</a></div>` });
+  } catch(e) { console.warn('Lead email error:', e.message); }
 }
 
-/* ── OUTGOING WEBHOOKS ─────────────────────────────────── */
+// ── DISPATCH WEBHOOKS ─────────────────────────────────────
 async function dispatchWebhooks(pool, agentId, eventType, payload) {
-  try {
-    const { dispatchWebhooks: dispatch } = require('./webhooks-out');
-    if (dispatch) await dispatch(pool, agentId, eventType, payload);
-  } catch { /* webhooks optional */ }
+  try { const {dispatchWebhooks:d}=require('./webhooks-out'); if(d) await d(pool,agentId,eventType,payload); } catch {}
 }
 
-/* ── WEB / WIDGET CHAT ─────────────────────────────────── */
-router.post('/web/:agentId', async (req, res) => {
+// ── SANITIZE MESSAGES (size + format) ────────────────────
+function sanitizeMessages(messages, maxLen = 4000, maxCount = 12) {
+  return messages.slice(-maxCount).map(m => {
+    if (typeof m.content === 'string') {
+      return { role: m.role, content: m.content.slice(0, maxLen) };
+    }
+    // Multimodal content array
+    if (Array.isArray(m.content)) {
+      return {
+        role: m.role,
+        content: m.content.map(block => {
+          if (block.type === 'text') return { ...block, text: block.text.slice(0, maxLen) };
+          if (block.type === 'image') return block; // pass through images
+          return block;
+        })
+      };
+    }
+    return { role: m.role, content: String(m.content || '').slice(0, maxLen) };
+  });
+}
+
+// ── STREAMING SSE ENDPOINT ────────────────────────────────
+router.post('/stream/:agentId', async (req, res) => {
   const pool = getPool(req);
 
-  // Rate limit unauthenticated widget requests (FIX: prevent spam)
-  const { rateLimit } = require('../middleware/plan-gate');
-  const ip = req.ip || 'unknown';
+  // Widget rate limit
+  const ip  = req.ip || 'unknown';
   const wrl = await rateLimit(pool, `widget:${ip}`, 60).catch(() => ({ allowed: true }));
-  if (!wrl.allowed) return res.status(429).json({ error: 'Zu viele Anfragen. Bitte kurz warten.' });
-  try {
-    const { messages, sessionId, source = 'web' } = req.body;
-    if (!messages?.length) return res.status(400).json({ error: 'messages erforderlich' });
+  if (!wrl.allowed) return res.status(429).json({ error: 'Zu viele Anfragen.' });
 
-    // FIX 2: Limit message size to prevent abuse + cost explosion
-    const MAX_MSG_LEN  = 4000;  // chars per message
-    const MAX_HISTORY  = 12;    // max messages in history
-    const sanitized = messages
-      .slice(-MAX_HISTORY)
-      .map(m => ({ role: m.role, content: String(m.content || '').slice(0, MAX_MSG_LEN) }));
-    if (!sanitized.length) return res.status(400).json({ error: 'Ungültige Nachrichten' });
-    const validMessages = sanitized; // use this instead of messages below
+  try {
+    const { messages, sessionId: rawSid, source = 'web', sessionIdentifier } = req.body;
+    if (!messages?.length) return res.status(400).json({ error: 'messages erforderlich' });
 
     const ar = await pool.query(
       `SELECT a.*, u.email AS owner_email, u.plan AS owner_plan
@@ -258,64 +231,225 @@ router.post('/web/:agentId', async (req, res) => {
     );
     if (!ar.rows.length) return res.status(404).json({ error: 'Agent nicht gefunden' });
     const agent = ar.rows[0];
-    const owner = { email: agent.owner_email };
 
-    // Check quota
     const quota = await checkMsgQuota(pool, agent.user_id);
-    if (!quota.allowed)
-      return res.status(429).json({ error: 'Nachrichtenlimit erreicht.', upgrade: true });
+    if (!quota.allowed) return res.status(429).json({ error: 'Nachrichtenlimit erreicht.', upgrade: true });
 
-    const result = await handleChat(pool, agent, owner, validMessages, sessionId, source, res);
-    res.json({
-      ...result,
-      feedback: { endpoint: `/api/feedback/${agent.id}/${result.sessionId}` },
+    const sessionId = rawSid || uuid();
+    const msgs      = sanitizeMessages(messages);
+    const userMsg   = msgs[msgs.length - 1];
+    const model     = agent.model || 'claude-sonnet-4-6';
+
+    // Load memory + RAG
+    const memory = await loadMemory(pool, agent.id, sessionIdentifier);
+    const sysPrompt = await buildSystemPrompt(pool, agent, memory);
+    const ragCtx = agent.rag_enabled ? await fetchRagContext(pool, agent.id, typeof userMsg.content === 'string' ? userMsg.content : 'image') : '';
+
+    // Save user message
+    const hasImage = Array.isArray(userMsg.content) && userMsg.content.some(b => b.type === 'image');
+    await pool.query(
+      'INSERT INTO chat_messages (agent_id, session_id, role, content, source, has_image) VALUES ($1,$2,$3,$4,$5,$6)',
+      [agent.id, sessionId, 'user', typeof userMsg.content === 'string' ? userMsg.content : '[Bild + Text]', source, hasImage]
+    );
+
+    // SSE headers
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no'); // disable nginx buffering
+    res.flushHeaders();
+
+    // Send sessionId immediately
+    res.write(`data: ${JSON.stringify({ type: 'session', sessionId })}\n\n`);
+
+    let fullReply = '';
+    let usage     = {};
+
+    // Stream from Anthropic
+    const stream = client.messages.stream({
+      model,
+      max_tokens: 1024,
+      system: sysPrompt + ragCtx,
+      messages: msgs,
     });
-  } catch (e) {
+
+    stream.on('text', (text) => {
+      fullReply += text;
+      res.write(`data: ${JSON.stringify({ type: 'text', text })}\n\n`);
+    });
+
+    stream.on('message', (msg) => {
+      usage = msg.usage || {};
+    });
+
+    await stream.finalMessage();
+
+    // Done signal
+    res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
+    res.end();
+
+    // Post-processing (non-blocking)
+    setImmediate(async () => {
+      try {
+        // Save assistant message
+        await pool.query(
+          'INSERT INTO chat_messages (agent_id, session_id, role, content, source) VALUES ($1,$2,$3,$4,$5)',
+          [agent.id, sessionId, 'assistant', fullReply, source]
+        );
+        await pool.query('UPDATE agents SET total_messages=total_messages+1 WHERE id=$1', [agent.id]);
+
+        // Cost tracking
+        await trackCost(pool, agent.id, sessionId, model, usage, source);
+
+        // Memory update
+        if (sessionIdentifier) await updateMemory(pool, agent.id, sessionIdentifier, msgs, fullReply);
+
+        // Lead capture
+        const lead = await tryCaptureLead(pool, agent, msgs, fullReply, sessionId, source);
+        if (lead) {
+          await sendLeadEmail(agent, agent.owner_email, lead);
+          await dispatchWebhooks(pool, agent.id, 'lead.captured', { agentId:agent.id, sessionId, source, lead });
+        }
+
+        // Webhooks
+        await dispatchWebhooks(pool, agent.id, 'message.received', {
+          agentId: agent.id, agentName: agent.name, sessionId, source,
+          message: typeof userMsg.content === 'string' ? userMsg.content : '[Bild]',
+          reply: fullReply, timestamp: new Date().toISOString(),
+        });
+      } catch(e) { console.error('Post-stream error:', e.message); }
+    });
+
+  } catch(e) {
+    console.error('STREAM ERROR:', e.message);
+    if (!res.headersSent) return res.status(500).json({ error: 'Stream-Fehler' });
+    res.write(`data: ${JSON.stringify({ type: 'error', error: 'Stream-Fehler' })}\n\n`);
+    res.end();
+  }
+});
+
+// ── STANDARD (non-streaming) WEB CHAT ────────────────────
+router.post('/web/:agentId', async (req, res) => {
+  const pool = getPool(req);
+  const ip   = req.ip || 'unknown';
+  const wrl  = await rateLimit(pool, `widget:${ip}`, 60).catch(() => ({ allowed: true }));
+  if (!wrl.allowed) return res.status(429).json({ error: 'Zu viele Anfragen.' });
+
+  try {
+    const { messages, sessionId: rawSid, source = 'web', sessionIdentifier } = req.body;
+    if (!messages?.length) return res.status(400).json({ error: 'messages erforderlich' });
+
+    const ar = await pool.query(
+      `SELECT a.*, u.email AS owner_email, u.plan AS owner_plan
+       FROM agents a JOIN users u ON a.user_id=u.id WHERE a.id=$1 AND a.is_active=true`,
+      [req.params.agentId]
+    );
+    if (!ar.rows.length) return res.status(404).json({ error: 'Agent nicht gefunden' });
+    const agent = ar.rows[0];
+
+    const quota = await checkMsgQuota(pool, agent.user_id);
+    if (!quota.allowed) return res.status(429).json({ error: 'Nachrichtenlimit erreicht.', upgrade: true });
+
+    const sessionId = rawSid || uuid();
+    const msgs      = sanitizeMessages(messages);
+    const userMsg   = msgs[msgs.length - 1];
+    const model     = agent.model || 'claude-sonnet-4-6';
+
+    const memory    = await loadMemory(pool, agent.id, sessionIdentifier);
+    const sysPrompt = await buildSystemPrompt(pool, agent, memory);
+    const ragCtx    = agent.rag_enabled ? await fetchRagContext(pool, agent.id, typeof userMsg.content === 'string' ? userMsg.content : '') : '';
+
+    const hasImage = Array.isArray(userMsg.content) && userMsg.content.some(b => b.type === 'image');
+    await pool.query(
+      'INSERT INTO chat_messages (agent_id, session_id, role, content, source, has_image) VALUES ($1,$2,$3,$4,$5,$6)',
+      [agent.id, sessionId, 'user', typeof userMsg.content === 'string' ? userMsg.content : '[Bild + Text]', source, hasImage]
+    );
+
+    const response = await client.messages.create({
+      model, max_tokens: 1024, system: sysPrompt + ragCtx, messages: msgs,
+    });
+
+    const reply = response.content[0]?.text || 'Keine Antwort.';
+    await pool.query('INSERT INTO chat_messages (agent_id, session_id, role, content, source) VALUES ($1,$2,$3,$4,$5)', [agent.id, sessionId, 'assistant', reply, source]);
+    await pool.query('UPDATE agents SET total_messages=total_messages+1 WHERE id=$1', [agent.id]);
+
+    setImmediate(async () => {
+      await trackCost(pool, agent.id, sessionId, model, response.usage || {}, source);
+      if (sessionIdentifier) await updateMemory(pool, agent.id, sessionIdentifier, msgs, reply);
+      const lead = await tryCaptureLead(pool, agent, msgs, reply, sessionId, source);
+      if (lead) { await sendLeadEmail(agent, agent.owner_email, lead); await dispatchWebhooks(pool, agent.id, 'lead.captured', {agentId:agent.id,sessionId,source,lead}); }
+      await dispatchWebhooks(pool, agent.id, 'message.received', {agentId:agent.id,agentName:agent.name,sessionId,source,message:typeof userMsg.content==='string'?userMsg.content:'[Bild]',reply,timestamp:new Date().toISOString()});
+    });
+
+    // Human handoff detection
+    const handoffWords = ['mensch','mitarbeiter','human','real person','speak to someone'];
+    const wantsHandoff = typeof userMsg.content === 'string' && handoffWords.some(w => userMsg.content.toLowerCase().includes(w));
+
+    res.json({ reply, sessionId, wantsHandoff, feedback: { endpoint: `/api/feedback/${agent.id}/${sessionId}` } });
+  } catch(e) {
     console.error('WEB CHAT ERROR:', e.message);
     res.status(500).json({ error: 'Chat-Fehler' });
   }
 });
 
-/* ── API KEY CHAT ──────────────────────────────────────── */
+// ── API KEY CHAT ──────────────────────────────────────────
 router.post('/api/:agentId', async (req, res) => {
-  const pool = getPool(req);
-  try {
-    const apiKey = req.headers['x-api-key'];
-    if (!apiKey) return res.status(401).json({ error: 'x-api-key Header erforderlich' });
+  const pool   = getPool(req);
+  const apiKey = req.headers['x-api-key'];
+  if (!apiKey) return res.status(401).json({ error: 'x-api-key Header erforderlich' });
 
-    // Verify API key
-    const prefix = apiKey.slice(0, 16);
+  try {
+    const crypto  = require('crypto');
+    const keyHash = crypto.createHash('sha256').update(apiKey).digest('hex');
     const kr = await pool.query(
-      `SELECT k.*, a.*, u.email AS owner_email, u.plan AS owner_plan
-       FROM api_keys k
-       JOIN agents a ON (k.agent_id=a.id OR k.agent_id IS NULL)
-       JOIN users u ON k.user_id=u.id
-       WHERE k.key_prefix=$1 AND a.id=$2 AND a.is_active=true AND k.is_active=true`,
-      [prefix, req.params.agentId]
+      `SELECT k.user_id, u.plan, u.msg_count_month, a.id AS agent_id,
+              a.system_prompt, a.greeting, a.tone, a.language, a.quick_chips,
+              a.is_active, a.api_enabled, a.rag_enabled, a.rag_prompt,
+              a.cap_calendar, a.cal_link, a.cap_leads, a.lead_fields, a.lead_email,
+              a.cap_products, a.products_data, a.cap_multilang,
+              a.model, a.color, a.emoji, a.name,
+              u.email AS owner_email
+       FROM api_keys k JOIN users u ON k.user_id=u.id
+       JOIN agents a ON a.id=$2 AND a.user_id=k.user_id
+       WHERE k.key_hash=$1 AND k.is_active=true AND a.is_active=true AND u.deleted_at IS NULL`,
+      [keyHash, req.params.agentId]
     );
-    if (!kr.rows.length) return res.status(401).json({ error: 'Ungültiger API-Key' });
+    if (!kr.rows.length) return res.status(401).json({ error: 'Ungültiger API-Key oder Agent nicht gefunden' });
 
     const row   = kr.rows[0];
-    const agent = row;
-    const owner = { email: row.owner_email };
-
-    // Plan check
-    const limits = getLimits(row.owner_plan);
+    const limits = getLimits(row.plan);
     if (!limits.api) return res.status(403).json({ error: 'API-Zugang erfordert Pro-Plan', upgrade: true });
 
-    // Quota
-    const quota = await checkMsgQuota(pool, agent.user_id);
+    const quota = await checkMsgQuota(pool, row.user_id);
     if (!quota.allowed) return res.status(429).json({ error: 'Nachrichtenlimit erreicht.' });
 
-    // Update last_used
-    await pool.query('UPDATE api_keys SET last_used=NOW() WHERE id=$1', [row.id]);
-
-    const { messages, sessionId } = req.body;
+    const { messages, sessionId: rawSid, sessionIdentifier } = req.body;
     if (!messages?.length) return res.status(400).json({ error: 'messages erforderlich' });
 
-    const result = await handleChat(pool, agent, owner, messages, sessionId, 'api', res);
-    res.json(result);
-  } catch (e) {
+    const sessionId = rawSid || uuid();
+    const msgs      = sanitizeMessages(messages);
+    const userMsg   = msgs[msgs.length - 1];
+    const model     = row.model || 'claude-sonnet-4-6';
+
+    const agent = { ...row, id: row.agent_id };
+    const memory = await loadMemory(pool, agent.id, sessionIdentifier);
+    const sysPrompt = await buildSystemPrompt(pool, agent, memory);
+
+    const response = await client.messages.create({ model, max_tokens: 1024, system: sysPrompt, messages: msgs });
+    const reply    = response.content[0]?.text || '';
+
+    await pool.query('INSERT INTO chat_messages (agent_id, session_id, role, content, source) VALUES ($1,$2,$3,$4,$5)', [agent.id, sessionId, 'user', typeof userMsg.content==='string'?userMsg.content:'[Bild]', 'api']);
+    await pool.query('INSERT INTO chat_messages (agent_id, session_id, role, content, source) VALUES ($1,$2,$3,$4,$5)', [agent.id, sessionId, 'assistant', reply, 'api']);
+    await pool.query('UPDATE api_keys SET last_used=NOW() WHERE key_hash=$1', [keyHash]);
+    await pool.query('UPDATE agents SET total_messages=total_messages+1 WHERE id=$1', [agent.id]);
+
+    setImmediate(async () => {
+      await trackCost(pool, agent.id, sessionId, model, response.usage||{}, 'api');
+      if (sessionIdentifier) await updateMemory(pool, agent.id, sessionIdentifier, msgs, reply);
+    });
+
+    res.json({ reply, sessionId });
+  } catch(e) {
     console.error('API CHAT ERROR:', e.message);
     res.status(500).json({ error: 'Chat-Fehler' });
   }

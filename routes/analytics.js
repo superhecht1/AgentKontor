@@ -192,4 +192,70 @@ router.get('/leads/all', auth, async (req, res) => {
   }
 });
 
+
+/* ── AGENT COSTS ───────────────────────────────────────── */
+router.get('/:agentId/costs', auth, async (req, res) => {
+  const pool = getPool(req);
+  try {
+    const ownership = await pool.query('SELECT id FROM agents WHERE id=$1 AND user_id=$2', [req.params.agentId, req.userId]);
+    if (!ownership.rows.length) return res.status(403).json({ error: 'Nicht berechtigt' });
+
+    const [daily, totals, byModel] = await Promise.all([
+      pool.query(`
+        SELECT date, total_cost, total_tokens
+        FROM agent_cost_daily WHERE agent_id=$1
+        ORDER BY date DESC LIMIT 30
+      `, [req.params.agentId]),
+      pool.query(`
+        SELECT COALESCE(SUM(cost_usd),0) AS total_cost,
+               COALESCE(SUM(input_tokens+output_tokens),0) AS total_tokens,
+               COALESCE(SUM(cost_usd) FILTER (WHERE created_at >= NOW()-INTERVAL'30 days'),0) AS month_cost
+        FROM llm_usage WHERE agent_id=$1
+      `, [req.params.agentId]),
+      pool.query(`
+        SELECT model, COUNT(*) AS calls,
+               SUM(input_tokens) AS input_tokens,
+               SUM(output_tokens) AS output_tokens,
+               SUM(cost_usd) AS cost
+        FROM llm_usage WHERE agent_id=$1
+        GROUP BY model ORDER BY cost DESC
+      `, [req.params.agentId]),
+    ]);
+
+    res.json({
+      daily: daily.rows,
+      totals: totals.rows[0],
+      byModel: byModel.rows,
+    });
+  } catch(e) {
+    res.json({ daily: [], totals: { total_cost: 0, total_tokens: 0, month_cost: 0 }, byModel: [] });
+  }
+});
+
+/* ── PLATFORM COSTS (alle Agenten) ─────────────────────── */
+router.get('/costs/all', auth, async (req, res) => {
+  const pool = getPool(req);
+  try {
+    const r = await pool.query(`
+      SELECT COALESCE(SUM(lu.cost_usd),0) AS total_cost,
+             COALESCE(SUM(lu.cost_usd) FILTER (WHERE lu.created_at >= NOW()-INTERVAL'30 days'),0) AS month_cost,
+             COALESCE(SUM(lu.input_tokens+lu.output_tokens),0) AS total_tokens
+      FROM llm_usage lu JOIN agents a ON lu.agent_id=a.id WHERE a.user_id=$1
+    `, [req.userId]);
+
+    const byAgent = await pool.query(`
+      SELECT a.id, a.name, a.emoji, a.color,
+             COALESCE(SUM(lu.cost_usd),0) AS cost,
+             COALESCE(SUM(lu.input_tokens+lu.output_tokens),0) AS tokens
+      FROM agents a LEFT JOIN llm_usage lu ON lu.agent_id=a.id
+      WHERE a.user_id=$1
+      GROUP BY a.id ORDER BY cost DESC
+    `, [req.userId]);
+
+    res.json({ totals: r.rows[0], byAgent: byAgent.rows });
+  } catch(e) {
+    res.json({ totals: { total_cost: 0, month_cost: 0, total_tokens: 0 }, byAgent: [] });
+  }
+});
+
 module.exports = router;
