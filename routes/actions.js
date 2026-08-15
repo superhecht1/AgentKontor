@@ -1,477 +1,369 @@
 /**
- * AgentKontor — Action Engine
- * Handles real-world actions: calendar, email, calendly, forms
+ * AgentKontor — Agentic Actions (Tool Use)
+ *
+ * Agent kann echte Aktionen ausführen:
+ * - web_search   — DuckDuckGo / SerpAPI
+ * - send_email   — SMTP
+ * - book_calendar — Google Calendar
+ * - add_crm      — HubSpot / Pipedrive (HTTP)
+ * - http_request — beliebige HTTP-Anfragen
+ *
+ * GET  /api/actions/:agentId          — list tools
+ * POST /api/actions/:agentId          — create tool
+ * PUT  /api/actions/:agentId/:toolId  — update tool
+ * DELETE /api/actions/:agentId/:toolId — delete tool
  */
 
-const https = require('https');
-const http  = require('http');
+const router = require('express').Router();
+const auth   = require('../middleware/auth');
 
-/* ─────────────────────────────────────────────────────
-   IDENTITY LOADER
-───────────────────────────────────────────────────── */
-async function getIdentity(pool, agentId) {
-  const r = await pool.query(
-    'SELECT * FROM agent_identities WHERE agent_id=$1', [agentId]
-  );
-  return r.rows[0] || null;
+function getPool(req) { return req.app.locals.pool; }
+
+async function verifyOwner(pool, agentId, userId) {
+  const r = await pool.query('SELECT id FROM agents WHERE id=$1 AND user_id=$2', [agentId, userId]);
+  return r.rows.length > 0;
 }
 
-/* ─────────────────────────────────────────────────────
-   GOOGLE TOKEN REFRESH
-───────────────────────────────────────────────────── */
-async function refreshGoogleToken(pool, identity) {
-  if (!identity.google_refresh_token) return null;
-
-  // Check if still valid
-  if (identity.google_token_expiry && new Date(identity.google_token_expiry) > new Date(Date.now() + 60000)) {
-    return identity.google_access_token;
-  }
-
-  const body = JSON.stringify({
-    client_id:     process.env.GOOGLE_CLIENT_ID,
-    client_secret: process.env.GOOGLE_CLIENT_SECRET,
-    refresh_token: identity.google_refresh_token,
-    grant_type:    'refresh_token',
-  });
-
-  return new Promise((resolve, reject) => {
-    const req = https.request({
-      hostname: 'oauth2.googleapis.com',
-      path: '/token',
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) }
-    }, res => {
-      let data = '';
-      res.on('data', d => data += d);
-      res.on('end', async () => {
-        try {
-          const parsed = JSON.parse(data);
-          if (parsed.access_token) {
-            const expiry = new Date(Date.now() + parsed.expires_in * 1000);
-            await pool.query(
-              'UPDATE agent_identities SET google_access_token=$1, google_token_expiry=$2 WHERE agent_id=$3',
-              [parsed.access_token, expiry, identity.agent_id]
-            );
-            resolve(parsed.access_token);
-          } else {
-            reject(new Error('Token refresh failed: ' + data));
-          }
-        } catch(e) { reject(e); }
-      });
-    });
-    req.on('error', reject);
-    req.write(body);
-    req.end();
-  });
-}
-
-/* ─────────────────────────────────────────────────────
-   GOOGLE CALENDAR — Create Event
-───────────────────────────────────────────────────── */
-async function createCalendarEvent(pool, identity, eventData) {
-  const token = await refreshGoogleToken(pool, identity);
-  if (!token) throw new Error('Google nicht verbunden');
-
-  const calendarId = identity.google_calendar_id || 'primary';
-  const event = {
-    summary:     eventData.title || 'Termin',
-    description: eventData.description || '',
-    location:    eventData.location || '',
-    start: {
-      dateTime: eventData.startTime,  // ISO 8601
-      timeZone: eventData.timeZone || 'Europe/Berlin',
-    },
-    end: {
-      dateTime: eventData.endTime,
-      timeZone: eventData.timeZone || 'Europe/Berlin',
-    },
-    attendees: eventData.attendees?.map(email => ({ email })) || [],
-    reminders: {
-      useDefault: false,
-      overrides: [{ method: 'email', minutes: 1440 }, { method: 'popup', minutes: 30 }],
-    },
-    conferenceData: eventData.videoCall ? {
-      createRequest: { requestId: Date.now().toString(), conferenceSolutionKey: { type: 'hangoutsMeet' } }
-    } : undefined,
-  };
-
-  const body = JSON.stringify(event);
-  return new Promise((resolve, reject) => {
-    const req = https.request({
-      hostname: 'www.googleapis.com',
-      path: `/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?conferenceDataVersion=1&sendUpdates=all`,
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(body),
-      }
-    }, res => {
-      let data = '';
-      res.on('data', d => data += d);
-      res.on('end', () => {
-        try {
-          const parsed = JSON.parse(data);
-          if (parsed.id) resolve({ eventId: parsed.id, link: parsed.htmlLink, meetLink: parsed.hangoutLink });
-          else reject(new Error('Kalender-Fehler: ' + JSON.stringify(parsed)));
-        } catch(e) { reject(e); }
-      });
-    });
-    req.on('error', reject);
-    req.write(body);
-    req.end();
-  });
-}
-
-/* ─────────────────────────────────────────────────────
-   GMAIL — Send Email as Agent
-───────────────────────────────────────────────────── */
-async function sendGmail(pool, identity, emailData) {
-  const token = await refreshGoogleToken(pool, identity);
-  if (!token) throw new Error('Google nicht verbunden');
-
-  // Build RFC 2822 message
-  const from = identity.email_address || identity.display_name || 'Agent';
-  const boundary = 'boundary_' + Date.now();
-  const message = [
-    `From: ${identity.display_name || 'Agent'} <${from}>`,
-    `To: ${emailData.to}`,
-    `Subject: ${emailData.subject}`,
-    `MIME-Version: 1.0`,
-    `Content-Type: text/plain; charset=utf-8`,
-    ``,
-    emailData.body,
-  ].join('\r\n');
-
-  const encoded = Buffer.from(message).toString('base64url');
-  const body = JSON.stringify({ raw: encoded });
-
-  return new Promise((resolve, reject) => {
-    const req = https.request({
-      hostname: 'gmail.googleapis.com',
-      path: '/gmail/v1/users/me/messages/send',
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(body),
-      }
-    }, res => {
-      let data = '';
-      res.on('data', d => data += d);
-      res.on('end', () => {
-        try {
-          const parsed = JSON.parse(data);
-          if (parsed.id) resolve({ messageId: parsed.id });
-          else reject(new Error('Gmail-Fehler: ' + JSON.stringify(parsed)));
-        } catch(e) { reject(e); }
-      });
-    });
-    req.on('error', reject);
-    req.write(body);
-    req.end();
-  });
-}
-
-/* ─────────────────────────────────────────────────────
-   CALENDLY — Get available slots + book
-───────────────────────────────────────────────────── */
-async function getCalendlySlots(identity, eventTypeUri) {
-  if (!identity.calendly_token) throw new Error('Calendly nicht verbunden');
-
-  const startTime = new Date().toISOString();
-  const endTime = new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString();
-
-  return new Promise((resolve, reject) => {
-    const req = https.request({
-      hostname: 'api.calendly.com',
-      path: `/event_type_available_times?event_type=${encodeURIComponent(eventTypeUri)}&start_time=${startTime}&end_time=${endTime}`,
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${identity.calendly_token}`,
-        'Content-Type': 'application/json',
-      }
-    }, res => {
-      let data = '';
-      res.on('data', d => data += d);
-      res.on('end', () => {
-        try {
-          const parsed = JSON.parse(data);
-          const slots = parsed.collection?.map(s => ({
-            startTime: s.start_time,
-            inviteesRemaining: s.invitees_remaining,
-          })).slice(0, 10) || [];
-          resolve(slots);
-        } catch(e) { reject(e); }
-      });
-    });
-    req.on('error', reject);
-    req.end();
-  });
-}
-
-async function createCalendlyInvite(identity, eventTypeUri, inviteeData) {
-  if (!identity.calendly_token) throw new Error('Calendly nicht verbunden');
-
-  const body = JSON.stringify({
-    event_type_uuid: eventTypeUri,
-    start_time: inviteeData.startTime,
-    invitee: {
-      name: inviteeData.name,
-      email: inviteeData.email,
-      timezone: inviteeData.timezone || 'Europe/Berlin',
-    },
-    ...(inviteeData.notes ? { event: { notes: inviteeData.notes } } : {}),
-  });
-
-  return new Promise((resolve, reject) => {
-    const req = https.request({
-      hostname: 'api.calendly.com',
-      path: '/scheduled_events',
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${identity.calendly_token}`,
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(body),
-      }
-    }, res => {
-      let data = '';
-      res.on('data', d => data += d);
-      res.on('end', () => {
-        try {
-          const parsed = JSON.parse(data);
-          if (parsed.resource) resolve({ eventUri: parsed.resource.uri, startTime: parsed.resource.start_time });
-          else reject(new Error('Calendly-Fehler: ' + JSON.stringify(parsed)));
-        } catch(e) { reject(e); }
-      });
-    });
-    req.on('error', reject);
-    req.write(body);
-    req.end();
-  });
-}
-
-/* ─────────────────────────────────────────────────────
-   FORM FILLING — Playwright headless browser
-───────────────────────────────────────────────────── */
-async function fillForm(url, fields) {
-  let playwright;
+/* ── LIST TOOLS ─────────────────────────────────────────── */
+router.get('/:agentId', auth, async (req, res) => {
+  const pool = getPool(req);
+  if (!(await verifyOwner(pool, req.params.agentId, req.userId)))
+    return res.status(403).json({ error: 'Nicht berechtigt' });
   try {
-    playwright = require('playwright');
-  } catch(e) {
-    throw new Error('Playwright nicht installiert. Führe: npm install playwright aus.');
-  }
+    const r = await pool.query(
+      'SELECT * FROM agent_tools WHERE agent_id=$1 ORDER BY created_at ASC',
+      [req.params.agentId]
+    );
+    res.json({ tools: r.rows });
+  } catch(e) { res.json({ tools: [] }); }
+});
 
-  const browser = await playwright.chromium.launch({ headless: true });
-  const context = await browser.newContext({
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-  });
-  const page = await context.newPage();
+/* ── CREATE TOOL ────────────────────────────────────────── */
+router.post('/:agentId', auth, async (req, res) => {
+  const pool = getPool(req);
+  if (!(await verifyOwner(pool, req.params.agentId, req.userId)))
+    return res.status(403).json({ error: 'Nicht berechtigt' });
+  const { tool_type, tool_name, tool_desc, config } = req.body;
+  if (!tool_type || !tool_name) return res.status(400).json({ error: 'tool_type und tool_name erforderlich' });
+  try {
+    const r = await pool.query(
+      'INSERT INTO agent_tools (agent_id, tool_type, tool_name, tool_desc, config) VALUES ($1,$2,$3,$4,$5) RETURNING *',
+      [req.params.agentId, tool_type, tool_name, tool_desc || '', JSON.stringify(config || {})]
+    );
+    res.json({ tool: r.rows[0] });
+  } catch(e) { res.status(500).json({ error: 'Fehler' }); }
+});
+
+/* ── UPDATE TOOL ────────────────────────────────────────── */
+router.put('/:agentId/:toolId', auth, async (req, res) => {
+  const pool = getPool(req);
+  if (!(await verifyOwner(pool, req.params.agentId, req.userId)))
+    return res.status(403).json({ error: 'Nicht berechtigt' });
+  const { tool_name, tool_desc, config, is_enabled } = req.body;
+  try {
+    const r = await pool.query(
+      'UPDATE agent_tools SET tool_name=$1, tool_desc=$2, config=$3, is_enabled=$4 WHERE id=$5 AND agent_id=$6 RETURNING *',
+      [tool_name, tool_desc, JSON.stringify(config||{}), is_enabled!==false, req.params.toolId, req.params.agentId]
+    );
+    res.json({ tool: r.rows[0] });
+  } catch(e) { res.status(500).json({ error: 'Fehler' }); }
+});
+
+/* ── DELETE TOOL ────────────────────────────────────────── */
+router.delete('/:agentId/:toolId', auth, async (req, res) => {
+  const pool = getPool(req);
+  if (!(await verifyOwner(pool, req.params.agentId, req.userId)))
+    return res.status(403).json({ error: 'Nicht berechtigt' });
+  try {
+    await pool.query('DELETE FROM agent_tools WHERE id=$1 AND agent_id=$2', [req.params.toolId, req.params.agentId]);
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: 'Fehler' }); }
+});
+
+/* ═══════════════════════════════════════════════════════════
+   TOOL EXECUTION ENGINE
+   Called by chat.js when Claude returns tool_use blocks
+   ═══════════════════════════════════════════════════════════ */
+
+/**
+ * Build Anthropic tool definitions from agent_tools config
+ */
+function buildToolDefinitions(tools) {
+  return tools.filter(t => t.is_enabled).map(t => {
+    switch (t.tool_type) {
+      case 'web_search':
+        return {
+          name: 'web_search',
+          description: t.tool_desc || 'Suche im Internet nach aktuellen Informationen.',
+          input_schema: {
+            type: 'object',
+            properties: {
+              query: { type: 'string', description: 'Suchanfrage' },
+            },
+            required: ['query'],
+          },
+        };
+
+      case 'send_email':
+        return {
+          name: 'send_email',
+          description: t.tool_desc || 'Sende eine E-Mail im Namen des Nutzers.',
+          input_schema: {
+            type: 'object',
+            properties: {
+              to:      { type: 'string', description: 'Empfänger E-Mail' },
+              subject: { type: 'string', description: 'Betreff' },
+              body:    { type: 'string', description: 'E-Mail-Text' },
+            },
+            required: ['to', 'subject', 'body'],
+          },
+        };
+
+      case 'book_calendar':
+        return {
+          name: 'book_calendar',
+          description: t.tool_desc || 'Buche einen Termin im Kalender.',
+          input_schema: {
+            type: 'object',
+            properties: {
+              title:       { type: 'string', description: 'Titel des Termins' },
+              start_time:  { type: 'string', description: 'Startzeit (ISO 8601)' },
+              end_time:    { type: 'string', description: 'Endzeit (ISO 8601)' },
+              description: { type: 'string', description: 'Beschreibung' },
+              attendee_email: { type: 'string', description: 'E-Mail des Teilnehmers' },
+            },
+            required: ['title', 'start_time', 'end_time'],
+          },
+        };
+
+      case 'add_crm':
+        return {
+          name: 'add_crm',
+          description: t.tool_desc || 'Füge einen Lead oder Kontakt ins CRM ein.',
+          input_schema: {
+            type: 'object',
+            properties: {
+              name:    { type: 'string', description: 'Name des Kontakts' },
+              email:   { type: 'string', description: 'E-Mail' },
+              phone:   { type: 'string', description: 'Telefon' },
+              notes:   { type: 'string', description: 'Notizen' },
+              company: { type: 'string', description: 'Unternehmen' },
+            },
+            required: ['name'],
+          },
+        };
+
+      case 'http_request':
+        return {
+          name: t.tool_name.toLowerCase().replace(/[^a-z0-9_]/g, '_'),
+          description: t.tool_desc || 'Führe eine HTTP-Anfrage aus.',
+          input_schema: {
+            type: 'object',
+            properties: {
+              params: { type: 'object', description: 'Parameter für die Anfrage' },
+            },
+          },
+        };
+
+      default:
+        return null;
+    }
+  }).filter(Boolean);
+}
+
+/**
+ * Execute a single tool call
+ */
+async function executeTool(toolName, toolInput, toolConfig, agent) {
+  const start = Date.now();
+  let output = '', success = true;
 
   try {
-    await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+    switch (toolName) {
 
-    for (const field of fields) {
-      try {
-        if (field.selector) {
-          await page.waitForSelector(field.selector, { timeout: 5000 });
-          const el = await page.$(field.selector);
-          if (!el) continue;
-
-          const tagName = await el.evaluate(e => e.tagName.toLowerCase());
-          const type = await el.evaluate(e => e.type?.toLowerCase() || '');
-
-          if (tagName === 'select') {
-            await page.selectOption(field.selector, field.value);
-          } else if (type === 'checkbox' || type === 'radio') {
-            if (field.value === true || field.value === 'true') await page.check(field.selector);
-          } else {
-            await page.fill(field.selector, String(field.value));
-          }
-        } else if (field.label) {
-          // Try to find by label text
-          await page.getByLabel(field.label, { exact: false }).fill(String(field.value)).catch(() => {});
+      case 'web_search': {
+        const query = toolInput.query;
+        // Use DuckDuckGo Instant Answer API (free, no key)
+        const r = await fetch(
+          `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`,
+          { headers: { 'User-Agent': 'AgentKontor/1.0' } }
+        );
+        const d = await r.json();
+        if (d.AbstractText) {
+          output = `${d.AbstractText}\nQuelle: ${d.AbstractURL}`;
+        } else if (d.RelatedTopics?.length) {
+          output = d.RelatedTopics.slice(0, 5).map(t => t.Text || '').filter(Boolean).join('\n');
+        } else {
+          output = `Keine direkten Ergebnisse für "${query}" gefunden.`;
         }
-      } catch(fieldErr) {
-        console.warn(`Form field error (${field.selector || field.label}):`, fieldErr.message);
+        break;
+      }
+
+      case 'send_email': {
+        if (!process.env.SMTP_HOST && !agent.smtp_host)
+          return { output: 'SMTP nicht konfiguriert', success: false };
+
+        const nodemailer = require('nodemailer');
+        const t = nodemailer.createTransport({
+          host: agent.smtp_host || process.env.SMTP_HOST,
+          port: parseInt(agent.smtp_port || process.env.SMTP_PORT || '587'),
+          secure: false,
+          auth: {
+            user: agent.smtp_user || process.env.SMTP_USER,
+            pass: agent.smtp_pass || process.env.SMTP_PASS,
+          },
+        });
+        await t.sendMail({
+          from: agent.smtp_from || process.env.SMTP_FROM || `${agent.name} <noreply@agentkontor.de>`,
+          to:   toolInput.to,
+          subject: toolInput.subject,
+          text: toolInput.body,
+        });
+        output = `E-Mail erfolgreich gesendet an ${toolInput.to}`;
+        break;
+      }
+
+      case 'book_calendar': {
+        // Calendly create scheduling link or Google Calendar event
+        const calLink = toolConfig.calendar_url || agent.cal_link;
+        if (calLink) {
+          // Return a pre-filled Calendly link
+          output = `Buchungslink: ${calLink} — Bitte diesen Link nutzen für: ${toolInput.title} am ${toolInput.start_time}`;
+        } else {
+          output = `Termin notiert: "${toolInput.title}" für ${toolInput.start_time} bis ${toolInput.end_time}`;
+        }
+        break;
+      }
+
+      case 'add_crm': {
+        const crmUrl   = toolConfig.webhook_url || toolConfig.hubspot_url;
+        const apiKey   = toolConfig.api_key;
+
+        if (!crmUrl) {
+          output = `Lead erfasst: ${toolInput.name} (${toolInput.email || 'keine E-Mail'})`;
+          break;
+        }
+
+        // POST to CRM webhook (Zapier, HubSpot, etc.)
+        const crmResp = await fetch(crmUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(apiKey ? { 'Authorization': `Bearer ${apiKey}` } : {}),
+          },
+          body: JSON.stringify({
+            name:    toolInput.name,
+            email:   toolInput.email,
+            phone:   toolInput.phone,
+            notes:   toolInput.notes,
+            company: toolInput.company,
+            source:  'AgentKontor',
+          }),
+        });
+        output = crmResp.ok
+          ? `Kontakt "${toolInput.name}" erfolgreich ins CRM eingetragen.`
+          : `CRM-Eintrag fehlgeschlagen (HTTP ${crmResp.status})`;
+        break;
+      }
+
+      default: {
+        // Generic HTTP request tool
+        const url    = toolConfig.url;
+        const method = toolConfig.method || 'POST';
+        if (!url) { output = 'Tool-URL nicht konfiguriert'; success = false; break; }
+
+        const resp = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json', ...(toolConfig.headers || {}) },
+          body: method !== 'GET' ? JSON.stringify({ ...toolInput, agent_name: agent.name }) : undefined,
+        });
+        output = resp.ok ? `Aktion erfolgreich ausgeführt (HTTP ${resp.status})` : `Fehler (HTTP ${resp.status})`;
+        success = resp.ok;
+        break;
       }
     }
-
-    // Take screenshot before submit
-    const screenshot = await page.screenshot({ type: 'png', fullPage: false });
-    const screenshotB64 = screenshot.toString('base64');
-
-    // Submit if requested
-    let submitResult = null;
-    if (fields.find(f => f.action === 'submit')) {
-      const submitBtn = await page.$('[type="submit"], button[type="submit"], input[type="submit"]');
-      if (submitBtn) {
-        await submitBtn.click();
-        await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
-        submitResult = { url: page.url(), title: await page.title() };
-      }
-    }
-
-    return {
-      success: true,
-      screenshot: screenshotB64,
-      currentUrl: page.url(),
-      pageTitle: await page.title(),
-      submitResult,
-    };
-  } finally {
-    await browser.close();
+  } catch(e) {
+    output = `Fehler: ${e.message}`;
+    success = false;
   }
+
+  return { output, success, duration_ms: Date.now() - start };
 }
 
-/* ─────────────────────────────────────────────────────
-   ACTION PARSER — reads agent reply for action tokens
-───────────────────────────────────────────────────── */
-const ACTION_PATTERNS = {
-  CALENDAR_CREATE: /ACTION:CALENDAR_CREATE:([\s\S]+?)(?=ACTION:|$)/,
-  EMAIL_SEND:      /ACTION:EMAIL_SEND:([\s\S]+?)(?=ACTION:|$)/,
-  CALENDLY_SLOTS:  /ACTION:CALENDLY_SLOTS:([\s\S]+?)(?=ACTION:|$)/,
-  CALENDLY_BOOK:   /ACTION:CALENDLY_BOOK:([\s\S]+?)(?=ACTION:|$)/,
-  FORM_FILL:       /ACTION:FORM_FILL:([\s\S]+?)(?=ACTION:|$)/,
-};
-
-async function executeActions(reply, agent, identity, pool, sessionId, source) {
-  if (!identity?.is_configured) return reply;
-
-  let cleanReply = reply;
-  const results = [];
-
-  for (const [actionType, pattern] of Object.entries(ACTION_PATTERNS)) {
-    const match = reply.match(pattern);
-    if (!match) continue;
-
-    let actionData;
-    try {
-      actionData = JSON.parse(match[1].trim());
-    } catch(e) {
-      console.warn(`Action ${actionType} parse error:`, e.message);
-      continue;
-    }
-
-    // Log action
-    const logResult = await pool.query(
-      'INSERT INTO agent_actions (agent_id,session_id,action_type,action_data,status) VALUES ($1,$2,$3,$4,$5) RETURNING id',
-      [agent.id, sessionId, actionType, JSON.stringify(actionData), 'pending']
-    );
-    const actionId = logResult.rows[0].id;
-
-    let result = null;
-    let status = 'success';
-    let errorMsg = null;
-
-    try {
-      switch(actionType) {
-        case 'CALENDAR_CREATE':
-          result = await createCalendarEvent(pool, identity, actionData);
-          break;
-        case 'EMAIL_SEND':
-          result = await sendGmail(pool, identity, actionData);
-          break;
-        case 'CALENDLY_SLOTS':
-          result = await getCalendlySlots(identity, actionData.eventTypeUri);
-          break;
-        case 'CALENDLY_BOOK':
-          result = await createCalendlyInvite(identity, actionData.eventTypeUri, actionData);
-          break;
-        case 'FORM_FILL':
-          result = await fillForm(actionData.url, actionData.fields);
-          break;
-      }
-      results.push({ type: actionType, success: true, result });
-    } catch(e) {
-      console.error(`Action ${actionType} failed:`, e.message);
-      status = 'error';
-      errorMsg = e.message;
-      results.push({ type: actionType, success: false, error: e.message });
-    }
-
-    // Update action log
-    await pool.query(
-      'UPDATE agent_actions SET result=$1, status=$2, error_msg=$3 WHERE id=$4',
-      [JSON.stringify(result), status, errorMsg, actionId]
-    );
-
-    // Remove action token from reply
-    cleanReply = cleanReply.replace(match[0], '').trim();
+/**
+ * Main: run agentic chat with tool use loop
+ * Called from chat.js instead of simple client.messages.create()
+ */
+async function runAgenticChat(client, model, systemPrompt, messages, agentTools, pool, agentId, sessionId) {
+  const toolDefs = buildToolDefinitions(agentTools);
+  if (!toolDefs.length) {
+    // No tools — standard call
+    const r = await client.messages.create({ model, max_tokens: 1024, system: systemPrompt, messages });
+    return { reply: r.content[0]?.text || '', usage: r.usage };
   }
 
-  // Append action results to reply
-  if (results.length > 0) {
-    const resultTexts = results.map(r => {
-      if (!r.success) return `⚠️ Aktion fehlgeschlagen: ${r.error}`;
-      switch(r.type) {
-        case 'CALENDAR_CREATE':
-          return `✅ Termin erstellt! [Kalender öffnen](${r.result.link})${r.result.meetLink ? ` · [Meeting-Link](${r.result.meetLink})` : ''}`;
-        case 'EMAIL_SEND':
-          return `✅ E-Mail wurde gesendet.`;
-        case 'CALENDLY_SLOTS':
-          const slots = r.result.slice(0,5).map(s => new Date(s.startTime).toLocaleString('de-DE')).join('\n');
-          return `📅 Verfügbare Termine:\n${slots}`;
-        case 'CALENDLY_BOOK':
-          return `✅ Termin gebucht für ${new Date(r.result.startTime).toLocaleString('de-DE')}!`;
-        case 'FORM_FILL':
-          return `✅ Formular ${r.result.submitResult ? 'ausgefüllt und abgesendet' : 'ausgefüllt'}.`;
-        default: return `✅ Aktion ausgeführt.`;
-      }
+  let currentMessages = [...messages];
+  let totalUsage = { input_tokens: 0, output_tokens: 0 };
+  const MAX_ROUNDS = 5;
+
+  for (let round = 0; round < MAX_ROUNDS; round++) {
+    const response = await client.messages.create({
+      model,
+      max_tokens: 1024,
+      system: systemPrompt,
+      messages: currentMessages,
+      tools: toolDefs,
     });
-    cleanReply = cleanReply + '\n\n' + resultTexts.join('\n');
+
+    totalUsage.input_tokens  += response.usage?.input_tokens  || 0;
+    totalUsage.output_tokens += response.usage?.output_tokens || 0;
+
+    // If no tool use, return the text reply
+    if (response.stop_reason !== 'tool_use') {
+      const text = response.content.find(b => b.type === 'text')?.text || '';
+      return { reply: text, usage: totalUsage };
+    }
+
+    // Process tool calls
+    const toolUseBlocks  = response.content.filter(b => b.type === 'tool_use');
+    const toolResultContent = [];
+
+    for (const block of toolUseBlocks) {
+      const toolDef = agentTools.find(t =>
+        t.tool_type === block.name ||
+        t.tool_name.toLowerCase().replace(/[^a-z0-9_]/g, '_') === block.name
+      );
+
+      const config = toolDef?.config || {};
+      const result = await executeTool(block.name, block.input, config, {});
+
+      // Log execution
+      try {
+        await pool.query(
+          'INSERT INTO tool_executions (agent_id, session_id, tool_type, input, output, success, duration_ms) VALUES ($1,$2,$3,$4,$5,$6,$7)',
+          [agentId, sessionId, block.name, JSON.stringify(block.input), result.output, result.success, result.duration_ms]
+        );
+      } catch {}
+
+      toolResultContent.push({
+        type:        'tool_result',
+        tool_use_id: block.id,
+        content:     result.output,
+      });
+    }
+
+    // Append assistant response + tool results
+    currentMessages = [
+      ...currentMessages,
+      { role: 'assistant', content: response.content },
+      { role: 'user', content: toolResultContent },
+    ];
   }
 
-  return cleanReply;
+  // Fallback if max rounds exceeded
+  return { reply: 'Ich konnte die Aufgabe nach mehreren Versuchen nicht abschließen.', usage: totalUsage };
 }
 
-/* ─────────────────────────────────────────────────────
-   IDENTITY SYSTEM PROMPT ADDON
-───────────────────────────────────────────────────── */
-function buildIdentityPrompt(agent, identity) {
-  if (!identity?.is_configured) return '';
-
-  const parts = [`
-## Deine Identität
-Du agierst als: **${identity.display_name || agent.name}**
-${identity.email_address ? `Deine E-Mail-Adresse: ${identity.email_address}` : ''}
-
-Du kannst echte Aktionen ausführen. Verwende diese Befehle wenn nötig:`];
-
-  if (identity.google_access_token) {
-    parts.push(`
-### Kalender-Termin erstellen
-ACTION:CALENDAR_CREATE:{"title":"Titel","description":"Beschreibung","startTime":"2025-01-15T10:00:00+01:00","endTime":"2025-01-15T11:00:00+01:00","attendees":["email@example.com"],"videoCall":false}
-
-### E-Mail senden (als ${identity.display_name || agent.name})
-ACTION:EMAIL_SEND:{"to":"empfaenger@example.com","subject":"Betreff","body":"Text der E-Mail"}`);
-  }
-
-  if (identity.calendly_token) {
-    parts.push(`
-### Verfügbare Calendly-Slots abfragen
-ACTION:CALENDLY_SLOTS:{"eventTypeUri":"https://api.calendly.com/event_types/XXXXX"}
-
-### Calendly-Termin buchen
-ACTION:CALENDLY_BOOK:{"eventTypeUri":"https://api.calendly.com/event_types/XXXXX","startTime":"2025-01-15T10:00:00Z","name":"Max Mustermann","email":"max@example.com"}`);
-  }
-
-  parts.push(`
-### Formular auf Website ausfüllen
-ACTION:FORM_FILL:{"url":"https://example.com/contact","fields":[{"selector":"#name","value":"Max"},{"selector":"#email","value":"max@example.com"},{"action":"submit"}]}
-
-**Wichtig:** Führe Aktionen nur aus wenn der Nutzer explizit darum bittet und alle nötigen Informationen vorhanden sind. Bestätige vor dem Ausführen kurz was du tun wirst.`);
-
-  return '\n\n' + parts.join('');
-}
-
-module.exports = {
-  getIdentity,
-  executeActions,
-  buildIdentityPrompt,
-  createCalendarEvent,
-  sendGmail,
-  getCalendlySlots,
-  createCalendlyInvite,
-  fillForm,
-};
+module.exports = router;
+module.exports.buildToolDefinitions = buildToolDefinitions;
+module.exports.runAgenticChat       = runAgenticChat;

@@ -16,6 +16,7 @@ const router    = require('express').Router();
 const Anthropic = require('@anthropic-ai/sdk');
 const crypto    = require('crypto');
 const { checkMsgQuota, getLimits, rateLimit } = require('../middleware/plan-gate');
+const { runAgenticChat } = require('./actions');
 const { v4: uuid } = require('uuid');
 
 function getPool(req) { return req.app.locals.pool; }
@@ -265,6 +266,31 @@ router.post('/stream/:agentId', async (req, res) => {
     let fullReply = '';
     let usage     = {};
 
+    // Load agent tools for agentic actions
+    let agentTools = [];
+    try {
+      const toolsR = await pool.query('SELECT * FROM agent_tools WHERE agent_id=$1 AND is_enabled=true', [agent.id]);
+      agentTools = toolsR.rows;
+    } catch {}
+
+    // If tools present — use agentic mode (no streaming for tool-use loops)
+    if (agentTools.length > 0) {
+      const { reply, usage } = await runAgenticChat(client, model, sysPrompt + ragCtx, msgs, agentTools, pool, agent.id, sessionId);
+      fullReply = reply;
+      usage = usage || {};
+      res.write(`data: ${JSON.stringify({ type: 'session', sessionId })}
+
+`);
+      // Send full reply as one chunk (tool-use doesn't stream)
+      res.write(`data: ${JSON.stringify({ type: 'text', text: reply })}
+
+`);
+      res.write(`data: ${JSON.stringify({ type: 'done' })}
+
+`);
+      res.end();
+    } else {
+
     // Stream from Anthropic
     const stream = client.messages.stream({
       model,
@@ -365,16 +391,26 @@ router.post('/web/:agentId', async (req, res) => {
       [agent.id, sessionId, 'user', typeof userMsg.content === 'string' ? userMsg.content : '[Bild + Text]', source, hasImage]
     );
 
-    const response = await client.messages.create({
-      model, max_tokens: 1024, system: sysPrompt + ragCtx, messages: msgs,
-    });
+    // Load agent tools
+    let agentTools = [];
+    try {
+      const toolsR = await pool.query('SELECT * FROM agent_tools WHERE agent_id=$1 AND is_enabled=true', [agent.id]);
+      agentTools = toolsR.rows;
+    } catch {}
 
-    const reply = response.content[0]?.text || 'Keine Antwort.';
+    let reply, responseUsage;
+    if (agentTools.length > 0) {
+      const result = await runAgenticChat(client, model, sysPrompt + ragCtx, msgs, agentTools, pool, agent.id, sessionId);
+      reply = result.reply; responseUsage = result.usage;
+    } else {
+      const response = await client.messages.create({ model, max_tokens: 1024, system: sysPrompt + ragCtx, messages: msgs });
+      reply = response.content[0]?.text || 'Keine Antwort.'; responseUsage = response.usage;
+    };
     await pool.query('INSERT INTO chat_messages (agent_id, session_id, role, content, source) VALUES ($1,$2,$3,$4,$5)', [agent.id, sessionId, 'assistant', reply, source]);
     await pool.query('UPDATE agents SET total_messages=total_messages+1 WHERE id=$1', [agent.id]);
 
     setImmediate(async () => {
-      await trackCost(pool, agent.id, sessionId, model, response.usage || {}, source);
+      await trackCost(pool, agent.id, sessionId, model, responseUsage || {}, source);
       if (sessionIdentifier) await updateMemory(pool, agent.id, sessionIdentifier, msgs, reply);
       const lead = await tryCaptureLead(pool, agent, msgs, reply, sessionId, source);
       if (lead) { await sendLeadEmail(agent, agent.owner_email, lead); await dispatchWebhooks(pool, agent.id, 'lead.captured', {agentId:agent.id,sessionId,source,lead}); }
