@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin – AgentKontor</title>
+<script src="//unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg:#050510;--bg2:#09091a;--bg3:#0e0e22;--card:#0c0c1e;--border:rgba(255,255,255,.08);--purple:#6c5ce7;--pu-l:#a29bfe;--teal:#00cec9;--white:#fff;--muted:#5a5a80;--text:#c8c8e8;--red:#e94560;--green:#00b894;--gold:#f0c040;--orange:#fd9644}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+[x-cloak]{display:none!important}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.app{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.sb-logo{padding:20px 18px;font-size:1rem;font-weight:800;color:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.sb-logo span{color:var(--pu-l)}
+.admin-badge{font-size:.6rem;font-weight:700;padding:2px 6px;border-radius:4px;background:rgba(233,69,96,.2);color:var(--red);border:1px solid rgba(233,69,96,.3)}
+.sb-nav{flex:1;padding:10px 8px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:9px;font-size:.84rem;font-weight:500;color:var(--muted);cursor:pointer;transition:all .2s;margin-bottom:2px}
+.nav-item:hover,.nav-item.active{background:rgba(108,92,231,.12);color:var(--pu-l)}
+.sb-footer{padding:14px;border-top:1px solid var(--border)}
+.main{flex:1;overflow-y:auto}
+.page{padding:28px 32px;max-width:1300px}
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.ph-title{font-size:1.3rem;font-weight:700;color:var(--white)}
+.ph-sub{font-size:.82rem;color:var(--muted);margin-top:2px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px}
+.stat-n{font-size:1.8rem;font-weight:700;color:var(--pu-l);line-height:1}
+.stat-l{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.stat-sub{font-size:.72rem;color:var(--muted);margin-top:2px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:14px}
+.card h3{font-size:.82rem;font-weight:600;color:var(--text);margin-bottom:14px;letter-spacing:.06em;text-transform:uppercase}
+.badge{font-size:.62rem;padding:2px 7px;border-radius:20px;font-weight:600}
+.b-free{background:rgba(255,255,255,.06);color:var(--muted)}
+.b-pro{background:rgba(108,92,231,.12);color:var(--pu-l);border:1px solid rgba(108,92,231,.25)}
+.b-enterprise{background:rgba(0,206,201,.1);color:var(--teal);border:1px solid rgba(0,206,201,.2)}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th{padding:8px 12px;text-align:left;color:var(--muted);font-weight:600;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid var(--border)}
+td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text);vertical-align:middle}
+tr:hover td{background:rgba(255,255,255,.02)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:7px;font-size:.78rem;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:all .2s}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-ghost:hover{border-color:rgba(108,92,231,.4)}
+.btn-purple{background:var(--purple);color:#fff}
+.btn-purple:hover{background:var(--pu-l)}
+.btn-danger{background:rgba(233,69,96,.15);color:var(--red);border:1px solid rgba(233,69,96,.25)}
+.btn-danger:hover{background:rgba(233,69,96,.25)}
+.btn-green{background:rgba(0,184,148,.1);color:var(--green);border:1px solid rgba(0,184,148,.2)}
+.inp{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--white);font-size:.8rem;font-family:inherit}
+.inp:focus{outline:none;border-color:var(--purple)}
+select.inp option{background:var(--bg3)}
+.toast-area{position:fixed;bottom:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:6px}
+.toast{background:var(--bg3);border:1px solid rgba(108,92,231,.3);border-radius:9px;padding:10px 14px;font-size:.8rem;color:var(--white);animation:si .3s ease;display:flex;align-items:center;gap:7px}
+.toast.ok{border-color:rgba(0,184,148,.3)}.toast.ok::before{content:'✓';color:var(--green)}
+.toast.err{border-color:rgba(233,69,96,.3);color:var(--red)}.toast.err::before{content:'✕'}
+@keyframes si{from{transform:translateX(16px);opacity:0}to{transform:translateX(0);opacity:1}}
+.chart-wrap{height:180px}
+.search-inp{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--white);font-size:.82rem;width:220px;font-family:inherit}
+.search-inp::placeholder{color:var(--muted)}
+.search-inp:focus{outline:none;border-color:var(--purple)}
+.online-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-right:5px}
+</style>
+</head>
+<body x-data="admin()" x-init="init()" x-cloak>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="sb-logo">Agent<span>Kontor</span> <span class="admin-badge">ADMIN</span></div>
+    <nav class="sb-nav">
+      <div class="nav-item" :class="{active:page==='overview'}" @click="page='overview'">📊 Übersicht</div>
+      <div class="nav-item" :class="{active:page==='users'}" @click="page='users';loadUsers()">👥 Nutzer</div>
+      <div class="nav-item" :class="{active:page==='agents'}" @click="page='agents';loadAgents()">🤖 Agenten</div>
+      <div class="nav-item" :class="{active:page==='activity'}" @click="page='activity';loadActivity()">📋 Aktivität</div>
+    </nav>
+    <div class="sb-footer">
+      <div style="font-size:.72rem;color:var(--muted);margin-bottom:8px" x-text="adminUser?.email"></div>
+      <button class="btn btn-ghost" style="width:100%;font-size:.74rem" @click="location.href='/app'">← Zurück zum Dashboard</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- OVERVIEW -->
+    <div class="page" x-show="page==='overview'">
+      <div class="ph">
+        <div><div class="ph-title">Übersicht</div><div class="ph-sub" x-text="'Zuletzt aktualisiert: '+new Date().toLocaleTimeString('de-DE')" ></div></div>
+        <button class="btn btn-ghost" @click="loadStats()">↺ Aktualisieren</button>
+      </div>
+
+      <template x-if="stats">
+        <div>
+          <div class="grid-4">
+            <div class="stat-card"><div class="stat-n" x-text="stats.users?.total||0"></div><div class="stat-l">Nutzer gesamt</div><div class="stat-sub" x-text="'+'+stats.users?.new_week+' diese Woche'"></div></div>
+            <div class="stat-card"><div class="stat-n" style="color:var(--gold)" x-text="stats.users?.pro||0"></div><div class="stat-l">Pro-Nutzer</div><div class="stat-sub" x-text="'€'+((stats.revenue?.mrr||0))+' MRR'"></div></div>
+            <div class="stat-card"><div class="stat-n" style="color:var(--teal)" x-text="stats.agents?.total||0"></div><div class="stat-l">Agenten</div><div class="stat-sub" x-text="stats.agents?.active+' aktiv'"></div></div>
+            <div class="stat-card"><div class="stat-n" style="color:var(--green)" x-text="stats.messages?.month||0"></div><div class="stat-l">Nachrichten (30 Tage)</div><div class="stat-sub" x-text="stats.leads?.total+' Leads'"></div></div>
+          </div>
+
+          <!-- MRR highlight -->
+          <div style="background:linear-gradient(135deg,rgba(108,92,231,.12),rgba(0,206,201,.08));border:1px solid rgba(108,92,231,.2);border-radius:12px;padding:20px;margin-bottom:14px;display:flex;align-items:center;gap:24px">
+            <div><div style="font-size:2.4rem;font-weight:700;color:var(--white)">€<span x-text="stats.revenue?.mrr||0"></span></div><div style="font-size:.76rem;color:var(--muted);margin-top:2px">Monthly Recurring Revenue</div></div>
+            <div style="height:40px;width:1px;background:var(--border)"></div>
+            <div><div style="font-size:1.4rem;font-weight:700;color:var(--pu-l)" x-text="stats.revenue?.subscribers||0"></div><div style="font-size:.76rem;color:var(--muted)">aktive Abonnenten</div></div>
+            <div style="height:40px;width:1px;background:var(--border)"></div>
+            <div><div style="font-size:1.4rem;font-weight:700;color:var(--teal)" x-text="'€'+(stats.messages?.month&&stats.revenue?.subscribers?(stats.revenue.mrr/Math.max(1,stats.revenue.subscribers)).toFixed(2):0)"></div><div style="font-size:.76rem;color:var(--muted)">ARPU</div></div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px">
+            <div class="card">
+              <h3>Nachrichten (30 Tage)</h3>
+              <div class="chart-wrap"><canvas id="msgChart"></canvas></div>
+            </div>
+            <div class="card">
+              <h3>Top Agenten</h3>
+              <template x-for="a in stats.topAgents?.slice(0,6)" :key="a.id">
+                <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+                  <span x-text="a.emoji" style="font-size:1rem"></span>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:.8rem;font-weight:600;color:var(--white);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="a.name"></div>
+                    <div style="font-size:.68rem;color:var(--muted)" x-text="a.owner"></div>
+                  </div>
+                  <div style="font-size:.78rem;color:var(--pu-l);font-weight:700;flex-shrink:0" x-text="a.total_messages"></div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+      </template>
+      <template x-if="!stats"><div style="text-align:center;padding:60px;color:var(--muted)">⏳ Lade Daten…</div></template>
+    </div>
+
+    <!-- USERS -->
+    <div class="page" x-show="page==='users'">
+      <div class="ph">
+        <div><div class="ph-title">Nutzer</div><div class="ph-sub" x-text="users.length+' Nutzer gesamt'"></div></div>
+        <input class="search-inp" type="text" placeholder="Suche nach E-Mail oder Name…" x-model="userSearch">
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <table>
+          <thead><tr><th>Nutzer</th><th>Plan</th><th>Agenten</th><th>Nachrichten/Mo</th><th>Registriert</th><th>Aktionen</th></tr></thead>
+          <tbody>
+            <template x-for="u in filteredUsers" :key="u.id">
+              <tr>
+                <td>
+                  <div style="font-weight:600;color:var(--white)" x-text="u.name"></div>
+                  <div style="font-size:.72rem;color:var(--muted)" x-text="u.email"></div>
+                  <span x-show="u.is_admin" style="font-size:.6rem;background:rgba(233,69,96,.15);color:var(--red);padding:1px 5px;border-radius:3px;margin-top:2px;display:inline-block">ADMIN</span>
+                </td>
+                <td>
+                  <select class="inp" style="width:100px" :value="u.plan" @change="changePlan(u.id, $event.target.value)">
+                    <option value="free">Free</option>
+                    <option value="pro">Pro</option>
+                    <option value="enterprise">Enterprise</option>
+                  </select>
+                </td>
+                <td x-text="u.agent_count||0"></td>
+                <td>
+                  <span x-text="u.msg_count_month||0"></span>
+                </td>
+                <td style="font-size:.75rem;color:var(--muted);white-space:nowrap" x-text="new Date(u.created_at).toLocaleDateString('de-DE')"></td>
+                <td>
+                  <div style="display:flex;gap:5px">
+                    <button class="btn btn-ghost" style="font-size:.7rem;padding:3px 8px" @click="deleteUser(u.id, u.email)">🗑</button>
+                  </div>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- AGENTS -->
+    <div class="page" x-show="page==='agents'">
+      <div class="ph">
+        <div><div class="ph-title">Alle Agenten</div><div class="ph-sub" x-text="adminAgents.length+' Agenten'"></div></div>
+        <input class="search-inp" type="text" placeholder="Agent oder Betreiber suchen…" x-model="agentSearch">
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <table>
+          <thead><tr><th>Agent</th><th>Betreiber</th><th>Nachrichten</th><th>Features</th><th>Erstellt</th></tr></thead>
+          <tbody>
+            <template x-for="a in filteredAgents" :key="a.id">
+              <tr>
+                <td>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <span x-text="a.emoji" style="font-size:1.1rem"></span>
+                    <div>
+                      <div style="font-weight:600;color:var(--white)" x-text="a.name"></div>
+                      <div style="font-size:.7rem" :style="a.is_active?'color:var(--green)':'color:var(--muted)'" x-text="a.is_active?'● Aktiv':'● Inaktiv'"></div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div style="font-size:.8rem" x-text="a.owner_name"></div>
+                  <div style="font-size:.7rem;color:var(--muted)" x-text="a.owner_email"></div>
+                  <span class="badge" :class="'b-'+a.owner_plan" x-text="(a.owner_plan||'free').toUpperCase()"></span>
+                </td>
+                <td style="font-weight:700;color:var(--pu-l)" x-text="a.total_messages||0"></td>
+                <td>
+                  <div style="display:flex;gap:4px;flex-wrap:wrap">
+                    <span class="badge b-pro" x-show="a.rag_enabled">RAG</span>
+                    <span class="badge" style="background:rgba(37,211,102,.1);color:#25d366;border:1px solid rgba(37,211,102,.2)" x-show="a.whatsapp_enabled">WA</span>
+                    <span class="badge" style="background:rgba(0,136,204,.1);color:#0088cc;border:1px solid rgba(0,136,204,.2)" x-show="a.telegram_enabled">TG</span>
+                  </div>
+                </td>
+                <td style="font-size:.75rem;color:var(--muted);white-space:nowrap" x-text="new Date(a.created_at).toLocaleDateString('de-DE')"></td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ACTIVITY -->
+    <div class="page" x-show="page==='activity'">
+      <div class="ph">
+        <div><div class="ph-title">Aktivität</div><div class="ph-sub">Letzte 50 Nachrichten</div></div>
+        <button class="btn btn-ghost" @click="loadActivity()">↺</button>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <table>
+          <thead><tr><th>Zeit</th><th>Agent</th><th>Betreiber</th><th>Kanal</th><th>Nachricht</th></tr></thead>
+          <tbody>
+            <template x-for="a in activity" :key="a.id">
+              <tr>
+                <td style="font-size:.72rem;color:var(--muted);white-space:nowrap" x-text="new Date(a.created_at).toLocaleString('de-DE')"></td>
+                <td style="font-size:.8rem;color:var(--white)" x-text="a.agent_name"></td>
+                <td style="font-size:.72rem;color:var(--muted)" x-text="a.owner_email"></td>
+                <td><span class="badge b-pro" x-text="a.source"></span></td>
+                <td style="font-size:.78rem;color:var(--text);max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="a.preview"></td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast-area">
+  <template x-for="t in toasts" :key="t.id"><div class="toast" :class="t.type" x-text="t.msg"></div></template>
+</div>
+
+<script>
+function admin() {
+  return {
+    page: 'overview', token: null, adminUser: null,
+    stats: null, users: [], adminAgents: [], activity: [],
+    userSearch: '', agentSearch: '', toasts: [],
+
+    get filteredUsers() {
+      const q = this.userSearch.toLowerCase();
+      return this.users.filter(u => !q || u.email.toLowerCase().includes(q) || (u.name||'').toLowerCase().includes(q));
+    },
+    get filteredAgents() {
+      const q = this.agentSearch.toLowerCase();
+      return this.adminAgents.filter(a => !q || a.name.toLowerCase().includes(q) || (a.owner_email||'').toLowerCase().includes(q));
+    },
+
+    async init() {
+      this.token = localStorage.getItem('ak_token');
+      if (!this.token) { location.href = '/app'; return; }
+      const me = await this.api('/auth/me');
+      if (!me.user) { location.href = '/app'; return; }
+      this.adminUser = me.user;
+      await this.loadStats();
+    },
+
+    async api(path, method = 'GET', body = null) {
+      const opts = { method, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + this.token } };
+      if (body) opts.body = JSON.stringify(body);
+      const r = await fetch('/api' + path, opts);
+      if (r.status === 403) { location.href = '/app'; return {}; }
+      return r.json();
+    },
+
+    async loadStats() {
+      const d = await this.api('/admin/stats');
+      if (d.users) {
+        this.stats = d;
+        this.$nextTick(() => this.renderChart(d.msgsByDay || []));
+      } else {
+        this.toast('Kein Admin-Zugriff', 'err');
+        setTimeout(() => location.href = '/app', 1500);
+      }
+    },
+
+    renderChart(data) {
+      const ctx = document.getElementById('msgChart');
+      if (!ctx) return;
+      if (this._chart) { try { this._chart.destroy(); } catch {} }
+      this._chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: data.map(d => new Date(d.day).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })),
+          datasets: [{ data: data.map(d => parseInt(d.count)), borderColor: '#6c5ce7', backgroundColor: 'rgba(108,92,231,.1)', fill: true, tension: .4, pointRadius: 2 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#5a5a80', font: { size: 9 }, maxTicksLimit: 8 } }, y: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#5a5a80', font: { size: 9 } } } } }
+      });
+    },
+
+    async loadUsers() {
+      const d = await this.api('/admin/users');
+      if (d.users) this.users = d.users;
+    },
+
+    async changePlan(id, plan) {
+      const d = await this.api('/admin/users/' + id + '/plan', 'PUT', { plan });
+      if (d.success) { this.toast('Plan auf ' + plan + ' gesetzt ✓'); this.loadUsers(); }
+      else this.toast(d.error || 'Fehler', 'err');
+    },
+
+    async deleteUser(id, email) {
+      if (!confirm('Nutzer ' + email + ' wirklich löschen? Alle Daten werden gelöscht.')) return;
+      const d = await this.api('/admin/users/' + id, 'DELETE');
+      if (d.success) { this.toast('Gelöscht'); this.loadUsers(); }
+      else this.toast(d.error || 'Fehler', 'err');
+    },
+
+    async loadAgents() {
+      const d = await this.api('/admin/agents');
+      if (d.agents) this.adminAgents = d.agents;
+    },
+
+    async loadActivity() {
+      const d = await this.api('/admin/activity');
+      if (d.activity) this.activity = d.activity;
+    },
+
+    toast(msg, type = 'ok') {
+      const id = Date.now();
+      this.toasts.push({ id, msg, type });
+      setTimeout(() => this.toasts = this.toasts.filter(t => t.id !== id), 3500);
+    }
+  };
+}
+</script>
+</body>
+</html>
