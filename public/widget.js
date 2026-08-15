@@ -315,12 +315,92 @@
 
         history.push({ role: 'assistant', content: fullText });
         chips.innerHTML = '';
+        speakReply(fullText);
         if (!open) badge.style.display = 'block';
       } catch {
         if (typing.parentNode) typing.remove();
         addBot('Verbindungsfehler. Bitte versuche es erneut.');
       }
       send.disabled = false;
+    }
+
+    // Voice button
+    const voiceBtn = document.createElement('button');
+    voiceBtn.style.cssText = `width:34px;height:34px;border-radius:9px;background:${inputBg};border:1px solid ${borderClr};display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;flex-shrink:0`;
+    voiceBtn.innerHTML = '🎤';
+    voiceBtn.title = 'Spracheingabe';
+    frame.querySelector('.ak-foot').insertBefore(voiceBtn, send);
+
+    let mediaRecorder = null;
+    let audioChunks   = [];
+    let isRecording   = false;
+
+    voiceBtn.addEventListener('click', async () => {
+      if (!isRecording) {
+        // Start recording
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          audioChunks = [];
+          mediaRecorder = new MediaRecorder(stream);
+          mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+          mediaRecorder.onstop = async () => {
+            stream.getTracks().forEach(t => t.stop());
+            const blob = new Blob(audioChunks, { type: 'audio/webm' });
+            voiceBtn.innerHTML = '⏳';
+            voiceBtn.disabled = true;
+
+            // Transcribe
+            const fd = new FormData();
+            fd.append('audio', blob, 'recording.webm');
+            fd.append('language', 'de');
+
+            try {
+              const r = await fetch(`${BASE_URL}/api/voice/transcribe`, { method: 'POST', body: fd });
+              const d = await r.json();
+              if (d.text) {
+                input.value = d.text;
+                input.dispatchEvent(new Event('input'));
+                // Auto-send after transcription
+                setTimeout(() => doSend(), 300);
+              }
+            } catch(e) {
+              console.error('Transcribe error:', e);
+            }
+            voiceBtn.innerHTML = '🎤';
+            voiceBtn.disabled = false;
+          };
+          mediaRecorder.start();
+          isRecording = true;
+          voiceBtn.innerHTML = '⏹️';
+          voiceBtn.style.background = '#e94560';
+        } catch(e) {
+          console.error('Microphone error:', e);
+          voiceBtn.title = 'Mikrofon-Zugriff verweigert';
+        }
+      } else {
+        // Stop recording
+        mediaRecorder?.stop();
+        isRecording = false;
+        voiceBtn.innerHTML = '🎤';
+        voiceBtn.style.background = inputBg;
+      }
+    });
+
+    // TTS: speak bot replies if voice enabled
+    async function speakReply(text) {
+      if (!cfg.voice_enabled) return;
+      try {
+        const r = await fetch(`${BASE_URL}/api/voice/speak`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, voiceId: cfg.voice_id, provider: cfg.voice_provider || 'elevenlabs' }),
+        });
+        if (!r.ok || r.headers.get('content-type')?.includes('json')) return; // fallback
+        const blob = await r.blob();
+        const url  = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.play().catch(() => {});
+      } catch {}
     }
 
     // Events

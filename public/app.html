@@ -289,6 +289,7 @@ input:checked+.slider:before{transform:translateX(18px)}
       <div class="nav-item" @click="location.href='/docs.html'"><span>📖</span><span x-text="T.docs"></span></div>
       <div class="nav-item" @click="showChangelog=true;loadChangelog()"><span>✨</span>Was ist neu</div>
       <div class="nav-section" x-text="T.account_nav"></div>
+      <div class="nav-item" :class="{active:page==='workspace'}" @click="page='workspace';loadWorkspace()"><span>🏢</span>White-Label</div>
       <div class="nav-item" :class="{active:page==='settings'}" @click="page='settings';loadPlan()"><span>⚙️</span><span x-text="T.settings"></span></div>
       <template x-if="user?.is_admin"><div class="nav-item" @click="location.href='/admin'"><span>🔴</span>Admin</div></template>
     </nav>
@@ -548,6 +549,69 @@ Response:
 
 
 
+    <!-- WHITE-LABEL / WORKSPACE -->
+    <div class="page" x-show="page='workspace'">
+      <div class="ph">
+        <div><div class="ph-title">🏢 White-Label</div><div class="ph-sub">Eigene Marke, eigene Nutzer — Reseller-Programm</div></div>
+      </div>
+      <template x-if="user?.plan==='free'">
+        <div class="empty"><div class="empty-icon">🏢</div><h3>Pro-Feature</h3><p style="margin-bottom:18px">White-Label ist im Pro-Plan verfügbar.</p><button class="btn btn-purple btn-sm" @click="showUpgrade=true">⚡ Upgraden</button></div>
+      </template>
+      <template x-if="user?.plan!=='free'">
+        <div>
+          <template x-if="!workspace">
+            <div class="card">
+              <div style="font-size:.86rem;color:var(--text);line-height:1.7;margin-bottom:16px">Erstelle eine White-Label Workspace unter eigenem Branding. Lade Kunden oder Mitarbeiter ein — sie sehen nur dein Logo und deinen Namen.</div>
+              <div class="inp-row" style="margin-bottom:10px">
+                <div class="field" style="margin:0"><label>Workspace-Name</label><input class="inp" type="text" x-model="wsForm.name" placeholder="Mein KI-Portal"></div>
+                <div class="field" style="margin:0"><label>URL-Slug</label><input class="inp" type="text" x-model="wsForm.slug" placeholder="mein-ki-portal"></div>
+              </div>
+              <div class="inp-row" style="margin-bottom:10px">
+                <div class="field" style="margin:0"><label>Markenname</label><input class="inp" type="text" x-model="wsForm.brand_name" placeholder="Mein KI-Portal"></div>
+                <div class="field" style="margin:0"><label>Hauptfarbe</label><div style="display:flex;gap:8px;align-items:center"><input type="color" x-model="wsForm.primary_color" style="width:40px;height:38px;border-radius:6px;border:1px solid var(--border);background:none;cursor:pointer"><input class="inp" type="text" x-model="wsForm.primary_color" style="flex:1"></div></div>
+              </div>
+              <button class="btn btn-purple btn-sm" @click="createWorkspace()">Workspace erstellen</button>
+            </div>
+          </template>
+          <template x-if="workspace">
+            <div>
+              <div class="card" style="margin-bottom:14px">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+                  <div style="width:44px;height:44px;border-radius:10px;background:rgba(108,92,231,.1);border:1px solid rgba(108,92,231,.2);display:flex;align-items:center;justify-content:center;font-size:1.3rem">🏢</div>
+                  <div><div style="font-size:1rem;font-weight:700;color:var(--white)" x-text="workspace.brand_name"></div><div style="font-size:.76rem;color:var(--muted)" x-text="workspace.slug+'.agentkontor.de'"></div></div>
+                  <button class="btn btn-ghost btn-xs" style="margin-left:auto" @click="loadWorkspaceMembers()">Mitglieder ↓</button>
+                </div>
+                <div class="grid-3">
+                  <div><div style="font-size:1.3rem;font-weight:700;color:var(--pu-l)" x-text="wsMembers.length"></div><div style="font-size:.72rem;color:var(--muted)">Mitglieder</div></div>
+                  <div><div style="font-size:1.3rem;font-weight:700;color:var(--gold)" x-text="'$'+parseFloat(wsUsage?.totals?.total_cost_month||0).toFixed(3)"></div><div style="font-size:.72rem;color:var(--muted)">Kosten/Mo</div></div>
+                  <div><div style="font-size:1.3rem;font-weight:700;color:var(--green)" x-text="wsUsage?.totals?.total_messages||0"></div><div style="font-size:.72rem;color:var(--muted)">Nachrichten/Mo</div></div>
+                </div>
+              </div>
+              <div class="card" style="margin-bottom:14px">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                  <div style="font-size:.8rem;font-weight:600;color:var(--white)">Mitglieder</div>
+                  <div style="display:flex;gap:7px">
+                    <input class="inp" type="email" x-model="inviteEmail" placeholder="E-Mail einladen..." style="padding:6px 10px;font-size:.78rem">
+                    <button class="btn btn-purple btn-xs" @click="inviteMember()">Einladen</button>
+                  </div>
+                </div>
+                <template x-if="wsMembers.length===0"><div style="text-align:center;padding:16px;color:var(--muted);font-size:.82rem">Noch keine Mitglieder. Lade jemanden ein.</div></template>
+                <template x-for="m in wsMembers" :key="m.id">
+                  <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+                    <div style="width:28px;height:28px;border-radius:50%;background:rgba(108,92,231,.15);display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:var(--pu-l)" x-text="m.name?.[0]?.toUpperCase()"></div>
+                    <div style="flex:1"><div style="font-size:.82rem;font-weight:500;color:var(--white)" x-text="m.name"></div><div style="font-size:.7rem;color:var(--muted)" x-text="m.email"></div></div>
+                    <span class="badge b-purple" x-text="m.plan"></span>
+                    <span style="font-size:.72rem;color:var(--muted)" x-text="m.agent_count+' Agenten'"></span>
+                    <button class="btn btn-xs btn-danger" @click="removeMember(m.id)">✕</button>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+      </template>
+    </div>
+
     <!-- KOSTEN / LLM OBSERVABILITY -->
     <div class="page" x-show="page==='costs'">
       <div class="ph">
@@ -718,6 +782,96 @@ Response:
         </div>
       </template>
     </div>
+    <!-- VOICE TAB -->
+    <template x-if="aTab==='voice'&&editing">
+      <div>
+        <div style="display:flex;align-items:center;gap:12px;padding:13px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;margin-bottom:12px">
+          <div style="flex:1"><div style="font-size:.86rem;font-weight:600;color:var(--white)">🎙️ Voice aktivieren</div><div style="font-size:.73rem;color:var(--muted)">Nutzer können per Sprache chatten (Mikrofon → Text), Agent antwortet als Stimme (ElevenLabs).</div></div>
+          <label class="toggle"><input type="checkbox" x-model="af.voice_enabled"><span class="slider"></span></label>
+        </div>
+        <template x-if="af.voice_enabled">
+          <div>
+            <div class="inp-row" style="margin-bottom:10px">
+              <div><label style="font-size:.76rem;color:var(--text);display:block;margin-bottom:4px">TTS Provider</label>
+                <select class="inp" x-model="af.voice_provider">
+                  <option value="elevenlabs">ElevenLabs (beste Qualität)</option>
+                  <option value="openai">OpenAI TTS (schneller)</option>
+                  <option value="browser">Browser native (kostenlos)</option>
+                </select>
+              </div>
+              <div><label style="font-size:.76rem;color:var(--text);display:block;margin-bottom:4px">STT Provider</label>
+                <select class="inp" x-model="af.stt_provider">
+                  <option value="whisper">OpenAI Whisper</option>
+                </select>
+              </div>
+            </div>
+            <template x-if="af.voice_provider==='elevenlabs'">
+              <div>
+                <div class="field"><label>ElevenLabs Voice ID</label>
+                  <select class="inp" x-model="af.voice_id">
+                    <option value="">Standard wählen...</option>
+                    <template x-for="v in availableVoices" :key="v.id"><option :value="v.id" x-text="v.name"></option></template>
+                  </select>
+                  <div class="hint">Voices werden aus deinem ElevenLabs-Konto geladen (ELEVENLABS_API_KEY Env-Var).</div>
+                </div>
+                <div class="field"><label x-text="'Stabilität: '+af.voice_stability"></label><input type="range" min="0" max="1" step="0.1" x-model.number="af.voice_stability" style="width:100%;accent-color:var(--purple)"></div>
+              </div>
+            </template>
+            <div style="padding:12px;background:rgba(108,92,231,.06);border:1px solid rgba(108,92,231,.15);border-radius:9px;font-size:.78rem;color:var(--muted)">
+              <strong style="color:var(--pu-l)">Env-Variablen in Render:</strong><br>
+              <code>ELEVENLABS_API_KEY</code> — ElevenLabs API Key<br>
+              <code>OPENAI_API_KEY</code> — für Whisper STT<br>
+              <code>ELEVENLABS_DEFAULT_VOICE</code> — Standard Voice ID
+            </div>
+          </div>
+        </template>
+      </div>
+    </template>
+
+    <!-- ACTIONS TAB -->
+    <template x-if="aTab==='actions'&&editing">
+      <div>
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:14px;line-height:1.6">Agentic Actions erlauben deinem Agent echte Aktionen auszuführen: Websuche, E-Mails senden, Kalender buchen, CRM-Einträge erstellen.</p>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:12px"><button class="btn btn-purple btn-sm" @click="showNewAction=!showNewAction">+ Aktion hinzufügen</button></div>
+        <template x-if="showNewAction">
+          <div style="background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;padding:15px;margin-bottom:12px">
+            <div class="inp-row" style="margin-bottom:9px">
+              <div><label style="font-size:.75rem;color:var(--text);display:block;margin-bottom:4px">Aktionstyp</label>
+                <select class="inp" x-model="newAction.tool_type" @change="newAction.tool_name=newAction.tool_type">
+                  <option value="web_search">🔍 Websuche</option>
+                  <option value="send_email">✉️ E-Mail senden</option>
+                  <option value="book_calendar">📅 Kalender buchen</option>
+                  <option value="add_crm">👤 CRM-Eintrag</option>
+                  <option value="http_request">🔗 HTTP-Request</option>
+                </select>
+              </div>
+              <div><label style="font-size:.75rem;color:var(--text);display:block;margin-bottom:4px">Name</label><input class="inp" type="text" x-model="newAction.tool_name" placeholder="z.B. Aktuelle News suchen"></div>
+            </div>
+            <div class="field" style="margin-bottom:9px"><label style="font-size:.75rem;color:var(--text);display:block;margin-bottom:4px">Beschreibung (für Claude)</label><textarea class="inp" rows="2" x-model="newAction.tool_desc" placeholder="Wann soll Claude diese Aktion nutzen?"></textarea></div>
+            <template x-if="newAction.tool_type==='http_request'||newAction.tool_type==='add_crm'">
+              <div class="field" style="margin-bottom:9px"><label style="font-size:.75rem;color:var(--text);display:block;margin-bottom:4px">Webhook/CRM URL</label><input class="inp" type="url" x-model="newAction.config.url" placeholder="https://hooks.zapier.com/..."></div>
+            </template>
+            <div style="display:flex;gap:7px">
+              <button class="btn btn-purple btn-sm" @click="createAction()" x-text="'Speichern'"></button>
+              <button class="btn btn-ghost btn-sm" @click="showNewAction=false">Abbrechen</button>
+            </div>
+          </div>
+        </template>
+        <template x-if="agentActions.length===0&&!showNewAction"><div style="text-align:center;padding:20px;color:var(--muted);font-size:.82rem">Noch keine Aktionen. Füge eine hinzu um deinen Agent agentisch zu machen.</div></template>
+        <template x-for="action in agentActions" :key="action.id">
+          <div style="display:flex;align-items:center;gap:10px;padding:11px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:9px;margin-bottom:7px">
+            <div style="font-size:1.2rem" x-text="action.tool_type==='web_search'?'🔍':action.tool_type==='send_email'?'✉️':action.tool_type==='book_calendar'?'📅':action.tool_type==='add_crm'?'👤':'🔗'"></div>
+            <div style="flex:1">
+              <div style="font-size:.84rem;font-weight:600;color:var(--white)" x-text="action.tool_name"></div>
+              <div style="font-size:.72rem;color:var(--muted)" x-text="action.tool_desc||action.tool_type"></div>
+            </div>
+            <label class="toggle" style="flex-shrink:0"><input type="checkbox" :checked="action.is_enabled" @change="toggleAction(action)"><span class="slider"></span></label>
+            <button class="btn btn-xs btn-danger" @click="deleteAction(action.id)">✕</button>
+          </div>
+        </template>
+      </div>
+    </template>
+
     <!-- VERSIONS TAB -->
     <template x-if="aTab==='versions'&&editing">
       <div>
@@ -759,6 +913,8 @@ Response:
       <div class="tab" :class="{active:aTab==='preview'}" @click="aTab='preview'">👁 <span x-text="T.preview"></span></div>
       <div class="tab" :class="{active:aTab==='embed'}" @click="aTab='embed'" x-show="editing">🔗 <span x-text="T.embed"></span></div>
       <div class="tab" :class="{active:aTab==='versions'}" @click="aTab='versions';if(editing)loadVersions(editing.id)" x-show="editing">📜 Versionen</div>
+      <div class="tab" :class="{active:aTab==='voice'}" @click="aTab='voice';if(editing)loadVoices()">🎙️ Voice</div>
+      <div class="tab" :class="{active:aTab==='actions'}" @click="aTab='actions';if(editing)loadActions(editing.id)">⚡ Actions</div>
     </div>
 
     <!-- BASICS TAB -->
@@ -1308,7 +1464,7 @@ toggleLang(){this.lang=this.lang==='de'?'en':'de';localStorage.setItem('ak_lang'
 agents:[],docs:[],toasts:[],saving:false,
 showModal:false,editing:null,aTab:'basics',chipIn:'',
 uploading:false,dragging:false,docsTab:'api',
-af:{name:'',emoji:'🤖',description:'',system_prompt:'',greeting:'',tone:'professionell',language:'de',quick_chips:[],color:'#6c5ce7',is_active:true,widget_enabled:true,chatpage_enabled:true,api_enabled:false,whatsapp_enabled:false,whatsapp_number:'',telegram_enabled:false,telegram_token:'',rag_enabled:false,rag_prompt:'',cap_calendar:false,cal_link:'',cap_leads:false,lead_fields:[],lead_email:'',cap_products:false,products_data:[],cap_multilang:false,cap_email:false,smtp_host:'',smtp_port:587,smtp_user:'',smtp_pass:'',smtp_from:'',widget_position:'right',widget_delay:0,widget_theme:'dark',widget_size:56,instagram_enabled:false,instagram_token:'',instagram_business_id:'',facebook_enabled:false,facebook_token:'',facebook_page_id:''},
+af:{name:'',emoji:'🤖',description:'',system_prompt:'',greeting:'',tone:'professionell',language:'de',quick_chips:[],color:'#6c5ce7',is_active:true,widget_enabled:true,chatpage_enabled:true,api_enabled:false,whatsapp_enabled:false,whatsapp_number:'',telegram_enabled:false,telegram_token:'',rag_enabled:false,rag_prompt:'',cap_calendar:false,cal_link:'',cap_leads:false,lead_fields:[],lead_email:'',cap_products:false,products_data:[],cap_multilang:false,cap_email:false,smtp_host:'',smtp_port:587,smtp_user:'',smtp_pass:'',smtp_from:'',widget_position:'right',widget_delay:0,widget_theme:'dark',widget_size:56,instagram_enabled:false,instagram_token:'',instagram_business_id:'',facebook_enabled:false,facebook_token:'',facebook_page_id:'',voice_enabled:false,voice_provider:'elevenlabs',voice_id:'',voice_stability:0.5,stt_provider:'whisper'},
 showTemplates:false,selectedTemplate:null,
 agentTemplates:[
 {id:'blank',emoji:'🤖',name:'Leer / Blank',desc_de:'Starte mit einer leeren Vorlage.',desc_en:'Start fresh.',color:'#6c5ce7',system_prompt:'',greeting:'Hallo! Wie kann ich helfen?',tone:'professionell',quick_chips:[],cap_leads:false,lead_fields:[]},
@@ -1339,6 +1495,13 @@ ftAgentId:'',ftData:null,ftLoading:false,ftJobs:[],ftBaseModel:'gpt-4o-mini-2024
 showChangelog:false,changelogEntries:[],agentVersions:[],
 // Billing
 billingCycle:'monthly',
+// Voice
+availableVoices:[],
+// Actions
+agentActions:[],showNewAction:false,
+newAction:{tool_type:'web_search',tool_name:'web_search',tool_desc:'',config:{url:''}},
+// Workspace / White-Label
+workspace:null,wsMembers:[],wsUsage:null,wsForm:{name:'',slug:'',brand_name:'',primary_color:'#6c5ce7'},inviteEmail:'',
 // Costs
 costsData:null,costsLoading:false,agentCostsData:null,
 // Forgot/Reset password
@@ -1400,7 +1563,7 @@ applyTemplate(){
 async editAgent(a){
   const d=await this.api('/agents/'+a.id);if(!d.agent)return;
   const ag=d.agent;this.editing=ag;
-  this.af={name:ag.name,emoji:ag.emoji,description:ag.description||'',system_prompt:ag.system_prompt||'',greeting:ag.greeting||'',tone:ag.tone||'professionell',language:ag.language||'de',quick_chips:ag.quick_chips||[],color:ag.color||'#6c5ce7',is_active:ag.is_active!==false,widget_enabled:ag.widget_enabled!==false,chatpage_enabled:ag.chatpage_enabled!==false,api_enabled:!!ag.api_enabled,whatsapp_enabled:!!ag.whatsapp_enabled,whatsapp_number:ag.whatsapp_number||'',telegram_enabled:!!ag.telegram_enabled,telegram_token:ag.telegram_token||'',rag_enabled:!!ag.rag_enabled,rag_prompt:ag.rag_prompt||'',cap_calendar:!!ag.cap_calendar,cal_link:ag.cal_link||'',cap_leads:!!ag.cap_leads,lead_fields:ag.lead_fields||[],lead_email:ag.lead_email||'',cap_products:!!ag.cap_products,products_data:ag.products_data||[],cap_multilang:!!ag.cap_multilang,cap_email:!!ag.cap_email,smtp_host:ag.smtp_host||'',smtp_port:ag.smtp_port||587,smtp_user:ag.smtp_user||'',smtp_pass:ag.smtp_pass||'',smtp_from:ag.smtp_from||'',widget_position:ag.widget_position||'right',widget_delay:ag.widget_delay||0,widget_theme:ag.widget_theme||'dark',widget_size:ag.widget_size||56,instagram_enabled:!!ag.instagram_enabled,instagram_token:ag.instagram_token||'',instagram_business_id:ag.instagram_business_id||'',facebook_enabled:!!ag.facebook_enabled,facebook_token:ag.facebook_token||'',facebook_page_id:ag.facebook_page_id||''};
+  this.af={name:ag.name,emoji:ag.emoji,description:ag.description||'',system_prompt:ag.system_prompt||'',greeting:ag.greeting||'',tone:ag.tone||'professionell',language:ag.language||'de',quick_chips:ag.quick_chips||[],color:ag.color||'#6c5ce7',is_active:ag.is_active!==false,widget_enabled:ag.widget_enabled!==false,chatpage_enabled:ag.chatpage_enabled!==false,api_enabled:!!ag.api_enabled,whatsapp_enabled:!!ag.whatsapp_enabled,whatsapp_number:ag.whatsapp_number||'',telegram_enabled:!!ag.telegram_enabled,telegram_token:ag.telegram_token||'',rag_enabled:!!ag.rag_enabled,rag_prompt:ag.rag_prompt||'',cap_calendar:!!ag.cap_calendar,cal_link:ag.cal_link||'',cap_leads:!!ag.cap_leads,lead_fields:ag.lead_fields||[],lead_email:ag.lead_email||'',cap_products:!!ag.cap_products,products_data:ag.products_data||[],cap_multilang:!!ag.cap_multilang,cap_email:!!ag.cap_email,smtp_host:ag.smtp_host||'',smtp_port:ag.smtp_port||587,smtp_user:ag.smtp_user||'',smtp_pass:ag.smtp_pass||'',smtp_from:ag.smtp_from||'',widget_position:ag.widget_position||'right',widget_delay:ag.widget_delay||0,widget_theme:ag.widget_theme||'dark',widget_size:ag.widget_size||56,instagram_enabled:!!ag.instagram_enabled,instagram_token:ag.instagram_token||'',instagram_business_id:ag.instagram_business_id||'',facebook_enabled:!!ag.facebook_enabled,facebook_token:ag.facebook_token||'',facebook_page_id:ag.facebook_page_id||'',voice_enabled:!!ag.voice_enabled,voice_provider:ag.voice_provider||'elevenlabs',voice_id:ag.voice_id||'',voice_stability:ag.voice_stability||0.5,stt_provider:ag.stt_provider||'whisper'};
   this.docs=[];this.convSessions=[];this.selectedSession=null;this.aTab='basics';this.showModal=true;
 },
 
@@ -1521,6 +1684,69 @@ async ftPollJob(jobId){
   if(d.status)this.toast('Status: '+d.status+(d.fineTunedModel?' · '+d.fineTunedModel:''));
   await this.ftLoadJobs();
 },
+// Voice
+async loadVoices(){
+  const d=await this.api('/voice/voices');
+  if(d.voices)this.availableVoices=d.voices;
+},
+
+// Actions
+async loadActions(id){
+  const d=await this.api('/actions/'+id);
+  if(d.tools)this.agentActions=d.tools;
+},
+async createAction(){
+  if(!this.editing)return;
+  const d=await this.api('/actions/'+this.editing.id,'POST',this.newAction);
+  if(d.error){this.toast(d.error,'err');return;}
+  this.toast('Aktion gespeichert ✓');this.showNewAction=false;
+  this.newAction={tool_type:'web_search',tool_name:'web_search',tool_desc:'',config:{url:''}};
+  this.loadActions(this.editing.id);
+},
+async toggleAction(a){
+  await this.api('/actions/'+this.editing.id+'/'+a.id,'PUT',{...a,is_enabled:!a.is_enabled});
+  a.is_enabled=!a.is_enabled;
+},
+async deleteAction(id){
+  if(!confirm('Aktion löschen?'))return;
+  await this.api('/actions/'+this.editing.id+'/'+id,'DELETE');
+  this.agentActions=this.agentActions.filter(a=>a.id!==id);
+},
+
+// Workspace
+async loadWorkspace(){
+  const d=await this.api('/workspace/me');
+  this.workspace=d.workspace;
+  if(this.workspace){this.loadWorkspaceMembers();this.loadWorkspaceUsage();}
+},
+async createWorkspace(){
+  const d=await this.api('/workspace','POST',this.wsForm);
+  if(d.error){this.toast(d.error,'err');return;}
+  this.workspace=d.workspace;this.toast('Workspace erstellt ✓');
+  this.loadWorkspaceMembers();
+},
+async loadWorkspaceMembers(){
+  if(!this.workspace)return;
+  const d=await this.api('/workspace/'+this.workspace.id+'/members');
+  if(d.members)this.wsMembers=d.members;
+},
+async loadWorkspaceUsage(){
+  if(!this.workspace)return;
+  const d=await this.api('/workspace/'+this.workspace.id+'/usage');
+  if(d.totals)this.wsUsage=d;
+},
+async inviteMember(){
+  if(!this.inviteEmail||!this.workspace)return;
+  const d=await this.api('/workspace/'+this.workspace.id+'/invite','POST',{email:this.inviteEmail});
+  if(d.error){this.toast(d.error,'err');return;}
+  this.toast('Einladung gesendet ✓');this.inviteEmail='';this.loadWorkspaceMembers();
+},
+async removeMember(uid){
+  if(!confirm('Mitglied entfernen?'))return;
+  await this.api('/workspace/'+this.workspace.id+'/members/'+uid,'DELETE');
+  this.wsMembers=this.wsMembers.filter(m=>m.id!==uid);
+},
+
 async loadCosts(){
   this.costsLoading=true;this.costsData=null;
   const d=await this.api('/analytics/costs/all');
