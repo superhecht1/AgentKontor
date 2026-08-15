@@ -4,6 +4,12 @@ const cors    = require('cors');
 const path    = require('path');
 const { Pool } = require('pg');
 
+// FIX 1: Crash immediately if critical env vars are missing
+const REQUIRED_ENV = ['DATABASE_URL', 'JWT_SECRET', 'ANTHROPIC_API_KEY'];
+for (const key of REQUIRED_ENV) {
+  if (!process.env[key]) throw new Error(`❌ Env var fehlt: ${key}`);
+}
+
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
@@ -26,6 +32,7 @@ async function initDb() {
     'migrations/add_models.sql',
     'migrations/add_features.sql',
     'migrations/add_extras.sql',
+    'migrations/add_security.sql',   // token_version
   ];
   for (const file of sqls) {
     const fp = path.join(__dirname, file);
@@ -51,22 +58,38 @@ async function initDb() {
 
 app.locals.pool = pool;
 
+// FIX 5: Helmet — security headers
+try {
+  const helmet = require('helmet');
+  app.use(helmet({
+    contentSecurityPolicy: false, // eigene CSP falls nötig später
+    crossOriginEmbedderPolicy: false,
+  }));
+} catch { console.warn('⚠ helmet nicht installiert — npm install helmet'); }
+
 // Stripe webhook raw body — must be BEFORE express.json()
 app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
 
-app.use(cors({ origin: process.env.CORS_ORIGIN || '*', credentials: true }));
-app.use(express.json({ limit: '15mb' }));
+// FIX 3: CORS — nur eigene Domain in Produktion
+const allowedOrigin = process.env.CORS_ORIGIN || (process.env.NODE_ENV === 'production' ? 'https://agentkontor.de' : '*');
+app.use(cors({ origin: allowedOrigin, credentials: true }));
+
+app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Auth rate limiter
+// FIX 4: Auth rate limiter — fail CLOSED (kein next() bei DB-Fehler)
 const authLimiter = async (req, res, next) => {
   try {
     const { rateLimit } = require('./middleware/plan-gate');
     const ip = req.ip || 'unknown';
-    const r = await rateLimit(pool, `auth:${ip}`, 30);
+    const r  = await rateLimit(pool, `auth:${ip}`, 30);
     if (!r.allowed) return res.status(429).json({ error: 'Zu viele Anfragen. Bitte später erneut versuchen.' });
     next();
-  } catch { next(); }
+  } catch (e) {
+    // Fail CLOSED für Auth-Endpunkte — bei DB-Fehler kein Zugang
+    console.error('Rate limiter error:', e.message);
+    return res.status(503).json({ error: 'Dienst vorübergehend nicht verfügbar' });
+  }
 };
 
 // ── ROUTES ──────────────────────────────────────────────────────
