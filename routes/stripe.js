@@ -56,7 +56,7 @@ router.post('/create-checkout', auth, async (req, res) => {
     res.json({ url: session.url });
   } catch(e) {
     console.error('Stripe checkout error:', e);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: 'Interner Fehler' });
   }
 });
 
@@ -80,7 +80,7 @@ router.post('/portal', auth, async (req, res) => {
     });
     res.json({ url: session.url });
   } catch(e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: 'Interner Fehler' });
   }
 });
 
@@ -97,7 +97,7 @@ router.post('/webhook', async (req, res) => {
     event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
   } catch(e) {
     console.error('Stripe webhook signature error:', e.message);
-    return res.status(400).send(`Webhook Error: ${e.message}`);
+    return res.status(400).send("Webhook-Signatur ungültig");
   }
 
   const pool = req.app.locals.pool;
@@ -180,7 +180,7 @@ router.post('/webhook', async (req, res) => {
     }
   } catch(e) {
     console.error('Stripe webhook handler error:', e);
-    return res.status(500).json({ error: e.message });
+    return res.status(500).json({ error: 'Interner Fehler' });
   }
 
   res.json({ received: true });
