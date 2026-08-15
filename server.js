@@ -4,7 +4,6 @@ const cors    = require('cors');
 const path    = require('path');
 const { Pool } = require('pg');
 
-// FIX 1: Crash immediately if critical env vars are missing
 const REQUIRED_ENV = ['DATABASE_URL', 'JWT_SECRET', 'ANTHROPIC_API_KEY'];
 for (const key of REQUIRED_ENV) {
   if (!process.env[key]) throw new Error(`❌ Env var fehlt: ${key}`);
@@ -12,14 +11,12 @@ for (const key of REQUIRED_ENV) {
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
-
 app.set('trust proxy', 1);
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  max: 10,
-  idleTimeoutMillis: 30000,
+  max: 10, idleTimeoutMillis: 30000,
 });
 
 async function initDb() {
@@ -32,13 +29,14 @@ async function initDb() {
     'migrations/add_models.sql',
     'migrations/add_features.sql',
     'migrations/add_extras.sql',
-    'migrations/add_security.sql',   // token_version
+    'migrations/add_security.sql',
+    'migrations/add_reset.sql',
   ];
   for (const file of sqls) {
     const fp = path.join(__dirname, file);
     if (!fs.existsSync(fp)) continue;
     try {
-      const sql = fs.readFileSync(fp, 'utf8');
+      const sql   = fs.readFileSync(fp, 'utf8');
       const stmts = sql.split(';').map(s => s.trim()).filter(s => s.length > 3 && !s.startsWith('--'));
       for (const stmt of stmts) {
         try { await pool.query(stmt); }
@@ -58,44 +56,42 @@ async function initDb() {
 
 app.locals.pool = pool;
 
-// FIX 5: Helmet — security headers
+// Helmet — security headers
 try {
   const helmet = require('helmet');
-  app.use(helmet({
-    contentSecurityPolicy: false, // eigene CSP falls nötig später
-    crossOriginEmbedderPolicy: false,
-  }));
+  app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
 } catch { console.warn('⚠ helmet nicht installiert — npm install helmet'); }
 
-// Stripe webhook raw body — must be BEFORE express.json()
+// Stripe raw body before json parser
 app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
 
-// FIX 3: CORS — nur eigene Domain in Produktion
-const allowedOrigin = process.env.CORS_ORIGIN || (process.env.NODE_ENV === 'production' ? 'https://agentkontor.de' : '*');
+// CORS — production: only own domain
+const allowedOrigin = process.env.CORS_ORIGIN ||
+  (process.env.NODE_ENV === 'production' ? 'https://agentkontor.de' : '*');
 app.use(cors({ origin: allowedOrigin, credentials: true }));
-
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// FIX 4: Auth rate limiter — fail CLOSED (kein next() bei DB-Fehler)
+// Auth rate limiter — fail CLOSED
 const authLimiter = async (req, res, next) => {
   try {
     const { rateLimit } = require('./middleware/plan-gate');
     const ip = req.ip || 'unknown';
     const r  = await rateLimit(pool, `auth:${ip}`, 30);
-    if (!r.allowed) return res.status(429).json({ error: 'Zu viele Anfragen. Bitte später erneut versuchen.' });
+    if (!r.allowed) return res.status(429).json({ error: 'Zu viele Anfragen. Bitte später versuchen.' });
     next();
   } catch (e) {
-    // Fail CLOSED für Auth-Endpunkte — bei DB-Fehler kein Zugang
     console.error('Rate limiter error:', e.message);
     return res.status(503).json({ error: 'Dienst vorübergehend nicht verfügbar' });
   }
 };
 
-// ── ROUTES ──────────────────────────────────────────────────────
+// ── ROUTES ──────────────────────────────────────────────
 app.use('/api/auth',          authLimiter, require('./routes/auth'));
+app.use('/api/auth',          require('./routes/auth-extra'));        // reset + verify
 app.use('/api/agents',        require('./routes/agents'));
 app.use('/api/chat',          require('./routes/chat'));
+app.use('/api/chat',          require('./routes/agents'));            // widget-config
 app.use('/api/keys',          require('./routes/keys'));
 app.use('/api/analytics',     require('./routes/analytics'));
 app.use('/api/account',       require('./routes/account'));
@@ -115,16 +111,16 @@ try {
   app.use('/api/rag', (req, res) => res.status(503).json({ error: 'RAG not available' }));
 }
 
-// ── PAGES ────────────────────────────────────────────────────────
-app.get('/chat/:publicId',    (req, res) => res.sendFile(path.join(__dirname, 'public', 'chat.html')));
-app.get('/app',               (req, res) => res.sendFile(path.join(__dirname, 'public', 'app.html')));
-app.get('/app/*',             (req, res) => res.sendFile(path.join(__dirname, 'public', 'app.html')));
-app.get('/admin',             (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
-app.get('/impressum.html',    (req, res) => res.sendFile(path.join(__dirname, 'public', 'impressum.html')));
-app.get('/datenschutz.html',  (req, res) => res.sendFile(path.join(__dirname, 'public', 'datenschutz.html')));
-app.get('/agb.html',          (req, res) => res.sendFile(path.join(__dirname, 'public', 'agb.html')));
-app.get('/',                  (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
-app.get('*',                  (req, res) => res.redirect('/'));
+// ── PAGES ────────────────────────────────────────────────
+app.get('/chat/:publicId',   (req, res) => res.sendFile(path.join(__dirname, 'public', 'chat.html')));
+app.get('/app',              (req, res) => res.sendFile(path.join(__dirname, 'public', 'app.html')));
+app.get('/app/*',            (req, res) => res.sendFile(path.join(__dirname, 'public', 'app.html')));
+app.get('/admin',            (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
+app.get('/impressum.html',   (req, res) => res.sendFile(path.join(__dirname, 'public', 'impressum.html')));
+app.get('/datenschutz.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'datenschutz.html')));
+app.get('/agb.html',         (req, res) => res.sendFile(path.join(__dirname, 'public', 'agb.html')));
+app.get('/',                 (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get('*',                 (req, res) => res.redirect('/'));
 
 initDb().then(() => {
   app.listen(PORT, () => console.log(`🚀 AgentKontor on port ${PORT}`));
