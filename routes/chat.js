@@ -231,6 +231,15 @@ router.post('/web/:agentId', async (req, res) => {
     const { messages, sessionId, source = 'web' } = req.body;
     if (!messages?.length) return res.status(400).json({ error: 'messages erforderlich' });
 
+    // FIX 2: Limit message size to prevent abuse + cost explosion
+    const MAX_MSG_LEN  = 4000;  // chars per message
+    const MAX_HISTORY  = 12;    // max messages in history
+    const sanitized = messages
+      .slice(-MAX_HISTORY)
+      .map(m => ({ role: m.role, content: String(m.content || '').slice(0, MAX_MSG_LEN) }));
+    if (!sanitized.length) return res.status(400).json({ error: 'Ungültige Nachrichten' });
+    const validMessages = sanitized; // use this instead of messages below
+
     const ar = await pool.query(
       `SELECT a.*, u.email AS owner_email, u.plan AS owner_plan
        FROM agents a JOIN users u ON a.user_id=u.id
@@ -246,7 +255,7 @@ router.post('/web/:agentId', async (req, res) => {
     if (!quota.allowed)
       return res.status(429).json({ error: 'Nachrichtenlimit erreicht.', upgrade: true });
 
-    const result = await handleChat(pool, agent, owner, messages, sessionId, source, res);
+    const result = await handleChat(pool, agent, owner, validMessages, sessionId, source, res);
     res.json(result);
   } catch (e) {
     console.error('WEB CHAT ERROR:', e.message);

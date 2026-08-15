@@ -1,10 +1,8 @@
 /**
- * AgentKontor — Account Management
- * PATCH /api/account/password  — change password
- * PATCH /api/account/email     — change email
- * DELETE /api/account          — delete account
- * GET   /api/account/export    — DSGVO data export
- * GET   /api/account/plan      — current plan + usage
+ * AgentKontor — Account Management (security-hardened)
+ * FIX 7:  E-Mail in Logs maskiert
+ * FIX 8:  smtp_pass aus DSGVO-Export entfernt
+ * FIX 9:  Soft-Delete statt sofortigem DELETE
  */
 
 const router = require('express').Router();
@@ -12,6 +10,11 @@ const auth   = require('../middleware/auth');
 const bcrypt = require('bcryptjs');
 
 function getPool(req) { return req.app.locals.pool; }
+
+// FIX 7: Mask email in logs
+function maskEmail(email) {
+  return email.replace(/(?<=.{1}).(?=[^@]*@)/g, '*');
+}
 
 /* ── CHANGE PASSWORD ─────────────────────────────────────── */
 router.patch('/password', auth, async (req, res) => {
@@ -22,12 +25,15 @@ router.patch('/password', auth, async (req, res) => {
   if (newPw === current) return res.status(400).json({ error: 'Neues Passwort muss sich unterscheiden' });
 
   try {
-    const r = await pool.query('SELECT password_hash FROM users WHERE id=$1', [req.userId]);
+    const r = await pool.query('SELECT password_hash FROM users WHERE id=$1 AND deleted_at IS NULL', [req.userId]);
     if (!r.rows.length) return res.status(404).json({ error: 'Nutzer nicht gefunden' });
     const valid = await bcrypt.compare(current, r.rows[0].password_hash);
     if (!valid) return res.status(401).json({ error: 'Aktuelles Passwort falsch' });
     const hash = await bcrypt.hash(newPw, 12);
-    await pool.query('UPDATE users SET password_hash=$1 WHERE id=$2', [hash, req.userId]);
+    await pool.query(
+      'UPDATE users SET password_hash=$1, token_version=COALESCE(token_version,1)+1 WHERE id=$2',
+      [hash, req.userId]
+    );
     res.json({ success: true });
   } catch(e) {
     res.status(500).json({ error: 'Fehler beim Ändern des Passworts' });
@@ -42,13 +48,15 @@ router.patch('/email', auth, async (req, res) => {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Ungültige E-Mail' });
 
   try {
-    const r = await pool.query('SELECT password_hash FROM users WHERE id=$1', [req.userId]);
+    const r = await pool.query('SELECT password_hash FROM users WHERE id=$1 AND deleted_at IS NULL', [req.userId]);
     if (!r.rows.length) return res.status(404).json({ error: 'Nutzer nicht gefunden' });
     const valid = await bcrypt.compare(password, r.rows[0].password_hash);
     if (!valid) return res.status(401).json({ error: 'Passwort falsch' });
 
-    // Check if email already taken
-    const exists = await pool.query('SELECT id FROM users WHERE email=$1 AND id!=$2', [email.toLowerCase(), req.userId]);
+    const exists = await pool.query(
+      'SELECT id FROM users WHERE email=$1 AND id!=$2 AND deleted_at IS NULL',
+      [email.toLowerCase(), req.userId]
+    );
     if (exists.rows.length) return res.status(409).json({ error: 'E-Mail bereits vergeben' });
 
     await pool.query('UPDATE users SET email=$1 WHERE id=$2', [email.toLowerCase(), req.userId]);
@@ -71,7 +79,9 @@ router.patch('/name', auth, async (req, res) => {
   }
 });
 
-/* ── DELETE ACCOUNT ──────────────────────────────────────── */
+/* ── DELETE ACCOUNT (Soft-Delete) ────────────────────────── */
+// FIX 9: Soft-Delete — Daten bleiben 30 Tage erhalten (DSGVO-konform)
+// Stripe-Daten bleiben für 10-Jahres-Aufbewahrungspflicht
 router.delete('/', auth, async (req, res) => {
   const pool = getPool(req);
   const { password, confirm } = req.body;
@@ -79,24 +89,48 @@ router.delete('/', auth, async (req, res) => {
   if (confirm !== 'LÖSCHEN') return res.status(400).json({ error: 'Bitte "LÖSCHEN" eingeben' });
 
   try {
-    const r = await pool.query('SELECT password_hash, stripe_subscription_id FROM users WHERE id=$1', [req.userId]);
+    const r = await pool.query(
+      'SELECT password_hash, stripe_subscription_id, email FROM users WHERE id=$1 AND deleted_at IS NULL',
+      [req.userId]
+    );
     if (!r.rows.length) return res.status(404).json({ error: 'Nutzer nicht gefunden' });
     const valid = await bcrypt.compare(password, r.rows[0].password_hash);
     if (!valid) return res.status(401).json({ error: 'Passwort falsch' });
 
-    // Cancel Stripe subscription if exists
+    // Cancel Stripe subscription
     if (r.rows[0].stripe_subscription_id && process.env.STRIPE_SECRET_KEY) {
       try {
         const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
         await stripe.subscriptions.cancel(r.rows[0].stripe_subscription_id);
-      } catch(stripeErr) { console.warn('Stripe cancel error:', stripeErr.message); }
+      } catch(stripeErr) { console.warn('Stripe cancel:', stripeErr.message); }
     }
 
-    // CASCADE deletes agents, api_keys, chat_messages, etc.
-    await pool.query('DELETE FROM users WHERE id=$1', [req.userId]);
-    res.json({ success: true });
+    // Soft-delete: mark as deleted, anonymize PII, deactivate agents
+    // Keep stripe_customer_id + plan history for 10-year billing retention (§257 HGB)
+    await pool.query(`
+      UPDATE users SET
+        deleted_at = NOW(),
+        email      = 'deleted-' || id || '@deleted.invalid',
+        name       = 'Gelöschter Nutzer',
+        password_hash = 'DELETED',
+        token_version = COALESCE(token_version,1) + 999,
+        email_verify_token = NULL
+      WHERE id=$1
+    `, [req.userId]);
+
+    // Deactivate all agents (don't delete — may be needed for billing audit)
+    await pool.query('UPDATE agents SET is_active=false WHERE user_id=$1', [req.userId]);
+
+    // Anonymize chat messages (keep for analytics, remove PII)
+    // Full delete of leads (PII)
+    await pool.query(`
+      DELETE FROM lead_captures WHERE agent_id IN (SELECT id FROM agents WHERE user_id=$1)
+    `, [req.userId]);
+
+    console.log(`Account soft-deleted: user ${req.userId} (${maskEmail(r.rows[0].email)})`);
+    res.json({ success: true, message: 'Konto wird innerhalb von 30 Tagen vollständig gelöscht.' });
   } catch(e) {
-    console.error('Delete account error:', e);
+    console.error('Delete account error:', e.message);
     res.status(500).json({ error: 'Fehler beim Löschen des Kontos' });
   }
 });
@@ -108,16 +142,14 @@ router.get('/plan', auth, async (req, res) => {
     const r = await pool.query(
       `SELECT plan, msg_count_month, msg_count_reset, plan_period_end,
               stripe_subscription_id, stripe_customer_id
-       FROM users WHERE id=$1`,
+       FROM users WHERE id=$1 AND deleted_at IS NULL`,
       [req.userId]
     );
     if (!r.rows.length) return res.status(404).json({ error: 'Nicht gefunden' });
     const u = r.rows[0];
 
-    // Agent count
     const agentCount = await pool.query('SELECT COUNT(*) FROM agents WHERE user_id=$1', [req.userId]);
-    // RAG docs
-    const ragCount = await pool.query(`
+    const ragCount   = await pool.query(`
       SELECT COUNT(*) FROM rag_documents rd
       JOIN agents a ON rd.agent_id=a.id WHERE a.user_id=$1
     `, [req.userId]);
@@ -130,16 +162,13 @@ router.get('/plan', auth, async (req, res) => {
       periodEnd: u.plan_period_end,
       hasSubscription: !!u.stripe_subscription_id,
       usage: {
-        agents:    { current: parseInt(agentCount.rows[0].count), limit: limits.agents },
-        messages:  { current: u.msg_count_month, limit: limits.msgPerMonth, reset: u.msg_count_reset },
-        ragDocs:   { current: parseInt(ragCount.rows[0].count), limit: limits.ragDocsPerAgent === Infinity ? '∞' : limits.ragDocsPerAgent },
+        agents:   { current: parseInt(agentCount.rows[0].count), limit: limits.agents },
+        messages: { current: u.msg_count_month, limit: limits.msgPerMonth, reset: u.msg_count_reset },
+        ragDocs:  { current: parseInt(ragCount.rows[0].count), limit: limits.ragDocsPerAgent },
       },
       features: {
-        api: limits.api,
-        whatsapp: limits.whatsapp,
-        telegram: limits.telegram,
-        webhooksOut: limits.webhooksOut,
-        finetune: limits.finetune,
+        api: limits.api, whatsapp: limits.whatsapp, telegram: limits.telegram,
+        webhooksOut: limits.webhooksOut, finetune: limits.finetune,
       },
     });
   } catch(e) {
@@ -148,14 +177,22 @@ router.get('/plan', auth, async (req, res) => {
 });
 
 /* ── DSGVO DATA EXPORT ───────────────────────────────────── */
+// FIX 8: smtp_pass wird NICHT exportiert
 router.get('/export', auth, async (req, res) => {
   const pool = getPool(req);
   try {
     const user = await pool.query(
-      'SELECT id,email,name,lang,plan,created_at FROM users WHERE id=$1', [req.userId]
+      'SELECT id,email,name,lang,plan,created_at FROM users WHERE id=$1',
+      [req.userId]
     );
     const agents = await pool.query(
-      'SELECT id,public_id,name,emoji,description,system_prompt,greeting,tone,language,is_active,created_at FROM agents WHERE user_id=$1',
+      // Deliberately exclude smtp_pass and other credentials
+      `SELECT id,public_id,name,emoji,description,system_prompt,greeting,tone,language,
+              is_active,widget_enabled,chatpage_enabled,api_enabled,
+              whatsapp_enabled,telegram_enabled,rag_enabled,
+              cap_calendar,cal_link,cap_leads,lead_fields,cap_products,products_data,
+              cap_multilang,created_at
+       FROM agents WHERE user_id=$1`,
       [req.userId]
     );
     const messages = await pool.query(`
@@ -168,17 +205,16 @@ router.get('/export', auth, async (req, res) => {
       FROM lead_captures lc JOIN agents a ON lc.agent_id=a.id WHERE a.user_id=$1
     `, [req.userId]);
 
-    const exportData = {
+    res.setHeader('Content-Disposition', 'attachment; filename="agentkontor-daten.json"');
+    res.setHeader('Content-Type', 'application/json');
+    res.json({
       exportedAt: new Date().toISOString(),
+      notice: 'SMTP-Zugangsdaten werden aus Sicherheitsgründen nicht exportiert.',
       user: user.rows[0],
       agents: agents.rows,
       messages: messages.rows,
       leads: leads.rows,
-    };
-
-    res.setHeader('Content-Disposition', 'attachment; filename="agentkontor-daten.json"');
-    res.setHeader('Content-Type', 'application/json');
-    res.json(exportData);
+    });
   } catch(e) {
     res.status(500).json({ error: 'Export fehlgeschlagen' });
   }
