@@ -5,14 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AgentKontor – Dashboard</title>
 <script src="//unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-:root{--bg:#050510;--bg2:#09091a;--bg3:#0e0e22;--card:#0c0c1e;--border:rgba(255,255,255,.08);--purple:#6c5ce7;--pu-l:#a29bfe;--pu-d:#4a3db0;--teal:#00cec9;--white:#fff;--muted:#5a5a80;--text:#c8c8e8;--red:#e94560;--green:#00b894;--gold:#f0c040}
+:root{--bg:#050510;--bg2:#09091a;--bg3:#0e0e22;--card:#0c0c1e;--border:rgba(255,255,255,.08);--purple:#6c5ce7;--pu-l:#a29bfe;--pu-d:#4a3db0;--teal:#00cec9;--white:#fff;--muted:#5a5a80;--text:#c8c8e8;--red:#e94560;--green:#00b894;--gold:#f0c040;--orange:#fd9644}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 [x-cloak]{display:none!important}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
-/* ─── AUTH ─── */
+/* AUTH */
 .auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;position:relative;overflow:hidden}
 .auth-screen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(108,92,231,.12),transparent 70%);pointer-events:none}
 .auth-card{width:100%;max-width:440px;background:var(--card);border:1px solid rgba(108,92,231,.2);border-radius:20px;padding:44px 40px;position:relative;box-shadow:0 40px 100px rgba(0,0,0,.5)}
@@ -27,13 +28,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .inp{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--white);font-size:.9rem;transition:all .2s;font-family:inherit}
 .inp:focus{outline:none;border-color:var(--purple);background:rgba(108,92,231,.06);box-shadow:0 0 0 3px rgba(108,92,231,.12)}
 .inp::placeholder{color:var(--muted)}
-.inp-icon{position:relative}
-.inp-icon .inp{padding-left:40px}
-.inp-icon .icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:.95rem;pointer-events:none}
+.inp-icon{position:relative}.inp-icon .inp{padding-left:40px}.inp-icon .icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:.95rem;pointer-events:none}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:10px;font-size:.9rem;font-weight:600;border:none;cursor:pointer;transition:all .2s;font-family:inherit}
 .btn:disabled{opacity:.5;cursor:not-allowed}
 .btn-purple{background:var(--purple);color:#fff;box-shadow:0 4px 20px rgba(108,92,231,.3)}
-.btn-purple:hover:not(:disabled){background:var(--pu-l);transform:translateY(-1px);box-shadow:0 8px 28px rgba(108,92,231,.4)}
+.btn-purple:hover:not(:disabled){background:var(--pu-l);transform:translateY(-1px)}
 .btn-full{width:100%}
 .btn-sm{padding:7px 14px;font-size:.8rem;border-radius:8px}
 .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
@@ -41,53 +40,62 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .btn-danger{background:var(--red);color:#fff}
 .btn-danger:hover:not(:disabled){filter:brightness(1.15)}
 .btn-teal{background:var(--teal);color:#050510}
-.btn-teal:hover{filter:brightness(1.1)}
+.btn-green{background:var(--green);color:#050510}
 .err-box{background:rgba(233,69,96,.1);border:1px solid rgba(233,69,96,.25);border-radius:8px;padding:10px 14px;font-size:.82rem;color:var(--red);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.ok-box{background:rgba(0,184,148,.08);border:1px solid rgba(0,184,148,.2);border-radius:8px;padding:10px 14px;font-size:.82rem;color:var(--green);margin-bottom:16px;display:flex;align-items:center;gap:8px}
 .auth-footer{text-align:center;margin-top:20px;font-size:.8rem;color:var(--muted)}
 
-/* ─── APP LAYOUT ─── */
+/* APP LAYOUT */
 .app{display:flex;height:100vh;overflow:hidden}
 .sidebar{width:248px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
-.sb-logo{padding:22px 20px;font-size:1.2rem;font-weight:800;color:var(--white);border-bottom:1px solid var(--border);letter-spacing:-.01em}
+.sb-logo{padding:22px 20px;font-size:1.2rem;font-weight:800;color:var(--white);border-bottom:1px solid var(--border);letter-spacing:-.01em;display:flex;align-items:center;justify-content:space-between}
 .sb-logo span{color:var(--pu-l)}
+.plan-badge{font-size:.6rem;font-weight:700;padding:2px 7px;border-radius:20px;letter-spacing:.06em}
+.plan-free{background:rgba(255,255,255,.06);color:var(--muted)}
+.plan-pro{background:rgba(108,92,231,.2);color:var(--pu-l);border:1px solid rgba(108,92,231,.3)}
 .sb-nav{flex:1;padding:12px 10px;overflow-y:auto}
 .nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;font-size:.86rem;font-weight:500;color:var(--muted);cursor:pointer;transition:all .2s;margin-bottom:2px}
 .nav-item:hover,.nav-item.active{background:rgba(108,92,231,.12);color:var(--white)}
 .nav-item.active{color:var(--pu-l)}
 .nav-icon{font-size:1rem;width:20px;text-align:center;flex-shrink:0}
 .nav-section{font-size:.68rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding:14px 12px 5px;margin-top:4px}
+.upgrade-btn{margin:10px;background:linear-gradient(135deg,rgba(108,92,231,.15),rgba(162,155,254,.1));border:1px solid rgba(108,92,231,.3);border-radius:10px;padding:12px;cursor:pointer;transition:all .2s;text-align:left}
+.upgrade-btn:hover{background:rgba(108,92,231,.2)}
+.upgrade-btn h4{font-size:.78rem;font-weight:700;color:var(--pu-l);margin-bottom:2px}
+.upgrade-btn p{font-size:.7rem;color:var(--muted)}
 .sb-footer{padding:14px 16px;border-top:1px solid var(--border)}
 .sb-user{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .user-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--pu-l));display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:700;color:#fff;flex-shrink:0}
 .user-info .name{font-size:.84rem;font-weight:600;color:var(--white)}
-.user-info .plan{font-size:.7rem;color:var(--muted)}
+.user-info .email{font-size:.7rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px}
 .sb-actions{display:flex;gap:6px}
 .sb-action{flex:1;padding:6px;border-radius:7px;border:1px solid var(--border);background:transparent;font-size:.72rem;color:var(--muted);cursor:pointer;transition:all .2s;text-align:center}
 .sb-action:hover{border-color:rgba(108,92,231,.3);color:var(--pu-l)}
 .sb-action.danger:hover{border-color:rgba(233,69,96,.3);color:var(--red)}
-
 .main{flex:1;overflow-y:auto;background:var(--bg)}
-.page{padding:32px 36px;max-width:1160px}
+.page{padding:32px 36px;max-width:1200px}
 
-/* ─── PAGE HEADER ─── */
+/* PAGE HEADER */
 .ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:16px}
 .ph-title{font-size:1.45rem;font-weight:700;color:var(--white);letter-spacing:-.02em}
 .ph-sub{font-size:.84rem;color:var(--muted);margin-top:2px}
 
-/* ─── CARDS ─── */
+/* CARDS */
 .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px}
 .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}
-.stat-n{font-size:2.2rem;font-weight:700;color:var(--pu-l);line-height:1}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px}
+.stat-n{font-size:2rem;font-weight:700;color:var(--pu-l);line-height:1}
 .stat-l{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:5px}
+.stat-sub{font-size:.75rem;color:var(--muted);margin-top:4px}
 
-/* ─── TABS ─── */
+/* TABS */
 .tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:24px}
 .tab{padding:9px 16px;font-size:.84rem;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s}
 .tab:hover{color:var(--white)}
 .tab.active{color:var(--pu-l);border-bottom-color:var(--pu-l)}
 
-/* ─── AGENT CARDS ─── */
+/* AGENT CARDS */
 .agent-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
 .agent-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:all .25s}
 .agent-card:hover{border-color:rgba(108,92,231,.3);transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.3)}
@@ -109,19 +117,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .ac-stats{border-top:1px solid var(--border);padding-top:9px;display:flex;gap:14px;font-size:.73rem;color:var(--muted)}
 .ac-stats strong{color:var(--text)}
 
-/* ─── EMPTY ─── */
+/* EMPTY */
 .empty{text-align:center;padding:60px 24px;color:var(--muted)}
 .empty-icon{font-size:3rem;margin-bottom:14px}
 .empty h3{font-size:1.05rem;font-weight:600;color:var(--white);margin-bottom:6px}
 .empty p{font-size:.84rem;margin-bottom:22px}
 
-/* ─── MODAL ─── */
+/* MODAL */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)}
 .modal{background:var(--bg3);border:1px solid rgba(108,92,231,.2);border-radius:18px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;padding:32px;box-shadow:0 40px 100px rgba(0,0,0,.6)}
+.modal-sm{max-width:440px}
 .modal-title{font-size:1.15rem;font-weight:700;color:var(--white);margin-bottom:24px}
 .modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
 
-/* ─── FORM ─── */
+/* FORM */
 .fs{margin-bottom:22px}
 .fs-title{font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--pu-l);margin-bottom:12px;display:flex;align-items:center;gap:8px}
 .fs-title::after{content:'';flex:1;height:1px;background:var(--border)}
@@ -130,33 +139,7 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.5}
 select.inp option{background:var(--bg3)}
 .hint{font-size:.73rem;color:var(--muted);margin-top:4px;line-height:1.4}
 
-/* ─── EMOJI ─── */
-.emoji-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px}
-.emo{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.03);cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all .15s}
-.emo:hover,.emo.on{border-color:var(--purple);background:rgba(108,92,231,.15)}
-
-/* ─── TONE ─── */
-.tone-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:5px}
-.tone-opt{padding:9px 11px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.02);cursor:pointer;transition:all .15s}
-.tone-opt:hover,.tone-opt.on{border-color:var(--purple);background:rgba(108,92,231,.1)}
-.tone-opt h4{font-size:.82rem;font-weight:600;color:var(--white);margin-bottom:1px}
-.tone-opt p{font-size:.71rem;color:var(--muted)}
-
-/* ─── COLOR ─── */
-.color-grid{display:flex;gap:8px;flex-wrap:wrap;margin-top:5px}
-.col-opt{width:30px;height:30px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s}
-.col-opt:hover{transform:scale(1.15)}
-.col-opt.on{border-color:#fff;transform:scale(1.1)}
-
-/* ─── CHIPS ─── */
-.chip-row{display:flex;gap:8px;margin-bottom:7px}
-.chip-row .inp{flex:1}
-.chips-wrap{display:flex;flex-wrap:wrap;gap:5px}
-.chip-tag{display:flex;align-items:center;gap:5px;background:rgba(108,92,231,.1);border:1px solid rgba(108,92,231,.22);border-radius:20px;padding:3px 10px;font-size:.75rem;color:var(--pu-l)}
-.chip-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;line-height:1;transition:color .2s}
-.chip-del:hover{color:var(--red)}
-
-/* ─── TOGGLE ─── */
+/* TOGGLE */
 .toggle{position:relative;display:inline-block;width:40px;height:21px}
 .toggle input{opacity:0;width:0;height:0}
 .slider{position:absolute;inset:0;background:rgba(255,255,255,.1);border-radius:21px;cursor:pointer;transition:.3s}
@@ -164,7 +147,29 @@ select.inp option{background:var(--bg3)}
 input:checked+.slider{background:var(--purple)}
 input:checked+.slider:before{transform:translateX(19px)}
 
-/* ─── PREVIEW ─── */
+/* CHIPS */
+.chip-row{display:flex;gap:8px;margin-bottom:7px}
+.chip-row .inp{flex:1}
+.chips-wrap{display:flex;flex-wrap:wrap;gap:5px}
+.chip-tag{display:flex;align-items:center;gap:5px;background:rgba(108,92,231,.1);border:1px solid rgba(108,92,231,.22);border-radius:20px;padding:3px 10px;font-size:.75rem;color:var(--pu-l)}
+.chip-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;line-height:1;transition:color .2s}
+.chip-del:hover{color:var(--red)}
+
+/* COLOR / EMOJI */
+.emoji-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px}
+.emo{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.03);cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.emo:hover,.emo.on{border-color:var(--purple);background:rgba(108,92,231,.15)}
+.tone-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:5px}
+.tone-opt{padding:9px 11px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.02);cursor:pointer;transition:all .15s}
+.tone-opt:hover,.tone-opt.on{border-color:var(--purple);background:rgba(108,92,231,.1)}
+.tone-opt h4{font-size:.82rem;font-weight:600;color:var(--white);margin-bottom:1px}
+.tone-opt p{font-size:.71rem;color:var(--muted)}
+.color-grid{display:flex;gap:8px;flex-wrap:wrap;margin-top:5px}
+.col-opt{width:30px;height:30px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s}
+.col-opt:hover{transform:scale(1.15)}
+.col-opt.on{border-color:#fff;transform:scale(1.1)}
+
+/* PREVIEW */
 .preview-win{background:#0c0c1e;border:1px solid rgba(255,255,255,.1);border-radius:14px;overflow:hidden}
 .pw-hdr{padding:11px 14px;display:flex;align-items:center;gap:9px}
 .pw-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px}
@@ -176,208 +181,285 @@ input:checked+.slider:before{transform:translateX(19px)}
 .pw-bbl.u{color:#fff;border-bottom-right-radius:2px;align-self:flex-end;max-width:88%}
 .pw-foot{padding:9px 12px;border-top:1px solid rgba(255,255,255,.06);display:flex;gap:7px}
 .pw-inp{flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:7px;padding:6px 10px;color:#ccc;font-size:.79rem}
-.pw-send{width:30px;height:30px;border-radius:7px;border:none;cursor:pointer;font-size:.82rem}
 
-/* ─── INTEG ITEMS ─── */
+/* INTEG */
 .integ-item{display:flex;align-items:flex-start;gap:14px;padding:16px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.02);margin-bottom:8px}
 .ii-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
 .ii-info{flex:1}
 .ii-name{font-size:.88rem;font-weight:600;color:var(--white);margin-bottom:2px}
 .ii-desc{font-size:.76rem;color:var(--muted);margin-bottom:8px}
 
-/* ─── CODE ─── */
+/* CODE */
 .code{background:#07070f;border:1px solid var(--border);border-radius:8px;padding:13px;font-family:'Courier New',monospace;font-size:.76rem;color:var(--pu-l);overflow-x:auto;white-space:pre-wrap;word-break:break-all;position:relative}
-.copy-btn{position:absolute;top:7px;right:7px;background:rgba(108,92,231,.2);border:1px solid rgba(108,92,231,.3);border-radius:6px;padding:3px 9px;font-size:.7rem;color:var(--pu-l);cursor:pointer;transition:background .2s}
+.copy-btn{position:absolute;top:7px;right:7px;background:rgba(108,92,231,.2);border:1px solid rgba(108,92,231,.3);border-radius:6px;padding:3px 9px;font-size:.7rem;color:var(--pu-l);cursor:pointer}
 .copy-btn:hover{background:rgba(108,92,231,.4)}
 
-/* ─── RAG ─── */
+/* RAG */
 .doc-item{display:flex;align-items:center;gap:14px;padding:14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.02);margin-bottom:8px;transition:border-color .2s}
-.doc-item:hover{border-color:rgba(108,92,231,.25)}
 .doc-icon{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
 .doc-name{font-size:.86rem;font-weight:600;color:var(--white)}
 .doc-meta{font-size:.72rem;color:var(--muted);margin-top:1px}
-.doc-status{margin-left:auto;flex-shrink:0}
 .status-pill{font-size:.68rem;font-weight:600;padding:3px 9px;border-radius:20px}
 .s-ready{background:rgba(0,184,148,.12);color:var(--green);border:1px solid rgba(0,184,148,.2)}
 .s-processing{background:rgba(240,192,64,.1);color:var(--gold);border:1px solid rgba(240,192,64,.2)}
 .s-error{background:rgba(233,69,96,.1);color:var(--red);border:1px solid rgba(233,69,96,.2)}
-
-/* ─── UPLOAD ZONE ─── */
 .upload-zone{border:2px dashed rgba(108,92,231,.3);border-radius:12px;padding:36px;text-align:center;cursor:pointer;transition:all .25s;position:relative}
 .upload-zone:hover,.upload-zone.drag{border-color:var(--purple);background:rgba(108,92,231,.06)}
 .upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
-.upload-zone .uz-icon{font-size:2rem;margin-bottom:10px}
-.upload-zone h4{font-size:.9rem;font-weight:600;color:var(--white);margin-bottom:4px}
-.upload-zone p{font-size:.78rem;color:var(--muted)}
 
-/* ─── KEY ROWS ─── */
+/* KEYS */
 .key-row{display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:9px;margin-bottom:7px}
-.key-label{font-size:.82rem;font-weight:500;color:var(--white)}
 .key-prefix{font-family:monospace;font-size:.78rem;color:var(--pu-l);background:#07070f;padding:3px 8px;border-radius:5px}
-.key-date{font-size:.7rem;color:var(--muted);white-space:nowrap}
 
-/* ─── API DOCS ─── */
-.doc-block{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:12px}
-.doc-block h3{font-size:.88rem;font-weight:700;color:var(--white);margin-bottom:8px}
-.doc-block p{font-size:.8rem;color:var(--muted);margin-bottom:10px}
+/* ─── ANALYTICS ─── */
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px}
+.chart-card h3{font-size:.82rem;font-weight:600;color:var(--text);margin-bottom:16px;letter-spacing:.04em;text-transform:uppercase}
+.chart-wrap{position:relative;height:200px}
+.channel-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px}
 
-/* ─── TOAST ─── */
+/* ─── LEADS TABLE ─── */
+.leads-table{width:100%;border-collapse:collapse;font-size:.8rem}
+.leads-table th{padding:8px 12px;text-align:left;color:var(--muted);font-weight:600;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.leads-table td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text);vertical-align:top}
+.leads-table tr:hover td{background:rgba(255,255,255,.02)}
+
+/* ─── SETTINGS ─── */
+.settings-section{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:16px}
+.settings-section h2{font-size:.88rem;font-weight:700;color:var(--white);margin-bottom:4px}
+.settings-section p.desc{font-size:.78rem;color:var(--muted);margin-bottom:18px}
+.danger-zone{border-color:rgba(233,69,96,.25);background:rgba(233,69,96,.03)}
+.danger-zone h2{color:var(--red)}
+.usage-bar-wrap{margin-top:6px}
+.usage-bar{height:5px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden}
+.usage-bar-fill{height:100%;border-radius:3px;transition:width .5s}
+.usage-label{font-size:.72rem;color:var(--muted);display:flex;justify-content:space-between;margin-top:3px}
+
+/* ─── WEBHOOKS OUT ─── */
+.wh-row{display:flex;align-items:flex-start;gap:12px;padding:12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:9px;margin-bottom:7px}
+.wh-url{font-family:monospace;font-size:.76rem;color:var(--pu-l);word-break:break-all;flex:1}
+.event-chip{font-size:.62rem;padding:2px 6px;border-radius:4px;background:rgba(108,92,231,.1);color:var(--pu-l);border:1px solid rgba(108,92,231,.2)}
+
+/* ─── ONBOARDING MODAL ─── */
+.onboard-step{text-align:center;padding:16px 0}
+.onboard-icon{font-size:3rem;margin-bottom:16px}
+.onboard-step h3{font-size:1.1rem;font-weight:700;color:var(--white);margin-bottom:8px}
+.onboard-step p{font-size:.88rem;color:var(--muted);line-height:1.7;max-width:340px;margin:0 auto 24px}
+.step-dots{display:flex;gap:6px;justify-content:center;margin-top:20px}
+.step-dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:background .2s}
+.step-dot.active{background:var(--purple)}
+
+/* ─── UPGRADE MODAL ─── */
+.plan-compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}
+.plan-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:18px}
+.plan-card.featured{border-color:rgba(108,92,231,.4);background:rgba(108,92,231,.06)}
+.plan-card .plan-name{font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--pu-l);margin-bottom:4px}
+.plan-card .plan-price{font-size:1.8rem;font-weight:700;color:var(--white);margin-bottom:12px;line-height:1}
+.plan-card .plan-price sup{font-size:.9rem}
+.plan-card ul{list-style:none;display:flex;flex-direction:column;gap:5px}
+.plan-card ul li{font-size:.78rem;color:var(--text);display:flex;gap:6px}
+.plan-card ul li::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0}
+.plan-card ul li.no{color:var(--muted)}
+.plan-card ul li.no::before{content:'—';color:var(--muted)}
+
+/* TOAST */
 .toast-area{position:fixed;bottom:22px;right:22px;z-index:999;display:flex;flex-direction:column;gap:7px}
 .toast{background:var(--bg3);border:1px solid rgba(108,92,231,.3);border-radius:10px;padding:11px 16px;font-size:.82rem;color:var(--white);box-shadow:0 8px 24px rgba(0,0,0,.3);animation:slideIn .3s ease;display:flex;align-items:center;gap:8px;max-width:320px}
 .toast.ok{border-color:rgba(0,184,148,.3)}.toast.ok::before{content:'✓';color:var(--green)}
 .toast.err{border-color:rgba(233,69,96,.3);color:var(--red)}.toast.err::before{content:'✕'}
 @keyframes slideIn{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
 
-@media(max-width:768px){
-  .sidebar{display:none}.page{padding:18px 14px}
-  .inp-row,.grid-3{grid-template-columns:1fr}
-}
+@media(max-width:768px){.sidebar{display:none}.page{padding:18px 14px}.inp-row,.grid-3,.grid-4{grid-template-columns:1fr}}
 </style>
 </head>
 <body x-data="app()" x-init="init()">
 
-<!-- AUTH -->
+<!-- ─── AUTH ─── -->
 <div x-show="!user" x-cloak>
   <div class="auth-screen">
     <div class="auth-card">
       <div class="auth-logo">Agent<span>Kontor</span></div>
-
       <div class="auth-tabs">
-        <div class="auth-tab" :class="{active:authTab==='login'}" @click="authTab='login';authErr=''" x-text="lang==='de'?'Anmelden':'Sign in'"></div>
-        <div class="auth-tab" :class="{active:authTab==='register'}" @click="authTab='register';authErr=''" x-text="lang==='de'?'Registrieren':'Register'"></div>
+        <div class="auth-tab" :class="{active:authTab==='login'}" @click="authTab='login';authErr='';authOk=''" x-text="'Anmelden'"></div>
+        <div class="auth-tab" :class="{active:authTab==='register'}" @click="authTab='register';authErr='';authOk=''" x-text="'Registrieren'"></div>
       </div>
-
       <div class="err-box" x-show="authErr">⚠ <span x-text="authErr"></span></div>
-
+      <div class="ok-box" x-show="authOk">✓ <span x-text="authOk"></span></div>
       <!-- LOGIN -->
       <div x-show="authTab==='login'">
-        <div class="field">
-          <label>E-Mail</label>
-          <div class="inp-icon"><span class="icon">✉</span><input class="inp" type="email" x-model="lf.email" placeholder="name@beispiel.de" @keydown.enter="login()"></div>
-        </div>
-        <div class="field">
-          <label x-text="lang==='de'?'Passwort':'Password'"></label>
-          <div class="inp-icon"><span class="icon">🔒</span><input class="inp" type="password" x-model="lf.password" placeholder="••••••••" @keydown.enter="login()"></div>
-        </div>
-        <button class="btn btn-purple btn-full" @click="login()" :disabled="loading">
-          <span x-show="loading">⏳</span>
-          <span x-text="loading?(lang==='de'?'Anmelden...':'Signing in...'):(lang==='de'?'Jetzt anmelden':'Sign in now')"></span>
-        </button>
+        <div class="field"><label>E-Mail</label><div class="inp-icon"><span class="icon">✉</span><input class="inp" type="email" x-model="lf.email" placeholder="name@beispiel.de" @keydown.enter="login()"></div></div>
+        <div class="field"><label>Passwort</label><div class="inp-icon"><span class="icon">🔒</span><input class="inp" type="password" x-model="lf.password" placeholder="••••••••" @keydown.enter="login()"></div></div>
+        <button class="btn btn-purple btn-full" @click="login()" :disabled="loading"><span x-show="loading">⏳</span><span x-text="loading?'Anmelden...':'Jetzt anmelden'"></span></button>
       </div>
-
       <!-- REGISTER -->
       <div x-show="authTab==='register'">
-        <div class="field">
-          <label x-text="lang==='de'?'Vollständiger Name':'Full Name'"></label>
-          <div class="inp-icon"><span class="icon">👤</span><input class="inp" type="text" x-model="rf.name" :placeholder="lang==='de'?'Max Mustermann':'Jane Doe'" @keydown.enter="register()"></div>
-        </div>
-        <div class="field">
-          <label>E-Mail</label>
-          <div class="inp-icon"><span class="icon">✉</span><input class="inp" type="email" x-model="rf.email" placeholder="name@beispiel.de" @keydown.enter="register()"></div>
-        </div>
-        <div class="field">
-          <label x-text="lang==='de'?'Passwort (min. 8 Zeichen)':'Password (min. 8 chars)'"></label>
-          <div class="inp-icon"><span class="icon">🔒</span><input class="inp" type="password" x-model="rf.password" placeholder="••••••••" @keydown.enter="register()"></div>
-        </div>
-        <div class="field">
-          <label x-text="lang==='de'?'Sprache':'Language'"></label>
-          <select class="inp" x-model="lang">
-            <option value="de">🇩🇪 Deutsch</option>
-            <option value="en">🇬🇧 English</option>
-          </select>
-        </div>
-        <button class="btn btn-purple btn-full" @click="register()" :disabled="loading">
-          <span x-show="loading">⏳</span>
-          <span x-text="loading?(lang==='de'?'Erstellen...':'Creating...'):(lang==='de'?'Kostenlos starten':'Start for free')"></span>
-        </button>
-        <p style="font-size:.73rem;color:var(--muted);text-align:center;margin-top:12px" x-text="lang==='de'?'Kein Abo · Keine Kreditkarte':'No subscription · No credit card'"></p>
-      </div>
-
-      <div class="auth-footer">
-        <button @click="lang=lang==='de'?'en':'de'" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.75rem;margin-top:4px" x-text="lang==='de'?'🇬🇧 Switch to English':'🇩🇪 Auf Deutsch wechseln'"></button>
+        <div class="field"><label>Vollständiger Name</label><div class="inp-icon"><span class="icon">👤</span><input class="inp" type="text" x-model="rf.name" placeholder="Max Mustermann" @keydown.enter="register()"></div></div>
+        <div class="field"><label>E-Mail</label><div class="inp-icon"><span class="icon">✉</span><input class="inp" type="email" x-model="rf.email" placeholder="name@beispiel.de" @keydown.enter="register()"></div></div>
+        <div class="field"><label>Passwort (min. 8 Zeichen)</label><div class="inp-icon"><span class="icon">🔒</span><input class="inp" type="password" x-model="rf.password" placeholder="••••••••" @keydown.enter="register()"></div></div>
+        <button class="btn btn-purple btn-full" @click="register()" :disabled="loading"><span x-show="loading">⏳</span><span x-text="loading?'Erstellen...':'Kostenlos starten'"></span></button>
+        <p style="font-size:.73rem;color:var(--muted);text-align:center;margin-top:12px">Kein Abo · Keine Kreditkarte</p>
       </div>
     </div>
   </div>
 </div>
 
-<!-- APP -->
+<!-- ─── APP ─── -->
 <div class="app" x-show="user" x-cloak>
 
   <!-- SIDEBAR -->
   <div class="sidebar">
-    <div class="sb-logo">Agent<span>Kontor</span></div>
+    <div class="sb-logo">
+      <span>Agent<span>Kontor</span></span>
+      <span class="plan-badge" :class="user?.plan==='pro'?'plan-pro':'plan-free'" x-text="(user?.plan||'free').toUpperCase()"></span>
+    </div>
     <nav class="sb-nav">
-      <div class="nav-item" :class="{active:page==='dashboard'}" @click="page='dashboard';loadAgents()"><span class="nav-icon">🏠</span><span x-text="lang==='de'?'Dashboard':'Dashboard'"></span></div>
-      <div class="nav-item" :class="{active:page==='agents'}" @click="page='agents';loadAgents()"><span class="nav-icon">🤖</span><span x-text="lang==='de'?'Meine Agenten':'My Agents'"></span></div>
-      <div class="nav-section" x-text="lang==='de'?'Entwickler':'Developer'"></div>
+      <div class="nav-item" :class="{active:page==='dashboard'}" @click="page='dashboard';loadAgents()"><span class="nav-icon">🏠</span>Dashboard</div>
+      <div class="nav-item" :class="{active:page==='agents'}" @click="page='agents';loadAgents()"><span class="nav-icon">🤖</span>Meine Agenten</div>
+      <div class="nav-item" :class="{active:page==='analytics'}" @click="page='analytics';loadAnalytics()"><span class="nav-icon">📊</span>Analytics</div>
+      <div class="nav-section">Entwickler</div>
       <div class="nav-item" :class="{active:page==='keys'}" @click="page='keys';loadKeys()"><span class="nav-icon">🔑</span>API Keys</div>
-      <div class="nav-item" :class="{active:page==='docs'}" @click="page='docs'"><span class="nav-icon">📖</span><span x-text="lang==='de'?'Dokumentation':'Docs'"></span></div>
+      <div class="nav-item" :class="{active:page==='docs'}" @click="page='docs'"><span class="nav-icon">📖</span>Dokumentation</div>
+      <div class="nav-section">Konto</div>
+      <div class="nav-item" :class="{active:page==='settings'}" @click="page='settings';loadPlan()"><span class="nav-icon">⚙️</span>Einstellungen</div>
     </nav>
+    <template x-if="user?.plan==='free'">
+      <div class="upgrade-btn" @click="showUpgrade=true">
+        <h4>⚡ Auf Pro upgraden</h4>
+        <p>Alle Kanäle, unbegrenzte Agenten &amp; mehr</p>
+      </div>
+    </template>
     <div class="sb-footer">
       <div class="sb-user">
         <div class="user-av" x-text="user?.name?.[0]?.toUpperCase()||'U'"></div>
-        <div class="user-info">
-          <div class="name" x-text="user?.name"></div>
-          <div class="plan" x-text="'Plan: '+(user?.plan||'Free')"></div>
-        </div>
+        <div class="user-info"><div class="name" x-text="user?.name"></div><div class="email" x-text="user?.email"></div></div>
       </div>
       <div class="sb-actions">
-        <button class="sb-action" @click="lang=lang==='de'?'en':'de'" x-text="lang==='de'?'🇬🇧 EN':'🇩🇪 DE'"></button>
-        <button class="sb-action danger" @click="logout()" x-text="lang==='de'?'Abmelden':'Logout'"></button>
+        <button class="sb-action" @click="page='settings';loadPlan()">⚙️ Einstellungen</button>
+        <button class="sb-action danger" @click="logout()">Abmelden</button>
       </div>
     </div>
   </div>
 
-  <!-- MAIN -->
   <div class="main">
 
-    <!-- DASHBOARD -->
+    <!-- ─── DASHBOARD ─── -->
     <div class="page" x-show="page==='dashboard'">
       <div class="ph">
-        <div>
-          <div class="ph-title" x-text="lang==='de'?'Dashboard':'Dashboard'"></div>
-          <div class="ph-sub" x-text="lang==='de'?'Willkommen zurück, '+user?.name:'Welcome back, '+user?.name"></div>
-        </div>
-        <button class="btn btn-purple btn-sm" @click="openNew()">+ <span x-text="lang==='de'?'Neuer Agent':'New Agent'"></span></button>
+        <div><div class="ph-title">Dashboard</div><div class="ph-sub" x-text="'Willkommen zurück, '+user?.name"></div></div>
+        <button class="btn btn-purple btn-sm" @click="openNew()">+ Neuer Agent</button>
       </div>
-      <div class="grid-3" style="margin-bottom:28px">
-        <div class="stat-card"><div class="stat-n" x-text="agents.length"></div><div class="stat-l" x-text="lang==='de'?'Agenten':'Agents'"></div></div>
-        <div class="stat-card"><div class="stat-n" x-text="agents.filter(a=>a.is_active).length"></div><div class="stat-l" x-text="lang==='de'?'Aktiv':'Active'"></div></div>
-        <div class="stat-card"><div class="stat-n" x-text="agents.reduce((s,a)=>s+(a.total_messages||0),0)"></div><div class="stat-l" x-text="lang==='de'?'Nachrichten':'Messages'"></div></div>
+      <div class="grid-4" style="margin-bottom:28px">
+        <div class="stat-card"><div class="stat-n" x-text="agents.length"></div><div class="stat-l">Agenten</div></div>
+        <div class="stat-card"><div class="stat-n" x-text="agents.filter(a=>a.is_active).length"></div><div class="stat-l">Aktiv</div></div>
+        <div class="stat-card"><div class="stat-n" x-text="agents.reduce((s,a)=>s+(a.total_messages||0),0)"></div><div class="stat-l">Nachrichten</div></div>
+        <div class="stat-card" style="cursor:pointer" @click="page='analytics';loadAnalytics()"><div class="stat-n">→</div><div class="stat-l">Analytics</div></div>
       </div>
-      <div style="font-size:.88rem;font-weight:600;color:var(--white);margin-bottom:14px" x-text="lang==='de'?'Deine Agenten':'Your Agents'"></div>
+      <div style="font-size:.88rem;font-weight:600;color:var(--white);margin-bottom:14px">Deine Agenten</div>
       <template x-if="agents.length===0">
-        <div class="empty"><div class="empty-icon">🤖</div><h3 x-text="lang==='de'?'Noch kein Agent':'No agents yet'"></h3><p x-text="lang==='de'?'Erstelle deinen ersten KI-Agenten.':'Create your first AI agent.'"></p><button class="btn btn-purple btn-sm" @click="openNew()">+ <span x-text="lang==='de'?'Ersten Agenten erstellen':'Create first agent'"></span></button></div>
+        <div class="empty"><div class="empty-icon">🤖</div><h3>Noch kein Agent</h3><p>Erstelle deinen ersten KI-Agenten.</p><button class="btn btn-purple btn-sm" @click="openNew()">+ Ersten Agenten erstellen</button></div>
       </template>
       <div class="agent-grid">
-        <template x-for="a in agents" :key="a.id"><div class="agent-card" @click="editAgent(a)"><div class="ac-stripe" :style="`background:${a.color}`"></div><div class="ac-body"><div class="ac-header"><div class="ac-av" :style="`background:${a.color}18;border:1px solid ${a.color}33`" x-text="a.emoji"></div><div><div class="ac-name" x-text="a.name"></div><div class="ac-desc" x-text="a.description||'—'"></div></div></div><div class="ac-badges"><span class="badge" :class="a.is_active?'b-active':'b-off'" x-text="a.is_active?'Aktiv':'Inaktiv'"></span><span class="badge b-purple" x-show="a.widget_enabled">Widget</span><span class="badge b-gold" x-show="a.api_enabled">API</span><span class="badge b-wa" x-show="a.whatsapp_enabled">WA</span><span class="badge b-tg" x-show="a.telegram_enabled">TG</span><span class="badge b-rag" x-show="a.rag_enabled">RAG</span></div><div class="ac-stats"><span><strong x-text="a.total_messages||0"></strong> <span x-text="lang==='de'?'Nachrichten':'msgs'"></span></span></div></div></div></template>
+        <template x-for="a in agents" :key="a.id"><div class="agent-card" @click="editAgent(a)"><div class="ac-stripe" :style="`background:${a.color}`"></div><div class="ac-body"><div class="ac-header"><div class="ac-av" :style="`background:${a.color}18;border:1px solid ${a.color}33`" x-text="a.emoji"></div><div><div class="ac-name" x-text="a.name"></div><div class="ac-desc" x-text="a.description||'—'"></div></div></div><div class="ac-badges"><span class="badge" :class="a.is_active?'b-active':'b-off'" x-text="a.is_active?'Aktiv':'Inaktiv'"></span><span class="badge b-purple" x-show="a.widget_enabled">Widget</span><span class="badge b-gold" x-show="a.api_enabled">API</span><span class="badge b-wa" x-show="a.whatsapp_enabled">WA</span><span class="badge b-tg" x-show="a.telegram_enabled">TG</span><span class="badge b-rag" x-show="a.rag_enabled">RAG</span></div><div class="ac-stats"><span><strong x-text="a.total_messages||0"></strong> Nachrichten</span></div></div></div></template>
       </div>
     </div>
 
-    <!-- AGENTS PAGE -->
+    <!-- ─── AGENTS PAGE ─── -->
     <div class="page" x-show="page==='agents'">
-      <div class="ph"><div><div class="ph-title" x-text="lang==='de'?'Meine Agenten':'My Agents'"></div><div class="ph-sub" x-text="lang==='de'?'Erstelle und verwalte deine Agenten':'Create and manage your agents'"></div></div><button class="btn btn-purple btn-sm" @click="openNew()">+ <span x-text="lang==='de'?'Neuer Agent':'New Agent'"></span></button></div>
-      <template x-if="agents.length===0"><div class="empty"><div class="empty-icon">🤖</div><h3 x-text="lang==='de'?'Noch kein Agent':'No agents yet'"></h3><p x-text="lang==='de'?'Erstelle deinen ersten KI-Agenten.':'Create your first AI agent.'"></p><button class="btn btn-purple btn-sm" @click="openNew()">+ Agent</button></div></template>
+      <div class="ph"><div><div class="ph-title">Meine Agenten</div><div class="ph-sub">Erstelle und verwalte deine Agenten</div></div><button class="btn btn-purple btn-sm" @click="openNew()">+ Neuer Agent</button></div>
+      <template x-if="agents.length===0"><div class="empty"><div class="empty-icon">🤖</div><h3>Noch kein Agent</h3><p>Erstelle deinen ersten KI-Agenten.</p><button class="btn btn-purple btn-sm" @click="openNew()">+ Agent</button></div></template>
       <div class="agent-grid">
-        <template x-for="a in agents" :key="a.id"><div class="agent-card" @click="editAgent(a)"><div class="ac-stripe" :style="`background:${a.color}`"></div><div class="ac-body"><div class="ac-header"><div class="ac-av" :style="`background:${a.color}18`" x-text="a.emoji"></div><div><div class="ac-name" x-text="a.name"></div><div class="ac-desc" x-text="a.description||'—'"></div></div></div><div class="ac-badges"><span class="badge" :class="a.is_active?'b-active':'b-off'" x-text="a.is_active?'Aktiv':'Inaktiv'"></span><span class="badge b-purple" x-show="a.widget_enabled">Widget</span><span class="badge b-gold" x-show="a.api_enabled">API</span><span class="badge b-rag" x-show="a.rag_enabled">RAG</span></div><div class="ac-stats"><span><strong x-text="a.total_messages||0"></strong> msgs</span></div></div></div></template>
+        <template x-for="a in agents" :key="a.id"><div class="agent-card" @click="editAgent(a)"><div class="ac-stripe" :style="`background:${a.color}`"></div><div class="ac-body"><div class="ac-header"><div class="ac-av" :style="`background:${a.color}18`" x-text="a.emoji"></div><div><div class="ac-name" x-text="a.name"></div><div class="ac-desc" x-text="a.description||'—'"></div></div></div><div class="ac-badges"><span class="badge" :class="a.is_active?'b-active':'b-off'" x-text="a.is_active?'Aktiv':'Inaktiv'"></span><span class="badge b-purple" x-show="a.widget_enabled">Widget</span><span class="badge b-gold" x-show="a.api_enabled">API</span></div><div class="ac-stats"><span><strong x-text="a.total_messages||0"></strong> msgs</span></div></div></div></template>
       </div>
     </div>
 
-    <!-- API KEYS -->
-    <div class="page" x-show="page==='keys'">
-      <div class="ph"><div><div class="ph-title">API Keys</div><div class="ph-sub" x-text="lang==='de'?'Für externe Integrationen':'For external integrations'"></div></div><button class="btn btn-purple btn-sm" @click="showNewKey=true">+ Key</button></div>
-      <template x-if="newKeyRev"><div class="card" style="border-color:rgba(0,184,148,.3);margin-bottom:16px"><div style="color:var(--green);font-weight:600;margin-bottom:8px">✓ <span x-text="lang==='de'?'Key erstellt — nur einmal sichtbar!':'Key created — visible only once!'"></span></div><div class="code" x-text="newKeyRev"><button class="copy-btn" @click="copy(newKeyRev)">Copy</button></div><div style="font-size:.75rem;color:var(--muted);margin-top:7px" x-text="lang==='de'?'Speichere diesen Key jetzt. Er wird nicht erneut angezeigt.':'Save this key now. It will not be shown again.'"></div></div></template>
-      <template x-if="apiKeys.length===0"><div class="empty"><div class="empty-icon">🔑</div><h3 x-text="lang==='de'?'Keine Keys':'No Keys'"></h3></div></template>
-      <template x-for="k in apiKeys" :key="k.id"><div class="key-row"><div style="flex:1"><div class="key-label" x-text="k.label"></div><div style="display:flex;align-items:center;gap:8px;margin-top:3px"><span class="key-prefix" x-text="k.key_prefix+'••••••••'"></span><span style="font-size:.7rem;color:var(--muted)" x-text="k.agent_name?'Agent: '+k.agent_name:''"></span></div></div><span class="key-date" x-text="k.last_used?new Date(k.last_used).toLocaleDateString():(lang==='de'?'Nie genutzt':'Never used')"></span><button class="btn btn-sm btn-danger" @click="delKey(k.id)" x-text="lang==='de'?'Löschen':'Delete'"></button></div></template>
+    <!-- ─── ANALYTICS PAGE ─── -->
+    <div class="page" x-show="page==='analytics'">
+      <div class="ph">
+        <div><div class="ph-title">Analytics</div><div class="ph-sub">Letzte 30 Tage</div></div>
+        <button class="btn btn-ghost btn-sm" @click="loadAnalytics()">↺ Aktualisieren</button>
+      </div>
+      <template x-if="analyticsLoading">
+        <div style="text-align:center;padding:60px;color:var(--muted)">⏳ Lade Daten…</div>
+      </template>
+      <template x-if="!analyticsLoading && analytics">
+        <div>
+          <div class="grid-4" style="margin-bottom:20px">
+            <div class="stat-card"><div class="stat-n" x-text="analytics.totals?.total_messages||0"></div><div class="stat-l">Nachrichten</div><div class="stat-sub">letzte 30 Tage</div></div>
+            <div class="stat-card"><div class="stat-n" x-text="analytics.totals?.unique_sessions||0"></div><div class="stat-l">Chats</div><div class="stat-sub">eindeutige Sessions</div></div>
+            <div class="stat-card"><div class="stat-n" x-text="analytics.leadsMonth||0"></div><div class="stat-l">Leads</div><div class="stat-sub">erfasste Kontakte</div></div>
+            <div class="stat-card"><div class="stat-n" x-text="analytics.totals?.active_agents||0"></div><div class="stat-l">Aktive Agenten</div></div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:20px">
+            <div class="chart-card">
+              <h3>Nachrichten pro Tag</h3>
+              <div class="chart-wrap"><canvas id="chartLine"></canvas></div>
+            </div>
+            <div class="chart-card">
+              <h3>Nach Kanal</h3>
+              <div class="chart-wrap" style="height:160px"><canvas id="chartDoughnut"></canvas></div>
+              <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px">
+                <template x-for="ch in analytics.byChannel" :key="ch.source">
+                  <div style="font-size:.72rem;color:var(--text);display:flex;align-items:center;gap:4px"><span class="channel-dot" :style="`background:${channelColor(ch.source)}`"></span><span x-text="ch.source+' ('+ch.count+')'"></span></div>
+                </template>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top Agents -->
+          <div class="card" style="margin-bottom:20px">
+            <div style="font-size:.82rem;font-weight:600;color:var(--white);margin-bottom:14px;letter-spacing:.04em;text-transform:uppercase">Top Agenten</div>
+            <template x-for="a in analytics.topAgents" :key="a.id">
+              <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)">
+                <span x-text="a.emoji" style="font-size:1.2rem"></span>
+                <div style="flex:1">
+                  <div style="font-size:.84rem;font-weight:600;color:var(--white)" x-text="a.name"></div>
+                  <div style="height:4px;background:rgba(255,255,255,.06);border-radius:2px;margin-top:4px;overflow:hidden">
+                    <div :style="`width:${Math.min(100,((a.msg_count||0)/Math.max(1,analytics.topAgents[0]?.msg_count)*100))}%;background:${a.color};height:100%;border-radius:2px`"></div>
+                  </div>
+                </div>
+                <div style="font-size:.8rem;color:var(--pu-l);font-weight:700;min-width:40px;text-align:right" x-text="a.msg_count||0"></div>
+              </div>
+            </template>
+            <template x-if="!analytics.topAgents?.length"><div style="color:var(--muted);font-size:.84rem">Noch keine Daten.</div></template>
+          </div>
+
+          <!-- Leads Table -->
+          <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+              <div style="font-size:.82rem;font-weight:600;color:var(--white);letter-spacing:.04em;text-transform:uppercase">Leads (letzte 30 Tage)</div>
+            </div>
+            <template x-if="allLeads.length===0"><div style="color:var(--muted);font-size:.84rem;padding:20px 0;text-align:center">Noch keine Leads erfasst.</div></template>
+            <template x-if="allLeads.length>0">
+              <table class="leads-table">
+                <tr><th>Agent</th><th>Kontakt</th><th>Kanal</th><th>Zeit</th></tr>
+                <template x-for="lead in allLeads.slice(0,20)" :key="lead.id">
+                  <tr>
+                    <td><span x-text="lead.agent_emoji+' '+lead.agent_name"></span></td>
+                    <td><span x-text="JSON.stringify(lead.data).slice(0,80)+'…'" style="font-size:.74rem;color:var(--muted)"></span></td>
+                    <td><span class="badge b-purple" x-text="lead.source"></span></td>
+                    <td style="white-space:nowrap;color:var(--muted);font-size:.76rem" x-text="new Date(lead.created_at).toLocaleDateString('de-DE')"></td>
+                  </tr>
+                </template>
+              </table>
+            </template>
+          </div>
+        </div>
+      </template>
     </div>
 
-    <!-- DOCS -->
+    <!-- ─── API KEYS ─── -->
+    <div class="page" x-show="page==='keys'">
+      <div class="ph"><div><div class="ph-title">API Keys</div><div class="ph-sub">Für externe Integrationen</div></div><button class="btn btn-purple btn-sm" @click="showNewKey=true">+ Key</button></div>
+      <template x-if="newKeyRev"><div class="card" style="border-color:rgba(0,184,148,.3);margin-bottom:16px"><div style="color:var(--green);font-weight:600;margin-bottom:8px">✓ Key erstellt — nur einmal sichtbar!</div><div class="code" x-text="newKeyRev"><button class="copy-btn" @click="copy(newKeyRev)">Copy</button></div></div></template>
+      <template x-if="apiKeys.length===0"><div class="empty"><div class="empty-icon">🔑</div><h3>Keine Keys</h3></div></template>
+      <template x-for="k in apiKeys" :key="k.id"><div class="key-row"><div style="flex:1"><div style="font-size:.84rem;font-weight:500;color:var(--white)" x-text="k.label"></div><div style="display:flex;align-items:center;gap:8px;margin-top:3px"><span class="key-prefix" x-text="k.key_prefix+'••••••••'"></span><span style="font-size:.7rem;color:var(--muted)" x-text="k.agent_name?'Agent: '+k.agent_name:''"></span></div></div><span style="font-size:.7rem;color:var(--muted);white-space:nowrap" x-text="k.last_used?new Date(k.last_used).toLocaleDateString():'Nie genutzt'"></span><button class="btn btn-sm btn-danger" @click="delKey(k.id)">Löschen</button></div></template>
+    </div>
+
+    <!-- ─── DOCS ─── -->
     <div class="page" x-show="page==='docs'">
-      <div class="ph"><div><div class="ph-title" x-text="lang==='de'?'Dokumentation':'Documentation'"></div></div></div>
+      <div class="ph"><div><div class="ph-title">Dokumentation</div></div></div>
       <div class="tabs"><div class="tab" :class="{active:docsTab==='api'}" @click="docsTab='api'">REST API</div><div class="tab" :class="{active:docsTab==='widget'}" @click="docsTab='widget'">Widget</div><div class="tab" :class="{active:docsTab==='webhooks'}" @click="docsTab='webhooks'">Webhooks</div></div>
-      <template x-if="docsTab==='api'">
-        <div>
-          <div class="doc-block"><h3>Chat (POST)</h3><p x-text="lang==='de'?'Sende eine Nachricht an einen Agenten per API Key.':'Send a message to an agent via API key.'"></p><div class="code">POST /api/chat/api/:agentId
+      <template x-if="docsTab==='api'"><div><div class="card"><h3 style="color:var(--white);margin-bottom:8px">Chat (POST)</h3><div class="code">POST /api/chat/api/:agentId
 
 Headers:
   x-api-key: ak_live_xxxxxxxxxxxxxxxxxx
@@ -393,69 +475,151 @@ Response:
 {
   "reply": "Hallo! Wie kann ich helfen?",
   "sessionId": "uuid"
-}</div></div>
+}</div></div></div></template>
+      <template x-if="docsTab==='widget'"><div><div class="card"><h3 style="color:var(--white);margin-bottom:8px">Widget einbinden</h3><div class="code" x-html="'&lt;script&gt;\n  window.AK_AGENT_ID = &quot;DEINE_AGENT_ID&quot;;\n&lt;/script&gt;\n&lt;script src=&quot;'+window.location.origin+'/widget.js&quot;&gt;&lt;/script&gt;'"></div></div></div></template>
+      <template x-if="docsTab==='webhooks'"><div><div class="card" style="margin-bottom:12px"><h3 style="color:var(--white);margin-bottom:8px">Telegram</h3><div class="code" x-text="window.location.origin+'/webhook/telegram/BOT_TOKEN'"></div></div><div class="card"><h3 style="color:var(--white);margin-bottom:8px">WhatsApp</h3><div class="code" x-text="window.location.origin+'/webhook/whatsapp'"></div></div></div></template>
+    </div>
+
+    <!-- ─── SETTINGS ─── -->
+    <div class="page" x-show="page==='settings'">
+      <div class="ph"><div><div class="ph-title">Einstellungen</div><div class="ph-sub">Konto, Plan und Sicherheit</div></div></div>
+
+      <!-- Plan & Usage -->
+      <div class="settings-section">
+        <h2>Plan &amp; Nutzung</h2>
+        <p class="desc">Dein aktueller Plan und Ressourcenverbrauch diesen Monat.</p>
+        <template x-if="planData">
+          <div>
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+              <div style="font-size:1.4rem;font-weight:700;color:var(--white)" x-text="(planData.plan||'free').toUpperCase()"></div>
+              <template x-if="planData.periodEnd"><div style="font-size:.76rem;color:var(--muted)">aktiv bis <span x-text="new Date(planData.periodEnd).toLocaleDateString('de-DE')"></span></div></template>
+              <template x-if="planData.plan==='free'"><button class="btn btn-purple btn-sm" @click="showUpgrade=true">⚡ Auf Pro upgraden</button></template>
+              <template x-if="planData.hasSubscription"><button class="btn btn-ghost btn-sm" @click="openPortal()">Abo verwalten</button></template>
+            </div>
+            <!-- Usage bars -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+              <div>
+                <div style="font-size:.78rem;color:var(--text);margin-bottom:4px">Agenten</div>
+                <div class="usage-bar-wrap"><div class="usage-bar"><div class="usage-bar-fill" :style="`width:${Math.min(100,(planData.usage?.agents?.current||0)/(planData.usage?.agents?.limit===Infinity?100:planData.usage?.agents?.limit||3)*100)}%;background:var(--purple)`"></div></div></div>
+                <div class="usage-label"><span x-text="planData.usage?.agents?.current||0"></span><span x-text="planData.usage?.agents?.limit===Infinity?'∞':planData.usage?.agents?.limit"></span></div>
+              </div>
+              <div>
+                <div style="font-size:.78rem;color:var(--text);margin-bottom:4px">Nachrichten / Monat</div>
+                <div class="usage-bar-wrap"><div class="usage-bar"><div class="usage-bar-fill" :style="`width:${Math.min(100,(planData.usage?.messages?.current||0)/(planData.usage?.messages?.limit||500)*100)}%;background:${((planData.usage?.messages?.current||0)/(planData.usage?.messages?.limit||500))>0.85?'var(--red)':'var(--teal)'}`"></div></div></div>
+                <div class="usage-label"><span x-text="planData.usage?.messages?.current||0"></span><span x-text="planData.usage?.messages?.limit===Infinity?'∞':planData.usage?.messages?.limit"></span></div>
+              </div>
+              <div>
+                <div style="font-size:.78rem;color:var(--text);margin-bottom:4px">RAG-Dokumente</div>
+                <div class="usage-bar-wrap"><div class="usage-bar"><div class="usage-bar-fill" :style="`width:20%;background:var(--gold)`"></div></div></div>
+                <div class="usage-label"><span x-text="planData.usage?.ragDocs?.current||0"></span><span x-text="planData.usage?.ragDocs?.limit===Infinity?'∞':planData.usage?.ragDocs?.limit"></span></div>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <!-- Profil -->
+      <div class="settings-section">
+        <h2>Profil</h2>
+        <p class="desc">Name und E-Mail-Adresse ändern.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div class="field" style="margin:0"><label>Name</label><input class="inp" type="text" x-model="nameForm.name" :placeholder="user?.name"></div>
+          <div style="display:flex;align-items:flex-end"><button class="btn btn-ghost btn-sm" @click="changeName()" :disabled="settingsSaving">Speichern</button></div>
         </div>
-      </template>
-      <template x-if="docsTab==='widget'">
-        <div><div class="doc-block"><h3>Widget einbinden</h3><div class="code" x-html="'&lt;script&gt;\n  window.AK_AGENT_ID = &quot;DEINE_AGENT_ID&quot;;\n&lt;/script&gt;\n&lt;script src=&quot;'+window.location.origin+'/widget.js&quot;&gt;&lt;/script&gt;'"></div></div></div>
-      </template>
-      <template x-if="docsTab==='webhooks'">
-        <div>
-          <div class="doc-block"><h3>Telegram</h3><div class="code" x-html="window.location.origin+'/webhook/telegram/BOT_TOKEN'"></div></div>
-          <div class="doc-block"><h3>WhatsApp (Meta Cloud API)</h3><div class="code" x-html="window.location.origin+'/webhook/whatsapp'"></div></div>
+      </div>
+
+      <!-- Passwort -->
+      <div class="settings-section">
+        <h2>Passwort ändern</h2>
+        <p class="desc">Wähle ein starkes Passwort mit mindestens 8 Zeichen.</p>
+        <div class="err-box" x-show="pwErr">⚠ <span x-text="pwErr"></span></div>
+        <div class="ok-box" x-show="pwOk">✓ Passwort erfolgreich geändert</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:flex-end">
+          <div class="field" style="margin:0"><label>Aktuelles Passwort</label><input class="inp" type="password" x-model="pwForm.current" placeholder="••••••••"></div>
+          <div class="field" style="margin:0"><label>Neues Passwort</label><input class="inp" type="password" x-model="pwForm.newPw" placeholder="••••••••"></div>
+          <div class="field" style="margin:0"><label>Wiederholen</label><input class="inp" type="password" x-model="pwForm.confirm" placeholder="••••••••"></div>
+          <button class="btn btn-ghost btn-sm" @click="changePassword()" :disabled="settingsSaving">Speichern</button>
         </div>
-      </template>
+      </div>
+
+      <!-- E-Mail -->
+      <div class="settings-section">
+        <h2>E-Mail ändern</h2>
+        <p class="desc">Aktuelle E-Mail: <strong style="color:var(--white)" x-text="user?.email"></strong></p>
+        <div class="err-box" x-show="emailErr">⚠ <span x-text="emailErr"></span></div>
+        <div class="ok-box" x-show="emailOk">✓ E-Mail erfolgreich geändert</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:flex-end">
+          <div class="field" style="margin:0"><label>Neue E-Mail</label><input class="inp" type="email" x-model="emailForm.email" placeholder="neu@beispiel.de"></div>
+          <div class="field" style="margin:0"><label>Passwort zur Bestätigung</label><input class="inp" type="password" x-model="emailForm.password" placeholder="••••••••"></div>
+          <button class="btn btn-ghost btn-sm" @click="changeEmail()" :disabled="settingsSaving">Speichern</button>
+        </div>
+      </div>
+
+      <!-- DSGVO Export -->
+      <div class="settings-section">
+        <h2>Daten exportieren</h2>
+        <p class="desc">Exportiere alle deine Daten gemäß DSGVO Art. 20 als JSON-Datei.</p>
+        <a href="/api/account/export" class="btn btn-ghost btn-sm" style="text-decoration:none" download>📥 Meine Daten exportieren</a>
+      </div>
+
+      <!-- Danger Zone -->
+      <div class="settings-section danger-zone">
+        <h2>Konto löschen</h2>
+        <p class="desc">Löscht dein Konto, alle Agenten und alle Daten unwiderruflich. Nicht rückgängig machbar.</p>
+        <div class="err-box" x-show="deleteErr">⚠ <span x-text="deleteErr"></span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:flex-end">
+          <div class="field" style="margin:0"><label>Passwort</label><input class="inp" type="password" x-model="deleteForm.password" placeholder="••••••••"></div>
+          <div class="field" style="margin:0"><label>Zur Bestätigung "LÖSCHEN" eingeben</label><input class="inp" type="text" x-model="deleteForm.confirm" placeholder="LÖSCHEN"></div>
+          <button class="btn btn-danger btn-sm" @click="deleteAccount()" :disabled="settingsSaving">Konto löschen</button>
+        </div>
+      </div>
     </div>
 
   </div><!-- /main -->
 </div><!-- /app -->
 
-<!-- AGENT MODAL -->
+<!-- ─── AGENT MODAL ─── -->
 <div class="modal-bg" x-show="showModal" @click.self="showModal=false" x-cloak>
   <div class="modal">
-    <div class="modal-title" x-text="editing?(lang==='de'?'Agent bearbeiten':'Edit Agent'):(lang==='de'?'Neuen Agenten erstellen':'Create Agent')"></div>
-
-    <div class="tabs" style="margin-bottom:16px">
-      <div class="tab" :class="{active:aTab==='basics'}" @click="aTab='basics'" x-text="lang==='de'?'Grundlagen':'Basics'"></div>
-      <div class="tab" :class="{active:aTab==='model'}" @click="aTab='model';loadModels()" x-text="'🧠 Modell'"></div>
-      <div class="tab" :class="{active:aTab==='behavior'}" @click="aTab='behavior'" x-text="lang==='de'?'Verhalten':'Behavior'"></div>
-      <div class="tab" :class="{active:aTab==='rag'}" @click="aTab='rag';if(editing)loadDocs(editing.id)" x-text="'RAG / Wissen'"></div>
-      <div class="tab" :class="{active:aTab==='caps'}" @click="aTab='caps'" x-text="lang==='de'?'Fähigkeiten':'Capabilities'"></div>
-      <div class="tab" :class="{active:aTab==='integ'}" @click="aTab='integ'" x-text="lang==='de'?'Integrationen':'Integrations'"></div>
-      <div class="tab" :class="{active:aTab==='preview'}" @click="aTab='preview'" x-text="lang==='de'?'Vorschau':'Preview'"></div>
-      <template x-if="editing">
-        <div class="tab" :class="{active:aTab==='embed'}" @click="aTab='embed'" x-text="lang==='de'?'Einbetten':'Embed'"></div>
-        <div class="tab" :class="{active:aTab==='identity'}" @click="aTab='identity';loadIdentity()" x-text="lang==='de'?'🤖 Identität':'🤖 Identity'"></div>
-      </template>
+    <div class="modal-title" x-text="editing?'Agent bearbeiten':'Neuen Agenten erstellen'"></div>
+    <div class="tabs" style="margin-bottom:16px;flex-wrap:wrap">
+      <div class="tab" :class="{active:aTab==='basics'}" @click="aTab='basics'">Grundlagen</div>
+      <div class="tab" :class="{active:aTab==='behavior'}" @click="aTab='behavior'">Verhalten</div>
+      <div class="tab" :class="{active:aTab==='rag'}" @click="aTab='rag';if(editing)loadDocs(editing.id)">📚 Wissen</div>
+      <div class="tab" :class="{active:aTab==='caps'}" @click="aTab='caps'">Fähigkeiten</div>
+      <div class="tab" :class="{active:aTab==='integ'}" @click="aTab='integ';if(editing)loadWebhooksOut(editing.id)">Integrationen</div>
+      <div class="tab" :class="{active:aTab==='stats'}" @click="aTab='stats';if(editing)loadAgentStats(editing.id)" x-show="editing">📊 Stats</div>
+      <div class="tab" :class="{active:aTab==='preview'}" @click="aTab='preview'">Vorschau</div>
+      <template x-if="editing"><div class="tab" :class="{active:aTab==='embed'}" @click="aTab='embed'">Einbetten</div></template>
     </div>
 
-    <!-- BASICS -->
+    <!-- BASICS TAB -->
     <template x-if="aTab==='basics'">
       <div>
-        <div class="fs"><div class="fs-title" x-text="lang==='de'?'Identität':'Identity'"></div>
+        <div class="fs"><div class="fs-title">Identität</div>
           <div class="inp-row" style="margin-bottom:12px">
-            <div class="field" style="margin:0"><label x-text="lang==='de'?'Name':'Name'"></label><input class="inp" type="text" x-model="af.name" :placeholder="lang==='de'?'z.B. Mia, Support-Bot':'e.g. Mia, Support Bot'"></div>
-            <div class="field" style="margin:0"><label x-text="lang==='de'?'Sprache':'Language'"></label><select class="inp" x-model="af.language"><option value="de">🇩🇪 Deutsch</option><option value="en">🇬🇧 English</option></select></div>
+            <div class="field" style="margin:0"><label>Name</label><input class="inp" type="text" x-model="af.name" placeholder="z.B. Mia, Support-Bot"></div>
+            <div class="field" style="margin:0"><label>Sprache</label><select class="inp" x-model="af.language"><option value="de">🇩🇪 Deutsch</option><option value="en">🇬🇧 English</option></select></div>
           </div>
-          <div class="field"><label x-text="lang==='de'?'Beschreibung':'Description'"></label><input class="inp" type="text" x-model="af.description" :placeholder="lang==='de'?'Wofür ist dieser Agent?':'What is this agent for?'"></div>
+          <div class="field"><label>Beschreibung</label><input class="inp" type="text" x-model="af.description" placeholder="Wofür ist dieser Agent?"></div>
           <div class="field"><label>Emoji</label><div class="emoji-grid"><template x-for="e in emojis" :key="e"><div class="emo" :class="{on:af.emoji===e}" @click="af.emoji=e" x-text="e"></div></template></div></div>
-          <div class="field"><label x-text="lang==='de'?'Farbe':'Color'"></label><div class="color-grid"><template x-for="c in colors" :key="c"><div class="col-opt" :class="{on:af.color===c}" :style="`background:${c}`" @click="af.color=c"></div></template></div></div>
+          <div class="field"><label>Farbe</label><div class="color-grid"><template x-for="c in colors" :key="c"><div class="col-opt" :class="{on:af.color===c}" :style="`background:${c}`" @click="af.color=c"></div></template></div></div>
         </div>
       </div>
     </template>
 
-    <!-- BEHAVIOR -->
+    <!-- BEHAVIOR TAB -->
     <template x-if="aTab==='behavior'">
       <div>
-        <div class="field"><label x-text="lang==='de'?'System-Prompt':'System Prompt'"></label><div class="hint" x-text="lang==='de'?'Persönlichkeit, Aufgaben und Regeln des Agenten.':'Personality, tasks and rules of the agent.'"></div><textarea class="inp" rows="5" x-model="af.system_prompt" :placeholder="lang==='de'?'Du bist [Name], ein KI-Assistent für [Unternehmen]...':'You are [Name], an AI assistant for [Company]...'"></textarea></div>
-        <div class="field"><label x-text="lang==='de'?'Begrüßungsnachricht':'Greeting Message'"></label><textarea class="inp" rows="2" x-model="af.greeting" :placeholder="lang==='de'?'Hallo! Wie kann ich helfen?':'Hello! How can I help?'"></textarea></div>
-        <div class="field"><label x-text="lang==='de'?'Kommunikationsstil':'Communication Style'"></label>
+        <div class="field"><label>System-Prompt</label><div class="hint">Persönlichkeit, Aufgaben und Regeln des Agenten.</div><textarea class="inp" rows="5" x-model="af.system_prompt" placeholder="Du bist [Name], ein KI-Assistent für [Unternehmen]..."></textarea></div>
+        <div class="field"><label>Begrüßungsnachricht</label><textarea class="inp" rows="2" x-model="af.greeting" placeholder="Hallo! Wie kann ich helfen?"></textarea></div>
+        <div class="field"><label>Kommunikationsstil</label>
           <div class="tone-grid">
-            <template x-for="t in tones" :key="t.key"><div class="tone-opt" :class="{on:af.tone===t.key}" @click="af.tone=t.key"><h4 x-text="lang==='de'?t.de:t.en"></h4><p x-text="lang==='de'?t.d:t.e"></p></div></template>
+            <template x-for="t in tones" :key="t.key"><div class="tone-opt" :class="{on:af.tone===t.key}" @click="af.tone=t.key"><h4 x-text="t.de"></h4><p x-text="t.d"></p></div></template>
           </div>
         </div>
-        <div class="field"><label x-text="lang==='de'?'Schnellantworten (max. 5)':'Quick Replies (max. 5)'"></label>
-          <div class="chip-row"><input class="inp" type="text" x-model="chipIn" :placeholder="lang==='de'?'Vorschlag...':'Suggestion...'" @keydown.enter.prevent="addChip()"><button class="btn btn-ghost btn-sm" @click="addChip()">+ Add</button></div>
+        <div class="field"><label>Schnellantworten (max. 5)</label>
+          <div class="chip-row"><input class="inp" type="text" x-model="chipIn" placeholder="Vorschlag..." @keydown.enter.prevent="addChip()"><button class="btn btn-ghost btn-sm" @click="addChip()">+ Add</button></div>
           <div class="chips-wrap"><template x-for="(c,i) in af.quick_chips" :key="i"><div class="chip-tag"><span x-text="c"></span><button class="chip-del" @click="af.quick_chips.splice(i,1)">✕</button></div></template></div>
         </div>
       </div>
@@ -465,430 +629,237 @@ Response:
     <template x-if="aTab==='rag'">
       <div>
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;padding:14px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px">
-          <div style="flex:1"><div style="font-size:.88rem;font-weight:600;color:var(--white)" x-text="lang==='de'?'RAG aktivieren':'Enable RAG'"></div><div style="font-size:.74rem;color:var(--muted)" x-text="lang==='de'?'Agent nutzt hochgeladene Dokumente als Wissensbasis':'Agent uses uploaded documents as knowledge base'"></div></div>
+          <div style="flex:1"><div style="font-size:.88rem;font-weight:600;color:var(--white)">RAG aktivieren</div><div style="font-size:.74rem;color:var(--muted)">Agent nutzt hochgeladene Dokumente als Wissensbasis</div></div>
           <label class="toggle"><input type="checkbox" x-model="af.rag_enabled"><span class="slider"></span></label>
         </div>
-
         <template x-if="af.rag_enabled">
           <div>
-            <div class="field"><label x-text="lang==='de'?'RAG-Anweisung':'RAG Instruction'"></label><div class="hint" x-text="lang==='de'?'Wie soll der Agent mit den Dokumenten umgehen?':'How should the agent use the documents?'"></div><textarea class="inp" rows="2" x-model="af.rag_prompt" :placeholder="lang==='de'?'Nutze die bereitgestellten Dokumente...':'Use the provided documents...'"></textarea></div>
-
+            <div class="field"><label>RAG-Anweisung</label><textarea class="inp" rows="2" x-model="af.rag_prompt" placeholder="Nutze die bereitgestellten Dokumente..."></textarea></div>
             <template x-if="editing">
               <div>
-                <!-- Upload Zone -->
                 <div class="upload-zone" :class="{drag:dragging}" @dragover.prevent="dragging=true" @dragleave="dragging=false" @drop.prevent="dropFile($event)">
                   <input type="file" accept=".txt,.md,.pdf,.csv,.json,.html" @change="uploadFile($event)">
-                  <div class="uz-icon">📂</div>
-                  <h4 x-text="lang==='de'?'Datei hochladen':'Upload File'"></h4>
-                  <p x-text="lang==='de'?'TXT, MD, PDF, CSV, JSON, HTML · max. 10MB':'TXT, MD, PDF, CSV, JSON, HTML · max. 10MB'"></p>
-                  <p x-show="uploading" style="color:var(--pu-l);margin-top:8px" x-text="lang==='de'?'Wird hochgeladen...':'Uploading...'"></p>
+                  <div style="font-size:2rem;margin-bottom:10px">📂</div>
+                  <h4 style="color:var(--white);margin-bottom:4px">Datei hochladen</h4>
+                  <p style="font-size:.78rem;color:var(--muted)">TXT, MD, PDF, CSV, JSON, HTML · max. 10MB</p>
+                  <p x-show="uploading" style="color:var(--pu-l);margin-top:8px">Wird hochgeladen...</p>
                 </div>
-
-                <!-- Documents list -->
                 <div style="margin-top:16px">
-                  <div style="font-size:.78rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px" x-text="lang==='de'?'Hochgeladene Dokumente':'Uploaded Documents'"></div>
-                  <template x-if="docs.length===0"><div style="text-align:center;padding:24px;color:var(--muted);font-size:.83rem" x-text="lang==='de'?'Noch keine Dokumente':'No documents yet'"></div></template>
+                  <template x-if="docs.length===0"><div style="text-align:center;padding:24px;color:var(--muted);font-size:.83rem">Noch keine Dokumente</div></template>
                   <template x-for="doc in docs" :key="doc.id">
                     <div class="doc-item">
-                      <div class="doc-icon" :style="`background:rgba(108,92,231,.1)`">
-                        <span x-text="doc.filetype==='pdf'?'📄':doc.filetype==='csv'?'📊':'📝'"></span>
-                      </div>
-                      <div style="flex:1">
-                        <div class="doc-name" x-text="doc.filename"></div>
-                        <div class="doc-meta" x-text="(doc.chunk_count||0)+' Chunks · '+(doc.filesize/1024).toFixed(1)+' KB'"></div>
-                      </div>
-                      <div class="doc-status">
-                        <span class="status-pill" :class="{'s-ready':doc.status==='ready','s-processing':doc.status==='processing','s-error':doc.status==='error'}" x-text="doc.status==='ready'?'✓ Bereit':doc.status==='processing'?'⏳ Verarbeitung':'✕ Fehler'"></span>
-                      </div>
-                      <button class="btn btn-sm btn-danger" style="margin-left:8px" @click="deleteDoc(doc.id)" x-text="lang==='de'?'Löschen':'Delete'"></button>
+                      <div class="doc-icon" style="background:rgba(108,92,231,.1)"><span x-text="doc.filetype==='pdf'?'📄':doc.filetype==='csv'?'📊':'📝'"></span></div>
+                      <div style="flex:1"><div class="doc-name" x-text="doc.filename"></div><div class="doc-meta" x-text="(doc.chunk_count||0)+' Chunks · '+(doc.filesize/1024).toFixed(1)+' KB'"></div></div>
+                      <span class="status-pill" :class="{'s-ready':doc.status==='ready','s-processing':doc.status==='processing','s-error':doc.status==='error'}" x-text="doc.status==='ready'?'✓ Bereit':doc.status==='processing'?'⏳ Verarbeitung':'✕ Fehler'"></span>
+                      <button class="btn btn-sm btn-danger" style="margin-left:8px" @click="deleteDoc(doc.id)">Löschen</button>
                     </div>
                   </template>
                 </div>
               </div>
             </template>
-
-            <template x-if="!editing">
-              <div style="padding:16px;background:rgba(108,92,231,.06);border:1px solid rgba(108,92,231,.2);border-radius:10px;font-size:.83rem;color:var(--muted)">
-                💡 <span x-text="lang==='de'?'Speichere den Agenten zuerst, dann kannst du Dokumente hochladen.':'Save the agent first, then you can upload documents.'"></span>
-              </div>
-            </template>
+            <template x-if="!editing"><div style="padding:16px;background:rgba(108,92,231,.06);border:1px solid rgba(108,92,231,.2);border-radius:10px;font-size:.83rem;color:var(--muted)">💡 Speichere den Agenten zuerst, dann kannst du Dokumente hochladen.</div></template>
           </div>
         </template>
       </div>
     </template>
 
-    <!-- MODEL TAB -->
-    <template x-if="aTab==='model'">
-      <div>
-        <!-- Current model selector -->
-        <div class="fs">
-          <div class="fs-title">🧠 <span x-text="lang==='de'?'KI-Modell':'AI Model'"></span></div>
-          <div class="field">
-            <label x-text="lang==='de'?'Aktives Modell für diesen Agenten':'Active model for this agent'"></label>
-            <select class="inp" x-model="af.model">
-              <optgroup label="Anthropic (Claude)">
-                <option value="claude-haiku-4-5-20251001">Claude Haiku 4 — Schnell &amp; günstig</option>
-                <option value="claude-sonnet-4-20250514">Claude Sonnet 4 — Empfohlen ⭐</option>
-                <option value="claude-opus-4-6">Claude Opus 4 — Mächtigste</option>
-              </optgroup>
-              <optgroup label="OpenAI">
-                <option value="gpt-4o-mini">GPT-4o Mini — Schnell</option>
-                <option value="gpt-4o">GPT-4o</option>
-              </optgroup>
-              <template x-if="availableModels.filter(m=>m.provider==='ollama').length>0">
-                <optgroup label="🖥️ Lokal (Ollama)">
-                  <template x-for="m in availableModels.filter(m=>m.provider==='ollama')" :key="m.id">
-                    <option :value="m.id" x-text="m.name"></option>
-                  </template>
-                </optgroup>
-              </template>
-              <template x-if="availableModels.filter(m=>m.isFineTuned).length>0">
-                <optgroup label="🎯 Deine Fine-Tuned Modelle">
-                  <template x-for="m in availableModels.filter(m=>m.isFineTuned)" :key="m.id">
-                    <option :value="m.id" x-text="m.name"></option>
-                  </template>
-                </optgroup>
-              </template>
-            </select>
-          </div>
-          <div class="field">
-            <label x-text="lang==='de'?'OpenAI API Key (optional, überschreibt .env)':'OpenAI API Key (optional, overrides .env)'"></label>
-            <input class="inp" type="password" x-model="openaiKey" placeholder="sk-...">
-          </div>
-        </div>
-
-        <!-- Ollama -->
-        <div class="fs">
-          <div class="fs-title">🖥️ Ollama (Lokale Modelle)</div>
-          <div class="field">
-            <label>Ollama URL</label>
-            <div style="display:flex;gap:8px">
-              <input class="inp" type="text" x-model="ollamaUrl" placeholder="http://localhost:11434">
-              <button class="btn btn-ghost btn-sm" @click="modelsLoaded=false;loadModels()" x-text="lang==='de'?'Prüfen':'Check'"></button>
-            </div>
-            <div class="hint" x-text="lang==='de'?'Ollama lokal installieren: https://ollama.ai':'Install Ollama locally: https://ollama.ai'"></div>
-          </div>
-          <div x-show="availableModels.filter(m=>m.provider==='ollama').length>0">
-            <div style="font-size:.78rem;color:var(--green);margin-bottom:8px">✓ <span x-text="availableModels.filter(m=>m.provider==='ollama').length+' lokale Modelle verfügbar'"></span></div>
-            <div style="display:flex;flex-wrap:wrap;gap:6px">
-              <template x-for="m in availableModels.filter(m=>m.provider==='ollama')" :key="m.id">
-                <span style="background:rgba(0,206,201,.1);border:1px solid rgba(0,206,201,.2);border-radius:20px;padding:3px 10px;font-size:.73rem;color:var(--teal);cursor:pointer" @click="af.model=m.id" x-text="m.id"></span>
-              </template>
-            </div>
-          </div>
-          <div x-show="modelsLoaded && availableModels.filter(m=>m.provider==='ollama').length===0" style="font-size:.78rem;color:var(--muted)" x-text="lang==='de'?'Ollama nicht erreichbar oder keine Modelle installiert.':'Ollama not reachable or no models installed.'"></div>
-        </div>
-
-        <button class="btn btn-purple btn-sm" style="width:100%;margin-bottom:24px" @click="saveModel()" x-text="lang==='de'?'💾 Modell speichern':'💾 Save Model'"></button>
-
-        <!-- Fine-Tuning -->
-        <div class="fs">
-          <div class="fs-title">🎯 Fine-Tuning (OpenAI)</div>
-          <div style="padding:12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:9px;margin-bottom:14px">
-            <div style="font-size:.82rem;color:var(--text)" x-text="lang==='de'?'Trainiere ein eigenes Modell auf den echten Gesprächen dieses Agenten. Das Modell lernt den Stil, Ton und die Antworten deines Agenten.':'Train a custom model on this agent\'s real conversations. The model learns the style, tone and responses of your agent.'"></div>
-          </div>
-
-          <template x-if="!ftPrepare">
-            <button class="btn btn-ghost btn-sm" @click="prepareFinetune()" :disabled="ftLoading">
-              <span x-show="ftLoading">⏳</span>
-              <span x-text="lang==='de'?'Trainingsdaten vorbereiten':'Prepare training data'"></span>
-            </button>
-          </template>
-
-          <template x-if="ftPrepare">
-            <div>
-              <div style="padding:12px;border-radius:9px;margin-bottom:12px" :style="ftPrepare.ready?'background:rgba(0,184,148,.08);border:1px solid rgba(0,184,148,.2)':'background:rgba(233,69,96,.08);border:1px solid rgba(233,69,96,.2)'">
-                <div style="font-size:.84rem;font-weight:600" :style="ftPrepare.ready?'color:var(--green)':'color:var(--red)'" x-text="ftPrepare.message"></div>
-                <div style="font-size:.75rem;color:var(--muted);margin-top:4px" x-text="ftPrepare.count+' Trainingspaare gefunden'"></div>
-              </div>
-              <template x-if="ftPrepare.ready">
-                <div>
-                  <div style="font-size:.75rem;color:var(--muted);margin-bottom:4px" x-text="lang==='de'?'Basis-Modell:':'Base model:'"></div>
-                  <select class="inp" x-model="af.model" style="margin-bottom:10px">
-                    <option value="gpt-4o-mini-2024-07-18">GPT-4o Mini (günstig, ~€3–8)</option>
-                    <option value="gpt-4o-2024-08-06">GPT-4o (leistungsstark, ~€15–40)</option>
-                  </select>
-                  <button class="btn btn-purple btn-sm" style="width:100%" @click="startFinetune()" :disabled="ftLoading">
-                    <span x-show="ftLoading">⏳</span>
-                    <span x-text="lang==='de'?'🚀 Fine-Tuning starten':'🚀 Start Fine-Tuning'"></span>
-                  </button>
-                </div>
-              </template>
-            </div>
-          </template>
-        </div>
-
-        <!-- Job list -->
-        <template x-if="ftJobs.length>0">
-          <div>
-            <div style="font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px" x-text="lang==='de'?'Fine-Tuning Jobs':'Fine-Tuning Jobs'"></div>
-            <template x-for="job in ftJobs" :key="job.id">
-              <div style="display:flex;align-items:center;gap:10px;padding:12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:9px;margin-bottom:7px">
-                <div style="flex:1">
-                  <div style="font-size:.84rem;font-weight:600;color:var(--white)" x-text="job.name"></div>
-                  <div style="font-size:.72rem;color:var(--muted)" x-text="job.base_model+' · '+job.training_pairs+' Paare · '+new Date(job.created_at).toLocaleDateString('de-DE')"></div>
-                  <div x-show="job.fine_tuned_model" style="font-size:.7rem;color:var(--pu-l);margin-top:2px" x-text="job.fine_tuned_model"></div>
-                </div>
-                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
-                  <span :style="`font-size:.66rem;font-weight:700;padding:2px 8px;border-radius:20px;background:${job.status==='succeeded'?'rgba(0,184,148,.12)':job.status==='failed'?'rgba(233,69,96,.1)':'rgba(240,192,64,.1)'};color:${job.status==='succeeded'?'var(--green)':job.status==='failed'?'var(--red)':'var(--gold)'};border:1px solid ${job.status==='succeeded'?'rgba(0,184,148,.2)':job.status==='failed'?'rgba(233,69,96,.2)':'rgba(240,192,64,.2)'}`" x-text="job.status"></span>
-                  <button x-show="job.status==='running'||job.status==='validating_files'||job.status==='queued'" class="btn btn-ghost" style="font-size:.68rem;padding:3px 8px" @click="pollFtJob(job.openai_job_id)" x-text="lang==='de'?'Aktualisieren':'Refresh'"></button>
-                  <button x-show="job.status==='succeeded'&&job.fine_tuned_model" class="btn btn-sm" style="font-size:.68rem;padding:3px 10px;background:var(--purple);color:#fff" @click="af.model=job.fine_tuned_model;toast(lang==='de'?'Modell gesetzt!':'Model set!')" x-text="lang==='de'?'Aktivieren':'Activate'"></button>
-                </div>
-              </div>
-            </template>
-          </div>
-        </template>
-      </div>
-    </template>
-
-
-    <!-- CAPS -->
+    <!-- CAPS TAB -->
     <template x-if="aTab==='caps'">
       <div>
-        <div style="font-size:.78rem;color:var(--muted);margin-bottom:18px" x-text="lang==='de'?'Aktiviere zusätzliche Fähigkeiten für deinen Agenten:':'Enable additional capabilities for your agent:'"></div>
-
-        <!-- Calendar -->
-        <div class="integ-item">
-          <div class="ii-icon" style="background:rgba(108,92,231,.1)">📅</div>
-          <div class="ii-info">
-            <div class="ii-name" x-text="lang==='de'?'Termine buchen':'Book Appointments'"></div>
-            <div class="ii-desc" x-text="lang==='de'?'Agent verlinkt Nutzer zum richtigen Zeitpunkt zu deinem Buchungslink.':'Agent links users to your booking link at the right moment.'"></div>
-            <template x-if="af.cap_calendar"><input class="inp" type="url" x-model="af.cal_link" placeholder="https://calendly.com/dein-link" style="margin-top:7px;width:100%"></template>
-          </div>
-          <label class="toggle"><input type="checkbox" x-model="af.cap_calendar"><span class="slider"></span></label>
-        </div>
-
-        <!-- Leads -->
-        <div class="integ-item">
-          <div class="ii-icon" style="background:rgba(233,69,96,.1)">📋</div>
-          <div class="ii-info">
-            <div class="ii-name" x-text="lang==='de'?'Leads erfassen':'Capture Leads'"></div>
-            <div class="ii-desc" x-text="lang==='de'?'Agent sammelt Kontaktdaten natürlich im Gespräch.':'Agent collects contact data naturally in conversation.'"></div>
-            <template x-if="af.cap_leads">
-              <div style="margin-top:8px">
-                <div style="font-size:.74rem;color:var(--muted);margin-bottom:5px" x-text="lang==='de'?'Welche Felder sammeln? (kommagetrennt)':'Which fields to collect? (comma-separated)'"></div>
-                <input class="inp" type="text" :value="af.lead_fields.join(',')" @change="af.lead_fields=$event.target.value.split(',').map(s=>s.trim()).filter(Boolean)" :placeholder="lang==='de'?'Name, E-Mail, Telefon, Unternehmen':'Name, Email, Phone, Company'" style="margin-bottom:7px">
-                <input class="inp" type="email" x-model="af.lead_email" :placeholder="lang==='de'?'Benachrichtigungs-E-Mail (deine@email.de)':'Notification email (your@email.com)'">
-              </div>
-            </template>
-          </div>
-          <label class="toggle"><input type="checkbox" x-model="af.cap_leads"><span class="slider"></span></label>
-        </div>
-
-        <!-- Products -->
-        <div class="integ-item">
-          <div class="ii-icon" style="background:rgba(0,184,148,.1)">🛒</div>
-          <div class="ii-info">
-            <div class="ii-name" x-text="lang==='de'?'Produkte empfehlen':'Recommend Products'"></div>
-            <div class="ii-desc" x-text="lang==='de'?'Agent kennt deine Produkte und empfiehlt passende Angebote.':'Agent knows your products and recommends suitable offers.'"></div>
-            <template x-if="af.cap_products">
-              <div style="margin-top:8px">
-                <div style="font-size:.74rem;color:var(--muted);margin-bottom:8px" x-text="lang==='de'?'Produkte eingeben (Name · Beschreibung · Preis):':'Enter products (Name · Description · Price):'"></div>
-                <template x-for="(p,i) in af.products_data" :key="i">
-                  <div style="display:grid;grid-template-columns:1fr 2fr 80px 28px;gap:5px;margin-bottom:5px">
-                    <input class="inp" type="text" :value="p.name" @input="af.products_data[i].name=$event.target.value" :placeholder="lang==='de'?'Name':'Name'" style="padding:7px">
-                    <input class="inp" type="text" :value="p.description" @input="af.products_data[i].description=$event.target.value" :placeholder="lang==='de'?'Beschreibung':'Description'" style="padding:7px">
-                    <input class="inp" type="text" :value="p.price" @input="af.products_data[i].price=$event.target.value" placeholder="€99" style="padding:7px">
-                    <button style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.9rem" @click="af.products_data.splice(i,1)">✕</button>
-                  </div>
-                </template>
-                <button class="btn btn-ghost btn-sm" style="margin-top:4px" @click="af.products_data.push({name:'',description:'',price:''})" x-text="lang==='de'?'+ Produkt hinzufügen':'+ Add product'"></button>
-              </div>
-            </template>
-          </div>
-          <label class="toggle"><input type="checkbox" x-model="af.cap_products"><span class="slider"></span></label>
-        </div>
-
-        <!-- Multilang -->
-        <div class="integ-item">
-          <div class="ii-icon" style="background:rgba(240,192,64,.1)">🌍</div>
-          <div class="ii-info">
-            <div class="ii-name" x-text="lang==='de'?'Mehrsprachig (Auto-Erkennung)':'Multilingual (Auto-detect)'"></div>
-            <div class="ii-desc" x-text="lang==='de'?'Agent erkennt automatisch die Sprache des Nutzers und antwortet entsprechend.':'Agent automatically detects the user language and responds accordingly.'"></div>
-          </div>
-          <label class="toggle"><input type="checkbox" x-model="af.cap_multilang"><span class="slider"></span></label>
-        </div>
-
-        <!-- Email -->
-        <div class="integ-item">
-          <div class="ii-icon" style="background:rgba(162,155,254,.1)">✉️</div>
-          <div class="ii-info">
-            <div class="ii-name" x-text="lang==='de'?'E-Mails senden':'Send Emails'"></div>
-            <div class="ii-desc" x-text="lang==='de'?'Agent kann auf Nutzerwunsch E-Mails via SMTP versenden.':'Agent can send emails via SMTP on user request.'"></div>
-            <template x-if="af.cap_email">
-              <div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:7px">
-                <input class="inp" type="text" x-model="af.smtp_host" placeholder="smtp.gmail.com" style="padding:8px">
-                <input class="inp" type="number" x-model="af.smtp_port" placeholder="587" style="padding:8px">
-                <input class="inp" type="email" x-model="af.smtp_user" :placeholder="lang==='de'?'Absender E-Mail':'Sender email'" style="padding:8px">
-                <input class="inp" type="password" x-model="af.smtp_pass" placeholder="App-Passwort" style="padding:8px">
-                <input class="inp" type="text" x-model="af.smtp_from" placeholder="Mein Agent &lt;agent@firma.de&gt;" style="padding:8px;grid-column:span 2">
-              </div>
-            </template>
-          </div>
-          <label class="toggle"><input type="checkbox" x-model="af.cap_email"><span class="slider"></span></label>
-        </div>
+        <div class="integ-item"><div class="ii-icon" style="background:rgba(108,92,231,.1)">📅</div><div class="ii-info"><div class="ii-name">Termine buchen</div><div class="ii-desc">Agent verlinkt Nutzer zu deinem Buchungslink.</div><template x-if="af.cap_calendar"><input class="inp" type="url" x-model="af.cal_link" placeholder="https://calendly.com/dein-link" style="margin-top:7px;width:100%"></template></div><label class="toggle"><input type="checkbox" x-model="af.cap_calendar"><span class="slider"></span></label></div>
+        <div class="integ-item"><div class="ii-icon" style="background:rgba(233,69,96,.1)">📋</div><div class="ii-info"><div class="ii-name">Leads erfassen</div><div class="ii-desc">Agent sammelt Kontaktdaten im Gespräch.</div><template x-if="af.cap_leads"><div style="margin-top:8px"><input class="inp" type="text" :value="af.lead_fields.join(',')" @change="af.lead_fields=$event.target.value.split(',').map(s=>s.trim()).filter(Boolean)" placeholder="Name, E-Mail, Telefon, Unternehmen" style="margin-bottom:7px"><input class="inp" type="email" x-model="af.lead_email" placeholder="Benachrichtigungs-E-Mail"></div></template></div><label class="toggle"><input type="checkbox" x-model="af.cap_leads"><span class="slider"></span></label></div>
+        <div class="integ-item"><div class="ii-icon" style="background:rgba(0,184,148,.1)">🛒</div><div class="ii-info"><div class="ii-name">Produkte empfehlen</div><div class="ii-desc">Agent kennt deine Produkte.</div><template x-if="af.cap_products"><div style="margin-top:8px"><template x-for="(p,i) in af.products_data" :key="i"><div style="display:grid;grid-template-columns:1fr 2fr 80px 28px;gap:5px;margin-bottom:5px"><input class="inp" type="text" :value="p.name" @input="af.products_data[i].name=$event.target.value" placeholder="Name" style="padding:7px"><input class="inp" type="text" :value="p.description" @input="af.products_data[i].description=$event.target.value" placeholder="Beschreibung" style="padding:7px"><input class="inp" type="text" :value="p.price" @input="af.products_data[i].price=$event.target.value" placeholder="€99" style="padding:7px"><button style="background:none;border:none;color:var(--muted);cursor:pointer" @click="af.products_data.splice(i,1)">✕</button></div></template><button class="btn btn-ghost btn-sm" @click="af.products_data.push({name:'',description:'',price:''})">+ Produkt</button></div></template></div><label class="toggle"><input type="checkbox" x-model="af.cap_products"><span class="slider"></span></label></div>
+        <div class="integ-item"><div class="ii-icon" style="background:rgba(240,192,64,.1)">🌍</div><div class="ii-info"><div class="ii-name">Mehrsprachig</div><div class="ii-desc">Agent erkennt automatisch die Sprache des Nutzers.</div></div><label class="toggle"><input type="checkbox" x-model="af.cap_multilang"><span class="slider"></span></label></div>
+        <div class="integ-item"><div class="ii-icon" style="background:rgba(162,155,254,.1)">✉️</div><div class="ii-info"><div class="ii-name">E-Mails senden</div><div class="ii-desc">Agent kann E-Mails via SMTP versenden.</div><template x-if="af.cap_email"><div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:7px"><input class="inp" type="text" x-model="af.smtp_host" placeholder="smtp.gmail.com" style="padding:8px"><input class="inp" type="number" x-model="af.smtp_port" placeholder="587" style="padding:8px"><input class="inp" type="email" x-model="af.smtp_user" placeholder="Absender E-Mail" style="padding:8px"><input class="inp" type="password" x-model="af.smtp_pass" placeholder="App-Passwort" style="padding:8px"><input class="inp" type="text" x-model="af.smtp_from" placeholder="Mein Agent &lt;agent@firma.de&gt;" style="padding:8px;grid-column:span 2"></div></template></div><label class="toggle"><input type="checkbox" x-model="af.cap_email"><span class="slider"></span></label></div>
       </div>
     </template>
 
-
-    <!-- INTEGRATIONS -->
+    <!-- INTEGRATIONS TAB -->
     <template x-if="aTab==='integ'">
       <div>
-        <div style="display:flex;align-items:center;gap:12px;padding:14px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;margin-bottom:10px">
-          <div style="flex:1"><div style="font-size:.88rem;font-weight:600;color:var(--white)" x-text="lang==='de'?'Agent aktiv':'Agent active'"></div></div>
-          <label class="toggle"><input type="checkbox" x-model="af.is_active"><span class="slider"></span></label>
-        </div>
-        <div class="integ-item"><div class="ii-icon" style="background:rgba(108,92,231,.1)">🌐</div><div class="ii-info"><div class="ii-name" x-text="lang==='de'?'Öffentliche Chat-Seite':'Public Chat Page'"></div><div class="ii-desc" x-text="lang==='de'?'Teile einen Link — jeder kann chatten.':'Share a link — anyone can chat.'"></div></div><label class="toggle"><input type="checkbox" x-model="af.chatpage_enabled"><span class="slider"></span></label></div>
-        <div class="integ-item"><div class="ii-icon" style="background:rgba(162,155,254,.1)">🔧</div><div class="ii-info"><div class="ii-name">Widget</div><div class="ii-desc" x-text="lang==='de'?'Chat-Widget auf deiner Website.':'Chat widget on your website.'"></div></div><label class="toggle"><input type="checkbox" x-model="af.widget_enabled"><span class="slider"></span></label></div>
-        <div class="integ-item"><div class="ii-icon" style="background:rgba(240,192,64,.1)">⚡</div><div class="ii-info"><div class="ii-name">REST API</div><div class="ii-desc">API Key Zugang.</div></div><label class="toggle"><input type="checkbox" x-model="af.api_enabled"><span class="slider"></span></label></div>
-        <div class="integ-item"><div class="ii-icon" style="background:rgba(37,211,102,.1)">📱</div><div class="ii-info"><div class="ii-name">WhatsApp</div><div class="ii-desc">Meta Cloud API.</div><template x-if="af.whatsapp_enabled"><input class="inp" type="text" x-model="af.whatsapp_number" placeholder="4915123456789" style="margin-top:7px;width:100%"></template></div><label class="toggle"><input type="checkbox" x-model="af.whatsapp_enabled"><span class="slider"></span></label></div>
-        <div class="integ-item"><div class="ii-icon" style="background:rgba(0,136,204,.1)">✈️</div><div class="ii-info"><div class="ii-name">Telegram</div><div class="ii-desc">@BotFather Token.</div><template x-if="af.telegram_enabled"><input class="inp" type="text" x-model="af.telegram_token" placeholder="123456:ABCdefGHIjklMNO" style="margin-top:7px;width:100%"></template></div><label class="toggle"><input type="checkbox" x-model="af.telegram_enabled"><span class="slider"></span></label></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:14px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;margin-bottom:10px"><div style="flex:1"><div style="font-size:.88rem;font-weight:600;color:var(--white)">Agent aktiv</div></div><label class="toggle"><input type="checkbox" x-model="af.is_active"><span class="slider"></span></label></div>
+        <div class="integ-item"><div class="ii-icon" style="background:rgba(108,92,231,.1)">🌐</div><div class="ii-info"><div class="ii-name">Öffentliche Chat-Seite</div><div class="ii-desc">Teile einen Link — jeder kann chatten.</div></div><label class="toggle"><input type="checkbox" x-model="af.chatpage_enabled"><span class="slider"></span></label></div>
+        <div class="integ-item"><div class="ii-icon" style="background:rgba(162,155,254,.1)">🔧</div><div class="ii-info"><div class="ii-name">Widget</div><div class="ii-desc">Chat-Widget auf deiner Website.</div></div><label class="toggle"><input type="checkbox" x-model="af.widget_enabled"><span class="slider"></span></label></div>
+        <div class="integ-item"><div class="ii-icon" style="background:rgba(240,192,64,.1)">⚡</div><div class="ii-info"><div class="ii-name">REST API</div><div class="ii-desc">API Key Zugang. <span style="color:var(--gold)" x-show="user?.plan==='free'">Pro-Feature</span></div></div><label class="toggle"><input type="checkbox" x-model="af.api_enabled" @change="if(af.api_enabled&&user?.plan==='free'){af.api_enabled=false;showUpgrade=true}"><span class="slider"></span></label></div>
+        <div class="integ-item"><div class="ii-icon" style="background:rgba(37,211,102,.1)">📱</div><div class="ii-info"><div class="ii-name">WhatsApp</div><div class="ii-desc">Meta Cloud API. <span style="color:var(--gold)" x-show="user?.plan==='free'">Pro-Feature</span></div><template x-if="af.whatsapp_enabled"><input class="inp" type="text" x-model="af.whatsapp_number" placeholder="4915123456789" style="margin-top:7px;width:100%"></template></div><label class="toggle"><input type="checkbox" x-model="af.whatsapp_enabled" @change="if(af.whatsapp_enabled&&user?.plan==='free'){af.whatsapp_enabled=false;showUpgrade=true}"><span class="slider"></span></label></div>
+        <div class="integ-item"><div class="ii-icon" style="background:rgba(0,136,204,.1)">✈️</div><div class="ii-info"><div class="ii-name">Telegram</div><div class="ii-desc">@BotFather Token. <span style="color:var(--gold)" x-show="user?.plan==='free'">Pro-Feature</span></div><template x-if="af.telegram_enabled"><input class="inp" type="text" x-model="af.telegram_token" placeholder="123456:ABCdefGHIjklMNO" style="margin-top:7px;width:100%"></template></div><label class="toggle"><input type="checkbox" x-model="af.telegram_enabled" @change="if(af.telegram_enabled&&user?.plan==='free'){af.telegram_enabled=false;showUpgrade=true}"><span class="slider"></span></label></div>
+
+        <!-- OUTGOING WEBHOOKS -->
+        <template x-if="editing">
+          <div style="margin-top:20px">
+            <div style="font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--pu-l);margin-bottom:12px;display:flex;align-items:center;gap:8px">Ausgehende Webhooks <span style="font-size:.6rem;color:var(--gold)" x-show="user?.plan==='free'">PRO</span><span style="flex:1;height:1px;background:var(--border)"></span><button class="btn btn-ghost btn-sm" @click="if(user?.plan==='free'){showUpgrade=true}else{showNewWebhook=!showNewWebhook}" style="font-size:.72rem">+ Webhook</button></div>
+            <template x-if="showNewWebhook">
+              <div style="background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">
+                <div class="field"><label>Ziel-URL</label><input class="inp" type="url" x-model="newWebhook.url" placeholder="https://hooks.zapier.com/..."></div>
+                <div class="field"><label>Events</label><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px">
+                  <template x-for="evt in webhookEvents" :key="evt"><label style="display:flex;align-items:center;gap:5px;font-size:.78rem;cursor:pointer"><input type="checkbox" :value="evt" x-model="newWebhook.events"> <span x-text="evt"></span></label></template>
+                </div></div>
+                <div style="display:flex;gap:8px">
+                  <button class="btn btn-purple btn-sm" @click="createWebhookOut()">Speichern</button>
+                  <button class="btn btn-ghost btn-sm" @click="showNewWebhook=false">Abbrechen</button>
+                </div>
+              </div>
+            </template>
+            <template x-for="wh in webhooksOut" :key="wh.id">
+              <div class="wh-row">
+                <div style="flex:1">
+                  <div class="wh-url" x-text="wh.url"></div>
+                  <div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap">
+                    <template x-for="ev in (wh.events||[])" :key="ev"><span class="event-chip" x-text="ev"></span></template>
+                  </div>
+                </div>
+                <label class="toggle" style="flex-shrink:0"><input type="checkbox" :checked="wh.is_active" @change="toggleWebhookOut(wh)"><span class="slider"></span></label>
+                <button class="btn btn-sm btn-ghost" @click="testWebhookOut(wh.id)" style="font-size:.72rem">Test</button>
+                <button class="btn btn-sm btn-danger" @click="deleteWebhookOut(wh.id)">✕</button>
+              </div>
+            </template>
+            <template x-if="!webhooksOut.length&&user?.plan!=='free'"><div style="font-size:.82rem;color:var(--muted);padding:12px 0">Noch kein Webhook konfiguriert.</div></template>
+          </div>
+        </template>
       </div>
     </template>
 
-    <!-- PREVIEW -->
+    <!-- STATS TAB -->
+    <template x-if="aTab==='stats'&&editing">
+      <div>
+        <template x-if="agentStats">
+          <div>
+            <div class="grid-4" style="margin-bottom:16px">
+              <div class="stat-card"><div class="stat-n" x-text="agentStats.totals?.total_messages||0"></div><div class="stat-l">Gesamt</div></div>
+              <div class="stat-card"><div class="stat-n" x-text="agentStats.totals?.week_messages||0"></div><div class="stat-l">Letzte 7 Tage</div></div>
+              <div class="stat-card"><div class="stat-n" x-text="agentStats.totals?.day_messages||0"></div><div class="stat-l">Heute</div></div>
+              <div class="stat-card"><div class="stat-n" x-text="agentStats.totals?.unique_sessions||0"></div><div class="stat-l">Chats</div></div>
+            </div>
+            <div class="chart-card" style="margin-bottom:12px">
+              <h3>Nachrichten (30 Tage)</h3>
+              <div style="height:140px"><canvas id="chartAgentLine"></canvas></div>
+            </div>
+            <div style="font-size:.8rem;color:var(--text);margin-bottom:8px;font-weight:600">Letzte Sessions</div>
+            <template x-for="s in agentStats.sessions" :key="s.session_id">
+              <div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-size:.78rem">
+                <span class="badge b-purple" x-text="s.source"></span>
+                <span style="color:var(--muted)" x-text="s.user_msgs+' Nachrichten'"></span>
+                <span style="color:var(--muted);margin-left:auto" x-text="new Date(s.started_at).toLocaleString('de-DE')"></span>
+              </div>
+            </template>
+          </div>
+        </template>
+        <template x-if="!agentStats"><div style="text-align:center;padding:40px;color:var(--muted)">⏳ Lade Stats…</div></template>
+      </div>
+    </template>
+
+    <!-- PREVIEW TAB -->
     <template x-if="aTab==='preview'">
       <div>
         <div class="preview-win">
-          <div class="pw-hdr" :style="`background:${af.color}22;border-bottom:1px solid ${af.color}33`">
-            <div class="pw-av" :style="`background:${af.color}33`" x-text="af.emoji||'🤖'"></div>
-            <div><div class="pw-name" x-text="af.name||'Agent'"></div><div class="pw-status">● Online</div></div>
-          </div>
+          <div class="pw-hdr" :style="`background:${af.color}22;border-bottom:1px solid ${af.color}33`"><div class="pw-av" :style="`background:${af.color}33`" x-text="af.emoji||'🤖'"></div><div><div class="pw-name" x-text="af.name||'Agent'"></div><div class="pw-status">● Online</div></div></div>
           <div class="pw-body">
-            <div class="pw-bbl a" x-text="af.greeting||(lang==='de'?'Hallo! Wie kann ich helfen?':'Hello! How can I help?')"></div>
+            <div class="pw-bbl a" x-text="af.greeting||'Hallo! Wie kann ich helfen?'"></div>
             <template x-if="af.quick_chips?.length"><div style="display:flex;flex-wrap:wrap;gap:5px"><template x-for="c in af.quick_chips" :key="c"><span style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:4px 11px;font-size:.73rem;color:#e0e0f0" x-text="c"></span></template></div></template>
-            <div class="pw-bbl u" :style="`background:${af.color}`" x-text="lang==='de'?'Was kannst du tun?':'What can you do?'"></div>
-            <div class="pw-bbl a" x-text="lang==='de'?'Ich helfe gerne! Stelle mir eine Frage.':'Happy to help! Ask me a question.'"></div>
+            <div class="pw-bbl u" :style="`background:${af.color}`">Was kannst du tun?</div>
+            <div class="pw-bbl a">Ich helfe gerne! Stelle mir eine Frage.</div>
           </div>
-          <div class="pw-foot"><input class="pw-inp" :placeholder="lang==='de'?'Nachricht...':'Message...'"><div class="pw-send" :style="`background:${af.color}`">➤</div></div>
+          <div class="pw-foot"><input class="pw-inp" placeholder="Nachricht..."><div style="width:30px;height:30px;border-radius:7px;border:none;cursor:pointer;font-size:.82rem;display:flex;align-items:center;justify-content:center" :style="`background:${af.color}`">➤</div></div>
         </div>
       </div>
     </template>
 
-    <!-- EMBED -->
-    <template x-if="aTab==='embed' && editing">
+    <!-- EMBED TAB -->
+    <template x-if="aTab==='embed'&&editing">
       <div>
-        <div class="card" style="margin-bottom:12px">
-          <div style="font-weight:600;color:var(--white);margin-bottom:6px">🌐 Chat-Seite</div>
-          <div style="display:flex;gap:8px"><div class="code" style="flex:1;padding:9px" x-text="window.location.origin+'/chat/'+editing.public_id"></div><button class="btn btn-ghost btn-sm" @click="copy(window.location.origin+'/chat/'+editing.public_id)">Copy</button></div>
-        </div>
-        <div class="card" style="margin-bottom:12px">
-          <div style="font-weight:600;color:var(--white);margin-bottom:6px">🔧 Widget Code</div>
-          <div class="code" x-html="'&lt;script&gt;window.AK_AGENT_ID=&quot;'+editing.public_id+'&quot;;&lt;/script&gt;\n&lt;script src=&quot;'+window.location.origin+'/widget.js&quot;&gt;&lt;/script&gt;'"></div>
-        </div>
-        <div class="card">
-          <div style="font-weight:600;color:var(--white);margin-bottom:6px">⚡ API Endpoint</div>
-          <div class="code" x-html="'POST '+window.location.origin+'/api/chat/api/'+editing.id+'\nx-api-key: ak_live_...'"></div>
-        </div>
+        <div class="card" style="margin-bottom:12px"><div style="font-weight:600;color:var(--white);margin-bottom:6px">🌐 Chat-Seite</div><div style="display:flex;gap:8px"><div class="code" style="flex:1;padding:9px" x-text="window.location.origin+'/chat/'+editing.public_id"></div><button class="btn btn-ghost btn-sm" @click="copy(window.location.origin+'/chat/'+editing.public_id)">Copy</button></div></div>
+        <div class="card" style="margin-bottom:12px"><div style="font-weight:600;color:var(--white);margin-bottom:6px">🔧 Widget Code</div><div class="code" x-html="'&lt;script&gt;window.AK_AGENT_ID=&quot;'+editing.public_id+'&quot;;&lt;/script&gt;\n&lt;script src=&quot;'+window.location.origin+'/widget.js&quot;&gt;&lt;/script&gt;'"></div></div>
+        <div class="card"><div style="font-weight:600;color:var(--white);margin-bottom:6px">⚡ API Endpoint</div><div class="code" x-html="'POST '+window.location.origin+'/api/chat/api/'+editing.id+'\nx-api-key: ak_live_...'"></div></div>
       </div>
     </template>
-
-    <!-- IDENTITY TAB -->
-    <template x-if="aTab==='identity'">
-      <div>
-        <div style="padding:14px;background:rgba(108,92,231,.06);border:1px solid rgba(108,92,231,.2);border-radius:10px;margin-bottom:18px">
-          <div style="font-size:.88rem;font-weight:600;color:var(--white);margin-bottom:4px" x-text="lang==='de'?'🤖 Agent-Identität':'🤖 Agent Identity'"></div>
-          <div style="font-size:.78rem;color:var(--muted)" x-text="lang==='de'?'Gib deinem Agenten eine Identität damit er eigenständig Aktionen ausführen kann: Termine buchen, E-Mails senden, Formulare ausfüllen.':'Give your agent an identity so it can autonomously take actions: book appointments, send emails, fill forms.'"></div>
-        </div>
-
-        <!-- Basic identity -->
-        <div class="fs"><div class="fs-title" x-text="lang==='de'?'Identität':'Identity'"></div>
-          <div class="inp-row" style="margin-bottom:12px">
-            <div class="field" style="margin:0"><label x-text="lang==='de'?'Anzeigename':'Display Name'"></label><input class="inp" type="text" x-model="identityForm.display_name" :placeholder="lang==='de'?'z.B. Mia von FirmaXY':'e.g. Mia from CompanyXY'"></div>
-            <div class="field" style="margin:0"><label>E-Mail</label><input class="inp" type="email" x-model="identityForm.email_address" placeholder="agent@firma.de"></div>
-          </div>
-        </div>
-
-        <!-- Google -->
-        <div class="integ-item">
-          <div class="ii-icon" style="background:rgba(66,133,244,.1)">🔵</div>
-          <div class="ii-info">
-            <div class="ii-name">Google (Calendar + Gmail)</div>
-            <div class="ii-desc" x-text="lang==='de'?'Kalender-Einträge erstellen & E-Mails senden als Agent.':'Create calendar events & send emails as the agent.'"></div>
-            <template x-if="identity?.has_google">
-              <div>
-                <div style="font-size:.75rem;color:var(--green);margin-top:5px">✓ <span x-text="lang==='de'?'Verbunden':'Connected'"></span> <span x-text="identity.email_address?'('+identity.email_address+')'":''"></span></div>
-                <div style="margin-top:8px">
-                  <label style="font-size:.74rem;color:var(--muted)" x-text="lang==='de'?'Kalender-ID (leer = primär)':'Calendar ID (empty = primary)'"></label>
-                  <input class="inp" type="text" x-model="identityForm.google_calendar_id" placeholder="primary" style="margin-top:4px">
-                </div>
-              </div>
-            </template>
-          </div>
-          <template x-if="!identity?.has_google">
-            <button class="btn btn-sm" style="background:#4285f4;color:#fff;flex-shrink:0" @click="connectGoogle()" x-text="lang==='de'?'Google verbinden':'Connect Google'"></button>
-          </template>
-          <template x-if="identity?.has_google">
-            <button class="btn btn-sm btn-danger" style="flex-shrink:0" @click="disconnectGoogle()" x-text="lang==='de'?'Trennen':'Disconnect'"></button>
-          </template>
-        </div>
-
-        <!-- Calendly -->
-        <div class="integ-item">
-          <div class="ii-icon" style="background:rgba(0,168,116,.1)">📅</div>
-          <div class="ii-info">
-            <div class="ii-name">Calendly API</div>
-            <div class="ii-desc" x-text="lang==='de'?'Freie Slots abrufen und Termine direkt buchen.':'Retrieve available slots and book appointments directly.'"></div>
-            <template x-if="identity?.has_calendly">
-              <div style="font-size:.75rem;color:var(--green);margin-top:5px">✓ <span x-text="lang==='de'?'API-Token hinterlegt':'API token stored'"></span></div>
-            </template>
-            <template x-if="!identity?.has_calendly || true">
-              <input class="inp" type="password" x-model="identityForm.calendly_token" :placeholder="lang==='de'?'Calendly Personal Access Token':'Calendly personal access token'" style="margin-top:7px">
-            </template>
-          </div>
-        </div>
-
-        <!-- Form Filling note -->
-        <div style="padding:14px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;margin-bottom:14px;display:flex;gap:12px">
-          <div style="font-size:1.3rem">🌐</div>
-          <div>
-            <div style="font-size:.86rem;font-weight:600;color:var(--white);margin-bottom:3px" x-text="lang==='de'?'Formulare ausfüllen':'Fill Forms'"></div>
-            <div style="font-size:.76rem;color:var(--muted)" x-text="lang==='de'?'Der Agent kann externe Websites öffnen und Formulare automatisch ausfüllen. Benötigt Playwright (npm install playwright).':'The agent can open external websites and fill forms automatically. Requires Playwright (npm install playwright).'"></div>
-          </div>
-        </div>
-
-        <button class="btn btn-purple btn-sm" style="width:100%;margin-bottom:20px" @click="saveIdentity()" x-text="lang==='de'?'💾 Identität speichern':'💾 Save Identity'"></button>
-
-        <!-- Action Log -->
-        <div class="fs-title" x-text="lang==='de'?'Aktionsprotokoll (letzte 20)':'Action Log (last 20)'"></div>
-        <template x-if="agentActions.length===0">
-          <div style="text-align:center;padding:20px;font-size:.82rem;color:var(--muted)" x-text="lang==='de'?'Noch keine Aktionen ausgeführt':'No actions executed yet'"></div>
-        </template>
-        <template x-for="a in agentActions" :key="a.id">
-          <div style="display:flex;align-items:center;gap:10px;padding:10px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;margin-bottom:6px">
-            <span x-text="a.action_type==='CALENDAR_CREATE'?'📅':a.action_type==='EMAIL_SEND'?'✉️':a.action_type==='CALENDLY_BOOK'?'🗓️':a.action_type==='FORM_FILL'?'🌐':'⚡'" style="font-size:1.1rem"></span>
-            <div style="flex:1">
-              <div style="font-size:.8rem;font-weight:600;color:var(--white)" x-text="a.action_type.replace(/_/g,' ')"></div>
-              <div style="font-size:.7rem;color:var(--muted)" x-text="new Date(a.created_at).toLocaleString('de-DE')"></div>
-            </div>
-            <span :style="`font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:20px;background:${a.status==='success'?'rgba(0,184,148,.12)':'rgba(233,69,96,.1)'};color:${a.status==='success'?'var(--green)':'var(--red)'};border:1px solid ${a.status==='success'?'rgba(0,184,148,.2)':'rgba(233,69,96,.2)'}`" x-text="a.status"></span>
-          </div>
-        </template>
-      </div>
-    </template>
-
 
     <div class="modal-footer">
-      <template x-if="editing"><button class="btn btn-sm btn-danger" @click="delAgent()" x-text="lang==='de'?'Löschen':'Delete'"></button></template>
-      <button class="btn btn-sm btn-ghost" @click="showModal=false" x-text="lang==='de'?'Abbrechen':'Cancel'"></button>
-      <button class="btn btn-sm btn-purple" @click="saveAgent()" :disabled="saving">
-        <span x-text="saving?(lang==='de'?'Speichern...':'Saving...'):(lang==='de'?'💾 Speichern':'💾 Save')"></span>
-      </button>
+      <template x-if="editing"><button class="btn btn-sm btn-danger" @click="delAgent()">Löschen</button></template>
+      <button class="btn btn-sm btn-ghost" @click="showModal=false">Abbrechen</button>
+      <button class="btn btn-sm btn-purple" @click="saveAgent()" :disabled="saving"><span x-text="saving?'Speichern...':'💾 Speichern'"></span></button>
     </div>
   </div>
 </div>
 
-<!-- NEW KEY MODAL -->
+<!-- ─── NEW KEY MODAL ─── -->
 <div class="modal-bg" x-show="showNewKey" @click.self="showNewKey=false" x-cloak>
-  <div class="modal" style="max-width:400px">
-    <div class="modal-title" x-text="lang==='de'?'Neuen API Key erstellen':'Create API Key'"></div>
-    <div class="field"><label x-text="lang==='de'?'Bezeichnung':'Label'"></label><input class="inp" type="text" x-model="nkf.label" :placeholder="lang==='de'?'z.B. Produktionskey':'e.g. Production key'"></div>
-    <div class="field"><label x-text="lang==='de'?'Agent (optional)':'Agent (optional)'"></label><select class="inp" x-model="nkf.agentId"><option value="" x-text="lang==='de'?'Alle Agenten':'All agents'"></option><template x-for="a in agents" :key="a.id"><option :value="a.id" x-text="a.emoji+' '+a.name"></option></template></select></div>
-    <div class="modal-footer"><button class="btn btn-sm btn-ghost" @click="showNewKey=false" x-text="lang==='de'?'Abbrechen':'Cancel'"></button><button class="btn btn-sm btn-purple" @click="createKey()" x-text="lang==='de'?'Key erstellen':'Create Key'"></button></div>
+  <div class="modal modal-sm">
+    <div class="modal-title">Neuen API Key erstellen</div>
+    <div class="field"><label>Bezeichnung</label><input class="inp" type="text" x-model="nkf.label" placeholder="z.B. Produktionskey"></div>
+    <div class="field"><label>Agent (optional)</label><select class="inp" x-model="nkf.agentId"><option value="">Alle Agenten</option><template x-for="a in agents" :key="a.id"><option :value="a.id" x-text="a.emoji+' '+a.name"></option></template></select></div>
+    <div class="modal-footer"><button class="btn btn-sm btn-ghost" @click="showNewKey=false">Abbrechen</button><button class="btn btn-sm btn-purple" @click="createKey()">Key erstellen</button></div>
   </div>
 </div>
 
-<!-- TOASTS -->
+<!-- ─── UPGRADE MODAL ─── -->
+<div class="modal-bg" x-show="showUpgrade" @click.self="showUpgrade=false" x-cloak>
+  <div class="modal modal-sm">
+    <div class="modal-title">⚡ Auf Pro upgraden</div>
+    <div class="plan-compare">
+      <div class="plan-card">
+        <div class="plan-name">Free</div>
+        <div class="plan-price"><sup>€</sup>0</div>
+        <ul>
+          <li>3 Agenten</li>
+          <li>500 Nachrichten/Monat</li>
+          <li>Chat-Seite &amp; Widget</li>
+          <li class="no">API / WhatsApp / TG</li>
+          <li class="no">Outgoing Webhooks</li>
+          <li class="no">Fine-Tuning</li>
+        </ul>
+      </div>
+      <div class="plan-card featured">
+        <div class="plan-name">Pro</div>
+        <div class="plan-price"><sup>€</sup>19<span style="font-size:.9rem;font-weight:400">/Mo</span></div>
+        <ul>
+          <li>Unbegrenzte Agenten</li>
+          <li>10.000 Nachrichten/Monat</li>
+          <li>Alle Kanäle</li>
+          <li>REST API + Keys</li>
+          <li>Outgoing Webhooks</li>
+          <li>Fine-Tuning (OpenAI)</li>
+        </ul>
+      </div>
+    </div>
+    <button class="btn btn-purple btn-full" @click="createCheckout()" :disabled="checkoutLoading">
+      <span x-show="checkoutLoading">⏳</span>
+      <span x-text="checkoutLoading?'Weiterleitung...':'⚡ Jetzt auf Pro upgraden'"></span>
+    </button>
+    <p style="font-size:.72rem;color:var(--muted);text-align:center;margin-top:10px">Jederzeit kündbar · Sichere Zahlung via Stripe</p>
+  </div>
+</div>
+
+<!-- ─── ONBOARDING MODAL ─── -->
+<div class="modal-bg" x-show="showOnboarding" x-cloak>
+  <div class="modal modal-sm">
+    <div x-show="onboardStep===1" class="onboard-step">
+      <div class="onboard-icon">🎉</div>
+      <h3>Willkommen bei AgentKontor!</h3>
+      <p>Du bist jetzt dabei. In wenigen Minuten hast du deinen ersten KI-Agenten live — auf deiner Website, WhatsApp oder Telegram.</p>
+      <button class="btn btn-purple btn-full" @click="onboardStep=2">Los geht's →</button>
+    </div>
+    <div x-show="onboardStep===2" class="onboard-step">
+      <div class="onboard-icon">🤖</div>
+      <h3>Schritt 1: Agenten bauen</h3>
+      <p>Gib deinem Agenten einen Namen, eine Persönlichkeit und einen Fokus. Unser Builder führt dich durch alles — kein Code nötig.</p>
+      <button class="btn btn-purple btn-full" @click="onboardStep=3">Weiter →</button>
+    </div>
+    <div x-show="onboardStep===3" class="onboard-step">
+      <div class="onboard-icon">🚀</div>
+      <h3>Schritt 2: Kanal wählen</h3>
+      <p>Wähle wo dein Agent erreichbar sein soll — als Chat-Seite, Widget auf deiner Website, oder auf WhatsApp und Telegram.</p>
+      <button class="btn btn-purple btn-full" @click="dismissOnboarding();openNew()">Ersten Agenten erstellen →</button>
+      <button class="btn btn-ghost btn-full" style="margin-top:8px" @click="dismissOnboarding()">Später</button>
+    </div>
+    <div class="step-dots">
+      <div class="step-dot" :class="{active:onboardStep===1}"></div>
+      <div class="step-dot" :class="{active:onboardStep===2}"></div>
+      <div class="step-dot" :class="{active:onboardStep===3}"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── TOASTS ─── -->
 <div class="toast-area">
   <template x-for="t in toasts" :key="t.id"><div class="toast" :class="t.type" x-text="t.msg"></div></template>
 </div>
@@ -896,29 +867,59 @@ Response:
 <script>
 function app() {
   return {
-    user:null, token:null, page:'dashboard', lang:'de',
-    authTab:'login', authErr:'', loading:false,
+    // Auth
+    user:null, token:null, page:'dashboard',
+    authTab:'login', authErr:'', authOk:'', loading:false,
     lf:{email:'',password:''}, rf:{name:'',email:'',password:''},
-    agents:[], apiKeys:[], docs:[], toasts:[],
-    showModal:false, showNewKey:false, saving:false,
-    editing:null, aTab:'basics', docsTab:'api',
-    chipIn:'', uploading:false, dragging:false,
-    newKeyRev:null, nkf:{label:'',agentId:''},
-    availableModels:[], modelsLoaded:false, ftJobs:[], ftPrepare:null, ftLoading:false, openaiKey:'', ollamaUrl:'http://localhost:11434',
-    identity:null, identityForm:{display_name:'',email_address:'',google_calendar_id:'',calendly_token:''},agentActions:[],
-    af:{name:'',emoji:'🤖',description:'',system_prompt:'',greeting:'',tone:'professionell',language:'de',quick_chips:[],color:'#6c5ce7',is_active:true,widget_enabled:true,chatpage_enabled:true,api_enabled:false,whatsapp_enabled:false,whatsapp_number:'',telegram_enabled:false,telegram_token:'',rag_enabled:false,rag_prompt:''},
+
+    // Agents
+    agents:[], docs:[], toasts:[], saving:false,
+    showModal:false, editing:null, aTab:'basics', chipIn:'',
+    uploading:false, dragging:false,
+    af: {name:'',emoji:'🤖',description:'',system_prompt:'',greeting:'',tone:'professionell',language:'de',quick_chips:[],color:'#6c5ce7',is_active:true,widget_enabled:true,chatpage_enabled:true,api_enabled:false,whatsapp_enabled:false,whatsapp_number:'',telegram_enabled:false,telegram_token:'',rag_enabled:false,rag_prompt:'',cap_calendar:false,cal_link:'',cap_leads:false,lead_fields:[],lead_email:'',cap_products:false,products_data:[],cap_multilang:false,cap_email:false,smtp_host:'',smtp_port:587,smtp_user:'',smtp_pass:'',smtp_from:''},
+
+    // Keys
+    apiKeys:[], showNewKey:false, newKeyRev:null, nkf:{label:'',agentId:''},
+
+    // Analytics
+    analytics:null, allLeads:[], analyticsLoading:false, analyticsCharts:{},
+    agentStats:null,
+
+    // Settings
+    planData:null, settingsSaving:false,
+    pwForm:{current:'',newPw:'',confirm:''}, pwErr:'', pwOk:false,
+    emailForm:{email:'',password:''}, emailErr:'', emailOk:false,
+    nameForm:{name:''},
+    deleteForm:{password:'',confirm:''}, deleteErr:'',
+
+    // Outgoing Webhooks
+    webhooksOut:[], showNewWebhook:false,
+    newWebhook:{url:'',events:['message.received','lead.captured']},
+    webhookEvents:['message.received','message.sent','lead.captured','session.started'],
+
+    // Modals
+    showUpgrade:false, showOnboarding:false, onboardStep:1,
+    checkoutLoading:false,
+
+    // Docs tab
+    docsTab:'api',
+
     emojis:['🤖','💬','⭐','🎓','💡','🔥','🦾','🧠','✨','🚀','🏆','💼','🎯','🌟','⚡','🎪'],
     colors:['#6c5ce7','#e94560','#00b894','#00aaff','#f39c12','#a29bfe','#fd79a8','#00cec9','#e17055','#74b9ff'],
     tones:[
-      {key:'professionell',de:'Professionell',en:'Professional',d:'Sachlich & klar',e:'Factual & clear'},
-      {key:'freundlich',de:'Freundlich',en:'Friendly',d:'Warm & motivierend',e:'Warm & motivating'},
-      {key:'direkt',de:'Direkt',en:'Direct',d:'Präzise & effizient',e:'Precise & efficient'},
-      {key:'locker',de:'Locker',en:'Casual',d:'Entspannt & sympathisch',e:'Relaxed & likeable'},
+      {key:'professionell',de:'Professionell',d:'Sachlich & klar'},
+      {key:'freundlich',de:'Freundlich',d:'Warm & motivierend'},
+      {key:'direkt',de:'Direkt',d:'Präzise & effizient'},
+      {key:'locker',de:'Locker',d:'Entspannt & sympathisch'},
     ],
 
     async init() {
       const t=localStorage.getItem('ak_token'), u=localStorage.getItem('ak_user');
-      if(t&&u){this.token=t;this.user=JSON.parse(u);this.lang=this.user.lang||'de';this.loadAgents();}
+      if(t&&u){this.token=t;this.user=JSON.parse(u);this.loadAgents();}
+      // Check URL params after Stripe redirect
+      const params=new URLSearchParams(location.search);
+      if(params.get('upgrade')==='success'){this.toast('🎉 Pro aktiviert! Willkommen im Pro-Plan.','ok');history.replaceState(null,'','/app');}
+      if(params.get('upgrade')==='cancelled'){this.toast('Upgrade abgebrochen.','err');}
     },
 
     async api(path,method='GET',body=null) {
@@ -930,40 +931,32 @@ function app() {
     },
 
     async login() {
-      if(!this.lf.email||!this.lf.password){this.authErr=this.lang==='de'?'E-Mail und Passwort erforderlich':'Email and password required';return;}
+      if(!this.lf.email||!this.lf.password){this.authErr='E-Mail und Passwort erforderlich';return;}
       this.loading=true;this.authErr='';
       try {
         const d=await this.api('/auth/login','POST',this.lf);
         this.loading=false;
         if(d.error){this.authErr=d.error;return;}
         this.setUser(d.token,d.user);
-      } catch(e) {
-        this.loading=false;
-        this.authErr=this.lang==='de'?'Verbindungsfehler — bitte erneut versuchen':'Connection error — please try again';
-      }
+      }catch{this.loading=false;this.authErr='Verbindungsfehler';}
     },
 
     async register() {
-      if(!this.rf.name){this.authErr=this.lang==='de'?'Name erforderlich':'Name required';return;}
-      if(!this.rf.email){this.authErr=this.lang==='de'?'E-Mail erforderlich':'Email required';return;}
-      if(this.rf.password.length<8){this.authErr=this.lang==='de'?'Passwort mindestens 8 Zeichen':'Password at least 8 characters';return;}
+      if(!this.rf.name||!this.rf.email||this.rf.password.length<8){this.authErr='Alle Felder ausfüllen (Passwort min. 8 Zeichen)';return;}
       this.loading=true;this.authErr='';
       try {
-        const d=await this.api('/auth/register','POST',{...this.rf,lang:this.lang});
+        const d=await this.api('/auth/register','POST',this.rf);
         this.loading=false;
         if(d.error){this.authErr=d.error;return;}
         this.setUser(d.token,d.user);
-      } catch(e) {
-        this.loading=false;
-        this.authErr=this.lang==='de'?'Verbindungsfehler — bitte erneut versuchen':'Connection error — please try again';
-      }
+        if(!d.user.onboarding_done){this.showOnboarding=true;}
+      }catch{this.loading=false;this.authErr='Verbindungsfehler';}
     },
 
     setUser(token,user){
       this.token=token;this.user=user;
       localStorage.setItem('ak_token',token);
       localStorage.setItem('ak_user',JSON.stringify(user));
-      this.lang=user.lang||'de';
       this.loadAgents();
     },
 
@@ -972,11 +965,14 @@ function app() {
       localStorage.removeItem('ak_token');localStorage.removeItem('ak_user');
     },
 
-    async loadAgents(){const d=await this.api('/agents');if(d.agents)this.agents=d.agents;},
+    async loadAgents(){
+      const d=await this.api('/agents');
+      if(d.agents)this.agents=d.agents;
+    },
 
     openNew(){
       this.editing=null;this.aTab='basics';
-      this.af={name:'',emoji:'🤖',description:'',system_prompt:'',greeting:'',tone:'professionell',language:this.lang,quick_chips:[],color:'#6c5ce7',is_active:true,widget_enabled:true,chatpage_enabled:true,api_enabled:false,whatsapp_enabled:false,whatsapp_number:'',telegram_enabled:false,telegram_token:'',rag_enabled:false,rag_prompt:'',cap_calendar:false,cal_link:'',cap_leads:false,lead_fields:[],lead_email:'',cap_products:false,products_data:[],cap_multilang:false,cap_email:false,smtp_host:'',smtp_port:587,smtp_user:'',smtp_pass:'',smtp_from:''};
+      this.af={name:'',emoji:'🤖',description:'',system_prompt:'',greeting:'',tone:'professionell',language:'de',quick_chips:[],color:'#6c5ce7',is_active:true,widget_enabled:true,chatpage_enabled:true,api_enabled:false,whatsapp_enabled:false,whatsapp_number:'',telegram_enabled:false,telegram_token:'',rag_enabled:false,rag_prompt:'',cap_calendar:false,cal_link:'',cap_leads:false,lead_fields:[],lead_email:'',cap_products:false,products_data:[],cap_multilang:false,cap_email:false,smtp_host:'',smtp_port:587,smtp_user:'',smtp_pass:'',smtp_from:''};
       this.showModal=true;
     },
 
@@ -984,151 +980,228 @@ function app() {
       const d=await this.api('/agents/'+a.id);
       if(!d.agent)return;
       this.editing=d.agent;
-      this.af={name:d.agent.name,emoji:d.agent.emoji,description:d.agent.description,system_prompt:d.agent.system_prompt,greeting:d.agent.greeting,tone:d.agent.tone,language:d.agent.language,quick_chips:d.agent.quick_chips||[],color:d.agent.color,is_active:d.agent.is_active,widget_enabled:d.agent.widget_enabled,chatpage_enabled:d.agent.chatpage_enabled,api_enabled:d.agent.api_enabled,whatsapp_enabled:d.agent.whatsapp_enabled,whatsapp_number:d.agent.whatsapp_number||'',telegram_enabled:d.agent.telegram_enabled,telegram_token:d.agent.telegram_token||'',rag_enabled:d.agent.rag_enabled||false,rag_prompt:d.agent.rag_prompt||'',cap_calendar:d.agent.cap_calendar||false,cal_link:d.agent.cal_link||'',cap_leads:d.agent.cap_leads||false,lead_fields:d.agent.lead_fields||[],lead_email:d.agent.lead_email||'',cap_products:d.agent.cap_products||false,products_data:d.agent.products_data||[],cap_multilang:d.agent.cap_multilang||false,cap_email:d.agent.cap_email||false,smtp_host:d.agent.smtp_host||'',smtp_port:d.agent.smtp_port||587,smtp_user:d.agent.smtp_user||'',smtp_pass:d.agent.smtp_pass||'',smtp_from:d.agent.smtp_from||''};
+      const ag=d.agent;
+      this.af={name:ag.name,emoji:ag.emoji,description:ag.description,system_prompt:ag.system_prompt,greeting:ag.greeting,tone:ag.tone,language:ag.language,quick_chips:ag.quick_chips||[],color:ag.color,is_active:ag.is_active,widget_enabled:ag.widget_enabled,chatpage_enabled:ag.chatpage_enabled,api_enabled:ag.api_enabled,whatsapp_enabled:ag.whatsapp_enabled,whatsapp_number:ag.whatsapp_number||'',telegram_enabled:ag.telegram_enabled,telegram_token:ag.telegram_token||'',rag_enabled:ag.rag_enabled||false,rag_prompt:ag.rag_prompt||'',cap_calendar:ag.cap_calendar||false,cal_link:ag.cal_link||'',cap_leads:ag.cap_leads||false,lead_fields:ag.lead_fields||[],lead_email:ag.lead_email||'',cap_products:ag.cap_products||false,products_data:ag.products_data||[],cap_multilang:ag.cap_multilang||false,cap_email:ag.cap_email||false,smtp_host:ag.smtp_host||'',smtp_port:ag.smtp_port||587,smtp_user:ag.smtp_user||'',smtp_pass:ag.smtp_pass||'',smtp_from:ag.smtp_from||''};
       this.docs=[];this.aTab='basics';this.showModal=true;
     },
 
     async saveAgent(){
-      if(!this.af.name){this.toast(this.lang==='de'?'Name erforderlich':'Name required','err');return;}
-      if(!this.af.system_prompt){this.toast(this.lang==='de'?'System-Prompt erforderlich':'System prompt required','err');return;}
+      if(!this.af.name){this.toast('Name erforderlich','err');return;}
+      if(!this.af.system_prompt){this.toast('System-Prompt erforderlich','err');return;}
       this.saving=true;
-      const payload={...this.af};if(this.openaiKey)payload.openai_key=this.openaiKey;if(this.ollamaUrl&&this.ollamaUrl!=='http://localhost:11434')payload.ollama_url=this.ollamaUrl;const d=this.editing?await this.api('/agents/'+this.editing.id,'PUT',payload):await this.api('/agents','POST',payload);
+      const d=this.editing?await this.api('/agents/'+this.editing.id,'PUT',this.af):await this.api('/agents','POST',this.af);
       this.saving=false;
       if(d.error){this.toast(d.error,'err');return;}
-      this.toast(this.lang==='de'?'Gespeichert ✓':'Saved ✓');
+      this.toast('Gespeichert ✓');
       if(!this.editing){this.editing=d.agent;this.aTab='embed';}
+      else{const idx=this.agents.findIndex(a=>a.id===this.editing.id);if(idx>-1)this.agents[idx]={...this.agents[idx],...d.agent};}
       await this.loadAgents();
     },
 
     async delAgent(){
-      if(!confirm(this.lang==='de'?'Agent löschen?':'Delete agent?'))return;
+      if(!confirm('Agent löschen?'))return;
       await this.api('/agents/'+this.editing.id,'DELETE');
       this.showModal=false;this.editing=null;
-      await this.loadAgents();this.toast(this.lang==='de'?'Gelöscht':'Deleted');
+      await this.loadAgents();this.toast('Gelöscht');
     },
 
     addChip(){const v=this.chipIn.trim();if(!v||this.af.quick_chips.length>=5)return;this.af.quick_chips.push(v);this.chipIn='';},
 
     // RAG
-    async loadDocs(agentId){
-      const d=await this.api('/rag/'+agentId+'/documents');
-      if(d.documents)this.docs=d.documents;
-    },
-
-    async uploadFile(event){
-      const file=event.target.files[0];if(!file)return;
-      await this._upload(file);
-      event.target.value='';
-    },
-
-    async dropFile(event){
-      this.dragging=false;
-      const file=event.dataTransfer.files[0];if(!file)return;
-      await this._upload(file);
-    },
-
+    async loadDocs(agentId){const d=await this.api('/rag/'+agentId+'/documents');if(d.documents)this.docs=d.documents;},
+    async uploadFile(e){const file=e.target.files[0];if(!file)return;await this._upload(file);e.target.value='';},
+    async dropFile(e){this.dragging=false;const file=e.dataTransfer.files[0];if(!file)return;await this._upload(file);},
     async _upload(file){
-      if(!this.editing)return;
-      this.uploading=true;
+      if(!this.editing)return;this.uploading=true;
       const fd=new FormData();fd.append('file',file);
       try{
         const r=await fetch('/api/rag/'+this.editing.id+'/upload',{method:'POST',headers:{Authorization:'Bearer '+this.token},body:fd});
         const d=await r.json();
-        if(d.error){this.toast(d.error,'err');}
-        else{this.toast(this.lang==='de'?'Wird verarbeitet...':'Processing...');setTimeout(()=>this.loadDocs(this.editing.id),3000);}
-      }catch{this.toast(this.lang==='de'?'Upload fehlgeschlagen':'Upload failed','err');}
+        if(d.error)this.toast(d.error,'err');
+        else{this.toast('Wird verarbeitet...');setTimeout(()=>this.loadDocs(this.editing.id),3000);}
+      }catch{this.toast('Upload fehlgeschlagen','err');}
       this.uploading=false;
     },
-
-    async deleteDoc(docId){
-      if(!confirm(this.lang==='de'?'Dokument löschen?':'Delete document?'))return;
-      await this.api('/rag/'+this.editing.id+'/documents/'+docId,'DELETE');
-      this.loadDocs(this.editing.id);this.toast(this.lang==='de'?'Gelöscht':'Deleted');
-    },
+    async deleteDoc(docId){if(!confirm('Dokument löschen?'))return;await this.api('/rag/'+this.editing.id+'/documents/'+docId,'DELETE');this.loadDocs(this.editing.id);this.toast('Gelöscht');},
 
     // Keys
     async loadKeys(){const d=await this.api('/keys');if(d.keys)this.apiKeys=d.keys;},
-    async createKey(){
-      const d=await this.api('/keys','POST',this.nkf);
+    async createKey(){const d=await this.api('/keys','POST',this.nkf);if(d.error){this.toast(d.error,'err');return;}this.newKeyRev=d.key;this.showNewKey=false;await this.loadKeys();this.toast('Key erstellt!');},
+    async delKey(id){if(!confirm('Key löschen?'))return;await this.api('/keys/'+id,'DELETE');await this.loadKeys();},
+
+    // Analytics
+    async loadAnalytics(){
+      this.analyticsLoading=true;
+      // Destroy old charts
+      Object.values(this.analyticsCharts).forEach(c=>{try{c.destroy()}catch{}});
+      this.analyticsCharts={};
+      try {
+        const [ov, leads]=await Promise.all([
+          this.api('/analytics/overview'),
+          this.api('/analytics/leads/all'),
+        ]);
+        this.analytics=ov;
+        this.allLeads=leads.leads||[];
+        this.analyticsLoading=false;
+        await this.$nextTick();
+        this.renderCharts();
+      }catch(e){this.analyticsLoading=false;this.toast('Analytics-Fehler','err');}
+    },
+
+    renderCharts(){
+      const days=this.analytics?.byDay||[];
+      const channels=this.analytics?.byChannel||[];
+      const lineCtx=document.getElementById('chartLine');
+      if(lineCtx){
+        this.analyticsCharts.line=new Chart(lineCtx,{
+          type:'line',
+          data:{
+            labels:days.map(d=>new Date(d.day).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})),
+            datasets:[{label:'Nachrichten',data:days.map(d=>parseInt(d.count)),borderColor:'#6c5ce7',backgroundColor:'rgba(108,92,231,.1)',fill:true,tension:.4,pointRadius:3}]
+          },
+          options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5a5a80',font:{size:10},maxTicksLimit:8}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5a5a80',font:{size:10}}}}}
+        });
+      }
+      const dCtx=document.getElementById('chartDoughnut');
+      if(dCtx&&channels.length){
+        const cmap={'web':'#6c5ce7','widget':'#a29bfe','api':'#f0c040','whatsapp':'#25d366','telegram':'#0088cc'};
+        this.analyticsCharts.doughnut=new Chart(dCtx,{
+          type:'doughnut',
+          data:{labels:channels.map(c=>c.source),datasets:[{data:channels.map(c=>parseInt(c.count)),backgroundColor:channels.map(c=>cmap[c.source]||'#5a5a80'),borderWidth:0,hoverOffset:4}]},
+          options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'65%'}
+        });
+      }
+    },
+
+    channelColor(s){const m={'web':'#6c5ce7','widget':'#a29bfe','api':'#f0c040','whatsapp':'#25d366','telegram':'#0088cc'};return m[s]||'#5a5a80';},
+
+    async loadAgentStats(agentId){
+      this.agentStats=null;
+      const d=await this.api('/analytics/'+agentId);
+      if(d.totals){this.agentStats=d;this.$nextTick(()=>this.renderAgentChart(d));}
+    },
+
+    renderAgentChart(data){
+      const ctx=document.getElementById('chartAgentLine');
+      if(!ctx)return;
+      const days=data.byDay||[];
+      if(this._agentChart){try{this._agentChart.destroy()}catch{}}
+      this._agentChart=new Chart(ctx,{
+        type:'bar',
+        data:{labels:days.map(d=>new Date(d.day).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})),datasets:[{data:days.map(d=>parseInt(d.count)),backgroundColor:'rgba(108,92,231,.5)',borderRadius:4}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5a5a80',font:{size:9},maxTicksLimit:6}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5a5a80',font:{size:9}}}}}
+      });
+    },
+
+    // Settings / Account
+    async loadPlan(){
+      const d=await this.api('/account/plan');
+      if(d.plan)this.planData=d;
+      this.nameForm.name=this.user?.name||'';
+    },
+
+    async changeName(){
+      if(!this.nameForm.name.trim())return;
+      this.settingsSaving=true;
+      const d=await this.api('/account/name','PATCH',{name:this.nameForm.name});
+      this.settingsSaving=false;
       if(d.error){this.toast(d.error,'err');return;}
-      this.newKeyRev=d.key;this.showNewKey=false;
-      await this.loadKeys();this.toast(this.lang==='de'?'Key erstellt!':'Key created!');
-    },
-    async delKey(id){
-      if(!confirm(this.lang==='de'?'Key löschen?':'Delete key?'))return;
-      await this.api('/keys/'+id,'DELETE');await this.loadKeys();
+      this.user.name=d.name;localStorage.setItem('ak_user',JSON.stringify(this.user));
+      this.toast('Name gespeichert ✓');
     },
 
-    async loadModels(){
-      if(this.modelsLoaded) return;
-      const d=await this.api('/models?ollamaUrl='+encodeURIComponent(this.ollamaUrl));
-      if(d.models) this.availableModels=d.models;
-      const fj=await this.api('/models/finetune');
-      if(fj.jobs) this.ftJobs=fj.jobs;
-      this.modelsLoaded=true;
+    async changePassword(){
+      this.pwErr='';this.pwOk=false;
+      if(!this.pwForm.current||!this.pwForm.newPw){this.pwErr='Alle Felder ausfüllen';return;}
+      if(this.pwForm.newPw!==this.pwForm.confirm){this.pwErr='Passwörter stimmen nicht überein';return;}
+      this.settingsSaving=true;
+      const d=await this.api('/account/password','PATCH',{current:this.pwForm.current,newPw:this.pwForm.newPw});
+      this.settingsSaving=false;
+      if(d.error){this.pwErr=d.error;return;}
+      this.pwOk=true;this.pwForm={current:'',newPw:'',confirm:''};
+      setTimeout(()=>this.pwOk=false,4000);
     },
 
-    async prepareFinetune(){
-      if(!this.editing) return;
-      this.ftLoading=true;
-      const d=await this.api('/models/finetune/prepare','POST',{agentId:this.editing.id});
-      this.ftLoading=false;
-      this.ftPrepare=d;
+    async changeEmail(){
+      this.emailErr='';this.emailOk=false;
+      if(!this.emailForm.email||!this.emailForm.password){this.emailErr='Alle Felder ausfüllen';return;}
+      this.settingsSaving=true;
+      const d=await this.api('/account/email','PATCH',this.emailForm);
+      this.settingsSaving=false;
+      if(d.error){this.emailErr=d.error;return;}
+      this.emailOk=true;this.user.email=d.email;localStorage.setItem('ak_user',JSON.stringify(this.user));
+      this.emailForm={email:'',password:''};setTimeout(()=>this.emailOk=false,4000);
     },
 
-    async startFinetune(){
-      if(!this.editing) return;
-      if(!this.openaiKey&&!confirm(this.lang==='de'?'Keinen OpenAI Key angegeben — wird OPENAI_API_KEY aus .env verwendet. Fortfahren?':'No OpenAI key provided — will use OPENAI_API_KEY from .env. Continue?')) return;
-      this.ftLoading=true;
-      const d=await this.api('/models/finetune/start','POST',{agentId:this.editing.id,openaiKey:this.openaiKey||undefined});
-      this.ftLoading=false;
-      if(d.success){this.toast(d.message||'Fine-Tuning gestartet!');const fj=await this.api('/models/finetune');if(fj.jobs)this.ftJobs=fj.jobs;}
-      else this.toast(d.error,'err');
+    async deleteAccount(){
+      this.deleteErr='';
+      if(!this.deleteForm.password){this.deleteErr='Passwort erforderlich';return;}
+      if(this.deleteForm.confirm!=='LÖSCHEN'){this.deleteErr='Bitte "LÖSCHEN" eingeben';return;}
+      if(!confirm('Konto wirklich löschen? Diese Aktion ist unwiderruflich.'))return;
+      this.settingsSaving=true;
+      const d=await this.api('/account','DELETE',this.deleteForm);
+      this.settingsSaving=false;
+      if(d.error){this.deleteErr=d.error;return;}
+      this.logout();
     },
 
-    async pollFtJob(jobId){
-      const d=await this.api('/models/finetune/'+jobId+'/status');
-      if(d.job){const idx=this.ftJobs.findIndex(j=>j.openai_job_id===jobId);if(idx>-1)this.ftJobs[idx]=d.job;}
-      if(d.job?.status==='succeeded') this.toast(this.lang==='de'?'Fine-Tuning fertig! Modell wird automatisch zugewiesen.':'Fine-tuning done! Model auto-assigned.');
+    // Stripe
+    async createCheckout(){
+      this.checkoutLoading=true;
+      const d=await this.api('/stripe/create-checkout','POST');
+      this.checkoutLoading=false;
+      if(d.error){this.toast(d.error,'err');return;}
+      if(d.url)window.location.href=d.url;
     },
 
-    async saveModel(){
-      if(!this.editing) return;
-      const d=await this.api('/agents/'+this.editing.id,'PUT',{...this.af,openai_key:this.openaiKey||undefined,ollama_url:this.ollamaUrl||undefined});
-      if(d.agent) this.toast(this.lang==='de'?'Modell gespeichert ✓':'Model saved ✓');
+    async openPortal(){
+      const d=await this.api('/stripe/portal','POST');
+      if(d.error){this.toast(d.error,'err');return;}
+      if(d.url)window.open(d.url,'_blank');
     },
 
-    copy(t){navigator.clipboard.writeText(t).then(()=>this.toast(this.lang==='de'?'Kopiert!':'Copied!'));},
-
-    async loadIdentity(){
-      if(!this.editing) return;
-      this.identityLoading=true;
-      const d=await this.api('/identity/'+this.editing.id);
-      this.identityLoading=false;
-      if(d.identity){
-        this.identity=d.identity;
-        this.identityForm={display_name:d.identity.display_name||'',email_address:d.identity.email_address||'',google_calendar_id:d.identity.google_calendar_id||'',calendly_token:''};
-      } else { this.identity=null; }
-      const actions=await this.api('/identity/'+this.editing.id+'/actions');
-      if(actions.actions) this.agentActions=actions.actions.slice(0,20);
+    // Outgoing Webhooks
+    async loadWebhooksOut(agentId){
+      if(this.user?.plan==='free'){this.webhooksOut=[];return;}
+      const d=await this.api('/webhooks-out/'+agentId);
+      if(d.webhooks)this.webhooksOut=d.webhooks;
     },
 
-    async saveIdentity(){
-      const d=await this.api('/identity/'+this.editing.id,'POST',this.identityForm);
-      if(d.success){ this.toast(this.lang==='de'?'Identität gespeichert ✓':'Identity saved ✓'); this.loadIdentity(); }
-      else this.toast(d.error,'err');
+    async createWebhookOut(){
+      if(!this.newWebhook.url){this.toast('URL erforderlich','err');return;}
+      const d=await this.api('/webhooks-out/'+this.editing.id,'POST',this.newWebhook);
+      if(d.error){this.toast(d.error,'err');return;}
+      this.toast('Webhook erstellt ✓');
+      if(d.secret)this.toast('Signing Secret: '+d.secret,'ok');
+      this.showNewWebhook=false;this.newWebhook={url:'',events:['message.received','lead.captured']};
+      this.loadWebhooksOut(this.editing.id);
     },
 
-    connectGoogle(){
-      window.open('/api/identity/'+this.editing.id+'/google/auth','_blank','width=600,height=700');
+    async toggleWebhookOut(wh){
+      await this.api('/webhooks-out/'+this.editing.id+'/'+wh.id,'PUT',{is_active:!wh.is_active});
+      wh.is_active=!wh.is_active;
     },
 
-    async disconnectGoogle(){
-      if(!confirm(this.lang==='de'?'Google trennen?':'Disconnect Google?')) return;
-      await this.api('/identity/'+this.editing.id+'/google','DELETE');
-      this.toast(this.lang==='de'?'Google getrennt':'Google disconnected');
-      this.loadIdentity();
+    async testWebhookOut(id){
+      const d=await this.api('/webhooks-out/'+this.editing.id+'/'+id+'/test','POST');
+      if(d.success)this.toast('Test erfolgreich! Status: '+d.statusCode,'ok');
+      else this.toast('Test fehlgeschlagen: '+(d.error||d.statusCode),'err');
     },
+
+    async deleteWebhookOut(id){
+      if(!confirm('Webhook löschen?'))return;
+      await this.api('/webhooks-out/'+this.editing.id+'/'+id,'DELETE');
+      this.webhooksOut=this.webhooksOut.filter(w=>w.id!==id);
+      this.toast('Gelöscht');
+    },
+
+    // Onboarding
+    async dismissOnboarding(){
+      this.showOnboarding=false;
+      await this.api('/account/onboarding-done','POST');
+    },
+
+    copy(t){navigator.clipboard.writeText(t).then(()=>this.toast('Kopiert!'));},
 
     toast(msg,type='ok'){
       const id=Date.now();this.toasts.push({id,msg,type});
