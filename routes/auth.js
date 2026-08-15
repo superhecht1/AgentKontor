@@ -3,20 +3,27 @@
  * POST /api/auth/register
  * POST /api/auth/login
  * GET  /api/auth/me
+ *
+ * Robustness: queries gracefully handle missing columns (token_version, is_admin)
+ * by using COALESCE / fallback — no dependency on specific migration order.
  */
 
 const router  = require('express').Router();
 const bcrypt  = require('bcryptjs');
 const jwt     = require('jsonwebtoken');
 
-// FIX 1: Crash on startup if JWT_SECRET missing — no fallback to weak default
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) throw new Error('❌ JWT_SECRET env var nicht gesetzt — bitte in Render setzen');
 
 function getPool(req) { return req.app.locals.pool; }
 
+/** Ensure security columns exist — runs once, idempotent */
+async function ensureColumns(pool) {
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS token_version INTEGER NOT NULL DEFAULT 1`);
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT false`);
+}
+
 function signToken(userId, tokenVersion) {
-  // Include token_version (tv) — allows invalidation on password change
   return jwt.sign({ userId, tv: tokenVersion }, JWT_SECRET, { expiresIn: '30d' });
 }
 
@@ -32,21 +39,27 @@ router.post('/register', async (req, res) => {
 
   const pool = getPool(req);
   try {
+    await ensureColumns(pool);
+
     const exists = await pool.query('SELECT id FROM users WHERE email=$1', [email.toLowerCase()]);
     if (exists.rows.length) return res.status(409).json({ error: 'E-Mail bereits registriert' });
 
     const hash   = await bcrypt.hash(password, 12);
     const result = await pool.query(
-      'INSERT INTO users (email, password_hash, name) VALUES ($1,$2,$3) RETURNING id, email, name, lang, plan, onboarding_done, token_version',
+      `INSERT INTO users (email, password_hash, name)
+       VALUES ($1,$2,$3)
+       RETURNING id, email, name, lang, plan, onboarding_done,
+                 COALESCE(token_version, 1) AS token_version`,
       [email.toLowerCase(), hash, name]
     );
     const user  = result.rows[0];
     const token = signToken(user.id, user.token_version);
+
     setImmediate(() => sendWelcomeEmail(user.email, user.name));
+
     const { token_version, ...safeUser } = user;
     res.json({ token, user: safeUser });
   } catch (e) {
-    // FIX 2: Never send internal error messages to client
     console.error('REGISTER ERROR:', e.message);
     res.status(500).json({ error: 'Registrierung fehlgeschlagen' });
   }
@@ -59,12 +72,18 @@ router.post('/login', async (req, res) => {
 
   const pool = getPool(req);
   try {
+    await ensureColumns(pool);
+
     const result = await pool.query(
-      'SELECT id, email, name, password_hash, lang, plan, onboarding_done, is_admin, token_version FROM users WHERE email=$1',
+      `SELECT id, email, name, password_hash, lang, plan, onboarding_done,
+              COALESCE(is_admin, false)        AS is_admin,
+              COALESCE(token_version, 1)       AS token_version
+       FROM users WHERE email=$1`,
       [email.toLowerCase()]
     );
-    // Same error for wrong email AND wrong password — prevents user enumeration
+    // Identical error for wrong email AND wrong password — prevents user enumeration
     if (!result.rows.length) return res.status(401).json({ error: 'Ungültige Zugangsdaten' });
+
     const user  = result.rows[0];
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) return res.status(401).json({ error: 'Ungültige Zugangsdaten' });
@@ -83,7 +102,9 @@ router.get('/me', require('../middleware/auth'), async (req, res) => {
   const pool = getPool(req);
   try {
     const result = await pool.query(
-      'SELECT id, email, name, lang, plan, onboarding_done, is_admin, created_at FROM users WHERE id=$1',
+      `SELECT id, email, name, lang, plan, onboarding_done,
+              COALESCE(is_admin, false) AS is_admin, created_at
+       FROM users WHERE id=$1`,
       [req.userId]
     );
     if (!result.rows.length) return res.status(404).json({ error: 'Nutzer nicht gefunden' });
@@ -118,7 +139,7 @@ async function sendWelcomeEmail(to, name) {
     <p style="color:#a8a49a;font-size:.78rem">Fragen? <a href="mailto:info@think-cloud.org" style="color:#5b4fcf">info@think-cloud.org</a></p>
   </div>
   <div style="background:#f4f3ef;padding:20px 40px;text-align:center;font-size:.72rem;color:#a8a49a">
-    © 2025 AgentKontor · superhecht.ai · Köln · <a href="${base}/impressum.html" style="color:#a8a49a">Impressum</a>
+    © 2025 AgentKontor · superhecht.ai · Köln
   </div>
 </div></body></html>`,
     });
