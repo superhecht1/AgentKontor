@@ -191,5 +191,32 @@ function generateInvoiceHTML(invoice) {
 </html>`;
 }
 
+
+/* ── DATEV EXPORT ───────────────────────────────────────── */
+router.get('/datev-export', auth, async (req, res) => {
+  const pool = req.app.locals.pool;
+  try {
+    const r = await pool.query(
+      'SELECT i.invoice_number, i.amount_eur, i.description, i.issued_at, u.name AS customer_name, u.email AS customer_email FROM invoices i JOIN users u ON i.user_id=u.id WHERE i.user_id=$1 ORDER BY i.issued_at ASC',
+      [req.userId]
+    );
+    // DATEV CSV format
+    const lines = [
+      'Umsatz (ohne Soll/Haben-Kz),Soll/Haben-Kennzeichen,WKZ Umsatz,Kurs,Basis-Umsatz,WKZ Basis-Umsatz,Konto,Gegenkonto (ohne BU-Schluessel),BU-Schluessel,Belegdatum,Belegfeld 1,Belegfeld 2,Skonto,Buchungstext',
+      ...r.rows.map(inv => {
+        const date = new Date(inv.issued_at);
+        const datevDate = (date.getDate().toString().padStart(2,'0')) + (date.getMonth()+1).toString().padStart(2,'0');
+        const amount = parseFloat(inv.amount_eur).toFixed(2).replace('.',',');
+        return [amount,'S','EUR','','','','8400','1200','','',datevDate,inv.invoice_number,'',inv.description + ' | ' + inv.customer_name].join(';');
+      })
+    ].join('\r\n');
+
+    const year = new Date().getFullYear();
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="DATEV-Export-' + year + '.csv"');
+    res.send('﻿' + lines); // BOM for Excel
+  } catch(e) { res.status(500).json({ error: 'DATEV-Export fehlgeschlagen' }); }
+});
+
 module.exports = router;
 module.exports.generateFromStripe = generateFromStripe;
