@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="AgentKontor — Baue eigene KI-Agenten für Website, WhatsApp und Telegram. Kostenlos starten, kein Code nötig.">
+<meta name="keywords" content="KI Agent, Chatbot, WhatsApp Bot, Telegram Bot, KI Kundenservice, Agent Builder">
+<meta property="og:title" content="AgentKontor — Dein eigener KI-Agent">
+<meta property="og:description" content="Baue KI-Agenten für Website, WhatsApp und Telegram. In 5 Minuten live.">
+<meta property="og:url" content="https://agentkontor.de">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+  <meta property="og:image" content="https://agentkontor.de/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:image" content="https://agentkontor.de/og-image.png">
+  <meta name="twitter:site" content="@agentkontor">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+<link rel="canonical" href="https://agentkontor.de">
+  <link rel="alternate" hreflang="de" href="https://agentkontor.de">
+  <link rel="alternate" hreflang="x-default" href="https://agentkontor.de">
+<title>AgentKontor — Dein eigener KI-Agent</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--ink:#1a1916;--sub:#7a786e;--bg:#f4f3ef;--card:#fff;--purple:#5b4fcf;--pu-l:#a29bfe;--border:#e8e6e0;--green:#00a878}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+a{color:inherit;text-decoration:none}
+.container{max-width:1080px;margin:0 auto;padding:0 24px}
+/* NAV */
+nav{padding:18px 0;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:100;backdrop-filter:blur(8px)}
+.nav-inner{display:flex;align-items:center;justify-content:space-between}
+.logo{font-size:1.2rem;font-weight:800;color:var(--ink)}
+.logo span{color:var(--purple)}
+.nav-links{display:flex;align-items:center;gap:24px}
+.nav-links a{font-size:.88rem;color:var(--sub);transition:color .2s}
+.nav-links a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 20px;border-radius:9px;font-size:.88rem;font-weight:600;border:none;cursor:pointer;transition:all .2s;font-family:inherit;text-decoration:none}
+.btn-primary{background:var(--ink);color:#fff}
+.btn-primary:hover{background:#2d2b26;transform:translateY(-1px)}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--ink)}
+.btn-outline:hover{border-color:var(--purple);color:var(--purple)}
+.btn-purple{background:var(--purple);color:#fff}
+.btn-purple:hover{background:#4a3db0;transform:translateY(-1px)}
+.btn-lg{padding:14px 28px;font-size:.95rem;border-radius:11px}
+/* HERO */
+.hero{padding:100px 0 80px;text-align:center}
+.hero-badge{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:.78rem;color:var(--sub);margin-bottom:28px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.hero-badge .dot{width:7px;height:7px;border-radius:50%;background:var(--green)}
+h1{font-size:clamp(2.2rem,5vw,3.6rem);font-weight:800;letter-spacing:-.03em;line-height:1.15;color:var(--ink);margin-bottom:20px;max-width:800px;margin-left:auto;margin-right:auto}
+h1 .hl{color:var(--purple)}
+.hero-sub{font-size:1.1rem;color:var(--sub);max-width:520px;margin:0 auto 36px;line-height:1.7}
+.hero-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:56px}
+.hero-proof{display:flex;gap:28px;justify-content:center;flex-wrap:wrap}
+.proof-item{display:flex;align-items:center;gap:7px;font-size:.82rem;color:var(--sub)}
+.proof-item svg{color:var(--green)}
+/* DEMO */
+.demo-wrap{max-width:380px;margin:0 auto 80px;background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.08)}
+.demo-hdr{padding:13px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);background:#fafaf8}
+.demo-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#5b4fcf,#a29bfe);display:flex;align-items:center;justify-content:center;font-size:.95rem}
+.demo-name{font-size:.88rem;font-weight:700}
+.demo-status{font-size:.7rem;color:var(--green)}
+.demo-msgs{padding:14px;display:flex;flex-direction:column;gap:10px;min-height:140px}
+.demo-bbl{padding:9px 13px;border-radius:12px;font-size:.82rem;line-height:1.55;max-width:88%}
+.demo-bbl.bot{background:#f4f3ef;color:var(--ink);border-bottom-left-radius:2px;align-self:flex-start}
+.demo-bbl.usr{background:var(--purple);color:#fff;border-bottom-right-radius:2px;align-self:flex-end}
+.demo-chips{display:flex;flex-wrap:wrap;gap:5px;padding:0 14px 10px}
+.demo-chip{background:#f4f3ef;border:1px solid var(--border);border-radius:20px;padding:4px 11px;font-size:.74rem;color:var(--sub)}
+.demo-foot{padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:7px;background:#fafaf8}
+.demo-inp{flex:1;background:#fff;border:1px solid var(--border);border-radius:8px;padding:7px 11px;font-size:.8rem;color:var(--sub)}
+.demo-btn{width:34px;height:34px;border-radius:8px;background:var(--purple);display:flex;align-items:center;justify-content:center;color:#fff;font-size:.85rem}
+/* LOGOS */
+.logos{padding:40px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);text-align:center}
+.logos-label{font-size:.76rem;color:var(--sub);margin-bottom:20px;text-transform:uppercase;letter-spacing:.1em}
+.logos-row{display:flex;gap:32px;justify-content:center;align-items:center;flex-wrap:wrap;opacity:.5}
+.logos-row span{font-size:.9rem;font-weight:700;color:var(--sub)}
+/* USE CASES */
+.section{padding:80px 0}
+.section-label{font-size:.74rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--purple);margin-bottom:10px}
+.section-title{font-size:clamp(1.6rem,3.5vw,2.4rem);font-weight:800;letter-spacing:-.02em;color:var(--ink);margin-bottom:14px}
+.section-sub{font-size:1rem;color:var(--sub);max-width:520px;line-height:1.7}
+.use-cases{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:40px}
+.uc-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:22px;transition:all .2s}
+.uc-card:hover{border-color:rgba(91,79,207,.25);box-shadow:0 6px 24px rgba(0,0,0,.08);transform:translateY(-3px)}
+.uc-icon{font-size:1.6rem;margin-bottom:10px}
+.uc-title{font-size:.92rem;font-weight:700;color:var(--ink);margin-bottom:5px}
+.uc-desc{font-size:.78rem;color:var(--sub);line-height:1.6}
+/* HOW IT WORKS */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:44px}
+.step{text-align:center;padding:28px}
+.step-num{width:44px;height:44px;border-radius:50%;background:var(--purple);color:#fff;font-size:1rem;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+.step-title{font-size:.92rem;font-weight:700;color:var(--ink);margin-bottom:6px}
+.step-desc{font-size:.8rem;color:var(--sub);line-height:1.6}
+/* FEATURES */
+.features{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:40px}
+.feat{display:flex;gap:13px;padding:18px;background:#fff;border:1px solid var(--border);border-radius:12px}
+.feat-icon{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.feat-title{font-size:.86rem;font-weight:700;color:var(--ink);margin-bottom:3px}
+.feat-desc{font-size:.76rem;color:var(--sub);line-height:1.5}
+/* PRICING */
+.pricing{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;max-width:1000px;margin:44px auto 0}
+.plan{background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:28px}
+.plan.featured{border-color:var(--purple);box-shadow:0 8px 32px rgba(91,79,207,.15)}
+.plan-name{font-size:.74rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);margin-bottom:6px}
+.plan-price{font-size:2.4rem;font-weight:800;color:var(--ink);line-height:1;margin-bottom:4px}
+.plan-price span{font-size:1rem;font-weight:400;color:var(--sub)}
+.plan-desc{font-size:.78rem;color:var(--sub);margin-bottom:20px;line-height:1.5}
+.plan-features{list-style:none;display:flex;flex-direction:column;gap:8px;margin-bottom:24px}
+.plan-features li{font-size:.82rem;color:var(--ink);display:flex;gap:8px;align-items:flex-start;line-height:1.4}
+.plan-features li::before{content:"✓";color:var(--green);font-weight:700;flex-shrink:0;margin-top:1px}
+.plan-features li.no{color:var(--sub)}.plan-features li.no::before{content:"—";color:var(--border)}
+/* FAQ */
+.faq{max-width:680px;margin:44px auto 0}
+.faq-item{border-bottom:1px solid var(--border);padding:18px 0}
+.faq-q{font-size:.92rem;font-weight:600;color:var(--ink);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;user-select:none}
+.faq-q .arrow{font-size:.8rem;color:var(--sub);transition:transform .2s;flex-shrink:0}
+.faq-a{font-size:.84rem;color:var(--sub);line-height:1.7;margin-top:10px;display:none}
+.faq-item.open .faq-q .arrow{transform:rotate(180deg)}
+.faq-item.open .faq-a{display:block}
+/* CTA */
+.cta{padding:80px 0;text-align:center;background:var(--ink);color:#fff;border-radius:24px;margin:0 24px 80px}
+.cta h2{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:800;letter-spacing:-.02em;margin-bottom:14px}
+.cta p{font-size:1rem;color:rgba(255,255,255,.6);max-width:460px;margin:0 auto 32px;line-height:1.7}
+/* FOOTER */
+footer{padding:40px 0;border-top:1px solid var(--border)}
+.footer-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.footer-links{display:flex;gap:20px;flex-wrap:wrap}
+.footer-links a{font-size:.78rem;color:var(--sub);transition:color .2s}
+.footer-links a:hover{color:var(--ink)}
+@media(max-width:768px){
+  .steps{grid-template-columns:1fr}.features{grid-template-columns:1fr}
+  .pricing{grid-template-columns:1fr;max-width:400px}.nav-links .nav-hide{display:none}
+  .hero{padding:60px 0 50px}.cta{margin:0 16px 60px}
+}
+</style>
+</head>
+<body>
+<nav style="padding:16px 24px;background:#1a1916;display:flex;align-items:center;gap:14px">
+  <a href="/" style="font-size:.95rem;font-weight:800;color:#fff;text-decoration:none">Agent<span style="color:#a29bfe">Kontor</span></a>
+  <a href="/app" style="font-size:.82rem;color:rgba(255,255,255,.6);text-decoration:none">Dashboard</a>
+</nav>
+<div style="max-width:860px;margin:0 auto;padding:60px 24px;font-family:system-ui,sans-serif">
+  <div style="text-align:center;margin-bottom:56px">
+    <div style="font-size:.9rem;font-weight:700;color:#6c5ce7;letter-spacing:.1em;margin-bottom:12px">🎁 AFFILIATE-PROGRAMM</div>
+    <h1 style="font-size:2.8rem;font-weight:800;color:#1a1916;margin-bottom:16px">Verdiene 20% auf jede Zahlung</h1>
+    <p style="font-size:1.1rem;color:#7a786e;max-width:520px;margin:0 auto">Empfehle AgentKontor und erhalte dauerhaft 20% der ersten Zahlung jedes geworbenen Nutzers als Guthaben.</p>
+    <a href="/app" style="display:inline-block;margin-top:28px;background:#6c5ce7;color:#fff;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:1rem">Jetzt Referral-Link holen →</a>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:56px">
+    <div style="background:#fff;border:1px solid #e8e6e0;border-radius:14px;padding:24px;text-align:center">
+      <div style="font-size:2rem;margin-bottom:10px">🔗</div>
+      <h3 style="margin-bottom:8px;color:#1a1916">1. Link teilen</h3>
+      <p style="font-size:.85rem;color:#7a786e">Deinen persönlichen Referral-Link an Kunden, Freunde oder in Social Media posten.</p>
+    </div>
+    <div style="background:#fff;border:1px solid #e8e6e0;border-radius:14px;padding:24px;text-align:center">
+      <div style="font-size:2rem;margin-bottom:10px">✅</div>
+      <h3 style="margin-bottom:8px;color:#1a1916">2. Nutzer registriert</h3>
+      <p style="font-size:.85rem;color:#7a786e">Der neue Nutzer registriert sich über deinen Link und testet AgentKontor 14 Tage kostenlos.</p>
+    </div>
+    <div style="background:#fff;border:1px solid #e8e6e0;border-radius:14px;padding:24px;text-align:center">
+      <div style="font-size:2rem;margin-bottom:10px">💶</div>
+      <h3 style="margin-bottom:8px;color:#1a1916">3. Du verdienst</h3>
+      <p style="font-size:.85rem;color:#7a786e">Bei der ersten Zahlung erhältst du automatisch 20% als Guthaben — ohne Aufwand.</p>
+    </div>
+  </div>
+  <div style="background:#f4f3ef;border-radius:16px;padding:36px;margin-bottom:40px">
+    <h2 style="color:#1a1916;margin-bottom:20px">Häufige Fragen</h2>
+    <div style="margin-bottom:16px"><strong>Wie viel verdiene ich?</strong><p style="color:#7a786e;margin-top:4px">20% der ersten Zahlung des geworbenen Nutzers. Bei Pro monatlich (€19) = €3,80 Guthaben.</p></div>
+    <div style="margin-bottom:16px"><strong>Wann wird das Guthaben gutgeschrieben?</strong><p style="color:#7a786e;margin-top:4px">Automatisch sobald der geworbene Nutzer seine erste Zahlung abschließt.</p></div>
+    <div style="margin-bottom:16px"><strong>Wie nutze ich das Guthaben?</strong><p style="color:#7a786e;margin-top:4px">Das Guthaben wird gegen zukünftige Zahlungen verrechnet. Auszahlung auf Anfrage möglich.</p></div>
+    <div><strong>Gibt es ein Limit?</strong><p style="color:#7a786e;margin-top:4px">Nein — du kannst unbegrenzt viele Nutzer werben und für jeden verdienen.</p></div>
+  </div>
+  <div style="text-align:center">
+    <p style="color:#7a786e;font-size:.85rem">Ideal für Agenturen, Freelancer und KI-Enthusiasten. Fragen? <a href="mailto:info@think-cloud.org" style="color:#6c5ce7">info@think-cloud.org</a></p>
+  </div>
+</div>
+<script src="/cookie-banner.js"></script></body></html>
