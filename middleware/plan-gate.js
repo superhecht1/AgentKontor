@@ -95,8 +95,13 @@ async function checkMsgQuota(pool, userId) {
     return { allowed: false, limit: limits.msgPerMonth, plan };
   }
 
-  await pool.query('UPDATE users SET msg_count_month=msg_count_month+1 WHERE id=$1', [userId]);
-  return { allowed: true, remaining: limits.msgPerMonth - user.msg_count_month - 1 };
+  // Atomic increment with ceiling check — prevents race condition on concurrent requests
+  const updated = await pool.query(
+    'UPDATE users SET msg_count_month=msg_count_month+1 WHERE id=$1 AND msg_count_month < $2 RETURNING msg_count_month',
+    [userId, limits.msgPerMonth]
+  );
+  if (!updated.rows.length) return { allowed: false, limit: limits.msgPerMonth, plan };
+  return { allowed: true, remaining: limits.msgPerMonth - updated.rows[0].msg_count_month };
 }
 
 /** IP-based rate limiter using DB */
