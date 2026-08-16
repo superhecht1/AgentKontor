@@ -275,20 +275,23 @@ router.post('/stream/:agentId', async (req, res) => {
 
     // If tools present — use agentic mode (no streaming for tool-use loops)
     if (agentTools.length > 0) {
-      const { reply, usage } = await runAgenticChat(client, model, sysPrompt + ragCtx, msgs, agentTools, pool, agent.id, sessionId);
-      fullReply = reply;
-      usage = usage || {};
-      res.write(`data: ${JSON.stringify({ type: 'session', sessionId })}
-
-`);
-      // Send full reply as one chunk (tool-use doesn't stream)
-      res.write(`data: ${JSON.stringify({ type: 'text', text: reply })}
-
-`);
-      res.write(`data: ${JSON.stringify({ type: 'done' })}
-
-`);
+      const agResult = await runAgenticChat(client, model, sysPrompt + ragCtx, msgs, agentTools, pool, agent.id, sessionId);
+      fullReply = agResult.reply;
+      usage = agResult.usage || {};
+      res.write(`data: ${JSON.stringify({ type: 'text', text: fullReply })}\n\n`);
+      res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
       res.end();
+
+      setImmediate(async () => {
+        try {
+          await pool.query('INSERT INTO chat_messages (agent_id, session_id, role, content, source) VALUES ($1,$2,$3,$4,$5)', [agent.id, sessionId, 'assistant', fullReply, source]);
+          await pool.query('UPDATE agents SET total_messages=total_messages+1 WHERE id=$1', [agent.id]);
+          await trackCost(pool, agent.id, sessionId, model, usage, source);
+          if (sessionIdentifier) await updateMemory(pool, agent.id, sessionIdentifier, msgs, fullReply);
+          const lead = await tryCaptureLead(pool, agent, msgs, fullReply, sessionId, source);
+          if (lead) { await sendLeadEmail(agent, agent.owner_email, lead); }
+        } catch(e) { console.error('Post-agentic error:', e.message); }
+      });
     } else {
 
     // Stream from Anthropic
@@ -345,6 +348,8 @@ router.post('/stream/:agentId', async (req, res) => {
         });
       } catch(e) { console.error('Post-stream error:', e.message); }
     });
+
+    } // end else (no agentic tools)
 
   } catch(e) {
     console.error('STREAM ERROR:', e.message);
