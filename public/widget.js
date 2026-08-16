@@ -165,6 +165,12 @@
     function toggleOpen(force) {
       open = force !== undefined ? force : !open;
       if (open) {
+        if (!privacyAccepted) {
+          showPrivacyNotice(() => {
+            if (!m.children.length) addBot(cfg.greeting || 'Hallo!', cfg.quick_chips || []);
+          });
+          return;
+        }
         frame.style.display = 'flex';
         requestAnimationFrame(() => frame.classList.add('open'));
         btn.querySelector('.ak-emoji').textContent = '✕';

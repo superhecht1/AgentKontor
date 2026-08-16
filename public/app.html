@@ -501,6 +501,19 @@ Response:
           </div>
         </template>
       </div>
+
+      <!-- Trial Banner -->
+      <template x-if="user?.trial_ends_at&&new Date(user.trial_ends_at)>new Date()">
+        <div style="background:linear-gradient(135deg,rgba(0,184,148,.08),rgba(108,92,231,.08));border:1px solid rgba(0,184,148,.2);border-radius:12px;padding:16px;margin-bottom:14px;display:flex;align-items:center;gap:12px">
+          <div style="font-size:1.5rem">🎁</div>
+          <div style="flex:1">
+            <div style="font-size:.86rem;font-weight:700;color:var(--white)">Pro Trial aktiv</div>
+            <div style="font-size:.76rem;color:var(--muted)" x-text="'Endet am '+new Date(user.trial_ends_at).toLocaleDateString('de-DE')+' — alle Pro-Features kostenlos nutzen.'"></div>
+          </div>
+          <button class="btn btn-purple btn-sm" @click="showUpgrade=true">Jetzt upgraden</button>
+        </div>
+      </template>
+
       <div class="settings-section">
         <h2 x-text="T.profile"></h2><p class="desc" x-text="T.profile_desc"></p>
         <div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:flex-end">
@@ -530,7 +543,97 @@ Response:
         </div>
       </div>
       <div class="settings-section">
+        <h2>🔐 Zwei-Faktor-Authentifizierung</h2>
+        <p class="desc" x-text="twoFaEnabled?'2FA ist aktiviert — dein Konto ist durch TOTP gesichert.':'Aktiviere 2FA für mehr Sicherheit (Google Authenticator, Authy).'"></p>
+        <template x-if="!twoFaEnabled">
+          <div>
+            <template x-if="!twoFaSetup">
+              <button class="btn btn-ghost btn-sm" @click="setup2FA()">2FA einrichten</button>
+            </template>
+            <template x-if="twoFaSetup">
+              <div>
+                <p style="font-size:.8rem;color:var(--muted);margin-bottom:10px">Scanne den QR-Code mit Google Authenticator oder gib den Code manuell ein:</p>
+                <template x-if="twoFaQR"><img :src="twoFaQR" style="width:160px;height:160px;border-radius:8px;background:#fff;padding:8px;margin-bottom:10px"></template>
+                <div style="font-family:monospace;font-size:.82rem;color:var(--pu-l);background:#07070f;padding:8px 12px;border-radius:6px;margin-bottom:12px" x-text="twoFaSecret"></div>
+                <div style="display:flex;gap:8px;align-items:flex-end">
+                  <div class="field" style="margin:0;flex:1"><label>6-stelliger Code zum Bestätigen</label><input class="inp" type="text" x-model="twoFaCode" placeholder="123456" maxlength="6"></div>
+                  <button class="btn btn-purple btn-sm" @click="verify2FA()">Bestätigen</button>
+                </div>
+                <template x-if="twoFaBackup.length">
+                  <div style="margin-top:14px;padding:12px;background:rgba(240,192,64,.08);border:1px solid rgba(240,192,64,.2);border-radius:9px">
+                    <div style="font-size:.78rem;font-weight:700;color:var(--gold);margin-bottom:7px">✓ 2FA aktiviert! Backup-Codes (einmalig sichtbar):</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+                      <template x-for="code in twoFaBackup" :key="code"><div style="font-family:monospace;font-size:.8rem;color:var(--text)" x-text="code"></div></template>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </template>
+          </div>
+        </template>
+        <template x-if="twoFaEnabled">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:.82rem;color:var(--green)">✓ Aktiviert</span>
+            <button class="btn btn-xs btn-danger" @click="disable2FA()">Deaktivieren</button>
+          </div>
+        </template>
+      </div>
+
+      <div class="settings-section">
+        <h2>🎁 Empfehlungsprogramm</h2>
+        <p class="desc">Empfehle AgentKontor und erhalte 20% der ersten Zahlung als Guthaben.</p>
+        <template x-if="referralData">
+          <div>
+            <div style="display:flex;gap:8px;margin-bottom:12px">
+              <div class="code" style="flex:1;padding:8px;font-size:.82rem" x-text="referralData.link"></div>
+              <button class="btn btn-ghost btn-sm" @click="copy(referralData.link)">Copy</button>
+            </div>
+            <div class="grid-3">
+              <div style="text-align:center;padding:12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:9px"><div style="font-size:1.3rem;font-weight:700;color:var(--pu-l)" x-text="referralData.stats?.total_referrals||0"></div><div style="font-size:.72rem;color:var(--muted)">Empfehlungen</div></div>
+              <div style="text-align:center;padding:12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:9px"><div style="font-size:1.3rem;font-weight:700;color:var(--green)" x-text="referralData.stats?.paid||0"></div><div style="font-size:.72rem;color:var(--muted)">Konvertiert</div></div>
+              <div style="text-align:center;padding:12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:9px"><div style="font-size:1.3rem;font-weight:700;color:var(--gold)" x-text="'€'+(parseFloat(referralData.credits||0).toFixed(2))"></div><div style="font-size:.72rem;color:var(--muted)">Guthaben</div></div>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <div class="settings-section">
+        <h2>📧 Lead-Digest</h2>
+        <p class="desc">Erhalte eine E-Mail-Zusammenfassung neuer Leads.</p>
+        <select class="inp" style="max-width:200px" x-model="digestFreq" @change="saveDigestPref()">
+          <option value="daily">Täglich</option>
+          <option value="weekly">Wöchentlich</option>
+          <option value="never">Nie</option>
+        </select>
+      </div>
+
+      <div class="settings-section">
+        <h2>📋 Aktivitäts-Log</h2>
+        <p class="desc">Letzte Aktionen auf deinem Konto.</p>
+        <button class="btn btn-ghost btn-sm" @click="loadAuditLog()" style="margin-bottom:10px">Log laden</button>
+        <template x-for="entry in auditLog" :key="entry.created_at">
+          <div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-size:.78rem">
+            <span style="color:var(--muted);white-space:nowrap" x-text="new Date(entry.created_at).toLocaleString('de-DE')"></span>
+            <span style="color:var(--pu-l);font-weight:600" x-text="entry.action"></span>
+            <span style="color:var(--muted)" x-text="entry.ip_address?'von '+entry.ip_address:''"></span>
+          </div>
+        </template>
+      </div>
+
+      <div class="settings-section">
         <h2 x-text="T.data_export"></h2><p class="desc" x-text="T.data_export_desc"></p>
+        <!-- Invoices list -->
+        <div style="margin-bottom:14px">
+          <template x-for="inv in userInvoices" :key="inv.id">
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+              <span style="font-family:monospace;font-size:.78rem;color:var(--pu-l)" x-text="inv.invoice_number"></span>
+              <span style="font-size:.78rem;color:var(--text)" x-text="'€'+parseFloat(inv.amount_eur).toFixed(2)"></span>
+              <span style="font-size:.72rem;color:var(--muted)" x-text="new Date(inv.issued_at).toLocaleDateString('de-DE')"></span>
+              <a :href="'/api/invoices/'+inv.id+'/pdf'" class="btn btn-ghost btn-xs" style="text-decoration:none;margin-left:auto" download>📄 PDF</a>
+            </div>
+          </template>
+          <button class="btn btn-ghost btn-xs" @click="loadInvoices()" style="margin-top:8px" x-show="!userInvoices.length">Rechnungen laden</button>
+        </div>
         <a :href="'/api/account/export'" class="btn btn-ghost btn-sm" style="text-decoration:none" download>📥 <span x-text="T.download_data"></span></a>
       </div>
       <div class="settings-section danger-zone">
@@ -915,6 +1018,7 @@ Response:
       <div class="tab" :class="{active:aTab==='versions'}" @click="aTab='versions';if(editing)loadVersions(editing.id)" x-show="editing">📜 Versionen</div>
       <div class="tab" :class="{active:aTab==='voice'}" @click="aTab='voice';if(editing)loadVoices()">🎙️ Voice</div>
       <div class="tab" :class="{active:aTab==='actions'}" @click="aTab='actions';if(editing)loadActions(editing.id)">⚡ Actions</div>
+      <div class="tab" :class="{active:aTab==='privacy'}" @click="aTab='privacy'" x-show="editing">🔒 Datenschutz</div>
     </div>
 
     <!-- BASICS TAB -->
@@ -1161,6 +1265,26 @@ Response:
                 <input class="inp" type="text" x-model="af.facebook_page_id" placeholder="Facebook Page ID" style="width:100%">
                 <input class="inp" type="text" x-model="af.facebook_token" placeholder="Page Access Token" style="width:100%">
                 <div style="font-size:.71rem;color:var(--muted)">Webhook: <span x-text="window.location.origin+'/webhook/facebook'" style="font-family:monospace;color:var(--pu-l)"></span></div>
+          </div>
+        </template>
+      </div>
+    </template>
+
+    <!-- DATENSCHUTZ TAB -->
+    <template x-if="aTab==='privacy'&&editing">
+      <div>
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:16px;line-height:1.6">Konfiguriere wie lange Gesprächsdaten und Leads gespeichert werden. Daten werden nach Ablauf automatisch gelöscht (DSGVO §5 Abs. 1e).</p>
+        <div class="inp-row" style="margin-bottom:14px">
+          <div class="field" style="margin:0"><label>Gespräche löschen nach (Tage)</label><input class="inp" type="number" min="7" max="730" x-model.number="af.data_retention_days" placeholder="90"></div>
+          <div class="field" style="margin:0"><label>Leads löschen nach (Tage)</label><input class="inp" type="number" min="7" max="730" x-model.number="af.lead_retention_days" placeholder="180"></div>
+        </div>
+        <div style="padding:12px;background:rgba(108,92,231,.06);border:1px solid rgba(108,92,231,.15);border-radius:9px;font-size:.78rem;color:var(--muted);line-height:1.6">
+          <strong style="color:var(--pu-l)">DSGVO-Hinweis:</strong><br>
+          Standard: Gespräche 90 Tage, Leads 180 Tage. Der Cron-Job löscht täglich abgelaufene Daten.
+          Widget-Nutzer können ihre Daten über den "Daten löschen"-Button im Widget selbst löschen.
+        </div>
+      </div>
+    </template>
               </div>
             </template>
           </div>
@@ -1212,6 +1336,24 @@ Response:
           </div>
         </div>
         <template x-if="convLoading"><div style="text-align:center;padding:30px;color:var(--muted)">⏳</div></template>
+        <!-- Search bar -->
+        <div style="margin-bottom:12px;display:flex;gap:8px">
+          <input class="inp" type="text" x-model="convSearch" :placeholder="'Gespräche durchsuchen...'" @keydown.enter="searchConversations(editing.id)" style="flex:1;padding:7px 11px">
+          <button class="btn btn-ghost btn-xs" @click="searchConversations(editing.id)">🔍</button>
+          <button class="btn btn-ghost btn-xs" @click="convSearch='';convSearchResults=[];loadConversations(editing.id)">✕</button>
+        </div>
+        <template x-if="convSearchResults.length>0">
+          <div style="margin-bottom:12px;padding:10px;background:rgba(108,92,231,.06);border:1px solid rgba(108,92,231,.15);border-radius:8px">
+            <div style="font-size:.76rem;color:var(--muted);margin-bottom:6px" x-text="convSearchResults.length+' Treffer für \''+convSearch+'\''"></div>
+            <template x-for="r in convSearchResults.slice(0,5)" :key="r.session_id">
+              <div style="font-size:.78rem;color:var(--text);padding:4px 0;cursor:pointer" @click="openSession(r)">
+                <span style="color:var(--pu-l)" x-text="r.session_id.slice(0,18)+'…'"></span> ·
+                <span x-text="r.match_content.slice(0,60)+'…'"></span>
+              </div>
+            </template>
+          </div>
+        </template>
+
         <template x-if="!selectedSession">
           <div>
             <template x-if="convSessions.length===0&&!convLoading"><div style="text-align:center;padding:24px;color:var(--muted);font-size:.82rem" x-text="T.no_conversations"></div></template>
@@ -1464,7 +1606,7 @@ toggleLang(){this.lang=this.lang==='de'?'en':'de';localStorage.setItem('ak_lang'
 agents:[],docs:[],toasts:[],saving:false,
 showModal:false,editing:null,aTab:'basics',chipIn:'',
 uploading:false,dragging:false,docsTab:'api',
-af:{name:'',emoji:'🤖',description:'',system_prompt:'',greeting:'',tone:'professionell',language:'de',quick_chips:[],color:'#6c5ce7',is_active:true,widget_enabled:true,chatpage_enabled:true,api_enabled:false,whatsapp_enabled:false,whatsapp_number:'',telegram_enabled:false,telegram_token:'',rag_enabled:false,rag_prompt:'',cap_calendar:false,cal_link:'',cap_leads:false,lead_fields:[],lead_email:'',cap_products:false,products_data:[],cap_multilang:false,cap_email:false,smtp_host:'',smtp_port:587,smtp_user:'',smtp_pass:'',smtp_from:'',widget_position:'right',widget_delay:0,widget_theme:'dark',widget_size:56,instagram_enabled:false,instagram_token:'',instagram_business_id:'',facebook_enabled:false,facebook_token:'',facebook_page_id:'',voice_enabled:false,voice_provider:'elevenlabs',voice_id:'',voice_stability:0.5,stt_provider:'whisper'},
+af:{name:'',emoji:'🤖',description:'',system_prompt:'',greeting:'',tone:'professionell',language:'de',quick_chips:[],color:'#6c5ce7',is_active:true,widget_enabled:true,chatpage_enabled:true,api_enabled:false,whatsapp_enabled:false,whatsapp_number:'',telegram_enabled:false,telegram_token:'',rag_enabled:false,rag_prompt:'',cap_calendar:false,cal_link:'',cap_leads:false,lead_fields:[],lead_email:'',cap_products:false,products_data:[],cap_multilang:false,cap_email:false,smtp_host:'',smtp_port:587,smtp_user:'',smtp_pass:'',smtp_from:'',widget_position:'right',widget_delay:0,widget_theme:'dark',widget_size:56,instagram_enabled:false,instagram_token:'',instagram_business_id:'',facebook_enabled:false,facebook_token:'',facebook_page_id:'',voice_enabled:false,voice_provider:'elevenlabs',voice_id:'',voice_stability:0.5,stt_provider:'whisper',data_retention_days:90,lead_retention_days:180},
 showTemplates:false,selectedTemplate:null,
 agentTemplates:[
 {id:'blank',emoji:'🤖',name:'Leer / Blank',desc_de:'Starte mit einer leeren Vorlage.',desc_en:'Start fresh.',color:'#6c5ce7',system_prompt:'',greeting:'Hallo! Wie kann ich helfen?',tone:'professionell',quick_chips:[],cap_leads:false,lead_fields:[]},
@@ -1495,6 +1637,18 @@ ftAgentId:'',ftData:null,ftLoading:false,ftJobs:[],ftBaseModel:'gpt-4o-mini-2024
 showChangelog:false,changelogEntries:[],agentVersions:[],
 // Billing
 billingCycle:'monthly',
+// 2FA
+twoFaEnabled:false,twoFaSetup:false,twoFaQR:null,twoFaSecret:'',twoFaCode:'',twoFaBackup:[],
+// Referral
+referralData:null,
+// Invoices
+userInvoices:[],
+// Digest
+digestFreq:'daily',
+// Audit
+auditLog:[],
+// Conversation search
+convSearch:'',convSearchResults:[],
 // Voice
 availableVoices:[],
 // Actions
@@ -1563,7 +1717,7 @@ applyTemplate(){
 async editAgent(a){
   const d=await this.api('/agents/'+a.id);if(!d.agent)return;
   const ag=d.agent;this.editing=ag;
-  this.af={name:ag.name,emoji:ag.emoji,description:ag.description||'',system_prompt:ag.system_prompt||'',greeting:ag.greeting||'',tone:ag.tone||'professionell',language:ag.language||'de',quick_chips:ag.quick_chips||[],color:ag.color||'#6c5ce7',is_active:ag.is_active!==false,widget_enabled:ag.widget_enabled!==false,chatpage_enabled:ag.chatpage_enabled!==false,api_enabled:!!ag.api_enabled,whatsapp_enabled:!!ag.whatsapp_enabled,whatsapp_number:ag.whatsapp_number||'',telegram_enabled:!!ag.telegram_enabled,telegram_token:ag.telegram_token||'',rag_enabled:!!ag.rag_enabled,rag_prompt:ag.rag_prompt||'',cap_calendar:!!ag.cap_calendar,cal_link:ag.cal_link||'',cap_leads:!!ag.cap_leads,lead_fields:ag.lead_fields||[],lead_email:ag.lead_email||'',cap_products:!!ag.cap_products,products_data:ag.products_data||[],cap_multilang:!!ag.cap_multilang,cap_email:!!ag.cap_email,smtp_host:ag.smtp_host||'',smtp_port:ag.smtp_port||587,smtp_user:ag.smtp_user||'',smtp_pass:ag.smtp_pass||'',smtp_from:ag.smtp_from||'',widget_position:ag.widget_position||'right',widget_delay:ag.widget_delay||0,widget_theme:ag.widget_theme||'dark',widget_size:ag.widget_size||56,instagram_enabled:!!ag.instagram_enabled,instagram_token:ag.instagram_token||'',instagram_business_id:ag.instagram_business_id||'',facebook_enabled:!!ag.facebook_enabled,facebook_token:ag.facebook_token||'',facebook_page_id:ag.facebook_page_id||'',voice_enabled:!!ag.voice_enabled,voice_provider:ag.voice_provider||'elevenlabs',voice_id:ag.voice_id||'',voice_stability:ag.voice_stability||0.5,stt_provider:ag.stt_provider||'whisper'};
+  this.af={name:ag.name,emoji:ag.emoji,description:ag.description||'',system_prompt:ag.system_prompt||'',greeting:ag.greeting||'',tone:ag.tone||'professionell',language:ag.language||'de',quick_chips:ag.quick_chips||[],color:ag.color||'#6c5ce7',is_active:ag.is_active!==false,widget_enabled:ag.widget_enabled!==false,chatpage_enabled:ag.chatpage_enabled!==false,api_enabled:!!ag.api_enabled,whatsapp_enabled:!!ag.whatsapp_enabled,whatsapp_number:ag.whatsapp_number||'',telegram_enabled:!!ag.telegram_enabled,telegram_token:ag.telegram_token||'',rag_enabled:!!ag.rag_enabled,rag_prompt:ag.rag_prompt||'',cap_calendar:!!ag.cap_calendar,cal_link:ag.cal_link||'',cap_leads:!!ag.cap_leads,lead_fields:ag.lead_fields||[],lead_email:ag.lead_email||'',cap_products:!!ag.cap_products,products_data:ag.products_data||[],cap_multilang:!!ag.cap_multilang,cap_email:!!ag.cap_email,smtp_host:ag.smtp_host||'',smtp_port:ag.smtp_port||587,smtp_user:ag.smtp_user||'',smtp_pass:ag.smtp_pass||'',smtp_from:ag.smtp_from||'',widget_position:ag.widget_position||'right',widget_delay:ag.widget_delay||0,widget_theme:ag.widget_theme||'dark',widget_size:ag.widget_size||56,instagram_enabled:!!ag.instagram_enabled,instagram_token:ag.instagram_token||'',instagram_business_id:ag.instagram_business_id||'',facebook_enabled:!!ag.facebook_enabled,facebook_token:ag.facebook_token||'',facebook_page_id:ag.facebook_page_id||'',voice_enabled:!!ag.voice_enabled,voice_provider:ag.voice_provider||'elevenlabs',voice_id:ag.voice_id||'',voice_stability:ag.voice_stability||0.5,stt_provider:ag.stt_provider||'whisper',data_retention_days:ag.data_retention_days||90,lead_retention_days:ag.lead_retention_days||180};
   this.docs=[];this.convSessions=[];this.selectedSession=null;this.aTab='basics';this.showModal=true;
 },
 
@@ -1640,7 +1794,7 @@ async openSession(s){
   if(d.messages)this.convMessages=d.messages;
 },
 
-async loadPlan(){const d=await this.api('/account/plan');if(d.plan||d.plan===null)this.planData=d;this.nameForm.name=this.user?.name||'';},
+async loadPlan(){const d=await this.api('/account/plan');if(d.plan||d.plan===null)this.planData=d;this.nameForm.name=this.user?.name||'';this.digestFreq=this.user?.digest_frequency||'daily';await this.check2FAStatus();await this.loadReferral();await this.loadInvoices();},
 async changeName(){if(!this.nameForm.name.trim())return;this.settingsSaving=true;const d=await this.api('/account/name','PATCH',{name:this.nameForm.name});this.settingsSaving=false;if(d.error){this.toast(d.error,'err');return;}this.user.name=d.name;localStorage.setItem('ak_user',JSON.stringify(this.user));this.toast('Gespeichert ✓');},
 async changePassword(){this.pwErr='';this.pwOk=false;if(!this.pwForm.current||!this.pwForm.newPw){this.pwErr='Alle Felder ausfüllen';return;}if(this.pwForm.newPw!==this.pwForm.confirm){this.pwErr='Passwörter stimmen nicht überein';return;}this.settingsSaving=true;const d=await this.api('/account/password','PATCH',{current:this.pwForm.current,newPw:this.pwForm.newPw});this.settingsSaving=false;if(d.error){this.pwErr=d.error;return;}this.pwOk=true;this.pwForm={current:'',newPw:'',confirm:''};setTimeout(()=>this.pwOk=false,4000);},
 async changeEmail(){this.emailErr='';this.emailOk=false;if(!this.emailForm.email||!this.emailForm.password){this.emailErr='Alle Felder ausfüllen';return;}this.settingsSaving=true;const d=await this.api('/account/email','PATCH',this.emailForm);this.settingsSaving=false;if(d.error){this.emailErr=d.error;return;}this.emailOk=true;this.user.email=d.email;localStorage.setItem('ak_user',JSON.stringify(this.user));this.emailForm={email:'',password:''};setTimeout(()=>this.emailOk=false,4000);},
@@ -1745,6 +1899,60 @@ async removeMember(uid){
   if(!confirm('Mitglied entfernen?'))return;
   await this.api('/workspace/'+this.workspace.id+'/members/'+uid,'DELETE');
   this.wsMembers=this.wsMembers.filter(m=>m.id!==uid);
+},
+
+// 2FA
+async setup2FA(){
+  const d=await this.api('/auth/2fa/setup','POST');
+  if(d.error){this.toast(d.error,'err');return;}
+  this.twoFaSetup=true;this.twoFaQR=d.qrCode;this.twoFaSecret=d.secret;
+},
+async verify2FA(){
+  if(!this.twoFaCode){this.toast('Code eingeben','err');return;}
+  const d=await this.api('/auth/2fa/verify','POST',{code:this.twoFaCode});
+  if(d.error){this.toast(d.error,'err');return;}
+  this.twoFaEnabled=true;this.twoFaBackup=d.backupCodes||[];this.toast('2FA aktiviert ✓');
+},
+async disable2FA(){
+  const pw=prompt('Passwort zur Bestätigung:');if(!pw)return;
+  const d=await this.api('/auth/2fa/disable','POST',{password:pw});
+  if(d.error){this.toast(d.error,'err');return;}
+  this.twoFaEnabled=false;this.twoFaSetup=false;this.toast('2FA deaktiviert');
+},
+async check2FAStatus(){
+  const d=await this.api('/auth/2fa/status');
+  this.twoFaEnabled=d.enabled||false;
+},
+
+// Referral
+async loadReferral(){
+  const d=await this.api('/referral/me');
+  if(d.code)this.referralData=d;
+},
+
+// Invoices
+async loadInvoices(){
+  const d=await this.api('/invoices');
+  if(d.invoices)this.userInvoices=d.invoices;
+},
+
+// Digest
+async saveDigestPref(){
+  await this.api('/digest-preferences','PUT',{frequency:this.digestFreq});
+  this.toast('Gespeichert ✓');
+},
+
+// Audit log
+async loadAuditLog(){
+  const d=await this.api('/audit');
+  if(d.log)this.auditLog=d.log;
+},
+
+// Conversation search
+async searchConversations(agentId){
+  if(!this.convSearch||this.convSearch.length<2)return;
+  const d=await this.api('/conversations/'+agentId+'/search?q='+encodeURIComponent(this.convSearch));
+  if(d.results)this.convSearchResults=d.results;
 },
 
 async loadCosts(){
