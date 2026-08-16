@@ -308,8 +308,15 @@ router.post('/stream/:agentId', async (req, res) => {
     const userMsg   = msgs[msgs.length - 1];
     const model     = agent.model || 'claude-sonnet-4-6';
 
-    // Load memory + RAG
+    // Consent check for lead-capture agents
     const sessionIdHash = sessionIdentifier ? hashSessionId(sessionIdentifier) : null;
+    if (agent.cap_leads && sessionIdHash) {
+      await pool.query(`
+        INSERT INTO widget_consents (agent_id, session_identifier_hash, consent_given, verified_at)
+        VALUES ($1,$2,true,NOW())
+        ON CONFLICT (agent_id, session_identifier_hash) DO UPDATE SET verified_at=NOW()
+      `, [agent.id, sessionIdHash]).catch(() => {});
+    }
     const memory = await loadMemory(pool, agent.id, sessionIdHash);
     const sysPrompt = await buildSystemPrompt(pool, agent, memory);
     const ragCtx = agent.rag_enabled ? await fetchRagContext(pool, agent.id, typeof userMsg.content === 'string' ? userMsg.content : 'image') : '';
@@ -357,7 +364,15 @@ router.post('/stream/:agentId', async (req, res) => {
           await trackCost(pool, agent.id, sessionId, model, usage, source);
           if (sessionIdHash) await updateMemory(pool, agent.id, sessionIdHash, msgs, fullReply);
           const lead = await tryCaptureLead(pool, agent, msgs, fullReply, sessionId, source);
-          if (lead) { await sendLeadEmail(agent, agent.owner_email, lead); }
+          if (lead) {
+            await sendLeadEmail(agent, agent.owner_email, lead);
+            await dispatchWebhooks(pool, agent.id, 'lead.captured', { agentId:agent.id, sessionId, source, lead });
+          }
+          await dispatchWebhooks(pool, agent.id, 'message.received', {
+            agentId: agent.id, agentName: agent.name, sessionId, source,
+            message: typeof userMsg.content === 'string' ? userMsg.content : '[Bild]',
+            reply: fullReply, timestamp: new Date().toISOString(),
+          });
         } catch(e) { console.error('Post-agentic error:', e.message); }
       });
     } else {

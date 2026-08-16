@@ -140,7 +140,7 @@ router.post('/:id/invite', auth, async (req, res) => {
       const crypto = require('crypto');
       const tmpHash = await require('bcryptjs').hash(crypto.randomBytes(32).toString('hex'), 10);
       user = await pool.query(
-        'INSERT INTO users (email, name, password_hash, workspace_id, plan) VALUES ($1,$2,$3,$4,$5) RETURNING id',
+        'INSERT INTO users (email, name, password_hash, workspace_id, plan, onboarding_done) VALUES ($1,$2,$3,$4,$5,true) RETURNING id',
         [email.toLowerCase(), email.split('@')[0], tmpHash, req.params.id, plan]
       );
     } else {

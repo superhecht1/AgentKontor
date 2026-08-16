@@ -10,6 +10,7 @@
 
 const router = require('express').Router();
 const auth   = require('../middleware/auth');
+const { minimizePii } = require('../utils/privacy');
 const { requirePlan } = require('../middleware/plan-gate');
 
 function getPool(req) { return req.app.locals.pool; }

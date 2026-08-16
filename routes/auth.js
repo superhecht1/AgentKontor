@@ -93,10 +93,15 @@ router.post('/login', async (req, res) => {
   try {
     await ensureColumns(pool);
 
+    // Fallback query if new columns don't exist yet
     const result = await pool.query(
       `SELECT id, email, name, password_hash, lang, plan, onboarding_done,
-              COALESCE(is_admin, false)        AS is_admin,
-              COALESCE(token_version, 1)       AS token_version
+              COALESCE(is_admin, false)             AS is_admin,
+              COALESCE(token_version, 1)            AS token_version,
+              COALESCE(totp_enabled, false)         AS totp_enabled,
+              totp_secret, totp_backup_codes,
+              COALESCE(login_attempts, 0)           AS login_attempts,
+              locked_until, deleted_at
        FROM users WHERE email=$1`,
       [email.toLowerCase()]
     );
