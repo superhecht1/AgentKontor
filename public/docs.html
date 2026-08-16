@@ -356,5 +356,130 @@ function copy(btn) {
   });
 }
 </script>
+
+  <!-- New API Endpoints -->
+  <section class="section" id="voice">
+    <h2>🎙️ Voice API</h2>
+    <div class="endpoint">
+      <span class="method post">POST</span>
+      <span class="path">/api/voice/transcribe</span>
+      <span class="desc">Audio → Text (Whisper STT). Multipart: field <code>audio</code>, optional <code>language</code> (default: de).</span>
+    </div>
+    <div class="endpoint">
+      <span class="method post">POST</span>
+      <span class="path">/api/voice/speak</span>
+      <span class="desc">Text → Audio (ElevenLabs/OpenAI). Body: <code>{ text, voiceId?, provider? }</code>. Returns audio/mpeg. Rate-limited: 30/h.</span>
+    </div>
+    <div class="endpoint">
+      <span class="method get">GET</span>
+      <span class="path">/api/voice/voices</span>
+      <span class="desc">List available ElevenLabs voices. Requires auth.</span>
+    </div>
+  </section>
+
+  <section class="section" id="actions">
+    <h2>⚡ Agentic Actions</h2>
+    <div class="endpoint">
+      <span class="method get">GET</span>
+      <span class="path">/api/actions/:agentId</span>
+      <span class="desc">List tools configured for this agent.</span>
+    </div>
+    <div class="endpoint">
+      <span class="method post">POST</span>
+      <span class="path">/api/actions/:agentId</span>
+      <span class="desc">Create tool. Body: <code>{ tool_type, tool_name, tool_desc, config }</code>. Types: <code>web_search | send_email | book_calendar | add_crm | http_request</code>.</span>
+    </div>
+    <div class="endpoint">
+      <span class="method del">DELETE</span>
+      <span class="path">/api/actions/:agentId/:toolId</span>
+      <span class="desc">Delete tool.</span>
+    </div>
+  </section>
+
+  <section class="section" id="workspace">
+    <h2>🏢 White-Label / Workspace</h2>
+    <div class="endpoint">
+      <span class="method get">GET</span>
+      <span class="path">/api/workspace/me</span>
+      <span class="desc">Get own workspace info.</span>
+    </div>
+    <div class="endpoint">
+      <span class="method post">POST</span>
+      <span class="path">/api/workspace</span>
+      <span class="desc">Create workspace. Body: <code>{ name, slug, brand_name, primary_color }</code>. Pro plan required.</span>
+    </div>
+    <div class="endpoint">
+      <span class="method post">POST</span>
+      <span class="path">/api/workspace/:id/invite</span>
+      <span class="desc">Invite member. Body: <code>{ email, plan? }</code>.</span>
+    </div>
+    <div class="endpoint">
+      <span class="method get">GET</span>
+      <span class="path">/api/workspace/:id/usage</span>
+      <span class="desc">Usage and costs per member.</span>
+    </div>
+  </section>
+
+  <section class="section" id="privacy">
+    <h2>🔒 DSGVO / Privacy</h2>
+    <div class="endpoint">
+      <span class="method post">POST</span>
+      <span class="path">/api/widget/forget</span>
+      <span class="desc">End-user data deletion. Body: <code>{ agentId, sessionIdentifier }</code>. No auth required — widget users can delete their own data.</span>
+    </div>
+    <div class="endpoint">
+      <span class="method get">GET</span>
+      <span class="path">/api/account/export</span>
+      <span class="desc">DSGVO data export (JSON). Includes user data, agents, conversations, leads, third-party disclosures.</span>
+    </div>
+  </section>
+
+  <section class="section" id="2fa">
+    <h2>🔐 Two-Factor Authentication</h2>
+    <div class="endpoint">
+      <span class="method post">POST</span>
+      <span class="path">/api/auth/2fa/setup</span>
+      <span class="desc">Generate TOTP secret + QR code. Returns <code>{ secret, qrCode, manualEntry }</code>.</span>
+    </div>
+    <div class="endpoint">
+      <span class="method post">POST</span>
+      <span class="path">/api/auth/2fa/verify</span>
+      <span class="desc">Confirm 2FA setup. Body: <code>{ code }</code>. Returns backup codes.</span>
+    </div>
+    <div class="endpoint">
+      <span class="method post">POST</span>
+      <span class="path">/api/auth/refresh</span>
+      <span class="desc">Refresh JWT token. Returns new token without re-login.</span>
+    </div>
+  </section>
+
+  <section class="section" id="referral">
+    <h2>🎁 Referral</h2>
+    <div class="endpoint">
+      <span class="method get">GET</span>
+      <span class="path">/api/referral/me</span>
+      <span class="desc">Get own referral code, link, credits and stats.</span>
+    </div>
+    <div class="endpoint">
+      <span class="method get">GET</span>
+      <span class="path">/api/referral/leaderboard</span>
+      <span class="desc">Top 10 referrers (public).</span>
+    </div>
+  </section>
+
+  <section class="section" id="invoices">
+    <h2>📄 Rechnungen</h2>
+    <div class="endpoint">
+      <span class="method get">GET</span>
+      <span class="path">/api/invoices</span>
+      <span class="desc">List all invoices (§19 UStG). Requires auth.</span>
+    </div>
+    <div class="endpoint">
+      <span class="method get">GET</span>
+      <span class="path">/api/invoices/:id/pdf</span>
+      <span class="desc">Download invoice as PDF (or HTML fallback). Requires auth.</span>
+    </div>
+  </section>
+
 </body>
 </html>
