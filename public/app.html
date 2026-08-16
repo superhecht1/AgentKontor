@@ -1768,7 +1768,7 @@ addChip(){const v=this.chipIn.trim();if(!v||this.af.quick_chips.length>=5)return
 async loadDocs(id){const d=await this.api('/rag/'+id+'/documents');if(d.documents)this.docs=d.documents;},
 async uploadFile(e){const f=e.target.files[0];if(!f)return;await this._upload(f);e.target.value='';},
 async dropFile(e){this.dragging=false;const f=e.dataTransfer.files[0];if(!f)return;await this._upload(f);},
-async _upload(file){if(!this.editing)return;this.uploading=true;const fd=new FormData();fd.append('file',file);try{const r=await fetch('/api/rag/'+this.editing.id+'/upload',{method:'POST',headers:{Authorization:'Bearer '+this.token},body:fd});const d=await r.json();if(d.error)this.toast(d.error,'err');else{this.toast('Upload gestartet — Verarbeitung läuft…');setTimeout(()=>this.loadDocs(this.editing.id),3500);}}catch{this.toast('Upload fehlgeschlagen','err');}this.uploading=false;},
+async _upload(file){if(!this.editing)return;this.uploading=true;const fd=new FormData();fd.append('file',file);try{const r=await fetch('/api/rag/'+this.editing.id+'/upload',{method:'POST',credentials:'include',headers:{Authorization:'Bearer '+this.token},body:fd});const d=await r.json();if(d.error)this.toast(d.error,'err');else{this.toast('Upload gestartet — Verarbeitung läuft…');setTimeout(()=>this.loadDocs(this.editing.id),3500);}}catch{this.toast('Upload fehlgeschlagen','err');}this.uploading=false;},
 async deleteDoc(id){if(!confirm('Dokument löschen?'))return;await this.api('/rag/'+this.editing.id+'/documents/'+id,'DELETE');this.loadDocs(this.editing.id);},
 
 async loadKeys(){const d=await this.api('/keys');if(d.keys)this.apiKeys=d.keys;},
