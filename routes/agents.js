@@ -338,4 +338,27 @@ router.post('/:id/test', auth, async (req, res) => {
   }
 });
 
+
+/* ── AVAILABLE MODELS (für Model-Picker im Dashboard) ──── */
+router.get('/models/available', require('../middleware/auth'), (req, res) => {
+  const { AVAILABLE_MODELS } = require('../utils/llm');
+
+  // Filter by configured API keys
+  const configured = {
+    anthropic: !!process.env.ANTHROPIC_API_KEY,
+    openai:    !!process.env.OPENAI_API_KEY,
+    google:    !!process.env.GOOGLE_AI_API_KEY,
+    mistral:   !!process.env.MISTRAL_API_KEY,
+    groq:      !!process.env.GROQ_API_KEY,
+    deepseek:  !!process.env.DEEPSEEK_API_KEY,
+  };
+
+  const models = AVAILABLE_MODELS.map(m => ({
+    ...m,
+    available: !m.requiresEnv || configured[m.provider.toLowerCase()],
+  }));
+
+  res.json({ models, configured });
+});
+
 module.exports = router;

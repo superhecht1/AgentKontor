@@ -17,6 +17,7 @@ const Anthropic = require('@anthropic-ai/sdk');
 const crypto    = require('crypto');
 const { checkMsgQuota, getLimits, rateLimit } = require('../middleware/plan-gate');
 const { hashSessionId, minimizeMessages, hashIp } = require('../utils/privacy');
+const { callLLM, calcCost: calcLLMCost, getProvider, AVAILABLE_MODELS } = require('../utils/llm');
 const { runAgenticChat } = require('./actions');
 const { v4: uuid } = require('uuid');
 
@@ -78,18 +79,9 @@ async function manageContextWindow(messages, systemPrompt, maxTokensBudget = 800
   }
 }
 
-// ── COST TABLE PER MODEL ──────────────────────────────────
-const MODEL_COSTS = {
-  'claude-sonnet-4-6':      { in: 3.00,   out: 15.00  },
-  'claude-opus-4-6':        { in: 15.00,  out: 75.00  },
-  'claude-haiku-4-5':       { in: 0.80,   out: 4.00   },
-  'gpt-4o':                 { in: 2.50,   out: 10.00  },
-  'gpt-4o-mini':            { in: 0.15,   out: 0.60   },
-};
-
+// Cost calculation now handled by utils/llm.js
 function calcCost(model, inputTokens, outputTokens) {
-  const base = model.startsWith('ft:') ? MODEL_COSTS['gpt-4o-mini'] : (MODEL_COSTS[model] || MODEL_COSTS['claude-sonnet-4-6']);
-  return ((inputTokens * base.in) + (outputTokens * base.out)) / 1_000_000;
+  return calcLLMCost(model, inputTokens, outputTokens);
 }
 
 // ── WIDGET CONFIG (public) ────────────────────────────────
@@ -497,8 +489,8 @@ router.post('/web/:agentId', async (req, res) => {
       reply = result.reply; responseUsage = result.usage;
     } else {
       const managedMsgs = await manageContextWindow(safeMsgs, sysPrompt + ragCtx);
-      const response = await withRetry(() => client.messages.create({ model, max_tokens: 1024, system: sysPrompt + ragCtx, messages: managedMsgs }));
-      reply = response.content[0]?.text || 'Keine Antwort.'; responseUsage = response.usage;
+      const llmResult = await withRetry(() => callLLM(model, sysPrompt + ragCtx, managedMsgs, 1024));
+      reply = llmResult.reply || 'Keine Antwort.'; responseUsage = llmResult.usage;
     };
     await pool.query('INSERT INTO chat_messages (agent_id, session_id, role, content, source) VALUES ($1,$2,$3,$4,$5)', [agent.id, sessionId, 'assistant', reply, source]);
     await pool.query('UPDATE agents SET total_messages=total_messages+1 WHERE id=$1', [agent.id]);
@@ -565,8 +557,8 @@ router.post('/api/:agentId', async (req, res) => {
     const memory = await loadMemory(pool, agent.id, sessionIdentifier);
     const sysPrompt = await buildSystemPrompt(pool, agent, memory);
 
-    const response = await client.messages.create({ model, max_tokens: 1024, system: sysPrompt, messages: msgs });
-    const reply    = response.content[0]?.text || '';
+    const llmResult = await callLLM(model, sysPrompt, msgs, 1024);
+    const reply    = llmResult.reply || '';
 
     await pool.query('INSERT INTO chat_messages (agent_id, session_id, role, content, source) VALUES ($1,$2,$3,$4,$5)', [agent.id, sessionId, 'user', typeof userMsg.content==='string'?userMsg.content:'[Bild]', 'api']);
     await pool.query('INSERT INTO chat_messages (agent_id, session_id, role, content, source) VALUES ($1,$2,$3,$4,$5)', [agent.id, sessionId, 'assistant', reply, 'api']);
@@ -574,7 +566,7 @@ router.post('/api/:agentId', async (req, res) => {
     await pool.query('UPDATE agents SET total_messages=total_messages+1 WHERE id=$1', [agent.id]);
 
     setImmediate(async () => {
-      await trackCost(pool, agent.id, sessionId, model, response.usage||{}, 'api');
+      await trackCost(pool, agent.id, sessionId, model, llmResult.usage||{}, 'api');
       if (sessionIdentifier) await updateMemory(pool, agent.id, sessionIdentifier, msgs, reply);
     });
 
