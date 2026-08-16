@@ -89,7 +89,7 @@ h1 .hl{color:var(--purple)}
 .feat-title{font-size:.86rem;font-weight:700;color:var(--ink);margin-bottom:3px}
 .feat-desc{font-size:.76rem;color:var(--sub);line-height:1.5}
 /* PRICING */
-.pricing{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:700px;margin:44px auto 0}
+.pricing{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;max-width:1000px;margin:44px auto 0}
 .plan{background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:28px}
 .plan.featured{border-color:var(--purple);box-shadow:0 8px 32px rgba(91,79,207,.15)}
 .plan-name{font-size:.74rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);margin-bottom:6px}
@@ -120,7 +120,7 @@ footer{padding:40px 0;border-top:1px solid var(--border)}
 .footer-links a:hover{color:var(--ink)}
 @media(max-width:768px){
   .steps{grid-template-columns:1fr}.features{grid-template-columns:1fr}
-  .pricing{grid-template-columns:1fr}.nav-links .nav-hide{display:none}
+  .pricing{grid-template-columns:1fr;max-width:400px}.nav-links .nav-hide{display:none}
   .hero{padding:60px 0 50px}.cta{margin:0 16px 60px}
 }
 </style>
@@ -295,6 +295,20 @@ footer{padding:40px 0;border-top:1px solid var(--border)}
         </ul>
         <a href="/app" class="btn btn-purple" style="width:100%;justify-content:center">⚡ Jetzt upgraden</a>
       </div>
+      <div class="plan">
+        <div class="plan-name">Enterprise</div>
+        <div class="plan-price" style="font-size:1.6rem">Auf Anfrage</div>
+        <div class="plan-desc">Für Agenturen und Unternehmen mit besonderen Anforderungen.</div>
+        <ul class="plan-features">
+          <li>Alles in Pro</li>
+          <li>Unbegrenzte Nachrichten</li>
+          <li>White-Label / Reseller</li>
+          <li>SLA &amp; dedizierter Support</li>
+          <li>Custom Vertrag &amp; AVV</li>
+          <li>Eigene Domain</li>
+        </ul>
+        <a href="mailto:info@think-cloud.org" class="btn btn-outline" style="width:100%;justify-content:center">Kontakt aufnehmen</a>
+      </div>
     </div>
     </div></div>
     <div id="price-yearly" style="display:none"><div class="pricing">
@@ -311,6 +325,20 @@ footer{padding:40px 0;border-top:1px solid var(--border)}
         <div class="plan-desc" style="color:#5b4fcf;font-weight:600">Statt €228 — 2 Monate gratis 🎉</div>
         <ul class="plan-features"><li>Unbegrenzte Agenten</li><li>10.000 Nachrichten/Mo</li><li>Alle Kanäle</li><li>Outgoing Webhooks</li><li>Fine-Tuning</li><li>Jährliche Rechnung</li></ul>
         <a href="/app" class="btn btn-purple" style="width:100%;justify-content:center">⚡ Jetzt upgraden</a>
+      </div>
+      <div class="plan">
+        <div class="plan-name">Enterprise</div>
+        <div class="plan-price" style="font-size:1.6rem">Auf Anfrage</div>
+        <div class="plan-desc">Für Agenturen und Unternehmen mit besonderen Anforderungen.</div>
+        <ul class="plan-features">
+          <li>Alles in Pro</li>
+          <li>Unbegrenzte Nachrichten</li>
+          <li>White-Label / Reseller</li>
+          <li>SLA &amp; dedizierter Support</li>
+          <li>Custom Vertrag &amp; AVV</li>
+          <li>Eigene Domain</li>
+        </ul>
+        <a href="mailto:info@think-cloud.org" class="btn btn-outline" style="width:100%;justify-content:center">Kontakt aufnehmen</a>
       </div>
     </div></div>
     <p style="text-align:center;font-size:.78rem;color:var(--sub);margin-top:16px">Monatlich kündbar · Sichere Zahlung via Stripe · Rechnungsstellung möglich</p>
