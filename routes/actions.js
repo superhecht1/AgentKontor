@@ -315,22 +315,57 @@ async function executeTool(toolName, toolInput, toolConfig, agent) {
 
 /**
  * Main: run agentic chat with tool use loop
- * Called from chat.js instead of simple client.messages.create()
+ * Anthropic: native tool_use blocks
+ * Other providers: prompt-based tool routing (fallback)
  */
 async function runAgenticChat(client, model, systemPrompt, messages, agentTools, pool, agentId, sessionId) {
+  const { callLLM, getProvider } = require('../utils/llm');
   const toolDefs = buildToolDefinitions(agentTools);
+  const provider = getProvider(model);
+
   if (!toolDefs.length) {
-    // No tools — standard call
-    const r = await client.messages.create({ model, max_tokens: 1024, system: systemPrompt, messages });
-    return { reply: r.content[0]?.text || '', usage: r.usage };
+    // No tools — use universal LLM call
+    const r = await callLLM(model, systemPrompt, messages, 1024);
+    return { reply: r.reply, usage: r.usage };
   }
+
+  // Non-Anthropic: prompt-based tool description (no native function calling here)
+  if (provider !== 'anthropic') {
+    const toolDesc = toolDefs.map(t =>
+      '- ' + t.name + ': ' + t.description + ' (Parameter: ' + Object.keys(t.input_schema?.properties||{}).join(', ') + ')'
+    ).join('\n');
+    const augmentedSys = systemPrompt + '\n\nDu hast folgende Tools zur Verfügung:\n' + toolDesc + '\n\nWenn du ein Tool nutzen möchtest, antworte mit: TOOL: toolname | {"param":"value"}';
+    const r = await callLLM(model, augmentedSys, messages, 1024);
+    // Parse simple tool calls from response
+    const toolMatch = r.reply.match(/^TOOL:\s*(\w+)\s*\|\s*(\{.*?\})/m);
+    if (toolMatch) {
+      const toolName = toolMatch[1];
+      const toolInput = JSON.parse(toolMatch[2]);
+      const toolDef = agentTools.find(t => t.tool_type === toolName);
+      if (toolDef) {
+        const result = await executeTool(toolName, toolInput, toolDef.config || {}, {});
+        // Second call with tool result
+        const r2 = await callLLM(model, systemPrompt, [
+          ...messages,
+          { role: 'assistant', content: r.reply },
+          { role: 'user', content: `Tool-Ergebnis (${toolName}): ${result.output}` },
+        ], 1024);
+        return { reply: r2.reply, usage: { input_tokens: (r.usage?.input_tokens||0)+(r2.usage?.input_tokens||0), output_tokens: (r.usage?.output_tokens||0)+(r2.usage?.output_tokens||0) } };
+      }
+    }
+    return { reply: r.reply, usage: r.usage };
+  }
+
+  // Anthropic tool-use loop
+  const Anthropic = require('@anthropic-ai/sdk');
+  const anthClient = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
   let currentMessages = [...messages];
   let totalUsage = { input_tokens: 0, output_tokens: 0 };
   const MAX_ROUNDS = 5;
 
   for (let round = 0; round < MAX_ROUNDS; round++) {
-    const response = await client.messages.create({
+    const response = await anthClient.messages.create({
       model,
       max_tokens: 1024,
       system: systemPrompt,

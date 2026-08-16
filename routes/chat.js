@@ -61,13 +61,11 @@ async function manageContextWindow(messages, systemPrompt, maxTokensBudget = 800
 
   // Summarize older messages with Haiku (cheap)
   try {
-    const summary = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 300,
-      system: 'Fasse das folgende Gespräch in 3-5 Sätzen zusammen. Behalte alle wichtigen Fakten, Entscheidungen und Informationen.',
-      messages: [{ role: 'user', content: older.map(m => m.role + ': ' + (typeof m.content === 'string' ? m.content : '[Bild]')).join('\n') }],
-    });
-    const summaryText = summary.content[0]?.text || '';
+    // Use cheapest Anthropic model for summarization (always available)
+    const summaryResult = await callLLM('claude-haiku-4-5',
+      'Fasse das folgende Gespräch in 3-5 Sätzen zusammen. Behalte alle wichtigen Fakten, Entscheidungen und Informationen.',
+      [{ role: 'user', content: older.map(m => m.role + ': ' + (typeof m.content === 'string' ? m.content : '[Bild]')).join('\n') }], 300);
+    const summaryText = summaryResult.reply || '';
     return [
       { role: 'user', content: `[Gesprächszusammenfassung: ${summaryText}]` },
       { role: 'assistant', content: 'Verstanden, ich habe die bisherigen Informationen zur Kenntnis genommen.' },
@@ -339,6 +337,36 @@ router.post('/stream/:agentId', async (req, res) => {
       const toolsR = await pool.query('SELECT * FROM agent_tools WHERE agent_id=$1 AND is_enabled=true', [agent.id]);
       agentTools = toolsR.rows;
     } catch {}
+
+    const { getProvider } = require('../utils/llm');
+    const isAnthropicModel = getProvider(model) === 'anthropic';
+
+    // Non-Anthropic models: always use non-streaming path
+    if (!isAnthropicModel) {
+      const safeNonStream = minimizeMessages(msgs);
+      const managed2      = await manageContextWindow(safeNonStream, sysPrompt + ragCtx);
+      const llmResult     = await withRetry(() => callLLM(model, sysPrompt + ragCtx, managed2, 1024));
+      fullReply = llmResult.reply;
+      usage     = llmResult.usage || {};
+
+      res.write(`data: ${JSON.stringify({ type: 'session', sessionId })}\n\n`);
+      res.write(`data: ${JSON.stringify({ type: 'text', text: fullReply })}\n\n`);
+      res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
+      res.end();
+
+      setImmediate(async () => {
+        try {
+          await pool.query('INSERT INTO chat_messages (agent_id, session_id, role, content, source) VALUES ($1,$2,$3,$4,$5)', [agent.id, sessionId, 'assistant', fullReply, source]);
+          await pool.query('UPDATE agents SET total_messages=total_messages+1 WHERE id=$1', [agent.id]);
+          await trackCost(pool, agent.id, sessionId, model, usage, source);
+          if (sessionIdHash) await updateMemory(pool, agent.id, sessionIdHash, msgs, fullReply);
+          const lead = await tryCaptureLead(pool, agent, msgs, fullReply, sessionId, source);
+          if (lead) { await sendLeadEmail(agent, agent.owner_email, lead); await dispatchWebhooks(pool, agent.id, 'lead.captured', {agentId:agent.id,sessionId,source,lead}); }
+          await dispatchWebhooks(pool, agent.id, 'message.received', {agentId:agent.id,agentName:agent.name,sessionId,source,message:typeof userMsg.content==='string'?userMsg.content:'[Bild]',reply:fullReply,timestamp:new Date().toISOString()});
+        } catch(e) { console.error('Post-nonstream error:', e.message); }
+      });
+      return;
+    }
 
     // If tools present — use agentic mode (no streaming for tool-use loops)
     if (agentTools.length > 0) {

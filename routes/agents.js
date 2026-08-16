@@ -312,25 +312,21 @@ router.post('/:id/test', auth, async (req, res) => {
     if (!r.rows.length) return res.status(404).json({ error: 'Agent nicht gefunden' });
     const agent = r.rows[0];
 
-    const Anthropic = require('@anthropic-ai/sdk');
-    const client    = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const { callLLM, calcCost, getProvider } = require('../utils/llm');
+    const model = agent.model || 'claude-sonnet-4-6';
 
-    const start    = Date.now();
-    const response = await client.messages.create({
-      model:      agent.model || 'claude-sonnet-4-6',
-      max_tokens: 512,
-      system:     agent.system_prompt || 'Du bist ein hilfreicher Assistent.',
-      messages:   [{ role: 'user', content: message }],
-    });
-    const ms    = Date.now() - start;
-    const reply = response.content[0]?.text || '';
+    const start  = Date.now();
+    const result = await callLLM(model, agent.system_prompt || 'Du bist ein hilfreicher Assistent.',
+      [{ role: 'user', content: message }], 512);
+    const ms     = Date.now() - start;
 
     res.json({
-      reply,
+      reply:    result.reply,
       ms,
-      model:    agent.model || 'claude-sonnet-4-6',
-      tokens:   response.usage,
-      cost_usd: ((response.usage.input_tokens * 3 + response.usage.output_tokens * 15) / 1_000_000).toFixed(6),
+      model,
+      provider: getProvider(model),
+      tokens:   result.usage,
+      cost_usd: calcCost(model, result.usage?.input_tokens||0, result.usage?.output_tokens||0).toFixed(6),
     });
   } catch(e) {
     console.error('Agent test error:', e.message);
