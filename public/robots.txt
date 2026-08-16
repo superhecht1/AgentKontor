@@ -1,13 +1,17 @@
 User-agent: *
 Allow: /
+Allow: /docs
+Disallow: /admin
+Disallow: /api/
+Disallow: /webhook/
+Disallow: /app
+
+# Legal pages — allow
 Allow: /impressum.html
 Allow: /datenschutz.html
 Allow: /agb.html
-
-Disallow: /app
-Disallow: /api/
-Disallow: /admin
-Disallow: /chat/
-Disallow: /webhook/
+Allow: /avv.html
+Allow: /cookie-richtlinie.html
+Allow: /vvt.html
 
 Sitemap: https://agentkontor.de/sitemap.xml
