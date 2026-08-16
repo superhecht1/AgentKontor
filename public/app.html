@@ -1056,7 +1056,35 @@ Response:
       <div>
         <div class="field"><label x-text="T.system_prompt"></label><div class="hint" x-text="T.system_prompt_hint"></div><textarea class="inp" rows="5" x-model="af.system_prompt" :placeholder="T.system_prompt_ph"></textarea></div>
         <div class="field"><label x-text="T.greeting"></label><textarea class="inp" rows="2" x-model="af.greeting" :placeholder="T.greeting_ph"></textarea></div>
-        <div class="field"><label x-text="T.tone"></label>
+        <div class="field">
+              <label>🤖 KI-Modell</label>
+              <select class="inp" x-model="af.model" @click="if(!availableModels.length)loadModels()">
+                <template x-for="grp in [{p:'Anthropic',badge:'⭐'},{p:'OpenAI',badge:'🟢'},{p:'Google',badge:'🔵'},{p:'Mistral',badge:'🇪🇺'},{p:'Groq',badge:'⚡'},{p:'DeepSeek',badge:'💡'}]" :key="grp.p">
+                  <template x-if="availableModels.filter(m=>m.provider===grp.p).length>0">
+                    <optgroup :label="grp.badge+' '+grp.p">
+                      <template x-for="m in availableModels.filter(m=>m.provider===grp.p)" :key="m.id">
+                        <option :value="m.id" :disabled="!m.available"
+                          x-text="m.name+(m.badge?' '+m.badge:'')+(m.available?'':' ⚠')">
+                        </option>
+                      </template>
+                    </optgroup>
+                  </template>
+                </template>
+              </select>
+              <div class="hint" x-show="af.model">
+                <template x-if="availableModels.find(m=>m.id===af.model)">
+                  <span>
+                    <span x-text="availableModels.find(m=>m.id===af.model)?.desc"></span> ·
+                    <span style="color:var(--gold);font-family:monospace;font-size:.75rem"
+                      x-text="'~€'+(availableModels.find(m=>m.id===af.model)?.costPer1k||0).toFixed(4)+'/1k Tokens'"></span>
+                  </span>
+                </template>
+                <template x-if="!availableModels.find(m=>m.id===af.model)">
+                  <span x-text="af.model"></span>
+                </template>
+              </div>
+            </div>
+            <div class="field"><label x-text="T.tone"></label>
           <div class="tone-grid">
             <template x-for="t in tones" :key="t.key">
               <div class="tone-opt" :class="{on:af.tone===t.key}" @click="af.tone=t.key">
@@ -1666,6 +1694,8 @@ auditLog:[],
 convSearch:'',convSearchResults:[],
 // Voice
 availableVoices:[],
+// Models
+availableModels:[],
 // Actions
 agentActions:[],showNewAction:false,
 newAction:{tool_type:'web_search',tool_name:'web_search',tool_desc:'',config:{url:''}},
@@ -1863,6 +1893,10 @@ async ftPollJob(jobId){
   await this.ftLoadJobs();
 },
 // Voice
+async loadModels(){
+  const d=await this.api('/agents/models/available');
+  if(d.models)this.availableModels=d.models;
+},
 async loadVoices(){
   const d=await this.api('/voice/voices');
   if(d.voices)this.availableVoices=d.voices;
