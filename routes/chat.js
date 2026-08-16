@@ -24,6 +24,60 @@ function getPool(req) { return req.app.locals.pool; }
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+// FIX 4: Retry with exponential backoff for Anthropic API calls
+async function withRetry(fn, maxRetries = 3) {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch(e) {
+      const isRetryable = e.status === 529 || e.status === 429 || e.status === 503 || e.message?.includes('overloaded');
+      if (!isRetryable || attempt === maxRetries) throw e;
+      const delay = Math.min(1000 * Math.pow(2, attempt) + Math.random() * 500, 30000);
+      console.warn(`Anthropic ${e.status}, retry ${attempt+1}/${maxRetries} in ${Math.round(delay)}ms`);
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
+}
+
+// FIX 5: Context window management — summarize old messages to stay under token budget
+async function manageContextWindow(messages, systemPrompt, maxTokensBudget = 80000) {
+  // Rough estimate: 1 token ≈ 4 chars
+  const estimateTokens = (msgs) => msgs.reduce((sum, m) => {
+    const content = typeof m.content === 'string' ? m.content : JSON.stringify(m.content);
+    return sum + Math.ceil(content.length / 4);
+  }, 0);
+
+  const sysTokens = Math.ceil((systemPrompt || '').length / 4);
+  const budget    = maxTokensBudget - sysTokens - 1024; // reserve 1k for response
+
+  if (estimateTokens(messages) <= budget) return messages;
+
+  // Keep last 4 messages always (current exchange)
+  const recent = messages.slice(-4);
+  const older  = messages.slice(0, -4);
+
+  if (!older.length) return recent;
+
+  // Summarize older messages with Haiku (cheap)
+  try {
+    const summary = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 300,
+      system: 'Fasse das folgende Gespräch in 3-5 Sätzen zusammen. Behalte alle wichtigen Fakten, Entscheidungen und Informationen.',
+      messages: [{ role: 'user', content: older.map(m => m.role + ': ' + (typeof m.content === 'string' ? m.content : '[Bild]')).join('\n') }],
+    });
+    const summaryText = summary.content[0]?.text || '';
+    return [
+      { role: 'user', content: `[Gesprächszusammenfassung: ${summaryText}]` },
+      { role: 'assistant', content: 'Verstanden, ich habe die bisherigen Informationen zur Kenntnis genommen.' },
+      ...recent,
+    ];
+  } catch {
+    // If summarization fails, just trim
+    return messages.slice(-8);
+  }
+}
+
 // ── COST TABLE PER MODEL ──────────────────────────────────
 const MODEL_COSTS = {
   'claude-sonnet-4-6':      { in: 3.00,   out: 15.00  },
@@ -309,11 +363,12 @@ router.post('/stream/:agentId', async (req, res) => {
     // Stream from Anthropic
     // PII minimization before external API call
     const safeMessages = minimizeMessages(msgs);
+    const managedStreamMsgs = await manageContextWindow(safeMessages, sysPrompt + ragCtx);
     const stream = client.messages.stream({
       model,
       max_tokens: 1024,
       system: sysPrompt + ragCtx,
-      messages: safeMessages,
+      messages: managedStreamMsgs,
     });
 
     stream.on('text', (text) => {
@@ -424,7 +479,8 @@ router.post('/web/:agentId', async (req, res) => {
       const result = await runAgenticChat(client, model, sysPrompt + ragCtx, safeMsgs, agentTools, pool, agent.id, sessionId);
       reply = result.reply; responseUsage = result.usage;
     } else {
-      const response = await client.messages.create({ model, max_tokens: 1024, system: sysPrompt + ragCtx, messages: safeMsgs });
+      const managedMsgs = await manageContextWindow(safeMsgs, sysPrompt + ragCtx);
+      const response = await withRetry(() => client.messages.create({ model, max_tokens: 1024, system: sysPrompt + ragCtx, messages: managedMsgs }));
       reply = response.content[0]?.text || 'Keine Antwort.'; responseUsage = response.usage;
     };
     await pool.query('INSERT INTO chat_messages (agent_id, session_id, role, content, source) VALUES ($1,$2,$3,$4,$5)', [agent.id, sessionId, 'assistant', reply, source]);

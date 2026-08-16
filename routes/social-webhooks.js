@@ -50,7 +50,9 @@ async function getAgentReply(pool, req, agent, userText, sessionId) {
 // ── INSTAGRAM VERIFICATION ───────────────────────────────
 router.get('/instagram', (req, res) => {
   const { 'hub.mode': mode, 'hub.verify_token': token, 'hub.challenge': challenge } = req.query;
-  if (mode === 'subscribe' && token === process.env.INSTAGRAM_VERIFY_TOKEN) {
+  const igToken = process.env.INSTAGRAM_VERIFY_TOKEN || '';
+  const tokenMatch = igToken && token ? crypto.timingSafeEqual(Buffer.from(token), Buffer.from(igToken)) : token === igToken;
+  if (mode === 'subscribe' && tokenMatch) {
     console.log('✅ Instagram webhook verified');
     return res.status(200).send(challenge);
   }
@@ -103,7 +105,9 @@ router.post('/instagram', async (req, res) => {
 // ── FACEBOOK MESSENGER VERIFICATION ─────────────────────
 router.get('/facebook', (req, res) => {
   const { 'hub.mode': mode, 'hub.verify_token': token, 'hub.challenge': challenge } = req.query;
-  if (mode === 'subscribe' && token === process.env.FACEBOOK_VERIFY_TOKEN) {
+  const fbToken = process.env.FACEBOOK_VERIFY_TOKEN || '';
+  const fbMatch = fbToken && token ? crypto.timingSafeEqual(Buffer.from(token), Buffer.from(fbToken)) : token === fbToken;
+  if (mode === 'subscribe' && fbMatch) {
     console.log('✅ Facebook webhook verified');
     return res.status(200).send(challenge);
   }

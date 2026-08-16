@@ -127,7 +127,7 @@ router.post('/:agentId/:id/test', auth, requirePlan('webhooksOut'), async (req, 
     const result = await deliver(whk.rows[0], 'test', testPayload);
     res.json({ success: result.ok, statusCode: result.statusCode, error: result.error });
   } catch(e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: "Fehler beim Test" });
   }
 });
 

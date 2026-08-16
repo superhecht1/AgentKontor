@@ -273,4 +273,48 @@ router.get('/widget-config/:publicId', async (req, res) => {
   }
 });
 
+
+/* ── TEST AGENT ─────────────────────────────────────────── */
+router.post('/:id/test', auth, async (req, res) => {
+  const pool = getPool(req);
+  if (!(await verifyOwner(pool, req.params.id, req.userId)))
+    return res.status(403).json({ error: 'Nicht berechtigt' });
+
+  const { message = 'Hallo! Stelle dich kurz vor.' } = req.body;
+  if (String(message).length > 500) return res.status(400).json({ error: 'Testnachricht max. 500 Zeichen' });
+
+  try {
+    const r = await pool.query(
+      'SELECT system_prompt, greeting, tone, language, model, emoji, name FROM agents WHERE id=$1',
+      [req.params.id]
+    );
+    if (!r.rows.length) return res.status(404).json({ error: 'Agent nicht gefunden' });
+    const agent = r.rows[0];
+
+    const Anthropic = require('@anthropic-ai/sdk');
+    const client    = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+    const start    = Date.now();
+    const response = await client.messages.create({
+      model:      agent.model || 'claude-sonnet-4-6',
+      max_tokens: 512,
+      system:     agent.system_prompt || 'Du bist ein hilfreicher Assistent.',
+      messages:   [{ role: 'user', content: message }],
+    });
+    const ms    = Date.now() - start;
+    const reply = response.content[0]?.text || '';
+
+    res.json({
+      reply,
+      ms,
+      model:    agent.model || 'claude-sonnet-4-6',
+      tokens:   response.usage,
+      cost_usd: ((response.usage.input_tokens * 3 + response.usage.output_tokens * 15) / 1_000_000).toFixed(6),
+    });
+  } catch(e) {
+    console.error('Agent test error:', e.message);
+    res.status(500).json({ error: 'Test fehlgeschlagen: ' + (e.status === 401 ? 'Ungültiger API-Key' : 'Anthropic-Fehler') });
+  }
+});
+
 module.exports = router;

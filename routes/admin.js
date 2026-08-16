@@ -164,4 +164,30 @@ router.get('/activity', auth, adminOnly, async (req, res) => {
   }
 });
 
+
+/* ── ADMIN: LLM COSTS OVERVIEW ──────────────────────────── */
+router.get('/costs', adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  try {
+    const [totals, byModel, topAgents, daily] = await Promise.all([
+      pool.query(`SELECT
+        COALESCE(SUM(cost_usd),0) AS total_cost,
+        COALESCE(SUM(cost_usd) FILTER (WHERE created_at>=NOW()-INTERVAL'30 days'),0) AS month_cost,
+        COALESCE(SUM(input_tokens+output_tokens),0) AS total_tokens,
+        COUNT(DISTINCT agent_id) AS agents_used
+        FROM llm_usage`),
+      pool.query(`SELECT model, COUNT(*) AS calls, SUM(cost_usd) AS cost, SUM(input_tokens) AS input, SUM(output_tokens) AS output
+        FROM llm_usage GROUP BY model ORDER BY cost DESC LIMIT 10`),
+      pool.query(`SELECT a.name, a.emoji, u.email, SUM(lu.cost_usd) AS cost, COUNT(*) AS calls
+        FROM llm_usage lu JOIN agents a ON lu.agent_id=a.id JOIN users u ON a.user_id=u.id
+        WHERE lu.created_at>=NOW()-INTERVAL'30 days'
+        GROUP BY a.id,u.email ORDER BY cost DESC LIMIT 10`),
+      pool.query(`SELECT DATE(created_at) AS day, SUM(cost_usd) AS cost, COUNT(*) AS calls
+        FROM llm_usage WHERE created_at>=NOW()-INTERVAL'30 days'
+        GROUP BY day ORDER BY day ASC`),
+    ]);
+    res.json({ totals: totals.rows[0], byModel: byModel.rows, topAgents: topAgents.rows, daily: daily.rows });
+  } catch(e) { res.status(500).json({ error: 'Fehler' }); }
+});
+
 module.exports = router;

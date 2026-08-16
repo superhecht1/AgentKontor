@@ -183,6 +183,25 @@ async function sendWelcomeEmail(to, name) {
   } catch (e) { console.warn('Welcome email failed:', e.message); }
 }
 
+/* ── TOKEN REFRESH ──────────────────────────────────────── */
+// Issues a new short-lived access token using the existing valid cookie/header
+router.post('/refresh', require('../middleware/auth'), async (req, res) => {
+  const pool = req.app.locals.pool;
+  try {
+    const r = await pool.query(
+      'SELECT token_version, plan, name, email FROM users WHERE id=$1 AND deleted_at IS NULL',
+      [req.userId]
+    );
+    if (!r.rows.length) return res.status(401).json({ error: 'Nutzer nicht gefunden' });
+    const user  = r.rows[0];
+    const token = signToken(req.userId, user.token_version);
+    setAuthCookie(res, token);
+    res.json({ token, expiresIn: '30d' });
+  } catch(e) {
+    res.status(500).json({ error: 'Refresh fehlgeschlagen' });
+  }
+});
+
 /* ── LOGOUT ─────────────────────────────────────────────── */
 router.post('/logout', (req, res) => {
   clearAuthCookie(res);
