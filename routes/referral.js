@@ -65,14 +65,18 @@ router.post('/track', async (req, res) => {
     // Find referrer
     const referrer = await pool.query('SELECT id FROM users WHERE referral_code=$1', [code.toUpperCase()]);
     if (!referrer.rows.length) return res.json({ success: false, reason: 'Code nicht gefunden' });
-    if (referrer.rows[0].id === parseInt(newUserId)) return res.json({ success: false, reason: 'Selbstreferral' });
+    const referrerId = referrer.rows[0].id;
+    const referredId  = parseInt(newUserId);
+    if (referrerId === referredId) return res.json({ success: false, reason: 'Selbstreferral nicht erlaubt' });
+
+    // Also check if referred user is the referrer's own account (by email or IP in future)
 
     // Record referral
     await pool.query(`
       INSERT INTO referrals (referrer_id, referred_id, code)
       VALUES ($1,$2,$3)
       ON CONFLICT DO NOTHING
-    `, [referrer.rows[0].id, newUserId, code.toUpperCase()]);
+    `, [referrerId, referredId, code.toUpperCase()]);
 
     // Mark new user as referred
     await pool.query('UPDATE users SET referred_by_code=$1 WHERE id=$2', [code.toUpperCase(), newUserId]);

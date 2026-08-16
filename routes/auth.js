@@ -95,8 +95,36 @@ router.post('/login', async (req, res) => {
 
     const token = signToken(user.id, user.token_version);
     const { password_hash, token_version, ...safeUser } = user;
+
+    // FIX 1: 2FA check — if enabled, require code before issuing token
+    if (user.totp_enabled) {
+      const totpCode = req.body.totpCode || req.body.totp_code;
+      if (!totpCode) {
+        // Return partial response — frontend must ask for TOTP
+        return res.json({ requires2FA: true, userId: user.id });
+      }
+      try {
+        const speakeasy = require('speakeasy');
+        const valid2FA = speakeasy.totp.verify({
+          secret: user.totp_secret, encoding: 'base32',
+          token: totpCode.replace(/\s/g, ''), window: 1,
+        });
+        if (!valid2FA) {
+          // Check backup codes
+          const backups = user.totp_backup_codes || [];
+          const idx = backups.indexOf(totpCode.toUpperCase().replace(/\s/g, ''));
+          if (idx === -1) return res.status(401).json({ error: 'Ungültiger 2FA-Code.' });
+          backups.splice(idx, 1);
+          await pool.query('UPDATE users SET totp_backup_codes=$1 WHERE id=$2', [JSON.stringify(backups), user.id]);
+        }
+      } catch(e) {
+        if (e.code === 'MODULE_NOT_FOUND')
+          return res.status(503).json({ error: '2FA nicht verfügbar (speakeasy fehlt).' });
+        throw e;
+      }
+    }
+
     setImmediate(() => auditLog(pool, user.id, 'user_login', 'user', user.id, { ip_hash: hashIp(req.ip) }));
-    // Set httpOnly cookie (XSS-safe) + return token for API clients
     setAuthCookie(res, token);
     res.json({ token, user: safeUser });
   } catch (e) {

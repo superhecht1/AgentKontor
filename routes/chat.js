@@ -228,7 +228,7 @@ router.post('/stream/:agentId', async (req, res) => {
 
   // Widget rate limit
   const ip  = req.ip || 'unknown';
-  const wrl = await rateLimit(pool, `widget:${ip}`, 60).catch(() => ({ allowed: true }));
+  const wrl = await rateLimit(pool, `widget:${ip}`, 60).catch(() => ({ allowed: false })); // fail-closed
   if (!wrl.allowed) return res.status(429).json({ error: 'Zu viele Anfragen.' });
 
   try {
@@ -377,7 +377,7 @@ router.post('/stream/:agentId', async (req, res) => {
 router.post('/web/:agentId', async (req, res) => {
   const pool = getPool(req);
   const ip   = req.ip || 'unknown';
-  const wrl  = await rateLimit(pool, `widget:${ip}`, 60).catch(() => ({ allowed: true }));
+  const wrl  = await rateLimit(pool, `widget:${ip}`, 60).catch(() => ({ allowed: false })); // fail-closed
   if (!wrl.allowed) return res.status(429).json({ error: 'Zu viele Anfragen.' });
 
   try {

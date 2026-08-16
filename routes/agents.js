@@ -29,7 +29,7 @@ const AGENT_FIELDS = `
   rag_enabled, rag_prompt,
   cap_calendar, cal_link, cap_leads, lead_fields, lead_email,
   cap_products, products_data, cap_multilang, cap_email,
-  smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from,
+  smtp_host, smtp_port, smtp_user, smtp_from,
   widget_position, widget_delay, widget_theme, widget_size,
   total_messages, created_at
 `;
@@ -86,7 +86,7 @@ router.post('/', auth, async (req, res) => {
         rag_enabled, rag_prompt,
         cap_calendar, cal_link, cap_leads, lead_fields, lead_email,
         cap_products, products_data, cap_multilang, cap_email,
-        smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from,
+        smtp_host, smtp_port, smtp_user, smtp_from,
         widget_position, widget_delay, widget_theme, widget_size
       ) VALUES (
         $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,
@@ -124,6 +124,14 @@ router.post('/', auth, async (req, res) => {
 /* ── UPDATE ────────────────────────────────────────────── */
 router.put('/:id', auth, async (req, res) => {
   const pool = getPool(req);
+
+  // FIX 4: Input length limits on update
+  const MAX = { name: 80, system_prompt: 20000, greeting: 1000, description: 500, tone: 50 };
+  for (const [field, limit] of Object.entries(MAX)) {
+    if (req.body[field] && String(req.body[field]).length > limit)
+      return res.status(400).json({ error: `${field} darf maximal ${limit} Zeichen lang sein.` });
+  }
+
   if (!(await verifyOwner(pool, req.params.id, req.userId)))
     return res.status(403).json({ error: 'Nicht berechtigt' });
 
@@ -214,7 +222,7 @@ router.post('/:id/clone', auth, async (req, res) => {
         rag_enabled, rag_prompt,
         cap_calendar, cal_link, cap_leads, lead_fields, lead_email,
         cap_products, products_data, cap_multilang, cap_email,
-        smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from,
+        smtp_host, smtp_port, smtp_user, smtp_from,
         widget_position, widget_delay, widget_theme, widget_size
       ) VALUES (
         $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,

@@ -118,8 +118,29 @@ router.delete('/', auth, async (req, res) => {
       WHERE id=$1
     `, [req.userId]);
 
-    // Deactivate all agents (don't delete — may be needed for billing audit)
+    // Deactivate all agents
     await pool.query('UPDATE agents SET is_active=false WHERE user_id=$1', [req.userId]);
+
+    // FIX 7: Delete RAG documents and chunks (PII / proprietary content)
+    await pool.query(`
+      DELETE FROM document_chunks dc
+      USING rag_documents rd
+      JOIN agents a ON rd.agent_id=a.id
+      WHERE dc.document_id=rd.id AND a.user_id=$1
+    `, [req.userId]).catch(() => {});
+
+    await pool.query(`
+      DELETE FROM rag_documents rd
+      USING agents a
+      WHERE rd.agent_id=a.id AND a.user_id=$1
+    `, [req.userId]).catch(() => {});
+
+    // Delete agent memory (encrypted facts)
+    await pool.query(`
+      DELETE FROM agent_memory am
+      USING agents a
+      WHERE am.agent_id=a.id AND a.user_id=$1
+    `, [req.userId]).catch(() => {});
 
     // Anonymize chat messages (keep for analytics, remove PII)
     // Full delete of leads (PII)
@@ -210,6 +231,17 @@ router.get('/export', auth, async (req, res) => {
     res.json({
       exportedAt: new Date().toISOString(),
       notice: 'SMTP-Zugangsdaten werden aus Sicherheitsgründen nicht exportiert.',
+      datenschutz: {
+        verantwortlicher: 'Mark Rusniok, superhecht.ai, Gottesweg 20, 50969 Köln',
+        datenempfaenger: [
+          { name: 'Anthropic, Inc. (USA)', zweck: 'KI-Modell-Inferenz (Chat-Inhalte)', rechtsgrundlage: 'Art. 6 Abs. 1 lit. b DSGVO' },
+          { name: 'Neon Inc. (USA)', zweck: 'Datenbank-Hosting', rechtsgrundlage: 'Art. 6 Abs. 1 lit. b DSGVO' },
+          { name: 'Render Services (USA)', zweck: 'Web-Hosting', rechtsgrundlage: 'Art. 6 Abs. 1 lit. b DSGVO' },
+          { name: 'Stripe, Inc. (USA)', zweck: 'Zahlungsabwicklung', rechtsgrundlage: 'Art. 6 Abs. 1 lit. b DSGVO' },
+        ],
+        speicherdauer: 'Chat-Daten: 90 Tage Standard (konfigurierbar). Rechnungsdaten: 10 Jahre (§257 HGB).',
+        betroffenenrechte: 'Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit — info@think-cloud.org',
+      },
       user: user.rows[0],
       agents: agents.rows,
       messages: messages.rows,
