@@ -36,7 +36,8 @@ const AGENT_FIELDS = `
   slack_enabled, slack_channel_id,
   voice_enabled, voice_provider, voice_id, voice_stability, stt_provider,
   data_retention_days, lead_retention_days,
-  model, total_messages, created_at
+  model, total_messages, created_at,
+  proactive_enabled, proactive_trigger, proactive_delay, proactive_message, proactive_scroll
 `;
 
 /* ── LIST ──────────────────────────────────────────────── */
@@ -91,14 +92,14 @@ router.post('/', auth, async (req, res) => {
         rag_enabled, rag_prompt,
         cap_calendar, cal_link, cap_leads, lead_fields, lead_email,
         cap_products, products_data, cap_multilang, cap_email,
-        smtp_host, smtp_port, smtp_user, smtp_from,
+        smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from,
         widget_position, widget_delay, widget_theme, widget_size,
         model
       ) VALUES (
         $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,
         $11,$12,$13,$14,$15,$16,$17,$18,$19,$20,
         $21,$22,$23,$24,$25,$26,$27,$28,$29,$30,
-        $31,$32,$33,$34,$35,$36,$37,$38,$39
+        $31,$32,$33,$34,$35,$36,$37,$38,$39,$40
       ) RETURNING ${AGENT_FIELDS}`,
       [
         req.userId,
@@ -160,8 +161,10 @@ router.put('/:id', auth, async (req, res) => {
         slack_enabled=$44, slack_bot_token=$45, slack_channel_id=$46,
         voice_enabled=$47, voice_provider=$48, voice_id=$49, voice_stability=$50, stt_provider=$51,
         data_retention_days=$52, lead_retention_days=$53,
-        model=$54
-      WHERE id=$55 AND user_id=$56
+        model=$54,
+        proactive_enabled=$55, proactive_trigger=$56, proactive_delay=$57,
+        proactive_message=$58, proactive_scroll=$59
+      WHERE id=$60 AND user_id=$61
       RETURNING ${AGENT_FIELDS}`,
       [
         b.name, b.emoji || '🤖', b.description || '', b.color || '#6c5ce7',
@@ -188,6 +191,9 @@ router.put('/:id', auth, async (req, res) => {
         Math.min(Math.max(parseInt(b.data_retention_days) || 90, 7), 730),
         Math.min(Math.max(parseInt(b.lead_retention_days) || 180, 7), 730),
         b.model || 'claude-sonnet-4-6',
+        !!b.proactive_enabled, b.proactive_trigger || 'time',
+        parseInt(b.proactive_delay) || 30, b.proactive_message || null,
+        parseInt(b.proactive_scroll) || 50,
         req.params.id, req.userId,
       ]
     );

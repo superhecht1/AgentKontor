@@ -136,7 +136,7 @@ router.get('/:agentId/:id/log', auth, async (req, res) => {
   const pool = getPool(req);
   try {
     const r = await pool.query(
-      'SELECT id,event_type,status,response_code,error_msg,delivered_at FROM webhook_deliveries WHERE webhook_id=$1 ORDER BY delivered_at DESC LIMIT 50',
+      'SELECT id, event_type, url, status_code, success, response AS error_msg, delivered_at FROM webhook_deliveries WHERE webhook_id=$1 ORDER BY delivered_at DESC LIMIT 50',
       [req.params.id]
     );
     res.json({ deliveries: r.rows });
@@ -151,6 +151,7 @@ const WEBHOOK_BLOCKED = [
 ];
 
 async function deliver(webhook, eventType, payload) {
+  const start = Date.now();
   const body = JSON.stringify({ ...payload, event: eventType });
 
   // SSRF protection
@@ -204,13 +205,13 @@ async function dispatchWebhooks(pool, agentId, eventType, payload) {
       setImmediate(async () => {
         const result = await deliver(whk, eventType, payload).catch(e => ({ ok: false, error: e.message }));
         await pool.query(
-          `INSERT INTO webhook_deliveries (webhook_id,event_type,payload,status,response_code,error_msg)
-           VALUES ($1,$2,$3,$4,$5,$6)`,
-          [whk.id, eventType, JSON.stringify(payload),
-           result.ok ? 'success' : 'error',
+          'INSERT INTO webhook_deliveries (webhook_id, agent_id, event_type, url, payload, status_code, response, success, duration_ms) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)',
+          [whk.id, whk.agent_id, eventType, whk.url, JSON.stringify(payload),
            result.statusCode || null,
-           result.error || null]
-        );
+           result.error ? result.error.slice(0, 500) : null,
+           result.ok,
+           result.duration_ms || null]
+        ).catch(() => {});
       });
     }
   } catch(e) {

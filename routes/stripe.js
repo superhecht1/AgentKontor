@@ -50,10 +50,12 @@ router.post('/create-checkout', auth, async (req, res) => {
     const session = await stripe.checkout.sessions.create({
       customer:   customerId,
       mode:       'subscription',
+      payment_method_types: ['card', 'sepa_debit'],
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${baseUrl}/app?upgrade=success`,
       cancel_url:  `${baseUrl}/app?upgrade=cancelled`,
       allow_promotion_codes: true,
+      ...(coupon ? { discounts: [{ coupon }] } : {}),
       metadata: { userId: String(req.userId) },
       subscription_data: {
         metadata: { userId: String(req.userId) },
