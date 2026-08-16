@@ -231,7 +231,14 @@ app.use((err, req, res, next) => {
   });
 });
 
-initDb().then(() => {
+initDb().then(async () => {
+  // Ensure all required DB columns exist (idempotent, runs once at startup)
+  try {
+    const { ensureColumnsOnce } = require('./routes/auth');
+    await ensureColumnsOnce(pool);
+    console.log('✅ DB columns verified');
+  } catch(e) { console.warn('ensureColumns:', e.message); }
+
   const server = app.listen(PORT, () => console.log(`🚀 AgentKontor on port ${PORT}`));
 
   // FIX 10: Graceful shutdown — close DB pool and server cleanly
