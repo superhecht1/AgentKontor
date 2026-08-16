@@ -13,5 +13,10 @@ Allow: /agb.html
 Allow: /avv.html
 Allow: /cookie-richtlinie.html
 Allow: /vvt.html
+Allow: /affiliate.html
+Allow: /vergleich
+Allow: /vergleich.html
+Allow: /roadmap
+Allow: /eu-ai-act
 
 Sitemap: https://agentkontor.de/sitemap.xml
