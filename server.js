@@ -17,7 +17,10 @@ app.set('trust proxy', 1);
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  max: 10, idleTimeoutMillis: 30000,
+  max:                    parseInt(process.env.DB_POOL_MAX)    || 20,  // FIX 11: bigger pool
+  idleTimeoutMillis:      parseInt(process.env.DB_IDLE_MS)    || 30000,
+  connectionTimeoutMillis:parseInt(process.env.DB_CONNECT_MS) || 5000, // FIX 4: fail fast
+  statement_timeout:      parseInt(process.env.DB_STMT_MS)    || 30000,
 });
 
 async function initDb() {
