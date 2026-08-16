@@ -230,6 +230,16 @@ router.post('/cron/cleanup', async (req, res) => {
     const digestCount = await sendLeadDigests(pool);
     results.push(`Digest emails sent: ${digestCount}`);
 
+    // FIX 15: Reset monthly quota alert flag (so users get notified again next month)
+    const quotaReset = await pool.query(`
+      UPDATE users SET quota_alert_sent=false
+      WHERE quota_alert_sent=true
+        AND msg_count_reset < DATE_TRUNC('month', NOW())
+      RETURNING id
+    `).catch(() => ({ rowCount: 0 }));
+    if (quotaReset.rowCount > 0)
+      results.push(`Reset quota alert for ${quotaReset.rowCount} users`);
+
     // FIX 4: Downgrade expired trials to free plan
     const trialExpired = await pool.query(`
       UPDATE users SET plan='free'
