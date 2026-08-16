@@ -415,6 +415,24 @@
       input.style.height = Math.min(input.scrollHeight, 100) + 'px';
     });
 
+    // GDPR consent text (shown before lead capture)
+    const consentText = cfg.lead_consent_text ||
+      'Ich stimme zu, dass meine Daten zum Zweck der Kontaktaufnahme gespeichert werden. Details: Datenschutzerklärung.';
+
+    // Show consent before lead data is captured
+    let consentGiven = false;
+    function showConsentBanner() {
+      const banner = document.createElement('div');
+      banner.style.cssText = `padding:12px;background:${inputBg};border-top:1px solid ${borderClr};font-size:.75rem;color:${mutedColor};line-height:1.5`;
+      banner.innerHTML = `<p style="margin-bottom:8px">${consentText}</p>
+        <div style="display:flex;gap:8px">
+          <button onclick="this.parentElement.parentElement.remove();window._akConsent=true;" style="padding:5px 12px;background:${color};color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.75rem">Zustimmen</button>
+          <button onclick="this.parentElement.parentElement.remove();" style="padding:5px 12px;background:transparent;border:1px solid ${borderClr};border-radius:6px;cursor:pointer;font-size:.75rem;color:${mutedColor}">Ablehnen</button>
+        </div>`;
+      frame.appendChild(banner);
+    }
+    window._akConsent = false;
+
     // Auto-open after delay
     if (delay > 0) {
       setTimeout(() => { if (!open) toggleOpen(true); }, delay * 1000);
