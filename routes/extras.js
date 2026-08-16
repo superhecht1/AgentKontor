@@ -153,6 +153,54 @@ router.post('/cron/cleanup', async (req, res) => {
     `);
     results.push(`Hard-deleted ${deleted.rowCount} users`);
 
+    // 1b. Auto-delete chat messages past agent retention period
+    const chatDel = await pool.query(`
+      DELETE FROM chat_messages cm
+      USING agents a
+      WHERE cm.agent_id = a.id
+        AND cm.created_at < NOW() - (a.data_retention_days * INTERVAL '1 day')
+    `);
+    results.push(`Deleted ${chatDel.rowCount} expired chat messages`);
+
+    // 1c. Auto-delete leads past lead retention period
+    const leadDel = await pool.query(`
+      DELETE FROM lead_captures lc
+      USING agents a
+      WHERE lc.agent_id = a.id
+        AND lc.created_at < NOW() - (a.lead_retention_days * INTERVAL '1 day')
+    `);
+    results.push(`Deleted ${leadDel.rowCount} expired leads`);
+
+    // 1d. Anonymize IP addresses in audit_log older than 30 days
+    const ipAnon = await pool.query(`
+      UPDATE audit_log
+      SET ip_address = NULL
+      WHERE created_at < NOW() - INTERVAL '30 days'
+        AND ip_address IS NOT NULL
+    `);
+    results.push(`Anonymized ${ipAnon.rowCount} IP addresses in audit log`);
+
+    // 1e. Process deletion requests
+    const delReqs = await pool.query(`
+      SELECT * FROM deletion_requests WHERE status='pending'
+    `).catch(() => ({ rows: [] }));
+
+    for (const req of delReqs.rows) {
+      try {
+        await pool.query(`DELETE FROM chat_messages WHERE agent_id=$1
+          AND session_id IN (
+            SELECT session_id FROM chat_messages cm2
+            JOIN agent_memory am ON am.agent_id=cm2.agent_id
+            WHERE am.session_identifier=$2 AND am.agent_id=$1
+            LIMIT 1000
+          )`, [req.agent_id, req.session_identifier_hash]);
+        await pool.query(`DELETE FROM agent_memory WHERE agent_id=$1 AND session_identifier=$2`,
+          [req.agent_id, req.session_identifier_hash]);
+        await pool.query(`UPDATE deletion_requests SET status='done', completed_at=NOW() WHERE id=$1`, [req.id]);
+      } catch(e) { console.warn('Deletion request error:', e.message); }
+    }
+    if (delReqs.rows.length) results.push(`Processed ${delReqs.rows.length} deletion requests`);
+
     // 2. Clean expired reset tokens
     const tokens = await pool.query(`
       DELETE FROM password_reset_tokens WHERE expires_at < NOW() - INTERVAL '1 day'
@@ -335,6 +383,54 @@ router.put('/digest-preferences', require('../middleware/auth'), async (req, res
   try {
     await pool.query('UPDATE users SET digest_frequency=$1 WHERE id=$2', [frequency, req.userId]);
     res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: 'Fehler' }); }
+});
+
+
+/* ── END-USER DELETION (DSGVO Recht auf Vergessen) ──────── */
+// Widget users can delete their own data by providing session identifier
+router.post('/widget/forget', async (req, res) => {
+  const pool = getPool(req);
+  const { sessionIdentifier, agentId, email } = req.body;
+  if (!sessionIdentifier && !email) return res.status(400).json({ error: 'sessionIdentifier oder E-Mail erforderlich' });
+  if (!agentId) return res.status(400).json({ error: 'agentId erforderlich' });
+
+  try {
+    const { hashSessionId } = require('../utils/privacy');
+    const hash = sessionIdentifier ? hashSessionId(sessionIdentifier) : null;
+
+    // Queue deletion request
+    await pool.query(`
+      INSERT INTO deletion_requests (agent_id, session_identifier_hash, email)
+      VALUES ($1,$2,$3)
+      ON CONFLICT DO NOTHING
+    `, [agentId, hash || 'email:' + email, email || null]).catch(() => {});
+
+    // Also immediate delete if hash known
+    if (hash) {
+      await pool.query('DELETE FROM agent_memory WHERE agent_id=$1 AND session_identifier=$2', [agentId, hash]);
+    }
+
+    res.json({ success: true, message: 'Deine Daten werden innerhalb von 24 Stunden gelöscht.' });
+  } catch(e) {
+    res.status(500).json({ error: 'Fehler beim Verarbeiten der Anfrage' });
+  }
+});
+
+/* ── DATA RETENTION SETTINGS ────────────────────────────── */
+router.put('/agents/:id/retention', require('../middleware/auth'), async (req, res) => {
+  const pool = getPool(req);
+  const { data_retention_days, lead_retention_days } = req.body;
+  const chat = Math.min(Math.max(parseInt(data_retention_days) || 90, 7), 730);
+  const lead = Math.min(Math.max(parseInt(lead_retention_days) || 180, 7), 730);
+  try {
+    const r = await pool.query('SELECT id FROM agents WHERE id=$1 AND user_id=$2', [req.params.id, req.userId]);
+    if (!r.rows.length) return res.status(403).json({ error: 'Nicht berechtigt' });
+    await pool.query(
+      'UPDATE agents SET data_retention_days=$1, lead_retention_days=$2 WHERE id=$3',
+      [chat, lead, req.params.id]
+    );
+    res.json({ success: true, data_retention_days: chat, lead_retention_days: lead });
   } catch(e) { res.status(500).json({ error: 'Fehler' }); }
 });
 

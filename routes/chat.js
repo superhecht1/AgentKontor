@@ -16,6 +16,7 @@ const router    = require('express').Router();
 const Anthropic = require('@anthropic-ai/sdk');
 const crypto    = require('crypto');
 const { checkMsgQuota, getLimits, rateLimit } = require('../middleware/plan-gate');
+const { hashSessionId, minimizeMessages, hashIp } = require('../utils/privacy');
 const { runAgenticChat } = require('./actions');
 const { v4: uuid } = require('uuid');
 
@@ -92,19 +93,29 @@ async function fetchRagContext(pool, agentId, query) {
 }
 
 // ── LOAD PERSISTENT MEMORY ───────────────────────────────
-async function loadMemory(pool, agentId, sessionIdentifier) {
-  if (!sessionIdentifier) return null;
+async function loadMemory(pool, agentId, sessionIdentifierHash) {
+  if (!sessionIdentifierHash) return null;
   try {
+    const { decryptFacts } = require('../utils/privacy');
     const r = await pool.query(
-      'SELECT facts, summary, message_count FROM agent_memory WHERE agent_id=$1 AND session_identifier=$2',
-      [agentId, sessionIdentifier]
+      'SELECT facts, summary, message_count, encrypted, iv FROM agent_memory WHERE agent_id=$1 AND session_identifier=$2',
+      [agentId, sessionIdentifierHash]
     );
-    return r.rows[0] || null;
+    if (!r.rows[0]) return null;
+    const row = r.rows[0];
+    // Decrypt if encrypted
+    if (row.encrypted && row.iv) {
+      const [ivHex, tagHex, ctHex] = (row.iv || '').split(':');
+      row.facts = decryptFacts(ctHex, ivHex, tagHex);
+    } else if (typeof row.facts === 'string') {
+      try { row.facts = JSON.parse(row.facts); } catch { row.facts = []; }
+    }
+    return row;
   } catch { return null; }
 }
 
 // ── UPDATE PERSISTENT MEMORY (async) ─────────────────────
-async function updateMemory(pool, agentId, sessionIdentifier, messages, reply) {
+async function updateMemory(pool, agentId, sessionIdentifierHash, messages, reply) {
   if (!sessionIdentifier) return;
   try {
     // Quick LLM call to extract facts
@@ -120,8 +131,8 @@ async function updateMemory(pool, agentId, sessionIdentifier, messages, reply) {
 
     // Merge with existing
     const existing = await pool.query(
-      'SELECT facts, message_count FROM agent_memory WHERE agent_id=$1 AND session_identifier=$2',
-      [agentId, sessionIdentifier]
+      'SELECT facts, message_count, encrypted, iv FROM agent_memory WHERE agent_id=$1 AND session_identifier=$2',
+      [agentId, sessionIdentifierHash]
     );
     const existingFacts = existing.rows[0]?.facts || [];
     const allFacts = [...new Set([...existingFacts, ...newFacts])].slice(0, 15);
@@ -242,7 +253,8 @@ router.post('/stream/:agentId', async (req, res) => {
     const model     = agent.model || 'claude-sonnet-4-6';
 
     // Load memory + RAG
-    const memory = await loadMemory(pool, agent.id, sessionIdentifier);
+    const sessionIdHash = sessionIdentifier ? hashSessionId(sessionIdentifier) : null;
+    const memory = await loadMemory(pool, agent.id, sessionIdHash);
     const sysPrompt = await buildSystemPrompt(pool, agent, memory);
     const ragCtx = agent.rag_enabled ? await fetchRagContext(pool, agent.id, typeof userMsg.content === 'string' ? userMsg.content : 'image') : '';
 
@@ -287,7 +299,7 @@ router.post('/stream/:agentId', async (req, res) => {
           await pool.query('INSERT INTO chat_messages (agent_id, session_id, role, content, source) VALUES ($1,$2,$3,$4,$5)', [agent.id, sessionId, 'assistant', fullReply, source]);
           await pool.query('UPDATE agents SET total_messages=total_messages+1 WHERE id=$1', [agent.id]);
           await trackCost(pool, agent.id, sessionId, model, usage, source);
-          if (sessionIdentifier) await updateMemory(pool, agent.id, sessionIdentifier, msgs, fullReply);
+          if (sessionIdHash) await updateMemory(pool, agent.id, sessionIdHash, msgs, fullReply);
           const lead = await tryCaptureLead(pool, agent, msgs, fullReply, sessionId, source);
           if (lead) { await sendLeadEmail(agent, agent.owner_email, lead); }
         } catch(e) { console.error('Post-agentic error:', e.message); }
@@ -295,11 +307,13 @@ router.post('/stream/:agentId', async (req, res) => {
     } else {
 
     // Stream from Anthropic
+    // PII minimization before external API call
+    const safeMessages = minimizeMessages(msgs);
     const stream = client.messages.stream({
       model,
       max_tokens: 1024,
       system: sysPrompt + ragCtx,
-      messages: msgs,
+      messages: safeMessages,
     });
 
     stream.on('text', (text) => {
@@ -331,7 +345,7 @@ router.post('/stream/:agentId', async (req, res) => {
         await trackCost(pool, agent.id, sessionId, model, usage, source);
 
         // Memory update
-        if (sessionIdentifier) await updateMemory(pool, agent.id, sessionIdentifier, msgs, fullReply);
+        if (sessionIdHash) await updateMemory(pool, agent.id, sessionIdHash, msgs, fullReply);
 
         // Lead capture
         const lead = await tryCaptureLead(pool, agent, msgs, fullReply, sessionId, source);
@@ -386,7 +400,8 @@ router.post('/web/:agentId', async (req, res) => {
     const userMsg   = msgs[msgs.length - 1];
     const model     = agent.model || 'claude-sonnet-4-6';
 
-    const memory    = await loadMemory(pool, agent.id, sessionIdentifier);
+    const sessionIdHash = sessionIdentifier ? hashSessionId(sessionIdentifier) : null;
+    const memory    = await loadMemory(pool, agent.id, sessionIdHash);
     const sysPrompt = await buildSystemPrompt(pool, agent, memory);
     const ragCtx    = agent.rag_enabled ? await fetchRagContext(pool, agent.id, typeof userMsg.content === 'string' ? userMsg.content : '') : '';
 
@@ -403,12 +418,13 @@ router.post('/web/:agentId', async (req, res) => {
       agentTools = toolsR.rows;
     } catch {}
 
+    const safeMsgs = minimizeMessages(msgs);
     let reply, responseUsage;
     if (agentTools.length > 0) {
-      const result = await runAgenticChat(client, model, sysPrompt + ragCtx, msgs, agentTools, pool, agent.id, sessionId);
+      const result = await runAgenticChat(client, model, sysPrompt + ragCtx, safeMsgs, agentTools, pool, agent.id, sessionId);
       reply = result.reply; responseUsage = result.usage;
     } else {
-      const response = await client.messages.create({ model, max_tokens: 1024, system: sysPrompt + ragCtx, messages: msgs });
+      const response = await client.messages.create({ model, max_tokens: 1024, system: sysPrompt + ragCtx, messages: safeMsgs });
       reply = response.content[0]?.text || 'Keine Antwort.'; responseUsage = response.usage;
     };
     await pool.query('INSERT INTO chat_messages (agent_id, session_id, role, content, source) VALUES ($1,$2,$3,$4,$5)', [agent.id, sessionId, 'assistant', reply, source]);
@@ -416,7 +432,7 @@ router.post('/web/:agentId', async (req, res) => {
 
     setImmediate(async () => {
       await trackCost(pool, agent.id, sessionId, model, responseUsage || {}, source);
-      if (sessionIdentifier) await updateMemory(pool, agent.id, sessionIdentifier, msgs, reply);
+      if (sessionIdHash) await updateMemory(pool, agent.id, sessionIdHash, msgs, reply);
       const lead = await tryCaptureLead(pool, agent, msgs, reply, sessionId, source);
       if (lead) { await sendLeadEmail(agent, agent.owner_email, lead); await dispatchWebhooks(pool, agent.id, 'lead.captured', {agentId:agent.id,sessionId,source,lead}); }
       await dispatchWebhooks(pool, agent.id, 'message.received', {agentId:agent.id,agentName:agent.name,sessionId,source,message:typeof userMsg.content==='string'?userMsg.content:'[Bild]',reply,timestamp:new Date().toISOString()});

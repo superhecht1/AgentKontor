@@ -13,6 +13,7 @@ const bcrypt  = require('bcryptjs');
 const jwt     = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET;
+const { setAuthCookie, clearAuthCookie, hashIp } = require('../utils/privacy');
 const { auditLog } = require('../middleware/plan-gate');
 if (!JWT_SECRET) throw new Error('❌ JWT_SECRET env var nicht gesetzt — bitte in Render setzen');
 
@@ -61,6 +62,7 @@ router.post('/register', async (req, res) => {
     setImmediate(() => sendWelcomeEmail(user.email, user.name));
 
     const { token_version, ...safeUser } = user;
+    setAuthCookie(res, token);
     res.json({ token, user: safeUser });
   } catch (e) {
     console.error('REGISTER ERROR:', e.message);
@@ -93,7 +95,9 @@ router.post('/login', async (req, res) => {
 
     const token = signToken(user.id, user.token_version);
     const { password_hash, token_version, ...safeUser } = user;
-    setImmediate(() => auditLog(pool, user.id, 'user_login', 'user', user.id, {}, req.ip));
+    setImmediate(() => auditLog(pool, user.id, 'user_login', 'user', user.id, { ip_hash: hashIp(req.ip) }));
+    // Set httpOnly cookie (XSS-safe) + return token for API clients
+    setAuthCookie(res, token);
     res.json({ token, user: safeUser });
   } catch (e) {
     console.error('LOGIN ERROR:', e.message);
@@ -150,5 +154,11 @@ async function sendWelcomeEmail(to, name) {
     console.log('✅ Welcome email sent to', to);
   } catch (e) { console.warn('Welcome email failed:', e.message); }
 }
+
+/* ── LOGOUT ─────────────────────────────────────────────── */
+router.post('/logout', (req, res) => {
+  clearAuthCookie(res);
+  res.json({ success: true });
+});
 
 module.exports = router;
