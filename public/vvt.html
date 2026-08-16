@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verarbeitungsverzeichnis — AgentKontor</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f4f3ef;color:#1a1916;line-height:1.7;font-size:14px}
+.container{max-width:900px;margin:0 auto;padding:48px 24px}
+h1{font-size:1.8rem;font-weight:800;margin-bottom:6px}
+.meta{font-size:.82rem;color:#7a786e;margin-bottom:40px}
+h2{font-size:1rem;font-weight:700;margin:36px 0 12px;padding-bottom:6px;border-bottom:2px solid #1a1916}
+table{width:100%;border-collapse:collapse;margin-bottom:24px;font-size:.82rem}
+th{padding:8px 12px;text-align:left;background:#1a1916;color:#fff;font-weight:600;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em}
+td{padding:9px 12px;border-bottom:1px solid #e8e6e0;vertical-align:top}
+tr:hover td{background:#faf9f7}
+.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:.72rem;font-weight:600;background:#e8e6e0;color:#3d3b35}
+.badge.green{background:#d4edda;color:#155724}
+.badge.yellow{background:#fff3cd;color:#856404}
+.badge.red{background:#f8d7da;color:#721c24}
+nav{padding:14px 24px;background:#1a1916;display:flex;align-items:center;gap:14px}
+.logo{font-size:.95rem;font-weight:800;color:#fff}.logo span{color:#a29bfe}
+nav a{font-size:.78rem;color:rgba(255,255,255,.6);text-decoration:none}
+nav a:hover{color:#fff}
+.info-box{background:#fff;border:1px solid #e8e6e0;border-radius:10px;padding:16px 20px;margin-bottom:16px;font-size:.82rem}
+.info-box strong{display:block;margin-bottom:4px;color:#1a1916}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/" class="logo">Agent<span>Kontor</span></a>
+  <a href="/datenschutz.html">Datenschutz</a>
+  <a href="/avv.html">AVV</a>
+  <a href="/impressum.html">Impressum</a>
+</nav>
+
+<div class="container">
+  <h1>Verarbeitungsverzeichnis</h1>
+  <p class="meta">Gemäß Art. 30 DSGVO · Stand: März 2025 · superhecht.ai / AgentKontor</p>
+
+  <div class="info-box">
+    <strong>Verantwortlicher</strong>
+    Mark Rusniok · superhecht.ai · Gottesweg 20, 50969 Köln · info@think-cloud.org
+  </div>
+  <div class="info-box">
+    <strong>Datenschutzbeauftragter</strong>
+    Kein DSB benannt (§ 38 BDSG: weniger als 20 Personen mit Datenverarbeitung beschäftigt).
+    Zuständig: Mark Rusniok (s.o.)
+  </div>
+
+  <h2>1. Nutzerverwaltung (Registrierung &amp; Login)</h2>
+  <table>
+    <tr><th>Merkmal</th><th>Details</th></tr>
+    <tr><td>Zweck</td><td>Zugang zur Plattform, Authentifizierung, Abrechnung</td></tr>
+    <tr><td>Kategorien betroffener Personen</td><td>Nutzer der SaaS-Plattform (Unternehmer, Selbstständige)</td></tr>
+    <tr><td>Datenkategorien</td><td>Name, E-Mail-Adresse, Passwort-Hash (bcrypt), Plan, Erstellungsdatum</td></tr>
+    <tr><td>Rechtsgrundlage</td><td>Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung)</td></tr>
+    <tr><td>Empfänger</td><td>Neon Inc. (DB-Hosting), Render Services (Webhosting)</td></tr>
+    <tr><td>Speicherdauer</td><td>Dauer des Vertragsverhältnisses + 30 Tage Soft-Delete-Frist</td></tr>
+    <tr><td>Drittlandübermittlung</td><td><span class="badge yellow">USA (SCCs)</span> — Neon Inc., Render Services</td></tr>
+    <tr><td>TOM</td><td>bcrypt-12, JWT mit tokenVersion-Invalidierung, httpOnly-Cookie, 2FA</td></tr>
+  </table>
+
+  <h2>2. Chat-Verarbeitung (KI-Agenten)</h2>
+  <table>
+    <tr><th>Merkmal</th><th>Details</th></tr>
+    <tr><td>Zweck</td><td>Betrieb von KI-Agenten im Auftrag der Plattform-Nutzer</td></tr>
+    <tr><td>Kategorien betroffener Personen</td><td>Endnutzer der Agenten (Kunden der Plattform-Nutzer)</td></tr>
+    <tr><td>Datenkategorien</td><td>Chat-Inhalte, Session-ID (gehasht), Kanal (Web/WA/TG/IG/FB), Zeitstempel</td></tr>
+    <tr><td>Rechtsgrundlage</td><td>Art. 6 Abs. 1 lit. b DSGVO; Art. 28 DSGVO (Auftragsverarbeitung)</td></tr>
+    <tr><td>Empfänger</td><td>Anthropic Inc. (Modell-Inferenz), Neon Inc. (Speicherung)</td></tr>
+    <tr><td>Speicherdauer</td><td>Standard 90 Tage (konfigurierbar durch Agent-Betreiber), danach automatische Löschung</td></tr>
+    <tr><td>Drittlandübermittlung</td><td><span class="badge yellow">USA (SCCs)</span> — Anthropic Inc., Neon Inc.</td></tr>
+    <tr><td>TOM</td><td>PII-Minimierung vor API-Call, Session-ID SHA-256, Rate-Limiting, Widget DSGVO-Consent</td></tr>
+  </table>
+
+  <h2>3. Lead-Erfassung</h2>
+  <table>
+    <tr><th>Merkmal</th><th>Details</th></tr>
+    <tr><td>Zweck</td><td>Erfassung von Kontaktdaten durch KI-Agenten (im Auftrag der Plattform-Nutzer)</td></tr>
+    <tr><td>Kategorien betroffener Personen</td><td>Endnutzer der Agenten</td></tr>
+    <tr><td>Datenkategorien</td><td>Name, E-Mail, Telefon (je nach Agent-Konfiguration), Kanal, Zeitstempel</td></tr>
+    <tr><td>Rechtsgrundlage</td><td>Art. 6 Abs. 1 lit. a DSGVO (Einwilligung via Widget-Consent)</td></tr>
+    <tr><td>Empfänger</td><td>Neon Inc. (Speicherung), SMTP-Anbieter (Benachrichtigung)</td></tr>
+    <tr><td>Speicherdauer</td><td>Standard 180 Tage (konfigurierbar), danach automatische Löschung</td></tr>
+    <tr><td>Drittlandübermittlung</td><td><span class="badge yellow">USA</span> — Neon Inc. / je nach SMTP-Konfiguration</td></tr>
+    <tr><td>TOM</td><td>Consent-Banner im Widget, server-seitige Consent-Verifikation, IP-Hash statt IP-Klartext</td></tr>
+  </table>
+
+  <h2>4. Zahlungsabwicklung</h2>
+  <table>
+    <tr><th>Merkmal</th><th>Details</th></tr>
+    <tr><td>Zweck</td><td>Abwicklung von Abonnement-Zahlungen</td></tr>
+    <tr><td>Datenkategorien</td><td>Name, E-Mail, Zahlungsdaten (ausschließlich bei Stripe)</td></tr>
+    <tr><td>Rechtsgrundlage</td><td>Art. 6 Abs. 1 lit. b DSGVO</td></tr>
+    <tr><td>Empfänger</td><td>Stripe, Inc. (USA)</td></tr>
+    <tr><td>Speicherdauer</td><td>10 Jahre (§ 257 HGB)</td></tr>
+    <tr><td>Drittlandübermittlung</td><td><span class="badge yellow">USA (SCCs)</span></td></tr>
+    <tr><td>TOM</td><td>Keine Kartendetails auf eigenen Servern, Stripe.js, Webhook-Signatur-Verifikation</td></tr>
+  </table>
+
+  <h2>5. E-Mail-Kommunikation</h2>
+  <table>
+    <tr><th>Merkmal</th><th>Details</th></tr>
+    <tr><td>Zweck</td><td>Transaktionale E-Mails (Bestätigung, Passwort-Reset, Lead-Digest)</td></tr>
+    <tr><td>Datenkategorien</td><td>E-Mail-Adresse, Name</td></tr>
+    <tr><td>Rechtsgrundlage</td><td>Art. 6 Abs. 1 lit. b DSGVO</td></tr>
+    <tr><td>Empfänger</td><td>Brevo (Sendinblue) — SMTP-Relay</td></tr>
+    <tr><td>Speicherdauer</td><td>Technisch notwendig (keine Marketingmails)</td></tr>
+    <tr><td>Drittlandübermittlung</td><td><span class="badge green">EU</span> — Brevo (Frankreich)</td></tr>
+    <tr><td>TOM</td><td>TLS-Verschlüsselung, E-Mail-Maskierung in Logs</td></tr>
+  </table>
+
+  <h2>6. Protokollierung / Audit-Log</h2>
+  <table>
+    <tr><th>Merkmal</th><th>Details</th></tr>
+    <tr><td>Zweck</td><td>Sicherheitsprotokollierung (Login, Änderungen), Compliance</td></tr>
+    <tr><td>Datenkategorien</td><td>User-ID, Aktion, Zeitstempel, IP-Adresse (anonymisiert nach 30 Tagen)</td></tr>
+    <tr><td>Rechtsgrundlage</td><td>Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse: IT-Sicherheit)</td></tr>
+    <tr><td>Speicherdauer</td><td>30 Tage (IP-Adressen werden nach 30 Tagen anonymisiert)</td></tr>
+    <tr><td>TOM</td><td>IP-Anonymisierung via Cron, keine Weitergabe an Dritte</td></tr>
+  </table>
+
+  <h2>7. RAG-Wissensbasis</h2>
+  <table>
+    <tr><th>Merkmal</th><th>Details</th></tr>
+    <tr><td>Zweck</td><td>Vektorisierte Unternehmens-Dokumente als Wissensquelle für KI-Agenten</td></tr>
+    <tr><td>Datenkategorien</td><td>Hochgeladene Dokumente (PDF, Text), Vektor-Embeddings</td></tr>
+    <tr><td>Rechtsgrundlage</td><td>Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung mit Plattform-Nutzer)</td></tr>
+    <tr><td>Empfänger</td><td>Neon Inc. (Speicherung), Anthropic/Voyage (Embedding-Generierung)</td></tr>
+    <tr><td>Speicherdauer</td><td>Bis zur manuellen Löschung oder Account-Löschung</td></tr>
+    <tr><td>TOM</td><td>Automatische Löschung bei Account-Soft-Delete, Zugriff nur durch Account-Inhaber</td></tr>
+  </table>
+
+  <p style="margin-top:32px;font-size:.78rem;color:#7a786e">
+    Dieses Verzeichnis wird bei jeder wesentlichen Änderung der Verarbeitungstätigkeiten aktualisiert.
+    Zuletzt aktualisiert: März 2025 · <a href="mailto:info@think-cloud.org">info@think-cloud.org</a>
+  </p>
+</div>
+
+<script src="/cookie-banner.js"></script>
+</body>
+</html>
