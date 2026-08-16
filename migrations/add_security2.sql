@@ -31,3 +31,7 @@ CREATE TABLE IF NOT EXISTS vvt_entries (
 ALTER TABLE users ADD COLUMN IF NOT EXISTS quota_alert_sent BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS pending_email VARCHAR(256);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS pending_email_token VARCHAR(128);
+
+-- Deactivate old API keys without hash (they can't authenticate anymore)
+-- Users must regenerate their keys
+UPDATE api_keys SET is_active=false WHERE key_hash IS NULL AND is_active=true;

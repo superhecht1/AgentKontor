@@ -35,3 +35,10 @@ CREATE INDEX IF NOT EXISTS idx_wc_agent_hash     ON widget_consents(agent_id, se
 
 -- stripe_events: idempotency
 CREATE INDEX IF NOT EXISTS idx_se_id             ON stripe_events(id);
+
+-- pg_trgm for fast ILIKE search on chat messages
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE INDEX IF NOT EXISTS idx_cm_content_trgm ON chat_messages USING GIN (content gin_trgm_ops);
+
+-- API keys: index on old key column (for backward compat)
+CREATE INDEX IF NOT EXISTS idx_api_keys_key ON api_keys(key) WHERE key IS NOT NULL;
