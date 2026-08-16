@@ -66,7 +66,7 @@ footer a:hover{color:var(--purple)}
   <p class="page-meta">Gemäß DSGVO, BDSG n.F., TMG · Stand: März 2025 · Verantwortlicher: Mark Rusniok, Köln</p>
 
   <div class="notice">
-    <strong>Kurzversion:</strong> AgentKontor wird bis 1. Juni 2026 als privates Projekt betrieben. Wir erheben nur die für den Betrieb notwendigen Daten, verkaufen keine Daten, schalten keine Werbung und nutzen Deine Konversationsinhalte nicht zum Training eigener Modelle.
+    <strong>Kurzversion:</strong> Wir erheben nur die für den Betrieb notwendigen Daten, verkaufen keine Daten, schalten keine Werbung und nutzen Deine Konversationsinhalte nicht zum Training eigener Modelle.
   </div>
 
   <div class="toc">
@@ -171,11 +171,15 @@ footer a:hover{color:var(--purple)}
 
   <section class="legal" id="drittanbieter">
     <h2>6. Drittanbieter &amp; KI-APIs</h2>
-    <p>Für die KI-Funktionalität werden Nachrichten an externe Sprachmodell-Anbieter übermittelt. Mit jedem Anbieter bestehen Datenverarbeitungsverträge (DPA/Art. 28 DSGVO):</p>
+    <p>Für die KI-Funktionalität werden Nachrichten an den vom Betreiber konfigurierten Sprachmodell-Anbieter übermittelt. Es wird immer genau ein Anbieter pro Agent verwendet. Mit jedem Anbieter bestehen Datenverarbeitungsverträge (DPA/Art. 28 DSGVO) soweit verfügbar:</p>
     <table class="dt">
       <tr><th>Anbieter</th><th>Zweck</th><th>Sitz</th><th>Datenschutz</th></tr>
       <tr><td><b>Anthropic, Inc.</b></td><td>Claude Sprachmodell (Standard)</td><td>USA</td><td><a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener">Privacy Policy</a></td></tr>
       <tr><td><b>OpenAI, LLC</b></td><td>GPT-Modelle &amp; Fine-Tuning (optional)</td><td>USA</td><td><a href="https://openai.com/privacy" target="_blank" rel="noopener">Privacy Policy</a></td></tr>
+      <tr><td><b>Google LLC</b></td><td>Gemini Sprachmodelle (optional, wenn konfiguriert)</td><td>USA</td><td><a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Privacy Policy</a></td></tr>
+      <tr><td><b>Mistral AI SAS</b></td><td>Mistral Sprachmodelle (optional, 🇪🇺 EU-Anbieter)</td><td>Frankreich (EU)</td><td><a href="https://mistral.ai/privacy" target="_blank" rel="noopener">Privacy Policy</a></td></tr>
+      <tr><td><b>Groq, Inc.</b></td><td>LLM-Inferenz via Groq (optional, wenn konfiguriert)</td><td>USA</td><td><a href="https://groq.com/privacy-policy" target="_blank" rel="noopener">Privacy Policy</a></td></tr>
+      <tr><td><b>DeepSeek</b></td><td>DeepSeek Sprachmodelle (optional, wenn konfiguriert)</td><td>China</td><td><a href="https://www.deepseek.com/privacy" target="_blank" rel="noopener">Privacy Policy</a></td></tr>
       <tr><td><b>Meta Platforms</b></td><td>WhatsApp-Kanal (optional)</td><td>Irland/USA</td><td><a href="https://www.whatsapp.com/legal/privacy-policy" target="_blank" rel="noopener">Privacy Policy</a></td></tr>
       <tr><td><b>Telegram Inc.</b></td><td>Telegram-Bot-Kanal (optional)</td><td>Dubai/USA</td><td><a href="https://telegram.org/privacy" target="_blank" rel="noopener">Privacy Policy</a></td></tr>
     </table>
@@ -208,7 +212,9 @@ footer a:hover{color:var(--purple)}
     <h2>9. Drittlandübermittlung (Art. 44 ff. DSGVO)</h2>
     <p>Bei der Nutzung von KI-APIs (Anthropic, OpenAI) sowie ggf. von WhatsApp/Telegram werden Daten in die USA übermittelt. Die Zulässigkeit ergibt sich aus:</p>
     <ul>
-      <li><strong>EU-US Data Privacy Framework (DPF)</strong> — soweit der Anbieter zertifiziert ist (Render, OpenAI)</li>
+      <li><strong>EU-US Data Privacy Framework (DPF)</strong> — soweit der Anbieter zertifiziert ist (Render, OpenAI, Google)</li>
+      <li><strong>Mistral AI</strong> — EU-Anbieter (Frankreich), keine Drittlandübermittlung</li>
+      <li><strong>DeepSeek</strong> — Anbieter aus China; Datenübermittlung nur wenn vom Betreiber aktiviert; Standardmäßig nicht konfiguriert</li>
       <li><strong>Standardvertragsklauseln (SCC)</strong> gem. Art. 46 Abs. 2 lit. c DSGVO — für nicht DPF-zertifizierte Übermittlungen</li>
       <li><strong>Art. 49 Abs. 1 lit. b DSGVO</strong> — Erforderlichkeit zur Vertragserfüllung (KI-Antwortgenerierung)</li>
     </ul>

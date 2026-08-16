@@ -264,14 +264,31 @@ app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
 }<button class="copy-btn" onclick="copy(this)">Copy</button></div>
 
   <!-- MODELS -->
-  <h2 id="models">Modelle</h2>
+  <h2 id="models">Modelle (14 Modelle, 6 Anbieter)</h2>
+  <p style="color:var(--muted);font-size:.85rem;margin-bottom:12px">Pro Agent frei wählbar. Verfügbarkeit je nach konfiguriertem API-Key. Mistral ist der einzige EU-Anbieter — DSGVO-freundlich ohne Drittlandtransfer.</p>
   <table>
     <tr><th>Model ID</th><th>Anbieter</th><th>Stärken</th><th>Plan</th></tr>
-    <tr><td>claude-sonnet-4-6</td><td>Anthropic</td><td>Standard — ausgewogen, schnell</td><td>Free + Pro</td></tr>
-    <tr><td>claude-opus-4-6</td><td>Anthropic</td><td>Komplex, langer Kontext</td><td>Pro</td></tr>
-    <tr><td>gpt-4o</td><td>OpenAI</td><td>Multimodal, Code</td><td>Pro</td></tr>
-    <tr><td>gpt-4o-mini</td><td>OpenAI</td><td>Schnell, günstig</td><td>Pro</td></tr>
+    <tr><th colspan="4" style="background:#1a1916;color:#a29bfe;font-size:.8rem">🟣 Anthropic</th></tr>
+    <tr><td>claude-sonnet-4-6</td><td>Anthropic</td><td>⭐ Standard — beste Qualität/Preis</td><td>Free + Pro</td></tr>
+    <tr><td>claude-haiku-4-5</td><td>Anthropic</td><td>⚡ Schnell &amp; günstig</td><td>Free + Pro</td></tr>
+    <tr><td>claude-opus-4-6</td><td>Anthropic</td><td>🧠 Maximale Intelligenz</td><td>Pro</td></tr>
+    <tr><th colspan="4" style="background:#1a1916;color:#a29bfe;font-size:.8rem">🟢 OpenAI</th></tr>
+    <tr><td>gpt-4o</td><td>OpenAI</td><td>Multimodal, sehr leistungsfähig</td><td>Pro</td></tr>
+    <tr><td>gpt-4o-mini</td><td>OpenAI</td><td>💰 Günstig für einfache Aufgaben</td><td>Free + Pro</td></tr>
     <tr><td>ft:gpt-4o-mini-...</td><td>OpenAI</td><td>Fine-tuned auf eigene Daten</td><td>Pro</td></tr>
+    <tr><th colspan="4" style="background:#1a1916;color:#a29bfe;font-size:.8rem">🔵 Google</th></tr>
+    <tr><td>gemini-2.0-flash</td><td>Google</td><td>🚀 Sehr günstig, sehr schnell</td><td>Free + Pro</td></tr>
+    <tr><td>gemini-1.5-pro</td><td>Google</td><td>📄 1M Token Kontext</td><td>Pro</td></tr>
+    <tr><th colspan="4" style="background:#1a1916;color:#a29bfe;font-size:.8rem">🇪🇺 Mistral AI (EU-Anbieter)</th></tr>
+    <tr><td>mistral-large-latest</td><td>Mistral AI</td><td>🇪🇺 DSGVO-freundlich, EU-Server</td><td>Pro</td></tr>
+    <tr><td>mistral-small-latest</td><td>Mistral AI</td><td>🇪🇺 EU, schnell &amp; günstig</td><td>Free + Pro</td></tr>
+    <tr><td>open-mistral-nemo</td><td>Mistral AI</td><td>🆓 Open-source, EU, sehr günstig</td><td>Free + Pro</td></tr>
+    <tr><th colspan="4" style="background:#1a1916;color:#a29bfe;font-size:.8rem">⚡ Groq</th></tr>
+    <tr><td>llama-3.3-70b-versatile</td><td>Groq</td><td>⚡ Llama via Groq — bis 10× schneller</td><td>Free + Pro</td></tr>
+    <tr><td>llama-3.1-8b-instant</td><td>Groq</td><td>🏎️ Instant — maximale Geschwindigkeit</td><td>Free + Pro</td></tr>
+    <tr><th colspan="4" style="background:#1a1916;color:#a29bfe;font-size:.8rem">💡 DeepSeek</th></tr>
+    <tr><td>deepseek-chat</td><td>DeepSeek</td><td>💰 ~90% günstiger als GPT-4o</td><td>Free + Pro</td></tr>
+    <tr><td>deepseek-reasoner</td><td>DeepSeek</td><td>🤔 Reasoning (wie o1)</td><td>Pro</td></tr>
   </table>
 
   <!-- LIMITS -->

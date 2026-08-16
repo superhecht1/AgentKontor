@@ -69,9 +69,9 @@ nav a:hover{color:#fff}
     <tr><td>Kategorien betroffener Personen</td><td>Endnutzer der Agenten (Kunden der Plattform-Nutzer)</td></tr>
     <tr><td>Datenkategorien</td><td>Chat-Inhalte, Session-ID (gehasht), Kanal (Web/WA/TG/IG/FB), Zeitstempel</td></tr>
     <tr><td>Rechtsgrundlage</td><td>Art. 6 Abs. 1 lit. b DSGVO; Art. 28 DSGVO (Auftragsverarbeitung)</td></tr>
-    <tr><td>Empfänger</td><td>Anthropic Inc. (Modell-Inferenz), Neon Inc. (Speicherung)</td></tr>
+    <tr><td>Empfänger</td><td>Je nach Agent-Konfiguration: Anthropic, OpenAI, Google, Mistral AI (EU), Groq oder DeepSeek (Modell-Inferenz) + Neon Inc. (Speicherung)</td></tr>
     <tr><td>Speicherdauer</td><td>Standard 90 Tage (konfigurierbar durch Agent-Betreiber), danach automatische Löschung</td></tr>
-    <tr><td>Drittlandübermittlung</td><td><span class="badge yellow">USA (SCCs)</span> — Anthropic Inc., Neon Inc.</td></tr>
+    <tr><td>Drittlandübermittlung</td><td><span class="badge yellow">USA (SCCs)</span> — Anthropic, OpenAI, Google, Groq, DeepSeek, Neon Inc.<br><span class="badge green">EU</span> — Mistral AI SAS (Frankreich) — kein Drittlandtransfer</td></tr>
     <tr><td>TOM</td><td>PII-Minimierung vor API-Call, Session-ID SHA-256, Rate-Limiting, Widget DSGVO-Consent</td></tr>
   </table>
 
@@ -128,7 +128,7 @@ nav a:hover{color:#fff}
     <tr><td>Zweck</td><td>Vektorisierte Unternehmens-Dokumente als Wissensquelle für KI-Agenten</td></tr>
     <tr><td>Datenkategorien</td><td>Hochgeladene Dokumente (PDF, Text), Vektor-Embeddings</td></tr>
     <tr><td>Rechtsgrundlage</td><td>Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung mit Plattform-Nutzer)</td></tr>
-    <tr><td>Empfänger</td><td>Neon Inc. (Speicherung), Anthropic/Voyage (Embedding-Generierung)</td></tr>
+    <tr><td>Empfänger</td><td>Neon Inc. (Speicherung), Anthropic/Voyage (Embedding-Generierung, konfigurierbar)</td></tr>
     <tr><td>Speicherdauer</td><td>Bis zur manuellen Löschung oder Account-Löschung</td></tr>
     <tr><td>TOM</td><td>Automatische Löschung bei Account-Soft-Delete, Zugriff nur durch Account-Inhaber</td></tr>
   </table>
