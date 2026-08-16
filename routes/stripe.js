@@ -134,8 +134,10 @@ router.post('/webhook', async (req, res) => {
           const userId = sub.metadata?.userId;
           if (userId) {
             await pool.query(
-              `UPDATE users SET plan='pro', plan_period_end=$1 WHERE id=$2`,
-              [periodEnd, userId]
+              `UPDATE users SET plan='pro', plan_period_end=$1,
+               billing_cycle=CASE WHEN $3='year' THEN 'yearly' ELSE 'monthly' END
+               WHERE id=$2`,
+              [periodEnd, userId, sub.items?.data?.[0]?.plan?.interval || 'month']
             );
           }
         }

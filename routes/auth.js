@@ -50,8 +50,8 @@ router.post('/register', async (req, res) => {
   const { email, password, name } = req.body;
   if (!email || !password || !name)
     return res.status(400).json({ error: 'Alle Felder erforderlich' });
-  if (password.length < 8)
-    return res.status(400).json({ error: 'Passwort mindestens 8 Zeichen' });
+  const pwErr = checkPasswordStrength(password);
+  if (pwErr) return res.status(400).json({ error: pwErr });
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
     return res.status(400).json({ error: 'Ungültige E-Mail-Adresse' });
 
@@ -76,6 +76,14 @@ router.post('/register', async (req, res) => {
     setImmediate(() => sendWelcomeEmail(user.email, user.name));
 
     const { token_version, ...safeUser } = user;
+
+    // Activate 14-day Pro trial
+    try {
+      const trialEnd = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+      await pool.query('UPDATE users SET trial_ends_at=$1 WHERE id=$2', [trialEnd, user.id]);
+      safeUser.trial_ends_at = trialEnd;
+    } catch {}
+
     setAuthCookie(res, token);
     res.json({ token, user: safeUser });
   } catch (e) {
@@ -102,15 +110,32 @@ router.post('/login', async (req, res) => {
               totp_secret, totp_backup_codes,
               COALESCE(login_attempts, 0)           AS login_attempts,
               locked_until, deleted_at
-       FROM users WHERE email=$1`,
+       FROM users WHERE email=$1 AND deleted_at IS NULL`,
       [email.toLowerCase()]
     );
     // Identical error for wrong email AND wrong password — prevents user enumeration
     if (!result.rows.length) return res.status(401).json({ error: 'Ungültige Zugangsdaten' });
 
     const user  = result.rows[0];
+
+    // Check lockout BEFORE bcrypt (bcrypt is slow - don't waste time on locked accounts)
+    if (user.locked_until && new Date(user.locked_until) > new Date()) {
+      const mins = Math.ceil((new Date(user.locked_until) - Date.now()) / 60000);
+      return res.status(423).json({ error: `Konto gesperrt. Bitte in ${mins} Minute(n) erneut versuchen.` });
+    }
+
     const valid = await bcrypt.compare(password, user.password_hash);
-    if (!valid) return res.status(401).json({ error: 'Ungültige Zugangsdaten' });
+    if (!valid) {
+      // Increment failed attempts, lock after 5
+      const pool2 = getPool(req);
+      const attempts = (user.login_attempts || 0) + 1;
+      const lockUntil = attempts >= 5 ? new Date(Date.now() + 15 * 60 * 1000) : null;
+      await pool2.query('UPDATE users SET login_attempts=$1, locked_until=$2 WHERE id=$3', [attempts, lockUntil, user.id]);
+      if (lockUntil) return res.status(423).json({ error: 'Zu viele Fehlversuche. Konto für 15 Minuten gesperrt.' });
+      return res.status(401).json({ error: 'Ungültige Zugangsdaten' });
+    }
+    // Reset on success
+    await pool.query('UPDATE users SET login_attempts=0, locked_until=NULL WHERE id=$1', [user.id]);
 
     const token = signToken(user.id, user.token_version);
     const { password_hash, token_version, ...safeUser } = user;
@@ -198,7 +223,7 @@ async function sendWelcomeEmail(to, name) {
   </div>
 </div></body></html>`,
     });
-    console.log('✅ Welcome email sent to', to);
+    console.log('✅ Welcome email sent to', to.replace(/(?<=.{1}).(?=[^@]*@)/g, '*'));
   } catch (e) { console.warn('Welcome email failed:', e.message); }
 }
 

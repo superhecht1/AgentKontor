@@ -144,13 +144,26 @@ router.get('/:agentId/:id/log', auth, async (req, res) => {
 });
 
 /* ── DELIVERY FUNCTION (used by chat.js) ─────────────────── */
+// SSRF protection for webhook delivery
+const WEBHOOK_BLOCKED = [
+  /^10\./, /^172\.(1[6-9]|2[0-9]|3[01])\./, /^192\.168\./,
+  /^127\./, /^0\./, /^169\.254\./, /^::1$/, /^localhost$/i,
+];
+
 async function deliver(webhook, eventType, payload) {
   const body = JSON.stringify({ ...payload, event: eventType });
+
+  // SSRF protection
+  const url = new URL(webhook.url);
+  if (!['http:', 'https:'].includes(url.protocol))
+    return { ok: false, statusCode: null, error: 'Protokoll nicht erlaubt' };
+  if (WEBHOOK_BLOCKED.some(r => r.test(url.hostname)))
+    return { ok: false, statusCode: null, error: 'Ziel-IP nicht erlaubt (interne Adresse)' };
+
   const sig  = webhook.secret
     ? 'sha256=' + crypto.createHmac('sha256', webhook.secret).update(body).digest('hex')
     : undefined;
 
-  const url = new URL(webhook.url);
   const lib = url.protocol === 'https:' ? https : http;
 
   return new Promise((resolve) => {
