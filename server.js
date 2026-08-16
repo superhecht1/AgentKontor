@@ -51,6 +51,7 @@ async function initDb() {
     'migrations/add_features5.sql',
     'migrations/add_privacy2.sql',
     'migrations/add_security2.sql',
+    'migrations/add_features6.sql',
     'migrations/add_indexes.sql',
   ];
   for (const file of sqls) {
