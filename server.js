@@ -48,6 +48,7 @@ async function initDb() {
     'migrations/add_features5.sql',
     'migrations/add_privacy2.sql',
     'migrations/add_security2.sql',
+    'migrations/add_indexes.sql',
   ];
   for (const file of sqls) {
     const fp = path.join(__dirname, file);
@@ -106,6 +107,12 @@ const allowedOrigin = process.env.CORS_ORIGIN ||
 app.use(cors({ origin: allowedOrigin, credentials: true }));
 app.use(cookieParser());
 app.use(express.json({ limit: '5mb' }));
+// FIX 5: Compression middleware (gzip/br)
+try {
+  const compression = require('compression');
+  app.use(compression({ threshold: 1024 })); // only compress >1KB
+} catch { console.warn('compression not installed: npm install compression'); }
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Health check endpoint
