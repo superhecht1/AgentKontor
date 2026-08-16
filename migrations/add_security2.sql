@@ -26,3 +26,8 @@ CREATE TABLE IF NOT EXISTS vvt_entries (
   retention   VARCHAR(128),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Quota alert tracking
+ALTER TABLE users ADD COLUMN IF NOT EXISTS quota_alert_sent BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS pending_email VARCHAR(256);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS pending_email_token VARCHAR(128);
