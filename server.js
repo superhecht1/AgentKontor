@@ -107,6 +107,16 @@ app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
 
 const allowedOrigin = process.env.CORS_ORIGIN ||
   (process.env.NODE_ENV === 'production' ? 'https://agentkontor.de' : '*');
+
+// FIX 1: Widget endpoints need open CORS (embedded on any customer domain)
+// App/Auth endpoints stay restricted
+app.use('/api/chat/stream', cors({ origin: '*', credentials: false }));
+app.use('/api/chat/web',    cors({ origin: '*', credentials: false }));
+app.use('/api/chat/widget-config', cors({ origin: '*', credentials: false }));
+app.use('/api/widget',      cors({ origin: '*', credentials: false }));
+app.use('/api/voice/speak', cors({ origin: '*', credentials: false }));
+
+// All other endpoints: restricted CORS
 app.use(cors({ origin: allowedOrigin, credentials: true }));
 app.use(cookieParser());
 app.use(express.json({ limit: '5mb' }));
@@ -119,6 +129,12 @@ try {
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Health check endpoint
+app.get('/og-image.png', (req, res) => {
+  res.setHeader('Content-Type', 'image/svg+xml');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.sendFile(require('path').join(__dirname, 'public', 'og-image.svg'));
+});
+
 app.get('/health', async (req, res) => {
   const start = Date.now();
   try {
@@ -198,7 +214,21 @@ app.get('/impressum.html',          (req, res) => res.sendFile(path.join(__dirna
 app.get('/datenschutz.html',        (req, res) => res.sendFile(path.join(__dirname, 'public', 'datenschutz.html')));
 app.get('/agb.html',                (req, res) => res.sendFile(path.join(__dirname, 'public', 'agb.html')));
 app.get('/',                        (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+// FIX 10: API 404 handler — return JSON not HTML
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ error: `Endpoint nicht gefunden: ${req.method} ${req.originalUrl}` });
+});
+
 app.get('*',                        (req, res) => res.redirect('/'));
+
+// FIX 6: Global error handler middleware (must be last)
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err.message);
+  if (res.headersSent) return next(err);
+  res.status(err.status || 500).json({
+    error: process.env.NODE_ENV === 'production' ? 'Interner Serverfehler' : err.message,
+  });
+});
 
 initDb().then(() => {
   const server = app.listen(PORT, () => console.log(`🚀 AgentKontor on port ${PORT}`));
