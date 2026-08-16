@@ -35,8 +35,42 @@ function getPool(req) { return req.app.locals.pool; }
 
 /** Ensure security columns exist — runs once, idempotent */
 async function ensureColumns(pool) {
-  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS token_version INTEGER NOT NULL DEFAULT 1`);
-  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT false`);
+  // Run once per server start would be ideal, but this is safe idempotently
+  const cols = [
+    // Auth basics
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS token_version    INTEGER  NOT NULL DEFAULT 1`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin         BOOLEAN  NOT NULL DEFAULT false`,
+    // 2FA
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_enabled     BOOLEAN  NOT NULL DEFAULT false`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_secret      TEXT`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_backup_codes TEXT`,
+    // Lockout
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS login_attempts   INTEGER  NOT NULL DEFAULT 0`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until     TIMESTAMPTZ`,
+    // Soft-delete
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_at       TIMESTAMPTZ`,
+    // Plan / trial
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_ends_at    TIMESTAMPTZ`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS plan_period_end  TIMESTAMPTZ`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS billing_cycle    VARCHAR(10) DEFAULT 'monthly'`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id      VARCHAR(64)`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id  VARCHAR(64)`,
+    // Quota
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS msg_count_month  INTEGER  NOT NULL DEFAULT 0`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS msg_count_reset  TIMESTAMPTZ NOT NULL DEFAULT NOW()`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS quota_alert_sent BOOLEAN  NOT NULL DEFAULT false`,
+    // E-Mail double-opt-in
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS pending_email       VARCHAR(256)`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS pending_email_token VARCHAR(128)`,
+    // Misc
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS lang              VARCHAR(5)  DEFAULT 'de'`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_done   BOOLEAN  NOT NULL DEFAULT false`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS digest_frequency  VARCHAR(10) DEFAULT 'weekly'`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS digest_last_sent  TIMESTAMPTZ`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS workspace_id      INTEGER`,
+  ];
+  // Run all in parallel, ignore errors (column already exists)
+  await Promise.allSettled(cols.map(sql => pool.query(sql)));
 }
 
 function maskEmail(e) { return e ? e.replace(/(?<=.{1}).(?=[^@]*@)/g, '*') : ''; }
@@ -99,7 +133,11 @@ router.post('/login', async (req, res) => {
 
   const pool = getPool(req);
   try {
-    await ensureColumns(pool);
+    // ensureColumns runs once per process start, cached after first run
+    if (!global._ak_columns_ready) {
+      await ensureColumns(pool);
+      global._ak_columns_ready = true;
+    }
 
     // Fallback query if new columns don't exist yet
     const result = await pool.query(
@@ -252,4 +290,12 @@ router.post('/logout', (req, res) => {
   res.json({ success: true });
 });
 
+async function ensureColumnsOnce(pool) {
+  if (!global._ak_columns_ready) {
+    await ensureColumns(pool);
+    global._ak_columns_ready = true;
+  }
+}
+
 module.exports = router;
+module.exports.ensureColumnsOnce = ensureColumnsOnce;
