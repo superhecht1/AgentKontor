@@ -1,42 +1,45 @@
 /**
- * AgentKontor — JWT Auth Middleware (security-hardened)
- * token_version check: invalidates tokens after password change
- * Graceful fallback if column doesn't exist yet
+ * AgentKontor — Auth Middleware
+ * Reads JWT from:
+ *   1. httpOnly Cookie (ak_token) — preferred, XSS-safe
+ *   2. Authorization: Bearer header — fallback for API clients
  */
 
 const jwt = require('jsonwebtoken');
-
 const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) throw new Error('❌ JWT_SECRET env var nicht gesetzt');
 
 module.exports = async function auth(req, res, next) {
-  const header = req.headers['authorization'];
-  if (!header || !header.startsWith('Bearer '))
-    return res.status(401).json({ error: 'Nicht autorisiert' });
+  // 1. Try httpOnly cookie first
+  let token = req.cookies?.ak_token;
 
-  const token = header.slice(7);
+  // 2. Fallback to Authorization header (API clients, mobile)
+  if (!token) {
+    const header = req.headers.authorization || '';
+    if (header.startsWith('Bearer ')) token = header.slice(7);
+  }
+
+  if (!token) return res.status(401).json({ error: 'Nicht autorisiert' });
+
   try {
     const payload = jwt.verify(token, JWT_SECRET);
     req.userId = payload.userId;
 
-    // Check token_version only if present in JWT (new tokens) — old tokens skip check
-    if (payload.tv !== undefined) {
+    // Token version check (invalidates old tokens after password change)
+    if (payload.tokenVersion !== undefined && req.app?.locals?.pool) {
       const pool = req.app.locals.pool;
-      try {
-        const r = await pool.query(
-          'SELECT COALESCE(token_version, 1) AS token_version FROM users WHERE id=$1',
-          [payload.userId]
-        );
-        if (!r.rows.length || r.rows[0].token_version !== payload.tv) {
-          return res.status(401).json({ error: 'Sitzung abgelaufen. Bitte erneut anmelden.' });
-        }
-      } catch {
-        // Column might not exist yet — skip check, don't block login
+      const r = await pool.query(
+        'SELECT token_version FROM users WHERE id=$1 AND deleted_at IS NULL',
+        [payload.userId]
+      );
+      if (!r.rows.length || r.rows[0].token_version !== payload.tokenVersion) {
+        return res.status(401).json({ error: 'Sitzung abgelaufen. Bitte erneut anmelden.' });
       }
     }
 
     next();
-  } catch (e) {
-    return res.status(401).json({ error: 'Ungültiger oder abgelaufener Token' });
+  } catch(e) {
+    if (e.name === 'TokenExpiredError')
+      return res.status(401).json({ error: 'Sitzung abgelaufen.' });
+    return res.status(401).json({ error: 'Ungültiges Token.' });
   }
 };
