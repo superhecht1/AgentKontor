@@ -1,4 +1,5 @@
 require('dotenv').config();
+const cookieParser = require('cookie-parser');
 const express = require('express');
 const cors    = require('cors');
 const path    = require('path');
@@ -36,6 +37,7 @@ async function initDb() {
     'migrations/add_features3.sql',
     'migrations/add_features4.sql',
     'migrations/add_features5.sql',
+    'migrations/add_privacy2.sql',
   ];
   for (const file of sqls) {
     const fp = path.join(__dirname, file);
@@ -87,6 +89,7 @@ app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
 const allowedOrigin = process.env.CORS_ORIGIN ||
   (process.env.NODE_ENV === 'production' ? 'https://agentkontor.de' : '*');
 app.use(cors({ origin: allowedOrigin, credentials: true }));
+app.use(cookieParser());
 app.use(express.json({ limit: '5mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
