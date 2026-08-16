@@ -38,6 +38,7 @@ async function initDb() {
     'migrations/add_features4.sql',
     'migrations/add_features5.sql',
     'migrations/add_privacy2.sql',
+    'migrations/add_security2.sql',
   ];
   for (const file of sqls) {
     const fp = path.join(__dirname, file);
