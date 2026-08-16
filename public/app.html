@@ -2,6 +2,9 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex">
 <title>AgentKontor – Dashboard</title>
@@ -223,7 +226,19 @@ input:checked+.slider:before{transform:translateX(18px)}
 @keyframes si{from{transform:translateX(16px);opacity:0}to{transform:translateX(0);opacity:1}}
 @media(max-width:768px){.sidebar{display:none}.page{padding:16px 13px}.inp-row,.grid-4,.grid-3,.template-grid{grid-template-columns:1fr}}
 </style>
+<script>
+window.onerror=function(msg,src,line,col,err){
+  console.error('JS Error:',msg,'at',src+':'+line);
+  // Show toast if Alpine is ready
+  try{if(window._ak_app)window._ak_app.toast('Ein Fehler ist aufgetreten. Bitte Seite neu laden.','err');}catch{}
+  return false;
+};
+window.addEventListener('unhandledrejection',function(e){
+  console.error('Unhandled Promise:',e.reason);
+});
+</script>
 </head>
+<noscript><div style="position:fixed;inset:0;background:#0c0c1e;display:flex;align-items:center;justify-content:center;color:#fff;font-family:sans-serif;text-align:center;padding:24px"><div><div style="font-size:2rem;margin-bottom:16px">⚠️</div><h2>JavaScript erforderlich</h2><p style="color:#888;margin-top:8px">AgentKontor benötigt JavaScript. Bitte aktiviere JavaScript in deinem Browser.</p></div></div></noscript>
 <body x-data="app()" x-init="init()">
 
 <!-- AUTH -->
@@ -1677,11 +1692,19 @@ async init(){
 },
 
 async api(path,method='GET',body=null){
-  const opts={method,headers:{'Content-Type':'application/json'}};
+  const opts={method,credentials:'include',headers:{'Content-Type':'application/json'}};
   if(this.token)opts.headers['Authorization']='Bearer '+this.token;
   if(body)opts.body=JSON.stringify(body);
-  const r=await fetch('/api'+path,opts);
-  return r.json();
+  try{
+    const r=await fetch('/api'+path,opts);
+    // FIX 2: Auto-logout on 401
+    if(r.status===401){this.logout();return {error:'Sitzung abgelaufen'};}
+    if(r.status===429){return {error:'Zu viele Anfragen — bitte kurz warten'};}
+    return r.json();
+  }catch(e){
+    if(e.name==='TypeError')return {error:'Keine Verbindung zum Server'};
+    return {error:'Unbekannter Fehler'};
+  }
 },
 
 async login(){
@@ -1693,6 +1716,7 @@ async login(){
 
 async register(){
   if(!this.rf.name||!this.rf.email||this.rf.password.length<8){this.authErr='Alle Felder ausfüllen (Passwort min. 8 Zeichen)';return;}
+  if(this.rf.password!==this.rf.passwordRepeat&&this.rf.passwordRepeat){this.authErr='Passwörter stimmen nicht überein';return;}
   this.loading=true;this.authErr='';
   try{const d=await this.api('/auth/register','POST',this.rf);this.loading=false;if(d.error){this.authErr=d.error;return;}this.setUser(d.token,d.user);if(!d.user?.onboarding_done)setTimeout(()=>this.showOnboarding=true,600);}
   catch{this.loading=false;this.authErr='Verbindungsfehler';}

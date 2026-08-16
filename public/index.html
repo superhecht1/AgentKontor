@@ -2,6 +2,8 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="AgentKontor — Baue eigene KI-Agenten für Website, WhatsApp und Telegram. Kostenlos starten, kein Code nötig.">
 <meta name="keywords" content="KI Agent, Chatbot, WhatsApp Bot, Telegram Bot, KI Kundenservice, Agent Builder">
@@ -10,7 +12,18 @@
 <meta property="og:url" content="https://agentkontor.de">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
+  <meta property="og:image" content="https://agentkontor.de/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:image" content="https://agentkontor.de/og-image.png">
+  <meta name="twitter:site" content="@agentkontor">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
 <link rel="canonical" href="https://agentkontor.de">
+  <link rel="alternate" hreflang="de" href="https://agentkontor.de">
+  <link rel="alternate" hreflang="x-default" href="https://agentkontor.de">
 <title>AgentKontor — Dein eigener KI-Agent</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -436,5 +449,40 @@ document.querySelectorAll('.faq-q').forEach(q => {
 });
 </script>
 <script src="/cookie-banner.js"></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "AgentKontor",
+  "description": "KI-Agent-Builder für Website, WhatsApp und Telegram. Kein Code nötig.",
+  "url": "https://agentkontor.de",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web",
+  "offers": [
+    {
+      "@type": "Offer",
+      "name": "Free",
+      "price": "0",
+      "priceCurrency": "EUR",
+      "description": "3 Agenten, 500 Nachrichten/Monat"
+    },
+    {
+      "@type": "Offer",
+      "name": "Pro",
+      "price": "19",
+      "priceCurrency": "EUR",
+      "billingDuration": "P1M",
+      "description": "Unbegrenzte Agenten, alle Kanäle"
+    }
+  ],
+  "author": {
+    "@type": "Organization",
+    "name": "superhecht.ai",
+    "url": "https://agentkontor.de"
+  },
+  "inLanguage": "de-DE",
+  "featureList": "KI-Agenten, WhatsApp, Telegram, Voice, RAG, Fine-Tuning"
+}
+</script>
 </body>
 </html>
