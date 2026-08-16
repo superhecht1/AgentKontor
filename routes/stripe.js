@@ -40,6 +40,13 @@ router.post('/create-checkout', auth, async (req, res) => {
 
     const baseUrl = process.env.APP_URL || 'https://agentkontor.de';
 
+    const { cycle = 'monthly', coupon } = req.body;
+    const priceId = cycle === 'yearly'
+      ? (process.env.STRIPE_YEARLY_PRICE_ID || process.env.STRIPE_PRO_PRICE_ID)
+      : process.env.STRIPE_PRO_PRICE_ID;
+
+    if (!priceId) return res.status(500).json({ error: 'Stripe Price ID nicht konfiguriert' });
+
     const session = await stripe.checkout.sessions.create({
       customer:   customerId,
       mode:       'subscription',

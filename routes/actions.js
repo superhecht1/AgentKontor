@@ -174,6 +174,22 @@ function buildToolDefinitions(tools) {
 /**
  * Execute a single tool call
  */
+// SSRF Protection — block internal/private IPs
+const SSRF_BLOCKED = [
+  /^10\./, /^172\.(1[6-9]|2[0-9]|3[01])\./, /^192\.168\./,
+  /^127\./, /^0\./, /^169\.254\./, /^::1$/, /^fc00:/, /^fe80:/,
+  /^localhost$/i, /metadata\.google\.internal/i,
+  /169\.254\.169\.254/, /100\.100\.100\.200/, // AWS/Alibaba metadata
+];
+
+function isSsrfBlocked(url) {
+  try {
+    const parsed = new URL(url);
+    const host   = parsed.hostname;
+    return SSRF_BLOCKED.some(r => r.test(host));
+  } catch { return true; }
+}
+
 async function executeTool(toolName, toolInput, toolConfig, agent) {
   const start = Date.now();
   let output = '', success = true;
@@ -238,6 +254,8 @@ async function executeTool(toolName, toolInput, toolConfig, agent) {
       case 'add_crm': {
         const crmUrl   = toolConfig.webhook_url || toolConfig.hubspot_url;
         const apiKey   = toolConfig.api_key;
+
+        if (crmUrl && isSsrfBlocked(crmUrl)) { output = 'CRM-URL nicht erlaubt'; success = false; break; }
 
         if (!crmUrl) {
           output = `Lead erfasst: ${toolInput.name} (${toolInput.email || 'keine E-Mail'})`;

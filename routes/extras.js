@@ -172,6 +172,10 @@ router.post('/cron/cleanup', async (req, res) => {
     await pool.query(`INSERT INTO cron_log (job, result) VALUES ('cleanup', $1)`,
       [results.join(', ')]);
 
+    // Send lead digests
+    const digestCount = await sendLeadDigests(pool);
+    results.push(`Digest emails sent: ${digestCount}`);
+
     console.log('Cron cleanup:', results.join(' | '));
     res.json({ success: true, results });
   } catch(e) {
@@ -244,4 +248,95 @@ router.post('/handoff/:agentId', async (req, res) => {
   }
 });
 
+
+/* ── LEAD DIGEST EMAIL ──────────────────────────────────── */
+// Also called by cron cleanup — sends daily/weekly lead summaries
+async function sendLeadDigests(pool) {
+  try {
+    // Find users who want digest and haven't received one recently
+    const users = await pool.query(`
+      SELECT u.id, u.email, u.name, u.digest_frequency, u.digest_last_sent
+      FROM users u WHERE u.deleted_at IS NULL
+        AND u.digest_frequency != 'never'
+        AND (
+          (u.digest_frequency='daily' AND (u.digest_last_sent IS NULL OR u.digest_last_sent < NOW()-INTERVAL'23 hours'))
+          OR
+          (u.digest_frequency='weekly' AND (u.digest_last_sent IS NULL OR u.digest_last_sent < NOW()-INTERVAL'6 days'))
+        )
+    `);
+
+    for (const user of users.rows) {
+      try {
+        // Get leads since last digest
+        const since = user.digest_last_sent || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        const leads = await pool.query(`
+          SELECT lc.data, lc.source, lc.created_at, a.name AS agent_name, a.emoji
+          FROM lead_captures lc
+          JOIN agents a ON lc.agent_id=a.id
+          WHERE a.user_id=$1 AND lc.created_at > $2
+          ORDER BY lc.created_at DESC LIMIT 50
+        `, [user.id, since]);
+
+        if (!leads.rows.length) continue; // No new leads
+
+        if (!process.env.SMTP_HOST) continue;
+
+        const nodemailer = require('nodemailer');
+        const t = nodemailer.createTransport({ host:process.env.SMTP_HOST, port:parseInt(process.env.SMTP_PORT||'587'), secure:false, auth:{user:process.env.SMTP_USER,pass:process.env.SMTP_PASS} });
+
+        const rows = leads.rows.map(l =>
+          `<tr><td style="padding:7px 11px">${l.emoji} ${l.agent_name}</td><td style="padding:7px 11px">${JSON.stringify(l.data).slice(0,60)}</td><td style="padding:7px 11px;color:#888;font-size:.85em">${l.source}</td><td style="padding:7px 11px;color:#888;font-size:.85em">${new Date(l.created_at).toLocaleDateString('de-DE')}</td></tr>`
+        ).join('');
+
+        await t.sendMail({
+          from: `AgentKontor <${process.env.SMTP_FROM||'noreply@agentkontor.de'}>`,
+          to: user.email,
+          subject: `📊 ${leads.rows.length} neue Leads — AgentKontor`,
+          html: `<div style="font-family:sans-serif;max-width:600px;margin:32px auto;padding:28px;background:#fff;border-radius:12px;border:1px solid #eee">
+            <h2 style="margin-bottom:4px">Hallo ${user.name}!</h2>
+            <p style="color:#888;margin-bottom:20px">${leads.rows.length} neue Lead(s) seit deinem letzten Digest.</p>
+            <table style="width:100%;border-collapse:collapse;border:1px solid #eee;border-radius:8px;overflow:hidden">
+              <thead><tr style="background:#f8f8f8"><th style="padding:8px 11px;text-align:left;font-size:.8em;color:#888">Agent</th><th style="padding:8px 11px;text-align:left;font-size:.8em;color:#888">Daten</th><th style="padding:8px 11px;text-align:left;font-size:.8em;color:#888">Kanal</th><th style="padding:8px 11px;text-align:left;font-size:.8em;color:#888">Datum</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+            <a href="${process.env.APP_URL||'https://agentkontor.de'}/app" style="display:inline-block;margin-top:20px;background:#6c5ce7;color:#fff;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:600">Im Dashboard ansehen →</a>
+            <p style="color:#aaa;font-size:.78em;margin-top:16px">Digest-Frequenz ändern: Einstellungen → Benachrichtigungen</p>
+          </div>`
+        });
+
+        // Update last sent
+        await pool.query('UPDATE users SET digest_last_sent=NOW() WHERE id=$1', [user.id]);
+      } catch(e) { console.warn(`Digest error for user ${user.id}:`, e.message); }
+    }
+
+    return users.rows.length;
+  } catch(e) { console.error('Digest error:', e.message); return 0; }
+}
+
+/* ── AUDIT LOG ENDPOINT ─────────────────────────────────── */
+router.get('/audit', require('../middleware/auth'), async (req, res) => {
+  const pool = getPool(req);
+  try {
+    const r = await pool.query(
+      `SELECT action, entity, entity_id, metadata, ip_address, created_at
+       FROM audit_log WHERE user_id=$1 ORDER BY created_at DESC LIMIT 50`,
+      [req.userId]
+    );
+    res.json({ log: r.rows });
+  } catch(e) { res.json({ log: [] }); }
+});
+
+/* ── DIGEST PREFERENCES ─────────────────────────────────── */
+router.put('/digest-preferences', require('../middleware/auth'), async (req, res) => {
+  const pool = getPool(req);
+  const { frequency } = req.body;
+  if (!['daily','weekly','never'].includes(frequency))
+    return res.status(400).json({ error: 'Ungültige Frequenz' });
+  try {
+    await pool.query('UPDATE users SET digest_frequency=$1 WHERE id=$2', [frequency, req.userId]);
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: 'Fehler' }); }
+});
+
 module.exports = router;
+module.exports.sendLeadDigests = sendLeadDigests;

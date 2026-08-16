@@ -13,6 +13,7 @@ const bcrypt  = require('bcryptjs');
 const jwt     = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET;
+const { auditLog } = require('../middleware/plan-gate');
 if (!JWT_SECRET) throw new Error('❌ JWT_SECRET env var nicht gesetzt — bitte in Render setzen');
 
 function getPool(req) { return req.app.locals.pool; }
@@ -22,6 +23,8 @@ async function ensureColumns(pool) {
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS token_version INTEGER NOT NULL DEFAULT 1`);
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT false`);
 }
+
+function maskEmail(e) { return e ? e.replace(/(?<=.{1}).(?=[^@]*@)/g, '*') : ''; }
 
 function signToken(userId, tokenVersion) {
   return jwt.sign({ userId, tv: tokenVersion }, JWT_SECRET, { expiresIn: '30d' });
@@ -90,6 +93,7 @@ router.post('/login', async (req, res) => {
 
     const token = signToken(user.id, user.token_version);
     const { password_hash, token_version, ...safeUser } = user;
+    setImmediate(() => auditLog(pool, user.id, 'user_login', 'user', user.id, {}, req.ip));
     res.json({ token, user: safeUser });
   } catch (e) {
     console.error('LOGIN ERROR:', e.message);

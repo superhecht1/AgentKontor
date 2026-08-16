@@ -178,4 +178,39 @@ router.get('/all/leads/csv', auth, async (req, res) => {
   }
 });
 
+
+/* ── SEARCH CONVERSATIONS ──────────────────────────────── */
+router.get('/:agentId/search', auth, async (req, res) => {
+  const pool = getPool(req);
+  if (!(await verifyOwner(pool, req.params.agentId, req.userId)))
+    return res.status(403).json({ error: 'Nicht berechtigt' });
+
+  const { q, source, from, to, limit = 20 } = req.query;
+  if (!q || q.length < 2) return res.status(400).json({ error: 'Suchbegriff erforderlich (min. 2 Zeichen)' });
+
+  try {
+    let query = `
+      SELECT DISTINCT ON (session_id)
+        session_id, source, created_at,
+        content AS match_content
+      FROM chat_messages
+      WHERE agent_id=$1
+        AND content ILIKE $2
+    `;
+    const params = [req.params.agentId, '%' + q + '%'];
+
+    if (source) { query += ` AND source=$${params.length+1}`; params.push(source); }
+    if (from)   { query += ` AND created_at >= $${params.length+1}`; params.push(from); }
+    if (to)     { query += ` AND created_at <= $${params.length+1}`; params.push(to); }
+
+    query += ` ORDER BY session_id, created_at DESC LIMIT $${params.length+1}`;
+    params.push(parseInt(limit));
+
+    const r = await pool.query(query, params);
+    res.json({ results: r.rows, query: q });
+  } catch(e) {
+    res.status(500).json({ error: 'Suche fehlgeschlagen' });
+  }
+});
+
 module.exports = router;
