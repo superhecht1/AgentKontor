@@ -50,7 +50,7 @@ router.post('/create-checkout', auth, async (req, res) => {
     const session = await stripe.checkout.sessions.create({
       customer:   customerId,
       mode:       'subscription',
-      line_items: [{ price: process.env.STRIPE_PRO_PRICE_ID, quantity: 1 }],
+      line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${baseUrl}/app?upgrade=success`,
       cancel_url:  `${baseUrl}/app?upgrade=cancelled`,
       allow_promotion_codes: true,

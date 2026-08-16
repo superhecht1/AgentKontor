@@ -262,7 +262,7 @@ router.get('/export', auth, async (req, res) => {
     const messages = await pool.query(`
       SELECT cm.session_id,cm.role,cm.content,cm.source,cm.created_at,a.name AS agent_name
       FROM chat_messages cm JOIN agents a ON cm.agent_id=a.id
-      WHERE a.user_id=$1 ORDER BY cm.created_at DESC LIMIT 5000
+      WHERE a.user_id=$1 ORDER BY cm.created_at DESC LIMIT 1000
     `, [req.userId]);
     const leads = await pool.query(`
       SELECT lc.data,lc.source,lc.created_at,a.name AS agent_name
@@ -273,7 +273,7 @@ router.get('/export', auth, async (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.json({
       exportedAt: new Date().toISOString(),
-      notice: 'SMTP-Zugangsdaten werden aus Sicherheitsgründen nicht exportiert.',
+      notice: 'SMTP-Zugangsdaten werden aus Sicherheitsgründen nicht exportiert. Chat-Verlauf: max. 1.000 neueste Nachrichten.',
       datenschutz: {
         verantwortlicher: 'Mark Rusniok, superhecht.ai, Gottesweg 20, 50969 Köln',
         datenempfaenger: [

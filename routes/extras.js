@@ -191,7 +191,7 @@ router.post('/cron/cleanup', async (req, res) => {
       SELECT * FROM deletion_requests WHERE status='pending'
     `).catch(() => ({ rows: [] }));
 
-    for (const req of delReqs.rows) {
+    for (const delReq of delReqs.rows) {
       try {
         await pool.query(`DELETE FROM chat_messages WHERE agent_id=$1
           AND session_id IN (
@@ -199,10 +199,10 @@ router.post('/cron/cleanup', async (req, res) => {
             JOIN agent_memory am ON am.agent_id=cm2.agent_id
             WHERE am.session_identifier=$2 AND am.agent_id=$1
             LIMIT 1000
-          )`, [req.agent_id, req.session_identifier_hash]);
+          )`, [delReq.agent_id, delReq.session_identifier_hash]);
         await pool.query(`DELETE FROM agent_memory WHERE agent_id=$1 AND session_identifier=$2`,
-          [req.agent_id, req.session_identifier_hash]);
-        await pool.query(`UPDATE deletion_requests SET status='done', completed_at=NOW() WHERE id=$1`, [req.id]);
+          [delReq.agent_id, delReq.session_identifier_hash]);
+        await pool.query(`UPDATE deletion_requests SET status='done', completed_at=NOW() WHERE id=$1`, [delReq.id]);
       } catch(e) { console.warn('Deletion request error:', e.message); }
     }
     if (delReqs.rows.length) results.push(`Processed ${delReqs.rows.length} deletion requests`);

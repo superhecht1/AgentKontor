@@ -116,6 +116,10 @@ router.post('/reset-password', async (req, res) => {
   const { token, password } = req.body;
   if (!token || !password) return res.status(400).json({ error: 'Token und Passwort erforderlich' });
   if (password.length < 8) return res.status(400).json({ error: 'Passwort mindestens 8 Zeichen' });
+  // Basic strength: at least 2 character classes
+  const checks2 = [/[A-Z]/, /[a-z]/, /[0-9]/, /[^A-Za-z0-9]/];
+  if (checks2.filter(r => r.test(password)).length < 2)
+    return res.status(400).json({ error: 'Passwort muss Groß-/Kleinbuchstaben oder Zahlen enthalten.' });
 
   const pool = getPool(req);
 

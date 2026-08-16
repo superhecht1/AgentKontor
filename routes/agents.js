@@ -159,8 +159,9 @@ router.put('/:id', auth, async (req, res) => {
         facebook_enabled=$41, facebook_token=$42, facebook_page_id=$43,
         slack_enabled=$44, slack_bot_token=$45, slack_channel_id=$46,
         voice_enabled=$47, voice_provider=$48, voice_id=$49, voice_stability=$50, stt_provider=$51,
-        data_retention_days=$52, lead_retention_days=$53
-      WHERE id=$54 AND user_id=$55
+        data_retention_days=$52, lead_retention_days=$53,
+        model=$54
+      WHERE id=$55 AND user_id=$56
       RETURNING ${AGENT_FIELDS}`,
       [
         b.name, b.emoji || '🤖', b.description || '', b.color || '#6c5ce7',
@@ -186,6 +187,7 @@ router.put('/:id', auth, async (req, res) => {
         parseFloat(b.voice_stability) || 0.5, b.stt_provider || 'whisper',
         Math.min(Math.max(parseInt(b.data_retention_days) || 90, 7), 730),
         Math.min(Math.max(parseInt(b.lead_retention_days) || 180, 7), 730),
+        b.model || 'claude-sonnet-4-6',
         req.params.id, req.userId,
       ]
     );
