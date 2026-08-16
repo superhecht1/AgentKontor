@@ -224,6 +224,19 @@ router.post('/cron/cleanup', async (req, res) => {
     const digestCount = await sendLeadDigests(pool);
     results.push(`Digest emails sent: ${digestCount}`);
 
+    // FIX 4: Downgrade expired trials to free plan
+    const trialExpired = await pool.query(`
+      UPDATE users SET plan='free'
+      WHERE plan='pro'
+        AND trial_ends_at IS NOT NULL
+        AND trial_ends_at < NOW()
+        AND stripe_subscription_id IS NULL
+        AND deleted_at IS NULL
+      RETURNING id
+    `);
+    if (trialExpired.rowCount > 0)
+      results.push(`Downgraded ${trialExpired.rowCount} expired trials to free`);
+
     console.log('Cron cleanup:', results.join(' | '));
     res.json({ success: true, results });
   } catch(e) {
@@ -307,9 +320,9 @@ async function sendLeadDigests(pool) {
       FROM users u WHERE u.deleted_at IS NULL
         AND u.digest_frequency != 'never'
         AND (
-          (u.digest_frequency='daily' AND (u.digest_last_sent IS NULL OR u.digest_last_sent < NOW()-INTERVAL'23 hours'))
+          (u.digest_frequency='daily'  AND (u.digest_last_sent IS NULL OR u.digest_last_sent < NOW()-INTERVAL'23 hours'))
           OR
-          (u.digest_frequency='weekly' AND (u.digest_last_sent IS NULL OR u.digest_last_sent < NOW()-INTERVAL'6 days'))
+          (u.digest_frequency='weekly' AND (u.digest_last_sent IS NULL OR u.digest_last_sent < NOW()-INTERVAL'6 days 23 hours'))
         )
     `);
 

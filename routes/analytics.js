@@ -163,12 +163,14 @@ router.get('/:agentId/leads', auth, async (req, res) => {
   if (!check.rows.length) return res.status(403).json({ error: 'Nicht berechtigt' });
 
   try {
+    const limit  = Math.min(parseInt(req.query.limit)  || 50, 200);
+    const offset = parseInt(req.query.offset) || 0;
     const leads = await pool.query(`
       SELECT id, session_id, source, data, created_at
       FROM lead_captures WHERE agent_id=$1
-      ORDER BY created_at DESC LIMIT 100
-    `, [agentId]);
-    res.json({ leads: leads.rows });
+      ORDER BY created_at DESC LIMIT $2 OFFSET $3
+    `, [agentId, limit, offset]);
+    res.json({ leads: leads.rows, limit, offset });
   } catch(e) {
     res.status(500).json({ error: 'Fehler' });
   }
@@ -184,8 +186,8 @@ router.get('/leads/all', auth, async (req, res) => {
       FROM lead_captures lc
       JOIN agents a ON lc.agent_id = a.id
       WHERE a.user_id=$1
-      ORDER BY lc.created_at DESC LIMIT 200
-    `, [req.userId]);
+      ORDER BY lc.created_at DESC LIMIT $2 OFFSET $3
+    `, [req.userId, Math.min(parseInt(req.query.limit)||50,200), parseInt(req.query.offset)||0]);
     res.json({ leads: leads.rows });
   } catch(e) {
     res.status(500).json({ error: 'Fehler' });

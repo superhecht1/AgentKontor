@@ -52,6 +52,15 @@ router.post('/transcribe', upload.single('audio'), async (req, res) => {
 
 /* ── TEXT-TO-SPEECH ─────────────────────────────────────── */
 router.post('/speak', async (req, res) => {
+  // Rate limit: 30 TTS calls/hour per IP (ElevenLabs costs money)
+  const pool = req.app.locals.pool;
+  const ip   = req.ip || 'unknown';
+  try {
+    const { rateLimit } = require('../middleware/plan-gate');
+    const rl = await rateLimit(pool, `tts:${ip}`, 30);
+    if (!rl.allowed) return res.status(429).json({ error: 'TTS-Limit erreicht (30/Stunde)' });
+  } catch { /* non-critical */ }
+
   const { text, voiceId, provider = 'elevenlabs', agentId } = req.body;
   if (!text) return res.status(400).json({ error: 'Text erforderlich' });
 

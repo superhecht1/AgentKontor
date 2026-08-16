@@ -147,8 +147,13 @@ router.put('/:id', auth, async (req, res) => {
         cap_calendar=$20, cal_link=$21, cap_leads=$22, lead_fields=$23, lead_email=$24,
         cap_products=$25, products_data=$26, cap_multilang=$27, cap_email=$28,
         smtp_host=$29, smtp_port=$30, smtp_user=$31, smtp_pass=$32, smtp_from=$33,
-        widget_position=$34, widget_delay=$35, widget_theme=$36, widget_size=$37
-      WHERE id=$38 AND user_id=$39
+        widget_position=$34, widget_delay=$35, widget_theme=$36, widget_size=$37,
+        instagram_enabled=$38, instagram_token=$39, instagram_business_id=$40,
+        facebook_enabled=$41, facebook_token=$42, facebook_page_id=$43,
+        slack_enabled=$44, slack_bot_token=$45, slack_channel_id=$46,
+        voice_enabled=$47, voice_provider=$48, voice_id=$49, voice_stability=$50, stt_provider=$51,
+        data_retention_days=$52, lead_retention_days=$53
+      WHERE id=$54 AND user_id=$55
       RETURNING ${AGENT_FIELDS}`,
       [
         b.name, b.emoji || '🤖', b.description || '', b.color || '#6c5ce7',
@@ -167,6 +172,13 @@ router.put('/:id', auth, async (req, res) => {
         b.smtp_pass || '', b.smtp_from || '',
         b.widget_position || 'right', b.widget_delay || 0,
         b.widget_theme || 'dark', b.widget_size || 56,
+        !!b.instagram_enabled, b.instagram_token || null, b.instagram_business_id || null,
+        !!b.facebook_enabled,  b.facebook_token  || null, b.facebook_page_id   || null,
+        !!b.slack_enabled,     b.slack_bot_token  || null, b.slack_channel_id   || null,
+        !!b.voice_enabled, b.voice_provider || 'elevenlabs', b.voice_id || null,
+        parseFloat(b.voice_stability) || 0.5, b.stt_provider || 'whisper',
+        Math.min(Math.max(parseInt(b.data_retention_days) || 90, 7), 730),
+        Math.min(Math.max(parseInt(b.lead_retention_days) || 180, 7), 730),
         req.params.id, req.userId,
       ]
     );
