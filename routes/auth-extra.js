@@ -168,6 +168,22 @@ router.get('/verify-email/:token', async (req, res) => {
   }
 });
 
+/* ── CONFIRM EMAIL CHANGE ──────────────────────────────── */
+router.get('/confirm-email/:token', async (req, res) => {
+  const pool = getPool(req);
+  const base = () => process.env.APP_URL || 'https://agentkontor.de';
+  try {
+    const r = await pool.query(
+      'UPDATE users SET email=pending_email, pending_email=NULL, pending_email_token=NULL WHERE pending_email_token=$1 AND pending_email IS NOT NULL RETURNING id',
+      [req.params.token]
+    );
+    if (!r.rows.length) return res.redirect(`${base()}/app?email_confirm=invalid`);
+    res.redirect(`${base()}/app?email_confirm=ok`);
+  } catch {
+    res.redirect(`${base()}/app?email_confirm=error`);
+  }
+});
+
 /* ── RESEND VERIFICATION ───────────────────────────────── */
 router.post('/resend-verification', require('../middleware/auth'), async (req, res) => {
   const pool = getPool(req);

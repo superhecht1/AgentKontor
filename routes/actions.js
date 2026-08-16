@@ -182,10 +182,14 @@ const SSRF_BLOCKED = [
   /169\.254\.169\.254/, /100\.100\.100\.200/, // AWS/Alibaba metadata
 ];
 
+const ALLOWED_PROTOCOLS = ['https:', 'http:'];
+
 function isSsrfBlocked(url) {
   try {
     const parsed = new URL(url);
-    const host   = parsed.hostname;
+    // Block dangerous protocols (file://, ftp://, data://, javascript://)
+    if (!ALLOWED_PROTOCOLS.includes(parsed.protocol)) return true;
+    const host = parsed.hostname;
     return SSRF_BLOCKED.some(r => r.test(host));
   } catch { return true; }
 }
@@ -202,7 +206,7 @@ async function executeTool(toolName, toolInput, toolConfig, agent) {
         // Use DuckDuckGo Instant Answer API (free, no key)
         const r = await fetch(
           `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`,
-          { headers: { 'User-Agent': 'AgentKontor/1.0' } }
+          { headers: { 'User-Agent': 'AgentKontor/1.0' }, signal: AbortSignal.timeout(8000) }
         );
         const d = await r.json();
         if (d.AbstractText) {
@@ -263,7 +267,7 @@ async function executeTool(toolName, toolInput, toolConfig, agent) {
         }
 
         // POST to CRM webhook (Zapier, HubSpot, etc.)
-        const crmResp = await fetch(crmUrl, {
+        const crmResp = await fetch(crmUrl, { signal: AbortSignal.timeout(10000),
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -294,6 +298,7 @@ async function executeTool(toolName, toolInput, toolConfig, agent) {
           method,
           headers: { 'Content-Type': 'application/json', ...(toolConfig.headers || {}) },
           body: method !== 'GET' ? JSON.stringify({ ...toolInput, agent_name: agent.name }) : undefined,
+          signal: AbortSignal.timeout(10000),
         });
         output = resp.ok ? `Aktion erfolgreich ausgeführt (HTTP ${resp.status})` : `Fehler (HTTP ${resp.status})`;
         success = resp.ok;

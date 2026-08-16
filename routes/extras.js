@@ -171,6 +171,12 @@ router.post('/cron/cleanup', async (req, res) => {
     `);
     results.push(`Deleted ${leadDel.rowCount} expired leads`);
 
+    // 1c2. Clean stale agent_memory (updated more than 180 days ago = likely abandoned sessions)
+    const memClean = await pool.query(`
+      DELETE FROM agent_memory WHERE updated_at < NOW() - INTERVAL '180 days'
+    `);
+    results.push(`Cleaned ${memClean.rowCount} stale memory records`);
+
     // 1d. Anonymize IP addresses in audit_log older than 30 days
     const ipAnon = await pool.query(`
       UPDATE audit_log

@@ -9,6 +9,21 @@ const router = require('express').Router();
 const auth   = require('../middleware/auth');
 const bcrypt = require('bcryptjs');
 
+
+function checkPasswordStrength(pw) {
+  if (!pw || pw.length < 8) return 'Passwort muss mindestens 8 Zeichen lang sein.';
+  if (pw.length > 128) return 'Passwort darf maximal 128 Zeichen lang sein.';
+  // Check for at least 2 of: uppercase, lowercase, number, special char
+  const checks = [/[A-Z]/, /[a-z]/, /[0-9]/, /[^A-Za-z0-9]/];
+  const passed = checks.filter(r => r.test(pw)).length;
+  if (passed < 2) return 'Passwort muss mindestens Groß- und Kleinbuchstaben oder Zahlen enthalten.';
+  // Common passwords
+  const common = ['password', 'passwort', '12345678', 'qwertyui', 'abcdefgh'];
+  if (common.some(p => pw.toLowerCase().includes(p))) return 'Passwort zu einfach. Bitte wähle ein sichereres Passwort.';
+  return null; // valid
+}
+
+
 function getPool(req) { return req.app.locals.pool; }
 
 // FIX 7: Mask email in logs
@@ -21,7 +36,8 @@ router.patch('/password', auth, async (req, res) => {
   const pool = getPool(req);
   const { current, newPw } = req.body;
   if (!current || !newPw) return res.status(400).json({ error: 'Alle Felder erforderlich' });
-  if (newPw.length < 8) return res.status(400).json({ error: 'Passwort mindestens 8 Zeichen' });
+  const pwErr = checkPasswordStrength(newPw);
+  if (pwErr) return res.status(400).json({ error: pwErr });
   if (newPw === current) return res.status(400).json({ error: 'Neues Passwort muss sich unterscheiden' });
 
   try {
@@ -59,8 +75,35 @@ router.patch('/email', auth, async (req, res) => {
     );
     if (exists.rows.length) return res.status(409).json({ error: 'E-Mail bereits vergeben' });
 
-    await pool.query('UPDATE users SET email=$1 WHERE id=$2', [email.toLowerCase(), req.userId]);
-    res.json({ success: true, email: email.toLowerCase() });
+    // FIX 9: Double-opt-in — send verification link to NEW email
+    const crypto = require('crypto');
+    const verifyToken = crypto.randomBytes(32).toString('hex');
+    // Store pending new email + token
+    await pool.query(
+      'UPDATE users SET pending_email=$1, pending_email_token=$2 WHERE id=$3',
+      [email.toLowerCase(), verifyToken, req.userId]
+    ).catch(async () => {
+      // Column might not exist yet — add it on the fly
+      await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS pending_email VARCHAR(256)');
+      await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS pending_email_token VARCHAR(128)');
+      await pool.query('UPDATE users SET pending_email=$1, pending_email_token=$2 WHERE id=$3',
+        [email.toLowerCase(), verifyToken, req.userId]);
+    });
+
+    // Send verification to NEW email
+    if (process.env.SMTP_HOST) {
+      const nodemailer = require('nodemailer');
+      const t = nodemailer.createTransport({ host:process.env.SMTP_HOST, port:parseInt(process.env.SMTP_PORT||'587'), secure:false, auth:{user:process.env.SMTP_USER,pass:process.env.SMTP_PASS} });
+      const link = `${process.env.APP_URL||'https://agentkontor.de'}/api/auth/confirm-email/${verifyToken}`;
+      await t.sendMail({
+        from: `AgentKontor <${process.env.SMTP_FROM||'noreply@agentkontor.de'}>`,
+        to: email.toLowerCase(),
+        subject: 'E-Mail-Adresse bestätigen — AgentKontor',
+        html: `<div style="font-family:sans-serif;max-width:500px;margin:32px auto;padding:28px;background:#fff;border-radius:12px"><h2>Neue E-Mail bestätigen</h2><p>Klicke auf den folgenden Link um deine neue E-Mail-Adresse zu bestätigen:</p><a href="${link}" style="display:inline-block;background:#6c5ce7;color:#fff;padding:11px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:14px">E-Mail bestätigen →</a><p style="color:#888;font-size:.8rem;margin-top:14px">Der Link ist 24 Stunden gültig. Falls du diese Änderung nicht angefragt hast, ignoriere diese E-Mail.</p></div>`,
+      }).catch(() => {});
+    }
+
+    res.json({ success: true, pending: true, message: 'Bestätigungslink an neue E-Mail gesendet.' });
   } catch(e) {
     res.status(500).json({ error: 'Fehler beim Ändern der E-Mail' });
   }

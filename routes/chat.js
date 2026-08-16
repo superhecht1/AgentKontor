@@ -104,6 +104,8 @@ router.get('/widget-config/:publicId', async (req, res) => {
     );
     if (!r.rows.length || !r.rows[0].is_active || !r.rows[0].widget_enabled)
       return res.status(404).json({ error: 'Widget nicht verfügbar' });
+    // FIX 10: Cache widget config for 5 minutes (static data, no PII)
+    res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
     res.json(r.rows[0]);
   } catch(e) { res.status(500).json({ error: 'Fehler' }); }
 });

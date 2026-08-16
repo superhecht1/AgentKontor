@@ -31,7 +31,12 @@ const AGENT_FIELDS = `
   cap_products, products_data, cap_multilang, cap_email,
   smtp_host, smtp_port, smtp_user, smtp_from,
   widget_position, widget_delay, widget_theme, widget_size,
-  total_messages, created_at
+  instagram_enabled, instagram_business_id,
+  facebook_enabled, facebook_page_id,
+  slack_enabled, slack_channel_id,
+  voice_enabled, voice_provider, voice_id, voice_stability, stt_provider,
+  data_retention_days, lead_retention_days,
+  model, total_messages, created_at
 `;
 
 /* ── LIST ──────────────────────────────────────────────── */

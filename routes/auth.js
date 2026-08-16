@@ -13,6 +13,20 @@ const bcrypt  = require('bcryptjs');
 const jwt     = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET;
+
+function checkPasswordStrength(pw) {
+  if (!pw || pw.length < 8) return 'Passwort muss mindestens 8 Zeichen lang sein.';
+  if (pw.length > 128) return 'Passwort darf maximal 128 Zeichen lang sein.';
+  // Check for at least 2 of: uppercase, lowercase, number, special char
+  const checks = [/[A-Z]/, /[a-z]/, /[0-9]/, /[^A-Za-z0-9]/];
+  const passed = checks.filter(r => r.test(pw)).length;
+  if (passed < 2) return 'Passwort muss mindestens Groß- und Kleinbuchstaben oder Zahlen enthalten.';
+  // Common passwords
+  const common = ['password', 'passwort', '12345678', 'qwertyui', 'abcdefgh'];
+  if (common.some(p => pw.toLowerCase().includes(p))) return 'Passwort zu einfach. Bitte wähle ein sichereres Passwort.';
+  return null; // valid
+}
+
 const { setAuthCookie, clearAuthCookie, hashIp } = require('../utils/privacy');
 const { auditLog } = require('../middleware/plan-gate');
 if (!JWT_SECRET) throw new Error('❌ JWT_SECRET env var nicht gesetzt — bitte in Render setzen');

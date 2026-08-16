@@ -148,6 +148,15 @@ router.post('/2fa/disable', auth, async (req, res) => {
 /* ── CHECK on login (called from auth.js) ───────────────── */
 router.post('/2fa/check', async (req, res) => {
   const { userId, code } = req.body;
+
+  // FIX 2: Rate limit brute-force on TOTP codes — 10/hour per userId
+  const pool2fa = getPool(req);
+  try {
+    const { rateLimit } = require('../middleware/plan-gate');
+    const key = `2fa_check:${userId || req.ip}`;
+    const rl  = await rateLimit(pool2fa, key, 10);
+    if (!rl.allowed) return res.status(429).json({ error: 'Zu viele 2FA-Versuche. Bitte in einer Stunde erneut versuchen.' });
+  } catch { /* non-critical */ }
   if (!userId || !code) return res.status(400).json({ error: 'userId und code erforderlich' });
 
   const speakeasy = getTOTP();
