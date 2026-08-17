@@ -316,6 +316,52 @@ input:checked+.slider::before{transform:translateX(18px)}
 .toast-info{background:#120e19;border-color:rgba(124,58,237,.35);color:var(--v-l)}
 @keyframes tIn{from{opacity:0;transform:translateY(8px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
 
+
+/* ── PLANNER ── */
+.plan-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:8px;cursor:pointer;transition:all .15s}
+.plan-card:hover{border-color:var(--border-h);transform:translateY(-1px)}
+.plan-card.active{border-color:rgba(124,58,237,.4);background:rgba(124,58,237,.04)}
+.plan-status{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:700;padding:3px 8px;border-radius:20px}
+.ps-planning{background:rgba(245,158,11,.1);color:var(--amber)}
+.ps-running{background:rgba(56,189,248,.1);color:var(--sky)}
+.ps-paused{background:rgba(124,58,237,.1);color:var(--v-l)}
+.ps-completed{background:rgba(16,185,129,.1);color:var(--emerald)}
+.ps-failed{background:rgba(244,63,94,.1);color:var(--rose)}
+.ps-cancelled{background:rgba(255,255,255,.05);color:var(--muted)}
+.plan-progress{height:4px;background:rgba(255,255,255,.06);border-radius:2px;margin-top:8px;overflow:hidden}
+.plan-progress-fill{height:100%;border-radius:2px;transition:width .5s ease;background:linear-gradient(90deg,var(--v),var(--amber))}
+/* Steps timeline */
+.step-timeline{display:flex;flex-direction:column;gap:0}
+.step-node{display:flex;gap:12px;position:relative}
+.step-node:not(:last-child)::after{content:'';position:absolute;left:15px;top:34px;bottom:-4px;width:2px;background:rgba(255,255,255,.07);border-radius:1px}
+.step-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0;border:2px solid;transition:all .2s}
+.step-body{flex:1;padding:8px 0 16px}
+.step-title{font-size:.87rem;font-weight:700;color:var(--white);margin-bottom:3px}
+.step-desc{font-size:.76rem;color:var(--muted-l);line-height:1.4;margin-bottom:4px}
+.step-result{font-size:.76rem;color:var(--text);background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.12);border-radius:6px;padding:6px 9px;margin-top:6px;line-height:1.5}
+.step-error{font-size:.76rem;color:var(--rose);background:var(--rose-bg);border:1px solid rgba(244,63,94,.18);border-radius:6px;padding:6px 9px;margin-top:6px}
+.step-approval-badge{font-size:.6rem;font-weight:700;padding:2px 7px;border-radius:10px}
+.sa-auto{background:rgba(16,185,129,.1);color:var(--emerald);border:1px solid rgba(16,185,129,.2)}
+.sa-notify{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.2)}
+.sa-approve{background:rgba(244,63,94,.1);color:var(--rose);border:1px solid rgba(244,63,94,.2)}
+/* Running animation */
+@keyframes pulse-ring{0%,100%{opacity:.4;transform:scale(1)}50%{opacity:1;transform:scale(1.1)}}
+.step-running .step-dot{animation:pulse-ring 1.4s ease-in-out infinite}
+/* Approval inbox */
+.approval-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:8px;transition:border-color .2s}
+.approval-card.pending{border-color:rgba(245,158,11,.25);background:rgba(245,158,11,.03)}
+.approval-level-badge{font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:20px}
+.rule-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);transition:background .12s}
+.rule-row:hover{background:rgba(255,255,255,.02)}
+.level-pill{font-size:.68rem;font-weight:700;padding:3px 9px;border-radius:12px;white-space:nowrap}
+.lp-auto{background:rgba(16,185,129,.12);color:var(--emerald);border:1px solid rgba(16,185,129,.22)}
+.lp-notify{background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.22)}
+.lp-approve{background:rgba(244,63,94,.1);color:var(--rose);border:1px solid rgba(244,63,94,.2)}
+/* Decompose preview */
+.decompose-preview{background:rgba(124,58,237,.05);border:1px solid rgba(124,58,237,.18);border-radius:var(--r);padding:16px;margin-top:12px}
+.preview-step{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.preview-step:last-child{border-bottom:none}
+.preview-num{width:24px;height:24px;border-radius:50%;background:rgba(124,58,237,.2);color:var(--v-l);font-size:.72rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 /* ── ONBOARDING WIZARD ── */
 .onboard-bg{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:600;display:flex;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(8px)}
 .onboard-card{background:var(--bg3);border:1px solid rgba(124,58,237,.25);border-radius:24px;width:100%;max-width:520px;overflow:hidden;box-shadow:0 60px 120px rgba(0,0,0,.8)}
@@ -540,6 +586,14 @@ input:checked+.slider::before{transform:translateX(18px)}
       <div class="nav-item" :class="{on:page==='agents'}" @click="page='agents'"><span class="nav-ico">🤖</span><span class="nav-lbl">Agenten</span><span class="nav-badge" x-show="agents.length" x-text="agents.length"></span></div>
       <div class="nav-item" :class="{on:page==='analytics'}" @click="page='analytics';loadAnalytics()"><span class="nav-ico">📊</span><span class="nav-lbl">Analytics</span><span class="nav-badge" x-show="dashLeads>0" x-text="dashLeads+' Leads'"></span></div>
       <div class="nav-item" :class="{on:page==='conversations'}" @click="page='conversations';loadConvAgents()"><span class="nav-ico">💬</span><span class="nav-lbl">Gespräche</span></div>
+      <div class="nav-group-label">Autonomie</div>
+      <div class="nav-item" :class="{on:page==='planner'}" @click="page='planner';loadPlans()">
+        <span class="nav-ico">🧭</span><span class="nav-lbl">Planner</span>
+      </div>
+      <div class="nav-item" :class="{on:page==='approvals'}" @click="page='approvals';loadApprovals()">
+        <span class="nav-ico">✅</span><span class="nav-lbl">Freigaben</span>
+        <span class="nav-badge" x-show="approvalCount>0" :style="'background:var(--rose)'" x-text="approvalCount"></span>
+      </div>
       <div class="nav-group-label">Agent-Kern</div>
       <div class="nav-item" :class="{on:page==='tools'}" @click="page='tools';loadTools()"><span class="nav-ico">⚙️</span><span class="nav-lbl">Tools</span></div>
       <div class="nav-item" :class="{on:page==='memory'}" @click="page='memory';loadMemory()"><span class="nav-ico">🧠</span><span class="nav-lbl">Memory</span></div>
@@ -1151,6 +1205,303 @@ X-AgentKontor-Signature: sha256=…
         </div>
       </div>
 
+
+
+      <!-- ── PLANNER PAGE ── -->
+      <div class="page" x-show="page==='planner'" @click.away="if(planPollInterval&&['completed','failed','cancelled'].includes(selectedPlan?.status)){}">
+        <div class="ph">
+          <div><h1>🧭 Planner</h1><div class="ph-sub">Ziele automatisch planen und ausführen</div></div>
+          <div class="ph-actions">
+            <button class="btn btn-ghost btn-sm" @click="loadPlans()">↺</button>
+            <button class="btn btn-primary btn-sm" @click="plansTab='new'">+ Neuer Plan</button>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:300px 1fr;gap:14px;align-items:start">
+
+          <!-- ── Linke Spalte: Input + Plan-Liste ── -->
+          <div>
+            <!-- Neues Ziel eingeben -->
+            <div class="card" x-show="plansTab==='new'||plansTab==='detail'" style="margin-bottom:12px">
+              <div class="card-hdr">🎯 Neues Ziel</div>
+              <div class="field">
+                <label>Ziel (natural language)</label>
+                <textarea class="inp" style="min-height:80px" x-model="planGoal"
+                  placeholder="Finde mir 20 potenzielle Kunden in Deutschland und bereite eine Kontaktkampagne vor…"></textarea>
+              </div>
+              <div class="field"><label>Kontext (optional)</label><input class="inp" x-model="planContext" placeholder="Wir sind ein B2B SaaS Anbieter…"></div>
+              <div class="inp-2col">
+                <div class="field"><label>Agent</label>
+                  <select class="inp" x-model="planAgentId">
+                    <option value="">Kein Agent</option>
+                    <template x-for="a in agents" :key="a.id"><option :value="a.id" x-text="a.emoji+' '+a.name"></option></template>
+                  </select>
+                </div>
+                <div class="field"><label>Modell</label>
+                  <select class="inp" x-model="planModel">
+                    <option value="claude-sonnet-4-6">Claude Sonnet 4.6</option>
+                    <option value="claude-opus-4-6">Claude Opus 4.6 🧠</option>
+                    <option value="gpt-4o">GPT-4o</option>
+                  </select>
+                </div>
+              </div>
+              <div style="display:flex;gap:7px">
+                <button class="btn btn-ghost btn-sm" @click="previewPlan()" :disabled="planDecomposing||!planGoal.trim()">
+                  <span x-text="planDecomposing?'Analysiere…':'👁 Vorschau'"></span>
+                </button>
+                <button class="btn btn-primary btn-sm" style="flex:1" @click="runPlan()" :disabled="planRunning||!planGoal.trim()">
+                  <span x-text="planRunning?'Starte…':'🚀 Plan ausführen'"></span>
+                </button>
+              </div>
+
+              <!-- Decompose-Vorschau -->
+              <div class="decompose-preview" x-show="decomposedPreview">
+                <div style="font-size:.72rem;font-weight:700;color:var(--v-l);margin-bottom:10px">📋 Geplante Schritte</div>
+                <div style="font-size:.78rem;color:var(--text);margin-bottom:10px;font-style:italic" x-text="decomposedPreview?.goal_understood"></div>
+                <template x-for="(s,i) in decomposedPreview?.steps||[]" :key="i">
+                  <div class="preview-step">
+                    <div class="preview-num" x-text="s.step_number"></div>
+                    <div style="flex:1;min-width:0">
+                      <div style="font-size:.82rem;font-weight:600;color:var(--white)" x-text="s.title"></div>
+                      <div style="font-size:.72rem;color:var(--muted-l);margin-top:2px" x-text="s.description"></div>
+                      <div style="display:flex;gap:5px;margin-top:4px;flex-wrap:wrap">
+                        <span class="badge b-v" x-show="s.tool_name" x-text="'⚙️ '+s.tool_name"></span>
+                        <span class="step-approval-badge" :class="'sa-'+s.approval_level" x-text="{auto:'🟢 Auto',notify:'🟡 Notify',approve:'🔴 Freigabe'}[s.approval_level]"></span>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+                <div style="margin-top:10px;font-size:.74rem;color:var(--muted-l);font-style:italic" x-text="'→ '+decomposedPreview?.expected_result"></div>
+                <button class="btn btn-primary btn-sm btn-full" style="margin-top:10px" @click="runPlan()">🚀 Jetzt ausführen</button>
+              </div>
+            </div>
+
+            <!-- Plan-Liste -->
+            <div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Verlauf</div>
+            <div class="empty" style="padding:20px" x-show="!plansList.length"><p style="font-size:.8rem">Noch keine Pläne</p></div>
+            <template x-for="p in plansList" :key="p.id">
+              <div class="plan-card" :class="{active:selectedPlan?.id===p.id}" @click="openPlan(p)">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px">
+                  <div style="font-size:.84rem;font-weight:600;color:var(--white);flex:1;line-height:1.3" x-text="p.goal.length>60?p.goal.slice(0,60)+'…':p.goal"></div>
+                  <div class="plan-status" :class="'ps-'+p.status" x-text="{planning:'⏳',running:'▶',paused:'⏸',completed:'✅',failed:'❌',cancelled:'🚫'}[p.status]+' '+p.status"></div>
+                </div>
+                <div style="font-size:.71rem;color:var(--muted)" x-text="(p.agent_emoji||'')+(p.agent_name?' '+p.agent_name+' · ':'')+new Date(p.created_at).toLocaleString('de-DE')"></div>
+                <div class="plan-progress" x-show="p.step_count>0">
+                  <div class="plan-progress-fill" :style="'width:'+(p.steps_done/(p.step_count||1)*100)+'%'"></div>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <!-- ── Rechte Spalte: Plan-Detail ── -->
+          <div>
+            <div x-show="!selectedPlan" style="display:flex;align-items:center;justify-content:center;height:300px;color:var(--muted);font-size:.85rem">← Plan wählen oder neues Ziel eingeben</div>
+
+            <div x-show="selectedPlan">
+              <!-- Plan-Header -->
+              <div class="card" style="margin-bottom:12px">
+                <div style="display:flex;align-items:flex-start;gap:12px">
+                  <div style="flex:1">
+                    <div style="font-size:1rem;font-weight:800;color:var(--white);margin-bottom:6px;line-height:1.3" x-text="selectedPlan?.goal"></div>
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                      <div class="plan-status" :class="'ps-'+selectedPlan?.status" x-text="{planning:'⏳ Analysiert',running:'▶ Läuft',paused:'⏸ Wartet auf Freigabe',completed:'✅ Abgeschlossen',failed:'❌ Fehlgeschlagen',cancelled:'🚫 Abgebrochen'}[selectedPlan?.status]||selectedPlan?.status"></div>
+                      <span style="font-size:.75rem;color:var(--muted)" x-text="(selectedPlan?.steps_done||0)+'/'+(selectedPlan?.step_count||0)+' Schritte'"></span>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:6px;flex-shrink:0">
+                    <button class="btn btn-ghost btn-sm" @click="retryPlan(selectedPlan?.id)" x-show="['failed','paused'].includes(selectedPlan?.status)">↺ Retry</button>
+                    <button class="btn btn-danger btn-sm" @click="cancelPlan(selectedPlan?.id)" x-show="['planning','running','paused'].includes(selectedPlan?.status)">⏹ Abbrechen</button>
+                  </div>
+                </div>
+                <!-- Fortschrittsbalken -->
+                <div class="plan-progress" style="height:6px;margin-top:12px">
+                  <div class="plan-progress-fill" :style="'width:'+(selectedPlan?.steps_done/(selectedPlan?.step_count||1)*100)+'%'"></div>
+                </div>
+
+                <!-- Laufend-Animation -->
+                <div x-show="selectedPlan?.status==='running'" style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:.78rem;color:var(--sky)">
+                  <span style="animation:pulse-ring 1.4s ease-in-out infinite;display:inline-block">▶</span>
+                  Plan wird ausgeführt…
+                </div>
+
+                <!-- Freigabe-Hinweis -->
+                <div x-show="selectedPlan?.status==='paused'" style="display:flex;align-items:center;gap:8px;margin-top:10px;padding:10px 12px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;font-size:.8rem;color:var(--amber)">
+                  🔐 Freigabe erforderlich — gehe zu <span class="link-muted" style="color:var(--amber)" @click="page='approvals';approvalsTab='pending';loadApprovals()">Freigaben →</span>
+                </div>
+
+                <!-- Ergebnis -->
+                <div x-show="selectedPlan?.result" style="margin-top:12px;padding:12px;background:rgba(16,185,129,.05);border:1px solid rgba(16,185,129,.15);border-radius:8px">
+                  <div style="font-size:.68rem;font-weight:700;color:var(--emerald);margin-bottom:6px;letter-spacing:.1em">ERGEBNIS</div>
+                  <div style="font-size:.84rem;color:var(--text);line-height:1.6;white-space:pre-wrap" x-text="selectedPlan?.result"></div>
+                </div>
+
+                <!-- Fehler -->
+                <div x-show="selectedPlan?.error_msg" class="err-box" style="margin-top:10px" x-text="selectedPlan?.error_msg"></div>
+              </div>
+
+              <!-- Step Timeline -->
+              <div class="card" x-show="planSteps.length">
+                <div class="card-hdr">📋 Ausführungsplan</div>
+                <div class="step-timeline">
+                  <template x-for="(s,i) in planSteps" :key="s.id">
+                    <div class="step-node" :class="{'step-running':s.status==='running'}">
+                      <div class="step-dot"
+                        :style="'background:'+planStepColor(s.status)+'18;border-color:'+planStepColor(s.status)"
+                        x-text="planStepIcon(s.status)">
+                      </div>
+                      <div class="step-body">
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                          <div class="step-title" x-text="'Schritt '+s.step_number+': '+s.title"></div>
+                          <span class="step-approval-badge" :class="'sa-'+(s.approval_level||'auto')" x-text="{auto:'🟢',notify:'🟡',approve:'🔴'}[s.approval_level||'auto']+' '+(s.approval_level||'auto')"></span>
+                          <span class="badge b-v" x-show="s.tool_name" x-text="'⚙️ '+s.tool_name"></span>
+                        </div>
+                        <div class="step-desc" x-text="s.description"></div>
+                        <div class="step-result" x-show="s.result_summary" x-text="s.result_summary"></div>
+                        <div class="step-error" x-show="s.error" x-text="s.error"></div>
+                        <div x-show="s.status==='waiting_approval'" style="margin-top:6px;font-size:.76rem;color:var(--amber)">
+                          ⏳ Wartet auf deine Freigabe…
+                          <span class="link-muted" style="color:var(--amber)" @click="page='approvals';loadApprovals()">→ Freigabe geben</span>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── APPROVALS PAGE ── -->
+      <div class="page" x-show="page==='approvals'">
+        <div class="ph">
+          <div>
+            <h1>✅ Freigaben</h1>
+            <div class="ph-sub">Agent-Aktionen genehmigen oder ablehnen</div>
+          </div>
+          <div class="ph-actions">
+            <button class="btn btn-ghost btn-sm" @click="seedRules()">🌱 Standard-Regeln</button>
+            <button class="btn btn-ghost btn-sm" @click="loadApprovals()">↺</button>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <div class="tab" :class="{on:approvalsTab==='pending'}"   @click="approvalsTab='pending';loadApprovals()">
+            🔐 Ausstehend
+            <span style="font-size:.65rem;background:var(--rose);color:#fff;padding:1px 6px;border-radius:10px;margin-left:5px;font-weight:700" x-show="approvalCount>0" x-text="approvalCount"></span>
+          </div>
+          <div class="tab" :class="{on:approvalsTab==='approved'}" @click="approvalsTab='approved';loadApprovals()">✅ Genehmigt</div>
+          <div class="tab" :class="{on:approvalsTab==='rejected'}" @click="approvalsTab='rejected';loadApprovals()">❌ Abgelehnt</div>
+          <div class="tab" :class="{on:approvalsTab==='rules'}"    @click="approvalsTab='rules';loadApprovals()">📋 Regeln</div>
+        </div>
+
+        <!-- Approval-Queue -->
+        <div x-show="approvalsTab!=='rules'">
+          <div class="empty" x-show="!approvalsList.length">
+            <div class="empty-ico" x-text="approvalsTab==='pending'?'🔐':'✅'"></div>
+            <h3 x-text="approvalsTab==='pending'?'Keine ausstehenden Freigaben':'Keine Einträge'"></h3>
+            <p x-show="approvalsTab==='pending'">Alle Aktionen sind entweder automatisch oder noch nicht angefragt.</p>
+          </div>
+          <template x-for="ap in approvalsList" :key="ap.id">
+            <div class="approval-card" :class="{pending:ap.status==='pending'}">
+              <div style="display:flex;align-items:flex-start;gap:12px">
+                <div style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0"
+                  :style="'background:'+approvalLevelColor(ap.level)+'15'">
+                  <span x-text="approvalLevelIcon(ap.level)"></span>
+                </div>
+                <div style="flex:1;min-width:0">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap">
+                    <span style="font-size:.88rem;font-weight:700;color:var(--white)" x-text="ap.title"></span>
+                    <span class="approval-level-badge level-pill" :class="'lp-'+ap.level" x-text="ap.level"></span>
+                    <span class="badge b-v" x-show="ap.agent_name" x-text="(ap.agent_emoji||'🤖')+' '+ap.agent_name"></span>
+                  </div>
+                  <div style="font-size:.78rem;color:var(--muted-l);margin-bottom:6px" x-text="ap.description||ap.step_desc"></div>
+                  <!-- Proposed Action -->
+                  <div x-show="ap.proposed_action?.tool" style="font-size:.72rem;color:var(--text);background:rgba(255,255,255,.04);border-radius:6px;padding:6px 9px;font-family:'JetBrains Mono',monospace">
+                    ⚙️ <span x-text="ap.proposed_action?.tool"></span>
+                    <span x-show="ap.proposed_action?.input" style="color:var(--muted);margin-left:4px" x-text="JSON.stringify(ap.proposed_action?.input).slice(0,80)"></span>
+                  </div>
+                  <!-- Plan-Kontext -->
+                  <div x-show="ap.plan_goal" style="font-size:.72rem;color:var(--muted);margin-top:4px">
+                    🧭 Plan: <em x-text="ap.plan_goal?.slice(0,80)+'…'"></em>
+                  </div>
+                  <!-- Entscheidung/Zeitstempel -->
+                  <div style="font-size:.7rem;color:var(--muted);margin-top:5px">
+                    <span x-text="new Date(ap.created_at).toLocaleString('de-DE')"></span>
+                    <span x-show="ap.response_note"> · <em style="color:var(--muted-l)" x-text="ap.response_note"></em></span>
+                  </div>
+                </div>
+                <!-- Aktions-Buttons -->
+                <div x-show="ap.status==='pending'" style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+                  <button class="btn btn-primary btn-sm" @click="approve(ap.id)" style="background:var(--emerald);box-shadow:none">✅ Freigeben</button>
+                  <button class="btn btn-danger btn-sm" @click="reject(ap.id)">❌ Ablehnen</button>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Approval-Regeln -->
+        <div x-show="approvalsTab==='rules'">
+          <div style="display:grid;grid-template-columns:1fr 360px;gap:14px;align-items:start">
+            <!-- Bestehende Regeln -->
+            <div>
+              <div style="font-size:.72rem;color:var(--muted-l);line-height:1.6;margin-bottom:14px;padding:10px 12px;background:rgba(255,255,255,.03);border-radius:8px">
+                🎛 Regeln bestimmen pro Aktion die Freigabe-Stufe.
+                <strong style="color:var(--emerald)">🟢 Auto</strong> = sofort ausführen ·
+                <strong style="color:var(--amber)">🟡 Notify</strong> = ausführen + informieren ·
+                <strong style="color:var(--rose)">🔴 Freigabe</strong> = warten bis du bestätigst
+              </div>
+              <div class="card" style="padding:0;overflow:hidden">
+                <div class="empty" style="padding:28px" x-show="!approvalRules.length"><div class="empty-ico">📋</div><h3>Keine Regeln</h3><p>Lege Standard-Regeln an oder erstelle eigene.</p></div>
+                <template x-for="r in approvalRules" :key="r.id">
+                  <div class="rule-row">
+                    <span x-text="approvalLevelIcon(r.level)" style="font-size:1.1rem;flex-shrink:0"></span>
+                    <div style="flex:1;min-width:0">
+                      <div style="font-size:.83rem;font-weight:700;color:var(--white);font-family:'JetBrains Mono',monospace" x-text="r.action_pattern"></div>
+                      <div style="font-size:.72rem;color:var(--muted-l)" x-text="r.description"></div>
+                    </div>
+                    <span class="level-pill" :class="'lp-'+r.level" x-text="r.level"></span>
+                    <span style="font-size:.7rem;color:var(--muted);min-width:32px;text-align:right" x-text="r.priority"></span>
+                    <div style="display:flex;gap:5px;flex-shrink:0">
+                      <span class="badge b-on" x-show="r.enabled">An</span>
+                      <span class="badge b-off" x-show="!r.enabled">Aus</span>
+                      <button class="btn btn-xs btn-danger" @click="deleteRule(r.id)">✕</button>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+
+            <!-- Neue Regel erstellen -->
+            <div class="card">
+              <div class="card-hdr">+ Neue Regel</div>
+              <div class="field">
+                <label>Aktionsmuster *</label>
+                <input class="inp" x-model="newRule.actionPattern" placeholder="send_email · http_call · * (alle)">
+                <div class="field-hint">Tool-Name, Aktionstyp oder * für alle</div>
+              </div>
+              <div class="field">
+                <label>Freigabe-Stufe</label>
+                <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
+                  <div class="tone-opt" :class="{on:newRule.level==='auto'}"    @click="newRule.level='auto'">
+                    <h4>🟢 Auto</h4><p>Sofort ausführen, keine Benachrichtigung</p>
+                  </div>
+                  <div class="tone-opt" :class="{on:newRule.level==='notify'}"  @click="newRule.level='notify'">
+                    <h4>🟡 Notify</h4><p>Ausführen + du wirst benachrichtigt</p>
+                  </div>
+                  <div class="tone-opt" :class="{on:newRule.level==='approve'}" @click="newRule.level='approve'">
+                    <h4>🔴 Freigabe</h4><p>Warten bis du manuell bestätigst</p>
+                  </div>
+                </div>
+              </div>
+              <div class="field"><label>Beschreibung (optional)</label><input class="inp" x-model="newRule.description" placeholder="E-Mails immer bestätigen"></div>
+              <div class="field"><label>Priorität (höher = überschreibt andere)</label><input class="inp" type="number" x-model.number="newRule.priority" min="1" max="100" placeholder="50"></div>
+              <button class="btn btn-primary btn-full" @click="saveRule()">💾 Regel speichern</button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- ── TOOLS PAGE ── -->
       <div class="page" x-show="page==='tools'">
@@ -2015,6 +2366,13 @@ insightFunnel:{sessions:0,engaged:0,leads:0,rate:0},
 insightTopQ:[],insightHeatmap:[],insightScore:{},
 // A/B results
 abResults:{},
+// Planner
+plansList:[],plansTab:'new',selectedPlan:null,planSteps:[],planPollInterval:null,
+planGoal:'',planContext:'',planAgentId:'',planModel:'claude-sonnet-4-6',
+planDecomposing:false,planRunning:false,decomposedPreview:null,
+// Approvals
+approvalsList:[],approvalsTab:'pending',approvalCount:0,
+approvalRules:[],newRule:{actionPattern:'',level:'approve',description:'',priority:50},
 // Analytics
 analyticsTab:'overview',
 // Tools
@@ -2551,6 +2909,93 @@ toggleDay(day){
 },
 
 
+
+// ── PLANNER ───────────────────────────────────────────────────────────────
+async loadPlans(){const d=await this.api('/planner?limit=30');if(d.plans)this.plansList=d.plans;},
+async previewPlan(){
+  if(!this.planGoal.trim()){this.toast('Ziel eingeben','err');return;}
+  this.planDecomposing=true;this.decomposedPreview=null;
+  try{
+    const d=await this.api('/planner/decompose-preview','POST',{
+      goal:this.planGoal,context:this.planContext,
+      agentId:this.planAgentId||undefined,model:this.planModel
+    });
+    if(d.decomposed)this.decomposedPreview=d.decomposed;
+    else this.toast(d.error||'Fehler','err');
+  }finally{this.planDecomposing=false;}
+},
+async runPlan(){
+  if(!this.planGoal.trim()){this.toast('Ziel eingeben','err');return;}
+  this.planRunning=true;
+  try{
+    const d=await this.api('/planner','POST',{
+      goal:this.planGoal,context:this.planContext,
+      agentId:this.planAgentId||undefined,model:this.planModel
+    });
+    if(d.error){this.toast(d.error,'err');return;}
+    this.toast('Plan gestartet ✓');
+    this.planGoal='';this.planContext='';this.decomposedPreview=null;
+    await this.loadPlans();
+    this.openPlan(d.plan);
+    this.plansTab='detail';
+  }finally{this.planRunning=false;}
+},
+openPlan(plan){
+  this.selectedPlan=plan;this.planSteps=[];
+  this.plansTab='detail';
+  this.pollPlan(plan.id);
+},
+async pollPlan(id){
+  if(this.planPollInterval)clearInterval(this.planPollInterval);
+  const doPoll=async()=>{
+    const d=await this.api('/planner/'+id+'/poll').catch(()=>null);
+    if(!d)return;
+    this.selectedPlan={...this.selectedPlan,...d};
+    this.planSteps=d.steps||[];
+    if(['completed','failed','cancelled'].includes(d.status))clearInterval(this.planPollInterval);
+  };
+  await doPoll();
+  this.planPollInterval=setInterval(doPoll,2500);
+},
+async cancelPlan(id){await this.api('/planner/'+id+'/cancel','POST');this.toast('Plan abgebrochen');await this.loadPlans();if(this.selectedPlan?.id===id)this.selectedPlan={...this.selectedPlan,status:'cancelled'};},
+async retryPlan(id){await this.api('/planner/'+id+'/retry','POST');this.toast('Plan wird neu gestartet');this.pollPlan(id);},
+planStepIcon(s){return{pending:'○',running:'▶',waiting_approval:'🔐',approved:'✓',completed:'✅',failed:'❌',rejected:'🚫',skipped:'–'}[s]||'○'},
+planStepColor(s){return{completed:'var(--emerald)',failed:'var(--rose)',rejected:'var(--rose)',running:'var(--sky)',waiting_approval:'var(--amber)',approved:'var(--v-l)',pending:'var(--muted)',skipped:'var(--muted)'}[s]||'var(--muted)'},
+
+// ── APPROVALS ────────────────────────────────────────────────────────────
+async loadApprovals(){
+  const d=await this.api('/approvals?status='+(this.approvalsTab==='pending'?'pending':this.approvalsTab));
+  if(d.approvals)this.approvalsList=d.approvals;
+  this.approvalCount=d.byStatus?.pending||0;
+  const r=await this.api('/approvals/rules');
+  if(r.rules)this.approvalRules=r.rules;
+},
+async approve(id){
+  const note=prompt('Freigabe-Notiz (optional):','');
+  if(note===null)return;
+  const d=await this.api('/approvals/'+id+'/approve','POST',{note});
+  if(d.success){this.toast('Freigegeben ✓');await this.loadApprovals();}
+  else this.toast(d.error,'err');
+},
+async reject(id){
+  const note=prompt('Ablehnungsgrund:','');
+  if(note===null)return;
+  const d=await this.api('/approvals/'+id+'/reject','POST',{note});
+  if(d.success){this.toast('Abgelehnt');await this.loadApprovals();}
+  else this.toast(d.error,'err');
+},
+async saveRule(){
+  if(!this.newRule.actionPattern){this.toast('Aktionsmuster erforderlich','err');return;}
+  await this.api('/approvals/rules','POST',this.newRule);
+  this.toast('Regel gespeichert ✓');
+  this.newRule={actionPattern:'',level:'approve',description:'',priority:50};
+  await this.loadApprovals();
+},
+async deleteRule(id){if(!confirm('Regel löschen?'))return;await this.api('/approvals/rules/'+id,'DELETE');await this.loadApprovals();},
+async seedRules(){const d=await this.api('/approvals/rules/seed','POST');this.toast(d.created+' Standard-Regeln angelegt');await this.loadApprovals();},
+approvalLevelColor(l){return{auto:'var(--emerald)',notify:'var(--amber)',approve:'var(--rose)'}[l]||'var(--muted)'},
+approvalLevelIcon(l){return{auto:'🟢',notify:'🟡',approve:'🔴'}[l]||'⚪'},
+
 // ── TOOLS ─────────────────────────────────────────────────────────────────
 async loadTools(){const d=await this.api('/tools');if(d.tools)this.toolsList=d.tools;const c=await this.api('/tools/calls?limit=20');if(c.calls)this.toolCalls=c.calls;},
 async saveTool(){
@@ -2638,7 +3083,7 @@ get cmdResults(){
     {label:'Einstellungen',icon:'⚙️',action:()=>{this.page='settings';this.closeCmd();}},
     {label:'API Keys',icon:'🔑',action:()=>{this.page='keys';this.loadKeys();this.closeCmd();}},
     {label:'Gespräche',icon:'💬',action:()=>{this.page='conversations';this.loadConvAgents();this.closeCmd();}},
-    {label:'Abrechnung',icon:'💳',action:()=>{this.page='billing';this.closeCmd();}},{label:'Tools',icon:'⚙️',action:()=>{this.page='tools';this.loadTools();this.closeCmd();}},{label:'Memory',icon:'🧠',action:()=>{this.page='memory';this.loadMemory();this.closeCmd();}},{label:'Tasks',icon:'⚡',action:()=>{this.page='tasks';this.loadTasks();this.closeCmd();}},
+    {label:'Abrechnung',icon:'💳',action:()=>{this.page='billing';this.closeCmd();}},{label:'Planner',icon:'🧭',action:()=>{this.page='planner';this.loadPlans();this.closeCmd();}},{label:'Freigaben',icon:'✅',action:()=>{this.page='approvals';this.loadApprovals();this.closeCmd();}},{label:'Tools',icon:'⚙️',action:()=>{this.page='tools';this.loadTools();this.closeCmd();}},{label:'Memory',icon:'🧠',action:()=>{this.page='memory';this.loadMemory();this.closeCmd();}},{label:'Tasks',icon:'⚡',action:()=>{this.page='tasks';this.loadTasks();this.closeCmd();}},
     ...this.agents.map(a=>({label:a.name,icon:a.emoji,action:()=>{this.editAgent(a);this.closeCmd();}})),
   ];
   if(!q)return cmds.slice(0,8);
