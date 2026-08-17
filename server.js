@@ -57,6 +57,7 @@ async function initDb() {
     'migrations/005_agent_phase1.sql',
     'migrations/006_planner_approvals.sql',
     'migrations/007_integrations_webagent.sql',
+    'migrations/008_multi_agent.sql',
   ];
   for (const file of sqls) {
     const fp = path.join(__dirname, file);
@@ -210,6 +211,9 @@ app.use('/api/approvals',      require('./routes/approvals'));
 // ── Phase 3+4: Integrations, Web-Agent ─────────────────────────────────────
 app.use('/api/integrations',   require('./routes/integrations'));
 app.use('/api/web',            require('./routes/web-agent'));
+
+// ── Phase 5: Super Agent / Multi-Agent ─────────────────────────────────────
+app.use('/api/super',          require('./routes/super-agent'));
 
 try {
   app.use('/api/rag', require('./routes/rag'));
