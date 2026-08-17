@@ -55,6 +55,7 @@ async function initDb() {
     'migrations/add_indexes.sql',
     'migrations/004_add_missing_agent_columns.sql',
     'migrations/005_agent_phase1.sql',
+    'migrations/006_planner_approvals.sql',
   ];
   for (const file of sqls) {
     const fp = path.join(__dirname, file);
@@ -197,9 +198,13 @@ app.use('/webhook',           require('./routes/social-webhooks'));
 app.use('/webhook',           require('./routes/slack-webhook')); // feedback, cron, changelog, handoff, versions
 
 // ── Phase 1: Tool-System, Memory, Task-Engine ──────────────────────────────
-app.use('/api/tools',   require('./routes/tools'));
-app.use('/api/memory',  require('./routes/memory'));
-app.use('/api/tasks',   require('./routes/tasks'));
+app.use('/api/tools',     require('./routes/tools'));
+app.use('/api/memory',    require('./routes/memory'));
+app.use('/api/tasks',     require('./routes/tasks'));
+
+// ── Phase 2: Planner, Approval-System ──────────────────────────────────────
+app.use('/api/planner',   require('./routes/planner'));
+app.use('/api/approvals', require('./routes/approvals'));
 
 try {
   app.use('/api/rag', require('./routes/rag'));
