@@ -1159,6 +1159,23 @@ lf:{email:'',password:''},rf:{name:'',email:'',password:''},
 get T(){return TRANSLATIONS[this.lang]||TRANSLATIONS.de;},
 toggleLang(){this.lang=this.lang==='de'?'en':'de';localStorage.setItem('ak_lang',this.lang);},
 agents:[],docs:[],toasts:[],saving:false,
+// Auth state
+forgotMode:false,resetMode:false,forgotSent:false,
+// Conversations
+sessions:[],messages:[],activeSession:null,convAgentId:'',
+// Settings
+settingsName:'',pwCurrent:'',pwNew:'',pwRepeat:'',pwErr:'',pwSuccess:false,
+newEmail:'',emailPw:'',emailErr:'',emailSuccess:false,
+deleteConfirm:'',
+// 2FA
+qrCode:'',totpCode:'',
+// Keys
+newKeyName:'',lastKey:'',apiKeys:[],
+// Webhooks (global page)
+webhooks:[],newWebhook:{url:'',events:['message.received','lead.captured'],agent_id:''},
+// Billing
+invoices:[],
+
 // NEW UI STATE
 sidebarCollapsed:false,
 viewMode:'grid',       // 'grid' | 'list'
@@ -1693,6 +1710,132 @@ async loadAgentStats(){
   }
 },
 
+
+// ── SETTINGS helpers (aliases to existing methods) ──
+async saveName(){
+  if(!this.settingsName)this.settingsName=this.user?.name||'';
+  this.saving=true;
+  const d=await this.api('/account/name','PUT',{name:this.settingsName});
+  this.saving=false;
+  if(d.success){this.user.name=this.settingsName;this.toast('Gespeichert ✓');}
+  else this.toast(d.error||'Fehler','err');
+},
+async changePassword(){
+  if(!this.pwNew||this.pwNew!==this.pwRepeat){this.pwErr='Passwörter stimmen nicht überein';return;}
+  if(this.pwNew.length<8){this.pwErr='Min. 8 Zeichen';return;}
+  this.pwErr='';this.saving=true;
+  const d=await this.api('/account/password','PUT',{current:this.pwCurrent,password:this.pwNew});
+  this.saving=false;
+  if(d.success){this.pwSuccess=true;this.pwCurrent='';this.pwNew='';this.pwRepeat='';}
+  else this.pwErr=d.error||'Fehler';
+},
+async changeEmail(){
+  this.emailErr='';this.saving=true;
+  const d=await this.api('/account/email','PUT',{email:this.newEmail,password:this.emailPw});
+  this.saving=false;
+  if(d.success){this.emailSuccess=true;this.user.email=this.newEmail;}
+  else this.emailErr=d.error||'Fehler';
+},
+async sendForgot(){
+  this.loading=true;this.authErr='';
+  const d=await this.api('/auth/forgot','POST',{email:this.lf.email}).catch(()=>({}));
+  this.loading=false;
+  if(d.success)this.forgotSent=true;
+  else this.authErr=d.error||'Fehler';
+},
+async exportData(){
+  const d=await this.api('/account/export');
+  const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='agentkontor-export.json';a.click();
+},
+async deleteAccount(){
+  if(this.deleteConfirm!=='LÖSCHEN')return;
+  const d=await this.api('/account','DELETE');
+  if(d.success){localStorage.clear();window.location='/';}
+  else this.toast(d.error||'Fehler','err');
+},
+async setup2fa(){
+  const d=await this.api('/auth/2fa/setup','POST');
+  if(d.qrCode){this.qrCode=d.qrCode;}
+  else this.toast(d.error||'Fehler','err');
+},
+async verify2fa(){
+  const d=await this.api('/auth/2fa/verify','POST',{token:this.totpCode});
+  if(d.success){this.user.totp_enabled=true;this.qrCode='';this.toast('2FA aktiviert ✓');}
+  else this.toast(d.error||'Ungültiger Code','err');
+},
+async disable2fa(){
+  if(!confirm('2FA wirklich deaktivieren?'))return;
+  const d=await this.api('/auth/2fa/disable','POST');
+  if(d.success){this.user.totp_enabled=false;this.toast('2FA deaktiviert');}
+  else this.toast(d.error||'Fehler','err');
+},
+// ── KEYS ──
+async loadKeys(){const d=await this.api('/keys');if(d.keys)this.apiKeys=d.keys;},
+async createKey(){
+  if(!this.newKeyName){this.toast('Name erforderlich','err');return;}
+  const d=await this.api('/keys','POST',{name:this.newKeyName});
+  if(d.key){this.lastKey=d.key;this.newKeyName='';await this.loadKeys();}
+  else this.toast(d.error||'Fehler','err');
+},
+async deleteKey(id){
+  if(!confirm('Key löschen?'))return;
+  await this.api('/keys/'+id,'DELETE');
+  this.apiKeys=this.apiKeys.filter(k=>k.id!==id);
+},
+// ── WEBHOOKS (global page) ──
+async loadWebhooks(){
+  this.webhooks=[];
+  for(const a of this.agents){
+    const d=await this.api('/webhooks-out/'+a.id).catch(()=>({}));
+    if(d.webhooks)this.webhooks.push(...d.webhooks.map(w=>({...w,agent_name:a.name,agent_id:a.id})));
+  }
+},
+async createWebhook(){
+  if(!this.newWebhook.url||!this.newWebhook.agent_id){this.toast('URL und Agent erforderlich','err');return;}
+  const d=await this.api('/webhooks-out/'+this.newWebhook.agent_id,'POST',this.newWebhook);
+  if(d.error){this.toast(d.error,'err');return;}
+  this.toast('Webhook erstellt ✓');
+  this.newWebhook={url:'',events:['message.received','lead.captured'],agent_id:''};
+  await this.loadWebhooks();
+},
+async deleteWebhook(id){
+  const wh=this.webhooks.find(w=>w.id===id);
+  if(!wh||!confirm('Webhook löschen?'))return;
+  await this.api('/webhooks-out/'+wh.agent_id+'/'+id,'DELETE');
+  this.webhooks=this.webhooks.filter(w=>w.id!==id);
+},
+// ── BILLING ──
+async loadInvoices(){const d=await this.api('/invoices').catch(()=>({}));if(d.invoices)this.invoices=d.invoices;},
+async manageSubscription(){const d=await this.api('/stripe/portal','POST');if(d.url)window.location=d.url;},
+// ── CONVERSATIONS (global page) ──
+async loadConvAgents(){/* agents already loaded */},
+async loadSessions(){
+  if(!this.convAgentId)return;
+  this.sessions=[];this.messages=[];this.activeSession=null;
+  const d=await this.api('/conversations/'+this.convAgentId+'/sessions');
+  if(d.sessions)this.sessions=d.sessions;
+},
+async loadMessages(sid){
+  this.activeSession=sid;
+  const d=await this.api('/conversations/'+this.convAgentId+'/'+sid);
+  if(d.messages)this.messages=d.messages;
+},
+async searchMessages(){
+  if(!this.convSearch||this.convSearch.length<2)return;
+  const d=await this.api('/conversations/'+this.convAgentId+'/search?q='+encodeURIComponent(this.convSearch));
+  if(d.results)this.sessions=d.results;
+},
+// ── ANALYTICS ──
+async loadLeads(){
+  if(this.convAgentId){
+    const d=await this.api('/analytics/'+this.convAgentId+'/leads');
+    this.allLeads=d.leads||[];
+  } else {
+    const d=await this.api('/analytics/leads/all');
+    this.allLeads=d.leads||[];
+  }
+},
 copy(t){navigator.clipboard.writeText(t).then(()=>this.toast('Kopiert!')).catch(()=>this.toast('Kopieren fehlgeschlagen','err'));},
 
 toast(msg,type='ok'){const id=Date.now();this.toasts.push({id,msg,type});setTimeout(()=>this.toasts=this.toasts.filter(t=>t.id!==id),3500);}
