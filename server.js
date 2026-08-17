@@ -54,6 +54,7 @@ async function initDb() {
     'migrations/add_features6.sql',
     'migrations/add_indexes.sql',
     'migrations/004_add_missing_agent_columns.sql',
+    'migrations/005_agent_phase1.sql',
   ];
   for (const file of sqls) {
     const fp = path.join(__dirname, file);
@@ -195,6 +196,11 @@ app.use('/api/invoices',      require('./routes/invoices'));
 app.use('/webhook',           require('./routes/social-webhooks'));
 app.use('/webhook',           require('./routes/slack-webhook')); // feedback, cron, changelog, handoff, versions
 
+// ── Phase 1: Tool-System, Memory, Task-Engine ──────────────────────────────
+app.use('/api/tools',   require('./routes/tools'));
+app.use('/api/memory',  require('./routes/memory'));
+app.use('/api/tasks',   require('./routes/tasks'));
+
 try {
   app.use('/api/rag', require('./routes/rag'));
   console.log('✅ RAG routes loaded');
@@ -240,7 +246,14 @@ initDb().then(async () => {
     console.log('✅ DB columns verified');
   } catch(e) { console.warn('ensureColumns:', e.message); }
 
-  const server = app.listen(PORT, () => console.log(`🚀 AgentKontor on port ${PORT}`));
+  const server = app.listen(PORT, () => {
+    console.log(`🚀 AgentKontor on port ${PORT}`);
+    // Task-Engine Hintergrundprozessor starten (alle 5s nach fälligen Tasks schauen)
+    try {
+      const { taskRunner } = require('./utils/task-runner');
+      taskRunner.startBackgroundRunner(5000);
+    } catch(e) { console.warn('[task-runner] Start fehlgeschlagen:', e.message); }
+  });
 
   // FIX 10: Graceful shutdown — close DB pool and server cleanly
   async function shutdown(signal) {
