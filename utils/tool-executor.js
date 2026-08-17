@@ -70,6 +70,83 @@ const BUILTIN_TOOLS = {
     return { taskId: task.id, status: task.status };
   },
 
+
+  calendar_get_events: async ({ from, to, max_results = 10 }, context) => {
+    if (!context?.pool) throw new Error('Kein DB-Kontext');
+    const cal = require('./integrations/calendar');
+    const r = await context.pool.query(
+      "SELECT * FROM integration_credentials WHERE user_id=$1 AND integration='calendar' AND is_active=true LIMIT 1",
+      [context.userId]
+    );
+    if (!r.rows.length) throw new Error('Keine Kalender-Integration konfiguriert');
+    return cal.getEvents(r.rows[0], context.pool, { from, to, maxResults: max_results });
+  },
+
+  calendar_find_slots: async ({ from, to, duration_minutes = 60 }, context) => {
+    if (!context?.pool) throw new Error('Kein DB-Kontext');
+    const cal = require('./integrations/calendar');
+    const r = await context.pool.query(
+      "SELECT * FROM integration_credentials WHERE user_id=$1 AND integration='calendar' AND is_active=true LIMIT 1",
+      [context.userId]
+    );
+    if (!r.rows.length) throw new Error('Keine Kalender-Integration konfiguriert');
+    return cal.findFreeSlots(r.rows[0], context.pool, { from, to, durationMinutes: duration_minutes });
+  },
+
+  email_get_messages: async ({ query = 'is:inbox is:unread', max_results = 10 }, context) => {
+    if (!context?.pool) throw new Error('Kein DB-Kontext');
+    const emailTool = require('./integrations/email-tool');
+    const r = await context.pool.query(
+      "SELECT * FROM integration_credentials WHERE user_id=$1 AND integration='email' AND is_active=true LIMIT 1",
+      [context.userId]
+    );
+    if (!r.rows.length) throw new Error('Keine E-Mail-Integration konfiguriert');
+    return emailTool.getEmails(r.rows[0], context.pool, { query, maxResults: max_results });
+  },
+
+  qualify_leads: async ({ agent_id, limit = 20 }, context) => {
+    if (!context?.pool) throw new Error('Kein DB-Kontext');
+    const crm = require('./integrations/crm-tool');
+    const { callLLM } = require('./llm');
+    return crm.batchQualify(context.pool, context.userId, { agentId: agent_id, callLLM });
+  },
+
+  web_search: async ({ query, max_results = 10 }, context) => {
+    const webAgent = require('./web-agent');
+    return webAgent.search(context?.pool || null, { query, maxResults: max_results });
+  },
+
+  web_scrape: async ({ url }, context) => {
+    const webAgent = require('./web-agent');
+    const result = await webAgent.scrape(context?.pool || null, url);
+    return { url: result.url, title: result.title, content: result.content.slice(0, 5000) };
+  },
+
+  web_research: async ({ goal, depth = 3 }, context) => {
+    if (!context?.pool) throw new Error('Kein DB-Kontext');
+    const webAgent = require('./web-agent');
+    const { callLLM } = require('./llm');
+    // Session anlegen
+    const s = await context.pool.query(
+      "INSERT INTO research_sessions (user_id,agent_id,goal,status) VALUES ($1,$2,$3,'running') RETURNING id",
+      [context.userId, context.agentId||null, goal]
+    );
+    const result = await webAgent.research(context.pool, s.rows[0].id, {
+      goal, depth,
+      callLLM: (m,sys,msgs) => callLLM(m||'claude-sonnet-4-6',sys,msgs)
+    });
+    return { summary: result.report.slice(0, 1000)+'...', sources: result.sources.length, session_id: s.rows[0].id };
+  },
+
+  analyze_document: async ({ doc_id, agent_id, analysis_type = 'summary' }, context) => {
+    if (!context?.pool) throw new Error('Kein DB-Kontext');
+    const docTool = require('./integrations/document-tool');
+    const { callLLM } = require('./llm');
+    const doc = await docTool.getDocumentFromDB(context.pool, { docId: doc_id, agentId: agent_id });
+    const result = await docTool.analyzeDocument(doc.text, { analysisType: analysis_type }, callLLM);
+    return typeof result === 'string' ? { summary: result } : result;
+  },
+
   calculate: async ({ expression }) => {
     // Sichere Mathe-Auswertung (kein eval)
     const allowed = /^[\d\s\+\-\*\/\(\)\.\,]+$/;
@@ -221,6 +298,110 @@ async function loadAgentTools(pool, agentId) {
 
 // ── Globale Builtin-Tool-Definitionen (für DB-Seed) ─────────────────────────
 const BUILTIN_DEFINITIONS = [
+
+  {
+    name: 'calendar_get_events',
+    description: 'Lädt bevorstehende Kalendertermine aus dem verbundenen Kalender.',
+    type: 'builtin',
+    parameters: {
+      type: 'object',
+      properties: {
+        from: { type: 'string', description: 'Start-Datum ISO (z.B. 2025-01-20T00:00:00Z)' },
+        to:   { type: 'string', description: 'End-Datum ISO' },
+        max_results: { type: 'number', default: 10 },
+      },
+    },
+  },
+  {
+    name: 'calendar_find_slots',
+    description: 'Findet freie Zeitslots im Kalender für einen Termin.',
+    type: 'builtin',
+    parameters: {
+      type: 'object',
+      properties: {
+        from: { type: 'string', description: 'Suche ab (ISO-Datum)' },
+        to:   { type: 'string', description: 'Suche bis (ISO-Datum)' },
+        duration_minutes: { type: 'number', default: 60, description: 'Termindauer in Minuten' },
+      },
+    },
+  },
+  {
+    name: 'email_get_messages',
+    description: 'Lädt E-Mails aus dem verbundenen E-Mail-Postfach.',
+    type: 'builtin',
+    parameters: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'Gmail-Suchfilter z.B. "is:unread is:important"', default: 'is:inbox is:unread' },
+        max_results: { type: 'number', default: 10 },
+      },
+    },
+  },
+  {
+    name: 'qualify_leads',
+    description: 'Qualifiziert neue Leads mit KI-Scoring (BANT-Methode) und gibt priorisierte Liste zurück.',
+    type: 'builtin',
+    parameters: {
+      type: 'object',
+      properties: {
+        agent_id: { type: 'number', description: 'Agent-ID dessen Leads qualifiziert werden sollen' },
+        limit: { type: 'number', default: 20 },
+      },
+    },
+  },
+  {
+    name: 'web_search',
+    description: 'Sucht im Internet nach aktuellen Informationen zu einem Thema.',
+    type: 'builtin',
+    parameters: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'Suchanfrage' },
+        max_results: { type: 'number', default: 10 },
+      },
+      required: ['query'],
+    },
+  },
+  {
+    name: 'web_scrape',
+    description: 'Liest den Inhalt einer Webseite und extrahiert den Text.',
+    type: 'builtin',
+    parameters: {
+      type: 'object',
+      properties: {
+        url: { type: 'string', description: 'URL der Webseite (https://...)' },
+      },
+      required: ['url'],
+    },
+  },
+  {
+    name: 'web_research',
+    description: 'Führt eine mehrstufige Webrecherche durch: suchen → lesen → analysieren → Bericht erstellen.',
+    type: 'builtin',
+    parameters: {
+      type: 'object',
+      properties: {
+        goal:  { type: 'string', description: 'Was soll recherchiert werden?' },
+        depth: { type: 'number', default: 3, description: 'Anzahl zu analysierender Quellen' },
+      },
+      required: ['goal'],
+    },
+  },
+  {
+    name: 'analyze_document',
+    description: 'Analysiert ein hochgeladenes Dokument (PDF, DOCX) und extrahiert Informationen oder Risiken.',
+    type: 'builtin',
+    parameters: {
+      type: 'object',
+      properties: {
+        doc_id: { type: 'number', description: 'ID des Dokuments' },
+        agent_id: { type: 'number', description: 'Agent-ID' },
+        analysis_type: { type: 'string', enum: ['summary','risks','contract','key_info'], default: 'summary' },
+      },
+      required: ['doc_id','agent_id'],
+    },
+  },
+
   {
     name: 'get_current_time',
     description: 'Gibt die aktuelle Uhrzeit und das Datum zurück.',
