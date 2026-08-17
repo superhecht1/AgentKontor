@@ -318,6 +318,58 @@ input:checked+.slider::before{transform:translateX(18px)}
 
 
 
+
+/* ── SUPER AGENT ── */
+.super-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:8px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden}
+.super-card:hover{border-color:var(--border-h)}
+.super-card.active{border-color:rgba(124,58,237,.4);background:rgba(124,58,237,.04)}
+.super-card::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px;border-radius:3px 0 0 3px}
+.super-goal{font-size:.86rem;font-weight:700;color:var(--white);line-height:1.3;margin-bottom:4px}
+/* Agent Slots */
+.agent-slots{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.agent-slot{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:.72rem;font-weight:600;border:1px solid;position:relative}
+.agent-slot.running{animation:slot-pulse 1.2s ease-in-out infinite}
+@keyframes slot-pulse{0%,100%{opacity:.7}50%{opacity:1}}
+/* Agent result cards */
+.agent-result{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px;margin-bottom:8px}
+.agent-result-hdr{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.agent-result-ico{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+.agent-result-body{font-size:.8rem;color:var(--text);line-height:1.6;max-height:200px;overflow-y:auto;white-space:pre-wrap}
+/* Message feed */
+.agent-msg{display:flex;gap:9px;margin-bottom:8px;animation:msgIn .2s ease}
+@keyframes msgIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.agent-msg-ico{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;margin-top:2px}
+.agent-msg-bubble{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:0 12px 12px 12px;padding:9px 12px;flex:1}
+.agent-msg-bubble.from-user{background:linear-gradient(135deg,rgba(124,58,237,.2),rgba(124,58,237,.1));border-color:rgba(124,58,237,.2);border-radius:12px 12px 12px 0}
+.agent-msg-bubble.from-super{background:linear-gradient(135deg,rgba(56,189,248,.1),rgba(124,58,237,.08));border-color:rgba(56,189,248,.2)}
+.agent-msg-who{font-size:.65rem;font-weight:700;color:var(--muted);margin-bottom:3px;letter-spacing:.05em;text-transform:uppercase}
+.agent-msg-text{font-size:.8rem;color:var(--text);line-height:1.5;white-space:pre-wrap}
+.agent-msg-time{font-size:.64rem;color:var(--muted);margin-top:4px}
+/* Routing visualization */
+.routing-flow{display:flex;align-items:flex-start;gap:10px;padding:14px;background:rgba(124,58,237,.05);border:1px solid rgba(124,58,237,.15);border-radius:var(--r);margin-bottom:12px;flex-wrap:wrap}
+.routing-super{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0}
+.routing-arrow{font-size:1.1rem;color:var(--muted);align-self:center;flex-shrink:0}
+.routing-agents{display:flex;gap:8px;flex-wrap:wrap;flex:1}
+.routing-agent-node{display:flex;flex-direction:column;align-items:center;gap:4px}
+.routing-agent-ico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;border:2px solid}
+.routing-agent-name{font-size:.65rem;font-weight:700;text-align:center;white-space:nowrap}
+/* Final result */
+.final-result{background:linear-gradient(135deg,rgba(16,185,129,.05),rgba(124,58,237,.04));border:1px solid rgba(16,185,129,.2);border-radius:var(--r);padding:18px}
+.final-result-hdr{font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--emerald);margin-bottom:12px}
+.final-result-body{font-size:.85rem;color:var(--text);line-height:1.8;white-space:pre-wrap}
+/* Profile cards */
+.profile-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;transition:all .15s;display:flex;align-items:flex-start;gap:12px}
+.profile-card:hover{border-color:var(--border-h);transform:translateY(-1px)}
+.profile-ico-lg{width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;border:2px solid rgba(255,255,255,.08)}
+/* Status indicator */
+.status-indicator{display:inline-flex;align-items:center;gap:6px;font-size:.75rem;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid}
+.si-routing,.si-planning{background:rgba(124,58,237,.1);color:var(--v-l);border-color:rgba(124,58,237,.2)}
+.si-running{background:rgba(56,189,248,.1);color:var(--sky);border-color:rgba(56,189,248,.2)}
+.si-synthesizing{background:rgba(245,158,11,.1);color:var(--amber);border-color:rgba(245,158,11,.2)}
+.si-completed{background:rgba(16,185,129,.1);color:var(--emerald);border-color:rgba(16,185,129,.2)}
+.si-failed{background:rgba(244,63,94,.1);color:var(--rose);border-color:rgba(244,63,94,.2)}
+@keyframes spin-slow{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.spinning{animation:spin-slow 2s linear infinite;display:inline-block}
 /* ── INTEGRATIONS ── */
 .integ-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:8px;transition:border-color .2s}
 .integ-connected{border-color:rgba(16,185,129,.2);background:rgba(16,185,129,.02)}
@@ -621,6 +673,11 @@ input:checked+.slider::before{transform:translateX(18px)}
       <div class="nav-item" :class="{on:page==='agents'}" @click="page='agents'"><span class="nav-ico">🤖</span><span class="nav-lbl">Agenten</span><span class="nav-badge" x-show="agents.length" x-text="agents.length"></span></div>
       <div class="nav-item" :class="{on:page==='analytics'}" @click="page='analytics';loadAnalytics()"><span class="nav-ico">📊</span><span class="nav-lbl">Analytics</span><span class="nav-badge" x-show="dashLeads>0" x-text="dashLeads+' Leads'"></span></div>
       <div class="nav-item" :class="{on:page==='conversations'}" @click="page='conversations';loadConvAgents()"><span class="nav-ico">💬</span><span class="nav-lbl">Gespräche</span></div>
+      <div class="nav-group-label">🤖 Super Agent</div>
+      <div class="nav-item" :class="{on:page==='super'}" @click="page='super';loadSuperSessions()">
+        <span class="nav-ico">🦾</span><span class="nav-lbl">Super Agent</span>
+        <span class="nav-badge" x-show="superRunning>0" style="background:var(--sky)" x-text="superRunning"></span>
+      </div>
       <div class="nav-group-label">Phase 3+4</div>
       <div class="nav-item" :class="{on:page==='integrations'}" @click="page='integrations';loadIntegrations()">
         <span class="nav-ico">🔌</span><span class="nav-lbl">Integrationen</span>
@@ -1249,6 +1306,269 @@ X-AgentKontor-Signature: sha256=…
 
 
 
+
+
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <!-- ── SUPER AGENT PAGE ──                                        -->
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <div class="page" x-show="page==='super'">
+        <div class="ph">
+          <div>
+            <h1>🦾 Super Agent</h1>
+            <div class="ph-sub">Orchestriert automatisch die richtigen Spezialisten für jede Aufgabe</div>
+          </div>
+          <div class="ph-actions">
+            <button class="btn btn-ghost btn-sm" @click="loadSuperSessions()">↺</button>
+            <button class="btn btn-primary btn-sm" @click="superTab='new'">+ Neue Aufgabe</button>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <div class="tab" :class="{on:superTab==='new'}"      @click="superTab='new'">✨ Neue Aufgabe</div>
+          <div class="tab" :class="{on:superTab==='sessions'}" @click="superTab='sessions'">📋 Verlauf</div>
+          <div class="tab" :class="{on:superTab==='agents'}"   @click="superTab='agents'">🤖 Agenten</div>
+        </div>
+
+        <!-- ── NEUE AUFGABE ── -->
+        <div x-show="superTab==='new'">
+          <div style="max-width:700px;margin:0 auto">
+            <!-- Hero -->
+            <div style="text-align:center;padding:32px 0 20px">
+              <div style="font-size:3.5rem;margin-bottom:12px;line-height:1">🦾</div>
+              <div style="font-size:1.1rem;font-weight:800;color:var(--white);letter-spacing:-.03em;margin-bottom:6px">Was soll ich erledigen?</div>
+              <div style="font-size:.84rem;color:var(--muted-l)">Ich wähle automatisch die richtigen Spezialisten und koordiniere sie.</div>
+            </div>
+
+            <!-- Agent-Visualisierung -->
+            <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:28px;flex-wrap:wrap">
+              <div style="text-align:center">
+                <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--v),var(--v-l));display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin:0 auto 6px;box-shadow:0 4px 20px var(--v-glow)">🦾</div>
+                <div style="font-size:.65rem;font-weight:700;color:var(--v-l)">SUPER AGENT</div>
+              </div>
+              <div style="color:var(--muted);font-size:1.2rem">→</div>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+                <template x-for="p in superProfiles" :key="p.slug">
+                  <div style="text-align:center">
+                    <div style="width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;margin:0 auto 4px;border:2px solid rgba(255,255,255,.1)"
+                      :style="'background:'+p.color+'18;border-color:'+p.color+'35'" x-text="p.emoji"></div>
+                    <div style="font-size:.58rem;color:var(--muted);white-space:nowrap" x-text="p.name.replace(' Agent','')"></div>
+                  </div>
+                </template>
+              </div>
+            </div>
+
+            <!-- Eingabe -->
+            <div class="card">
+              <div class="field">
+                <label style="font-size:.8rem;color:var(--text);margin-bottom:6px;display:block">Aufgabe (natürliche Sprache)</label>
+                <textarea class="inp" style="min-height:100px;font-size:.9rem"
+                  x-model="superGoal"
+                  placeholder="Beispiele:&#10;• Finde mir 20 potenzielle Kunden und bereite eine Kontaktkampagne vor&#10;• Recherchiere unsere 5 größten Wettbewerber und erstelle einen Vergleich&#10;• Qualifiziere meine neuen Leads und beantworte die wichtigsten E-Mails"
+                  @keydown.meta.enter="startSuperAgent()"></textarea>
+              </div>
+              <div class="field"><label>Kontext (optional)</label><input class="inp" x-model="superContext" placeholder="Branche, Produkt, Zielgruppe…"></div>
+              <div class="field"><label>Modell</label>
+                <select class="inp" x-model="superModel">
+                  <option value="claude-sonnet-4-6">Claude Sonnet 4.6 (empfohlen)</option>
+                  <option value="claude-opus-4-6">Claude Opus 4.6 (maximale Qualität)</option>
+                  <option value="gpt-4o">GPT-4o</option>
+                </select>
+              </div>
+              <button class="btn btn-primary btn-full" style="font-size:.9rem;padding:12px" @click="startSuperAgent()" :disabled="!superGoal.trim()">
+                🦾 Super Agent starten
+              </button>
+              <div style="text-align:center;font-size:.72rem;color:var(--muted);margin-top:8px">
+                ⌘+Enter zum Starten · Der Agent wählt automatisch die richtigen Spezialisten
+              </div>
+            </div>
+
+            <!-- Beispiel-Aufgaben -->
+            <div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:20px 0 10px">Beispiel-Aufgaben</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <template x-for="ex in [
+                {icon:'💼',title:'Lead-Kampagne',text:'Finde 20 potenzielle B2B-Kunden in Deutschland und erstelle personalisierte Outreach-E-Mails'},
+                {icon:'🔬',title:'Marktrecherche',text:'Recherchiere die 5 größten CRM-Anbieter für KMUs und vergleiche Preise und Features'},
+                {icon:'📊',title:'Analyse',text:'Qualifiziere alle neuen Leads nach BANT und erstelle einen Prioritätsbericht'},
+                {icon:'📢',title:'Marketing',text:'Erstelle einen LinkedIn-Beitrag und eine E-Mail-Kampagne für unser neues Produkt'}
+              ]" :key="ex.title">
+                <div style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;cursor:pointer;transition:all .15s"
+                  @click="superGoal=ex.text;superTab='new'"
+                  @mouseover="$el.style.borderColor='var(--border-h)'"
+                  @mouseout="$el.style.borderColor='var(--border)'">
+                  <div style="font-size:.9rem;margin-bottom:4px" x-text="ex.icon+' '+ex.title"></div>
+                  <div style="font-size:.74rem;color:var(--muted-l);line-height:1.4" x-text="ex.text"></div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── SESSIONS LISTE + DETAIL ── -->
+        <div x-show="superTab==='sessions'">
+          <div style="display:grid;grid-template-columns:320px 1fr;gap:14px;align-items:start">
+
+            <!-- Liste -->
+            <div>
+              <div class="empty" style="padding:20px" x-show="!superSessions.length"><div style="font-size:1.8rem;margin-bottom:8px">🦾</div><p style="font-size:.8rem">Noch keine Aufgaben</p><button class="btn btn-primary btn-sm" @click="superTab='new'">Erste Aufgabe starten</button></div>
+              <template x-for="s in superSessions" :key="s.id">
+                <div class="super-card" :class="{active:selectedSuper?.id===s.id}" @click="openSuperSession(s.id)"
+                  :style="'--card-accent:'+superStatusColor(s.status)">
+                  <div :style="'position:absolute;top:0;left:0;bottom:0;width:3px;background:'+superStatusColor(s.status)+';border-radius:3px 0 0 3px'"></div>
+                  <div style="padding-left:6px">
+                    <div class="super-goal" x-text="s.goal?.length>70?s.goal.slice(0,70)+'…':s.goal"></div>
+                    <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+                      <span class="status-indicator" :class="'si-'+s.status" x-text="superStatusLabel(s.status)"></span>
+                      <span style="font-size:.68rem;color:var(--muted);margin-left:auto" x-text="new Date(s.created_at).toLocaleDateString('de-DE')"></span>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+
+            <!-- Detail -->
+            <div>
+              <div x-show="!selectedSuper" style="display:flex;align-items:center;justify-content:center;height:300px;color:var(--muted);font-size:.85rem">← Session wählen oder neue Aufgabe starten</div>
+              <div x-show="selectedSuper">
+                <!-- Routing Visualisierung -->
+                <div class="routing-flow" x-show="superRoutingResult">
+                  <div class="routing-super">
+                    <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--v),var(--v-l));display:flex;align-items:center;justify-content:center;font-size:1.4rem;box-shadow:0 4px 16px var(--v-glow)">🦾</div>
+                    <div style="font-size:.62rem;font-weight:700;color:var(--v-l);margin-top:4px">SUPER</div>
+                  </div>
+                  <div class="routing-arrow">→</div>
+                  <div class="routing-agents">
+                    <template x-for="slug in (superRoutingResult?.agents_needed||[])" :key="slug">
+                      <div class="routing-agent-node">
+                        <div class="routing-agent-ico"
+                          :style="'background:'+({research:'#38bdf8',sales:'#f59e0b',support:'#10b981',data:'#6366f1',marketing:'#ec4899',finance:'#f43f5e'}[slug]||'#7c3aed')+'18;border-color:'+({research:'#38bdf8',sales:'#f59e0b',support:'#10b981',data:'#6366f1',marketing:'#ec4899',finance:'#f43f5e'}[slug]||'#7c3aed')+'35'"
+                          x-text="{research:'🔬',sales:'💼',support:'🎧',data:'📊',marketing:'📢',finance:'💰'}[slug]||'🤖'"></div>
+                        <div class="routing-agent-name" :style="'color:'+({research:'#38bdf8',sales:'#f59e0b',support:'#10b981',data:'#6366f1',marketing:'#ec4899',finance:'#f43f5e'}[slug]||'var(--muted-l)')" x-text="slug"></div>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+
+                <!-- Status Banner -->
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+                  <div>
+                    <div style="font-size:.92rem;font-weight:700;color:var(--white);margin-bottom:3px" x-text="selectedSuper?.goal?.slice(0,80)"></div>
+                    <div style="display:flex;gap:8px;align-items:center">
+                      <span class="status-indicator" :class="'si-'+selectedSuper?.status">
+                        <span x-show="['routing','planning','running','synthesizing'].includes(selectedSuper?.status)" class="spinning">◌</span>
+                        <span x-text="superStatusLabel(selectedSuper?.status)"></span>
+                      </span>
+                      <span x-show="selectedSuper?.total_duration_ms" style="font-size:.7rem;color:var(--muted)" x-text="((selectedSuper?.total_duration_ms||0)/1000).toFixed(1)+'s'"></span>
+                    </div>
+                  </div>
+                  <button class="btn btn-danger btn-xs" @click="deleteSuperSession(selectedSuper?.id)">🗑</button>
+                </div>
+
+                <!-- Agent-Slots (laufend) -->
+                <div class="agent-slots" x-show="['running','synthesizing'].includes(selectedSuper?.status)||(Object.keys(superAgentResults).length>0)">
+                  <template x-for="slug in (superRoutingResult?.agents_needed||Object.keys(superAgentResults))" :key="slug">
+                    <div class="agent-slot"
+                      :class="{running:!superAgentResults[slug]&&selectedSuper?.status==='running'}"
+                      :style="'background:'+({research:'#38bdf8',sales:'#f59e0b',support:'#10b981',data:'#6366f1',marketing:'#ec4899',finance:'#f43f5e'}[slug]||'#7c3aed')+'15;border-color:'+({research:'#38bdf8',sales:'#f59e0b',support:'#10b981',data:'#6366f1',marketing:'#ec4899',finance:'#f43f5e'}[slug]||'#7c3aed')+'35;color:'+({research:'#38bdf8',sales:'#f59e0b',support:'#10b981',data:'#6366f1',marketing:'#ec4899',finance:'#f43f5e'}[slug]||'var(--v-l)')">
+                      <span x-text="{research:'🔬',sales:'💼',support:'🎧',data:'📊',marketing:'📢',finance:'💰'}[slug]||'🤖'"></span>
+                      <span x-text="slug"></span>
+                      <span x-show="superAgentResults[slug]">✓</span>
+                      <span x-show="!superAgentResults[slug]&&selectedSuper?.status==='running'" class="spinning" style="font-size:.7rem">◌</span>
+                    </div>
+                  </template>
+                </div>
+
+                <!-- Finales Ergebnis -->
+                <div class="final-result" x-show="selectedSuper?.final_result" style="margin-bottom:14px">
+                  <div class="final-result-hdr">✨ GESAMTERGEBNIS</div>
+                  <div class="final-result-body" x-text="selectedSuper?.final_result"></div>
+                  <button class="btn btn-ghost btn-xs" style="margin-top:10px" @click="copy(selectedSuper?.final_result)">Kopieren</button>
+                </div>
+
+                <!-- Fehler -->
+                <div class="err-box" x-show="selectedSuper?.error_msg" x-text="selectedSuper?.error_msg"></div>
+
+                <!-- Agenten-Ergebnisse (aufklappbar) -->
+                <div x-show="Object.keys(superAgentResults).length" style="margin-bottom:12px">
+                  <div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Agenten-Ergebnisse</div>
+                  <template x-for="[slug,r] in Object.entries(superAgentResults)" :key="slug">
+                    <div class="agent-result">
+                      <div class="agent-result-hdr">
+                        <div class="agent-result-ico"
+                          :style="'background:'+({research:'#38bdf8',sales:'#f59e0b',support:'#10b981',data:'#6366f1',marketing:'#ec4899',finance:'#f43f5e'}[slug]||'#7c3aed')+'15'"
+                          x-text="r.emoji||{research:'🔬',sales:'💼',support:'🎧',data:'📊',marketing:'📢',finance:'💰'}[slug]||'🤖'"></div>
+                        <div style="font-size:.82rem;font-weight:700;color:var(--white)" x-text="r.name||slug"></div>
+                        <span style="font-size:.65rem;background:var(--em-bg);color:var(--emerald);padding:2px 7px;border-radius:10px;margin-left:auto">✓ Fertig</span>
+                      </div>
+                      <div class="agent-result-body" x-text="(r.result||'').slice(0,600)+(r.result?.length>600?'…':'')"></div>
+                    </div>
+                  </template>
+                </div>
+
+                <!-- Message Feed -->
+                <div x-show="superMessages.length">
+                  <div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Aktivitäts-Feed</div>
+                  <div style="max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding-right:4px">
+                    <template x-for="m in superMessages" :key="m.id">
+                      <div class="agent-msg">
+                        <div class="agent-msg-ico" :style="'background:rgba(255,255,255,.06)'" x-text="agentMsgIcon(m.from_agent)"></div>
+                        <div class="agent-msg-bubble" :class="'from-'+m.from_agent" x-show="m.message_type!=='tool_result'">
+                          <div class="agent-msg-who" x-text="m.from_agent.toUpperCase()+' → '+m.to_agent.toUpperCase()"></div>
+                          <div class="agent-msg-text" x-text="m.content.slice(0,200)+(m.content.length>200?'…':'')"></div>
+                          <div class="agent-msg-time" x-text="new Date(m.created_at).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'})"></div>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── AGENTEN-PROFILE ── -->
+        <div x-show="superTab==='agents'">
+          <div style="margin-bottom:20px;font-size:.84rem;color:var(--muted-l);line-height:1.6;padding:12px 14px;background:rgba(255,255,255,.03);border-radius:var(--r-sm);border:1px solid var(--border)">
+            🦾 Der Super Agent wählt automatisch die richtigen Spezialisten basierend auf deiner Aufgabe. Du musst nichts konfigurieren — einfach Aufgabe eingeben und starten.
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px">
+            <template x-for="p in superProfiles" :key="p.slug">
+              <div class="profile-card">
+                <div class="profile-ico-lg" :style="'background:'+p.color+'18;border-color:'+p.color+'30'" x-text="p.emoji"></div>
+                <div style="flex:1;min-width:0">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+                    <span style="font-size:.9rem;font-weight:700;color:var(--white)" x-text="p.name"></span>
+                    <span class="badge b-on">Aktiv</span>
+                  </div>
+                  <div style="font-size:.76rem;color:var(--muted-l);margin-bottom:8px;line-height:1.4" x-text="p.description"></div>
+                  <div style="display:flex;flex-wrap:wrap;gap:4px">
+                    <template x-for="t in (p.tools||[]).slice(0,4)" :key="t">
+                      <span style="font-size:.62rem;padding:2px 7px;border-radius:10px;background:rgba(255,255,255,.05);color:var(--muted-l);border:1px solid rgba(255,255,255,.07);font-family:'JetBrains Mono',monospace" x-text="t"></span>
+                    </template>
+                    <span x-show="(p.tools||[]).length>4" style="font-size:.62rem;color:var(--muted)">+<span x-text="(p.tools||[]).length-4"></span></span>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <!-- Kollaborations-Stats -->
+          <div x-show="superCollabs.length" style="margin-top:24px">
+            <div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">🤝 Häufige Kollaborationen</div>
+            <div class="card" style="padding:0;overflow:hidden">
+              <template x-for="c in superCollabs.slice(0,8)" :key="c.agent_a+c.agent_b">
+                <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04)">
+                  <span style="font-size:1rem" x-text="{research:'🔬',sales:'💼',support:'🎧',data:'📊',marketing:'📢',finance:'💰'}[c.agent_a]||'🤖'"></span>
+                  <span style="font-size:.8rem;font-weight:600;color:var(--white)" x-text="c.agent_a"></span>
+                  <span style="color:var(--muted)">+</span>
+                  <span style="font-size:1rem" x-text="{research:'🔬',sales:'💼',support:'🎧',data:'📊',marketing:'📢',finance:'💰'}[c.agent_b]||'🤖'"></span>
+                  <span style="font-size:.8rem;font-weight:600;color:var(--white)" x-text="c.agent_b"></span>
+                  <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--amber)" x-text="c.count+'×'"></span>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- ── INTEGRATIONS PAGE ── -->
       <div class="page" x-show="page==='integrations'">
@@ -2794,6 +3114,12 @@ insightFunnel:{sessions:0,engaged:0,leads:0,rate:0},
 insightTopQ:[],insightHeatmap:[],insightScore:{},
 // A/B results
 abResults:{},
+// Super Agent
+superSessions:[],superProfiles:[],superCollabs:[],
+superGoal:'',superContext:'',superModel:'claude-sonnet-4-6',
+superRunning:0,selectedSuper:null,superPollInterval:null,
+superMessages:[],superAgentResults:{},superRoutingResult:null,
+superTab:'new',
 // Integrations
 integrationsList:[],integrationsTab:'overview',
 newCred:{integration:'calendar',provider:'google',label:'Standard',credentials:{}},
@@ -3349,6 +3675,48 @@ toggleDay(day){
 
 
 
+
+// ── SUPER AGENT ────────────────────────────────────────────────────────────
+async loadSuperSessions(){
+  const d=await this.api('/super?limit=30');
+  if(d.sessions)this.superSessions=d.sessions;
+  this.superRunning=d.sessions?.filter(s=>['routing','planning','running','synthesizing'].includes(s.status)).length||0;
+  const p=await this.api('/super/profiles/all');
+  if(p.profiles)this.superProfiles=p.profiles;
+  if(p.collaborations)this.superCollabs=p.collaborations;
+},
+async startSuperAgent(){
+  if(!this.superGoal.trim()){this.toast('Aufgabe eingeben','err');return;}
+  this.superRunning++;
+  const d=await this.api('/super','POST',{goal:this.superGoal,context:this.superContext,model:this.superModel});
+  if(d.error){this.toast(d.error,'err');this.superRunning--;return;}
+  this.toast('Super Agent gestartet ✓');
+  const sid=d.sessionId;
+  this.superGoal='';this.superContext='';
+  await this.loadSuperSessions();
+  this.openSuperSession(sid);
+  this.superTab='sessions';
+},
+openSuperSession(id){
+  this.selectedSuper=null;this.superMessages=[];this.superAgentResults={};this.superRoutingResult=null;
+  if(this.superPollInterval)clearInterval(this.superPollInterval);
+  const poll=async()=>{
+    const d=await this.api('/super/'+id+'/poll').catch(()=>null);
+    if(!d)return;
+    this.selectedSuper=d;
+    this.superMessages=d.messages||[];
+    if(d.agent_results)this.superAgentResults=typeof d.agent_results==='string'?JSON.parse(d.agent_results):d.agent_results;
+    if(d.routing_result)this.superRoutingResult=typeof d.routing_result==='string'?JSON.parse(d.routing_result):d.routing_result;
+    if(['completed','failed'].includes(d.status)){clearInterval(this.superPollInterval);this.superRunning=Math.max(0,this.superRunning-1);this.loadSuperSessions();}
+  };
+  poll();
+  this.superPollInterval=setInterval(poll,2000);
+},
+async deleteSuperSession(id){await this.api('/super/'+id,'DELETE');this.superSessions=this.superSessions.filter(s=>s.id!==id);if(this.selectedSuper?.id===id)this.selectedSuper=null;},
+superStatusLabel(s){return{routing:'🔍 Analysiert…',planning:'📋 Plant…',running:'▶ Agenten arbeiten…',synthesizing:'✨ Synthetisiert…',completed:'✅ Fertig',failed:'❌ Fehler'}[s]||s},
+superStatusColor(s){return{routing:'var(--muted-l)',planning:'var(--v-l)',running:'var(--sky)',synthesizing:'var(--amber)',completed:'var(--emerald)',failed:'var(--rose)'}[s]||'var(--muted)'},
+agentMsgIcon(a){return{super:'🦾',research:'🔬',sales:'💼',support:'🎧',data:'📊',marketing:'📢',finance:'💰',user:'👤',system:'⚙️'}[a]||'🤖'},
+
 // ── INTEGRATIONS ──────────────────────────────────────────────────────────
 async loadIntegrations(){const d=await this.api('/integrations');if(d.integrations)this.integrationsList=d.integrations;},
 async saveCredential(){
@@ -3592,7 +3960,7 @@ get cmdResults(){
     {label:'Einstellungen',icon:'⚙️',action:()=>{this.page='settings';this.closeCmd();}},
     {label:'API Keys',icon:'🔑',action:()=>{this.page='keys';this.loadKeys();this.closeCmd();}},
     {label:'Gespräche',icon:'💬',action:()=>{this.page='conversations';this.loadConvAgents();this.closeCmd();}},
-    {label:'Abrechnung',icon:'💳',action:()=>{this.page='billing';this.closeCmd();}},{label:'Planner',icon:'🧭',action:()=>{this.page='planner';this.loadPlans();this.closeCmd();}},{label:'Freigaben',icon:'✅',action:()=>{this.page='approvals';this.loadApprovals();this.closeCmd();}},{label:'Tools',icon:'⚙️',action:()=>{this.page='tools';this.loadTools();this.closeCmd();}},{label:'Memory',icon:'🧠',action:()=>{this.page='memory';this.loadMemory();this.closeCmd();}},{label:'Tasks',icon:'⚡',action:()=>{this.page='tasks';this.loadTasks();this.closeCmd();}},
+    {label:'Abrechnung',icon:'💳',action:()=>{this.page='billing';this.closeCmd();}},{label:'Super Agent',icon:'🦾',action:()=>{this.page='super';this.loadSuperSessions();this.closeCmd();}},{label:'Planner',icon:'🧭',action:()=>{this.page='planner';this.loadPlans();this.closeCmd();}},{label:'Freigaben',icon:'✅',action:()=>{this.page='approvals';this.loadApprovals();this.closeCmd();}},{label:'Tools',icon:'⚙️',action:()=>{this.page='tools';this.loadTools();this.closeCmd();}},{label:'Memory',icon:'🧠',action:()=>{this.page='memory';this.loadMemory();this.closeCmd();}},{label:'Tasks',icon:'⚡',action:()=>{this.page='tasks';this.loadTasks();this.closeCmd();}},
     ...this.agents.map(a=>({label:a.name,icon:a.emoji,action:()=>{this.editAgent(a);this.closeCmd();}})),
   ];
   if(!q)return cmds.slice(0,8);
