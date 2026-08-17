@@ -182,7 +182,7 @@ async function startBackgroundRunner(intervalMs = 5000) {
     if (_isRunning) return; // Kein paralleler Lauf
     _isRunning = true;
     try {
-      const pool = getPool({ neonUrl: process.env.DATABASE_URL });
+      const pool = getPool();
       await pool.query('BEGIN');
       const tasks = await getPending(pool, 5);
       await pool.query('COMMIT');
@@ -195,7 +195,7 @@ async function startBackgroundRunner(intervalMs = 5000) {
     } catch (e) {
       console.error('[task-runner] Runner-Fehler:', e.message);
       try {
-        const pool = getPool({ neonUrl: process.env.DATABASE_URL });
+        const pool = getPool();
         await pool.query('ROLLBACK').catch(() => {});
       } catch {}
     } finally {
