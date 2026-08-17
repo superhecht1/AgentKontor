@@ -12,109 +12,125 @@
 <style>
 :root{
   --bg:#020208;--bg2:#07071a;--bg3:#0d0d22;--card:#0a0a1c;
-  --border:rgba(255,255,255,.07);--border-h:rgba(108,92,231,.35);
-  --purple:#6c5ce7;--pu-l:#a29bfe;
+  --border:rgba(255,255,255,.07);--border-h:rgba(108,92,231,.38);
+  --purple:#6c5ce7;--pu-l:#a29bfe;--pu-d:#4834d4;
   --teal:#00cec9;--white:#f0f0ff;--muted:#52528a;--muted-l:#7272a2;
   --text:#c0c0e0;--red:#e94560;--green:#00b894;--gold:#f0c040;--amber:#f59e0b;
-  --shadow:0 8px 40px rgba(0,0,0,.6);--r:13px;--r-sm:9px;--r-lg:18px;
+  --orange:#fd9644;--shadow:0 8px 40px rgba(0,0,0,.6);--r:13px;--r-sm:9px;--r-lg:18px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 [x-cloak]{display:none!important}
-body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;-webkit-font-smoothing:antialiased}
+.app{display:flex;height:100vh;overflow:hidden}
 
 /* ── SIDEBAR ── */
-.app{display:flex;height:100vh;overflow:hidden}
-.sidebar{width:236px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;position:relative}
-.sidebar::before{content:'';position:absolute;top:0;left:0;right:0;height:240px;background:linear-gradient(180deg,rgba(233,69,96,.06),transparent);pointer-events:none}
-.sb-logo{padding:20px 16px 14px;font-size:1.05rem;font-weight:800;color:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;position:relative;letter-spacing:-.03em}
-.sb-logo span{color:var(--pu-l)}
+.sidebar{width:242px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;position:relative;overflow-y:auto;overflow-x:hidden}
+.sidebar::before{content:'';position:absolute;top:0;left:0;right:0;height:200px;background:linear-gradient(180deg,rgba(233,69,96,.07),transparent);pointer-events:none;z-index:0}
+.sb-top{padding:18px 16px 14px;border-bottom:1px solid var(--border);position:relative;z-index:1}
+.sb-brand{font-size:1.05rem;font-weight:800;color:var(--white);display:flex;align-items:center;gap:8px;letter-spacing:-.03em;margin-bottom:10px}
+.sb-brand span{color:var(--pu-l)}
 .admin-badge{font-size:.57rem;font-weight:700;padding:3px 8px;border-radius:4px;background:rgba(233,69,96,.18);color:var(--red);border:1px solid rgba(233,69,96,.28);letter-spacing:.06em}
-.sb-nav{flex:1;padding:10px 8px;overflow-y:auto;position:relative}
-.nav-section{font-size:.61rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);padding:14px 10px 4px}
-.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r-sm);font-size:.83rem;font-weight:500;color:var(--muted-l);cursor:pointer;transition:all .16s;margin-bottom:1px;position:relative}
+.sb-search{position:relative}
+.sb-search input{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:7px 10px 7px 30px;color:var(--white);font-size:.78rem;font-family:inherit;transition:border-color .18s}
+.sb-search input:focus{outline:none;border-color:var(--purple)}
+.sb-search::before{content:'🔍';position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:.7rem;pointer-events:none}
+.sb-nav{flex:1;padding:10px 8px;position:relative;z-index:1}
+.nav-section{font-size:.6rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);padding:14px 10px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 11px;border-radius:var(--r-sm);font-size:.82rem;font-weight:500;color:var(--muted-l);cursor:pointer;transition:all .15s;margin-bottom:1px;position:relative;user-select:none}
 .nav-item:hover{background:rgba(255,255,255,.04);color:var(--white)}
-.nav-item.active{background:linear-gradient(90deg,rgba(108,92,231,.16),rgba(108,92,231,.06));color:var(--pu-l);font-weight:600}
+.nav-item.active{background:linear-gradient(90deg,rgba(108,92,231,.18),rgba(108,92,231,.06));color:var(--pu-l);font-weight:600}
 .nav-item.active::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:3px;background:linear-gradient(180deg,var(--purple),var(--pu-l));border-radius:0 3px 3px 0}
-.nav-item .nav-n{margin-left:auto;font-size:.6rem;background:rgba(108,92,231,.25);color:var(--pu-l);padding:2px 7px;border-radius:10px;font-weight:700}
-.sb-footer{padding:12px 14px;border-top:1px solid var(--border);font-size:.72rem;color:var(--muted)}
-.health-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-right:5px;animation:pdot 2.2s ease-in-out infinite}
+.nav-ico{font-size:.9rem;width:18px;text-align:center;flex-shrink:0}
+.nav-txt{flex:1}
+.nav-n{font-size:.6rem;background:rgba(108,92,231,.25);color:var(--pu-l);padding:2px 6px;border-radius:10px;font-weight:700;flex-shrink:0}
+.nav-n.red{background:rgba(233,69,96,.2);color:var(--red)}
+.sb-footer{padding:12px 14px;border-top:1px solid var(--border);position:relative;z-index:1}
+.sb-admin-email{font-size:.72rem;color:var(--muted);margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb-links{display:flex;gap:8px;font-size:.72rem}
+.sb-links a{color:var(--muted-l);text-decoration:none;transition:color .15s}
+.sb-links a:hover{color:var(--pu-l)}
+.health-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-right:4px;animation:pdot 2.2s ease-in-out infinite}
 @keyframes pdot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
 
 /* ── MAIN ── */
 .main{flex:1;overflow-y:auto;background:var(--bg)}
-.page{padding:28px 32px;max-width:1440px;animation:pgIn .18s ease}
+.page{padding:26px 30px;max-width:1500px;animation:pgIn .18s ease}
 @keyframes pgIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
-.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
-.ph-title{font-size:1.4rem;font-weight:800;color:var(--white);letter-spacing:-.04em}
-.ph-sub{font-size:.8rem;color:var(--muted-l);margin-top:3px}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px}
+.ph-title{font-size:1.35rem;font-weight:800;color:var(--white);letter-spacing:-.04em}
+.ph-sub{font-size:.79rem;color:var(--muted-l);margin-top:3px}
+.ph-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+/* ── SNAPSHOT BAR ── */
+.snapshot-bar{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px 20px;margin-bottom:22px;display:flex;gap:0;flex-wrap:wrap}
+.snap-item{flex:1;min-width:130px;padding:0 20px;border-right:1px solid var(--border);text-align:center}
+.snap-item:first-child{padding-left:0;text-align:left}
+.snap-item:last-child{border-right:none}
+.snap-n{font-size:1.4rem;font-weight:800;color:var(--white);letter-spacing:-.04em}
+.snap-l{font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:2px;font-weight:600}
 
 /* ── REVENUE HERO ── */
-.rev-hero{background:linear-gradient(135deg,rgba(108,92,231,.14),rgba(0,184,148,.06));border:1px solid rgba(108,92,231,.2);border-radius:var(--r);padding:24px 28px;margin-bottom:22px;display:grid;grid-template-columns:auto 1fr;gap:32px;align-items:center;position:relative;overflow:hidden}
-.rev-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(108,92,231,.12),transparent 70%);pointer-events:none}
-.rev-hero-mrr{font-size:2.6rem;font-weight:800;color:var(--white);letter-spacing:-.05em;line-height:1}
-.rev-hero-label{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--pu-l);margin-top:4px}
-.rev-hero-stats{display:flex;gap:28px;flex-wrap:wrap}
-.rev-stat{text-align:center}
-.rev-stat-n{font-size:1.4rem;font-weight:800;color:var(--white);letter-spacing:-.03em}
-.rev-stat-l{font-size:.67rem;color:var(--muted-l);text-transform:uppercase;letter-spacing:.08em}
+.rev-hero{background:linear-gradient(135deg,rgba(108,92,231,.14),rgba(0,184,148,.06));border:1px solid rgba(108,92,231,.2);border-radius:var(--r);padding:22px 26px;margin-bottom:20px;display:grid;grid-template-columns:auto 1fr auto;gap:28px;align-items:center;position:relative;overflow:hidden}
+.rev-hero::after{content:'€';position:absolute;right:40px;font-size:8rem;font-weight:900;color:rgba(108,92,231,.06);top:50%;transform:translateY(-50%);pointer-events:none;letter-spacing:-.1em}
+.rev-mrr{font-size:2.8rem;font-weight:900;color:var(--white);letter-spacing:-.06em;line-height:1}
+.rev-label{font-size:.66rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--pu-l);margin-top:5px}
+.rev-stats{display:flex;gap:24px;flex-wrap:wrap}
+.rev-stat{text-align:center;min-width:60px}
+.rev-stat-n{font-size:1.3rem;font-weight:800;color:var(--white);letter-spacing:-.04em}
+.rev-stat-l{font-size:.64rem;color:var(--muted-l);text-transform:uppercase;letter-spacing:.07em;margin-top:2px}
 
-/* ── KPI GRID ── */
+/* ── GRIDS ── */
 .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:20px}
 .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-bottom:14px}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:14px}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px 20px 18px;position:relative;overflow:hidden;transition:border-color .18s,box-shadow .18s}
-.stat-card:hover{border-color:var(--border-h);box-shadow:0 4px 20px rgba(0,0,0,.3)}
-.stat-card-bar{position:absolute;top:0;left:0;right:0;height:2px}
-.stat-icon{position:absolute;bottom:12px;right:14px;font-size:1.5rem;opacity:.1}
-.stat-n{font-size:1.9rem;font-weight:800;color:var(--white);line-height:1;letter-spacing:-.05em;margin-bottom:4px}
-.stat-l{font-size:.65rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:700}
-.stat-sub{font-size:.71rem;color:var(--muted-l);margin-top:4px}
-.stat-trend{font-size:.72rem;margin-top:6px;font-weight:600}
+
+/* ── STAT CARDS ── */
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:19px 20px;position:relative;overflow:hidden;transition:border-color .18s,box-shadow .18s}
+.stat-card:hover{border-color:var(--border-h);box-shadow:0 4px 24px rgba(0,0,0,.35)}
+.stat-bar{position:absolute;top:0;left:0;right:0;height:2px}
+.stat-ico{position:absolute;bottom:12px;right:14px;font-size:1.4rem;opacity:.1}
+.stat-n{font-size:1.85rem;font-weight:800;color:var(--white);line-height:1;letter-spacing:-.05em;margin-bottom:4px}
+.stat-l{font-size:.64rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.stat-sub{font-size:.7rem;color:var(--muted-l);margin-top:4px}
+.stat-trend{font-size:.72rem;margin-top:5px;font-weight:600}
 .trend-up{color:var(--green)}.trend-dn{color:var(--red)}
 
 /* ── CARD ── */
 .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:14px}
-.card-title{font-size:.71rem;font-weight:700;color:var(--muted-l);margin-bottom:16px;letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between}
+.card-hdr{font-size:.7rem;font-weight:700;color:var(--muted-l);margin-bottom:14px;letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card-hdr-title{display:flex;align-items:center;gap:7px}
+.card-body{/* auto */}
+.card-section{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px;margin-bottom:10px}
+.card-section h3{font-size:.8rem;font-weight:700;color:var(--white);margin-bottom:10px}
+
+/* ── TRAFFIC LIGHTS ── */
+.tl-ok{color:var(--green)}.tl-warn{color:var(--gold)}.tl-err{color:var(--red)}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;flex-shrink:0}
+.status-dot.ok{background:var(--green);box-shadow:0 0 6px rgba(0,184,148,.5)}
+.status-dot.warn{background:var(--gold)}
+.status-dot.err{background:var(--red);box-shadow:0 0 6px rgba(233,69,96,.5)}
 
 /* ── TABLE ── */
 table{width:100%;border-collapse:collapse;font-size:.8rem}
-th{padding:8px 12px;text-align:left;color:var(--muted);font-weight:600;font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap}
+th{padding:8px 12px;text-align:left;color:var(--muted);font-weight:600;font-size:.67rem;letter-spacing:.09em;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap}
 td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text);vertical-align:middle}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:rgba(255,255,255,.02)}
-.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px}
+.td-mono{font-family:monospace;font-size:.77rem}
+.td-trunc{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* ── BADGES ── */
 .badge{font-size:.6rem;padding:2px 8px;border-radius:20px;font-weight:600;white-space:nowrap;display:inline-block}
 .b-free{background:rgba(255,255,255,.06);color:var(--muted-l)}
-.b-pro{background:rgba(108,92,231,.14);color:var(--pu-l);border:1px solid rgba(108,92,231,.28)}
+.b-pro{background:rgba(108,92,231,.15);color:var(--pu-l);border:1px solid rgba(108,92,231,.3)}
 .b-trial{background:rgba(240,192,64,.1);color:var(--gold);border:1px solid rgba(240,192,64,.25)}
 .b-admin{background:rgba(233,69,96,.14);color:var(--red);border:1px solid rgba(233,69,96,.28)}
 .b-green{background:rgba(0,184,148,.1);color:var(--green);border:1px solid rgba(0,184,148,.2)}
-
-/* ── STATUS CELLS (traffic light) ── */
-.status-cell{display:flex;align-items:center;gap:7px}
-.status-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-.status-ok .status-dot{background:var(--green);box-shadow:0 0 8px rgba(0,184,148,.5)}
-.status-warn .status-dot{background:var(--gold)}
-.status-err .status-dot{background:var(--red);box-shadow:0 0 8px rgba(233,69,96,.5)}
-.status-ok{color:var(--green)}
-.status-warn{color:var(--gold)}
-.status-err{color:var(--red)}
-
-/* ── LIVE FEED ── */
-.live-feed{display:flex;flex-direction:column}
-.live-row{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);animation:feedIn .3s ease}
-@keyframes feedIn{from{background:rgba(108,92,231,.08)}to{background:transparent}}
-.live-row:last-child{border-bottom:none}
-.live-dot{width:6px;height:6px;border-radius:50%;background:var(--purple);flex-shrink:0;margin-top:5px;animation:pdot 2s infinite}
-.live-content{flex:1;min-width:0}
-.live-line{font-size:.79rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.live-meta{font-size:.68rem;color:var(--muted);margin-top:2px}
-.live-badge{font-size:.6rem;padding:1px 6px;border-radius:10px;background:rgba(108,92,231,.14);color:var(--pu-l);border:1px solid rgba(108,92,231,.2);flex-shrink:0}
+.b-red{background:rgba(233,69,96,.1);color:var(--red);border:1px solid rgba(233,69,96,.2)}
+.b-amber{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.2)}
 
 /* ── BUTTONS ── */
-.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:var(--r-sm);font-size:.78rem;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:all .18s;line-height:1}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:var(--r-sm);font-size:.78rem;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:all .18s;line-height:1;white-space:nowrap}
 .btn:disabled{opacity:.4;cursor:not-allowed}
 .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
 .btn-ghost:hover:not(:disabled){border-color:var(--border-h);color:var(--pu-l);background:rgba(108,92,231,.05)}
@@ -134,61 +150,96 @@ select.inp option{background:var(--bg3)}
 textarea.inp{resize:vertical;min-height:90px;line-height:1.5}
 .field{margin-bottom:14px}
 .field label{display:block;font-size:.73rem;font-weight:600;color:var(--text);margin-bottom:4px}
+.inp-row{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.code{background:#04040c;border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;font-family:monospace;font-size:.74rem;color:var(--pu-l);overflow-x:auto;white-space:pre-wrap;word-break:break-all;line-height:1.5}
 
 /* ── CHART ── */
 .chart-wrap{position:relative;height:200px}
-.chart-wrap-sm{position:relative;height:160px}
+.chart-sm{position:relative;height:160px}
 
 /* ── MODAL ── */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
-.modal{background:var(--bg3);border:1px solid rgba(108,92,231,.16);border-radius:var(--r-lg);width:100%;max-width:520px;max-height:90vh;overflow-y:auto;padding:28px;box-shadow:var(--shadow)}
+.modal{background:var(--bg3);border:1px solid rgba(108,92,231,.16);border-radius:var(--r-lg);width:100%;max-width:560px;max-height:90vh;overflow-y:auto;padding:28px;box-shadow:var(--shadow)}
+.modal-lg{max-width:760px}
 .modal-title{font-size:1.05rem;font-weight:700;color:var(--white);margin-bottom:20px;display:flex;align-items:center;justify-content:space-between}
+.modal-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.4rem;line-height:1;transition:color .15s}
+.modal-close:hover{color:var(--red)}
 .modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
 
 /* ── TOAST ── */
 .toast-area{position:fixed;bottom:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:7px;pointer-events:none}
-.toast{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 16px;font-size:.8rem;color:var(--white);animation:tIn .3s ease;pointer-events:auto;display:flex;align-items:center;gap:8px;max-width:360px;cursor:pointer}
-.toast.ok{border-color:rgba(0,184,148,.35)}.toast.ok::before{content:'✓';color:var(--green);font-weight:800;font-size:.9rem}
-.toast.err{border-color:rgba(233,69,96,.35)}.toast.err::before{content:'✕';color:var(--red);font-weight:800;font-size:.9rem}
+.toast{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 16px;font-size:.8rem;color:var(--white);animation:tIn .28s ease;pointer-events:auto;display:flex;align-items:center;gap:8px;max-width:360px;cursor:pointer}
+.toast.ok{border-color:rgba(0,184,148,.4)}.toast.ok::before{content:'✓';color:var(--green);font-weight:800}
+.toast.err{border-color:rgba(233,69,96,.4)}.toast.err::before{content:'✕';color:var(--red);font-weight:800}
 @keyframes tIn{from{transform:translateX(14px);opacity:0}to{transform:translateX(0);opacity:1}}
 
-/* ── HEALTH BARS ── */
-.health-bar{height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;margin-top:5px}
-.health-fill{height:100%;border-radius:3px;transition:width .6s ease}
+/* ── LIVE FEED ── */
+.live-feed{display:flex;flex-direction:column}
+.live-row{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s}
+.live-row:last-child{border-bottom:none}
+.live-row:hover{background:rgba(255,255,255,.02)}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--purple);flex-shrink:0;margin-top:5px}
+.live-content{flex:1;min-width:0}
+.live-line{font-size:.79rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.live-meta{font-size:.68rem;color:var(--muted);margin-top:2px}
+.live-tag{font-size:.6rem;padding:1px 7px;border-radius:10px;background:rgba(108,92,231,.14);color:var(--pu-l);border:1px solid rgba(108,92,231,.2);flex-shrink:0}
+
+/* ── HEALTH BAR ── */
+.hbar{height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;margin-top:5px}
+.hbar-fill{height:100%;border-radius:3px;transition:width .6s ease}
 
 /* ── MISC ── */
 .sep{height:1px;background:var(--border);margin:16px 0}
-.code{background:#04040c;border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;font-family:'JetBrains Mono','Fira Code',monospace;font-size:.74rem;color:var(--pu-l);overflow-x:auto;white-space:pre-wrap;word-break:break-all;line-height:1.5}
-.empty{text-align:center;padding:48px 24px;color:var(--muted)}
-.tag{font-size:.63rem;padding:2px 7px;border-radius:20px;background:rgba(255,255,255,.05);color:var(--muted-l);border:1px solid var(--border)}
-.user-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--pu-l));display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;color:#fff;flex-shrink:0}
-.metric-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.empty{text-align:center;padding:40px 24px;color:var(--muted);font-size:.83rem}
+.user-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--pu-l));display:flex;align-items:center;justify-content:center;font-size:.74rem;font-weight:700;color:#fff;flex-shrink:0}
+.metric-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)}
 .metric-row:last-child{border-bottom:none}
-.metric-label{font-size:.8rem;color:var(--muted-l)}
-.metric-value{font-size:.86rem;font-weight:700;color:var(--white)}
+.metric-lbl{font-size:.79rem;color:var(--muted-l)}
+.metric-val{font-size:.84rem;font-weight:700;color:var(--white)}
+.rating-star{color:var(--gold);font-size:.9rem}
+.rating-down{color:var(--red);font-size:.9rem}
+.funnel-step{display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:var(--r-sm);background:rgba(255,255,255,.02);border:1px solid var(--border);margin-bottom:6px}
+.funnel-n{font-size:1.6rem;font-weight:800;color:var(--white);letter-spacing:-.04em;min-width:80px}
+.funnel-bar-wrap{flex:1;height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden}
+.funnel-bar{height:100%;border-radius:4px;transition:width .8s ease}
+.funnel-lbl{font-size:.78rem;color:var(--muted-l);min-width:140px}
+.funnel-pct{font-size:.78rem;font-weight:700;color:var(--pu-l);min-width:44px;text-align:right}
 
+/* ── SEARCH RESULTS ── */
+.search-results{position:absolute;top:100%;left:0;right:0;background:var(--bg3);border:1px solid var(--border-h);border-radius:var(--r-sm);margin-top:2px;z-index:100;max-height:300px;overflow-y:auto;box-shadow:var(--shadow)}
+.search-result-item{padding:10px 14px;cursor:pointer;transition:background .12s;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.search-result-item:last-child{border-bottom:none}
+.search-result-item:hover{background:rgba(108,92,231,.08)}
+.search-group{font-size:.65rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:8px 14px 4px;background:rgba(0,0,0,.2)}
+
+/* ── ANNOUNCEMENT ── */
+.ann-bar{padding:9px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:.82rem;border-bottom:1px solid;animation:annIn .3s ease}
+@keyframes annIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.ann-info{background:rgba(108,92,231,.12);border-color:rgba(108,92,231,.25);color:var(--pu-l)}
+.ann-warn{background:rgba(240,192,64,.1);border-color:rgba(240,192,64,.3);color:var(--gold)}
+.ann-err{background:rgba(233,69,96,.1);border-color:rgba(233,69,96,.3);color:var(--red)}
 </style>
 </head>
 <body x-data="admin()" x-init="init()" x-cloak>
 
+<!-- TOASTS -->
 <div class="toast-area">
   <template x-for="t in toasts" :key="t.id">
     <div class="toast" :class="t.type" x-text="t.msg" @click="toasts=toasts.filter(x=>x.id!==t.id)"></div>
   </template>
 </div>
 
+<!-- AUTH GUARD -->
 <template x-if="!ready">
   <div style="display:flex;align-items:center;justify-content:center;height:100vh;color:var(--muted)">
     <div style="text-align:center"><div style="font-size:2rem;margin-bottom:12px">🔐</div><div>Authentifiziere…</div></div>
   </div>
 </template>
-
 <template x-if="ready && !authorized">
   <div style="display:flex;align-items:center;justify-content:center;height:100vh">
-    <div style="text-align:center;max-width:360px">
-      <div style="font-size:2.5rem;margin-bottom:16px">🚫</div>
+    <div style="text-align:center;max-width:360px"><div style="font-size:2.5rem;margin-bottom:16px">🚫</div>
       <h2 style="color:var(--white);margin-bottom:8px">Kein Admin-Zugriff</h2>
-      <p style="font-size:.85rem;color:var(--muted);margin-bottom:20px">Dein Account hat keine Admin-Rechte. Setze ADMIN_EMAIL in den Render-Env-Variablen.</p>
+      <p style="font-size:.85rem;color:var(--muted);margin-bottom:20px">Setze ADMIN_EMAIL in den Render-Env-Variablen.</p>
       <a href="/app" style="color:var(--pu-l);font-size:.85rem">← Zurück zum Dashboard</a>
     </div>
   </div>
@@ -196,85 +247,219 @@ textarea.inp{resize:vertical;min-height:90px;line-height:1.5}
 
 <template x-if="ready && authorized">
 <div class="app">
+
+  <!-- SIDEBAR -->
   <div class="sidebar">
-    <div class="sb-logo">
-      <span>Agent<span style="color:var(--pu-l)">Kontor</span></span>
-      <span class="admin-badge">ADMIN</span>
+    <div class="sb-top">
+      <div class="sb-brand">Agent<span>Kontor</span> <span class="admin-badge">ADMIN</span></div>
+      <!-- Platform Search -->
+      <div class="sb-search" style="position:relative">
+        <input type="text" placeholder="Nutzer, Agent suchen…" x-model="globalSearch" @input.debounce.300ms="runSearch()" @focus="showSearchResults=true" @click.outside="showSearchResults=false">
+        <div class="search-results" x-show="showSearchResults && (searchRes.users.length||searchRes.agents.length)" x-cloak>
+          <template x-if="searchRes.users.length">
+            <div>
+              <div class="search-group">👥 Nutzer</div>
+              <template x-for="u in searchRes.users" :key="u.id">
+                <div class="search-result-item" @click="page='users';loadUsers();showSearchResults=false">
+                  <div class="user-av" x-text="(u.name||u.email||'?')[0].toUpperCase()"></div>
+                  <div><div style="font-size:.81rem;font-weight:600;color:var(--white)" x-text="u.name||'—'"></div><div style="font-size:.71rem;color:var(--muted)" x-text="u.email"></div></div>
+                  <span class="badge" :class="u.plan==='pro'?'b-pro':'b-free'" style="margin-left:auto" x-text="u.plan"></span>
+                </div>
+              </template>
+            </div>
+          </template>
+          <template x-if="searchRes.agents.length">
+            <div>
+              <div class="search-group">🤖 Agenten</div>
+              <template x-for="a in searchRes.agents" :key="a.id">
+                <div class="search-result-item" @click="page='agents';loadAllAgents();showSearchResults=false">
+                  <span x-text="a.emoji" style="font-size:1rem"></span>
+                  <div><div style="font-size:.81rem;font-weight:600;color:var(--white)" x-text="a.name"></div><div style="font-size:.71rem;color:var(--muted)" x-text="a.owner"></div></div>
+                  <span style="font-size:.71rem;color:var(--pu-l);margin-left:auto;font-weight:600" x-text="(a.total_messages||0).toLocaleString('de-DE')"></span>
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
+      </div>
     </div>
+
     <div class="sb-nav">
       <div class="nav-section">Übersicht</div>
-      <div class="nav-item" :class="{active:page==='overview'}" @click="page='overview';loadOverview()">📊 Dashboard</div>
-      <div class="nav-item" :class="{active:page==='revenue'}" @click="page='revenue';loadRevenue()">💶 Revenue &amp; MRR</div>
-      <div class="nav-item" :class="{active:page==='health'}" @click="page='health';loadHealth()"><span class="health-dot"></span>System Health</div>
+      <div class="nav-item" :class="{active:page==='overview'}" @click="page='overview';loadOverview()">
+        <span class="nav-ico">📊</span><span class="nav-txt">Dashboard</span>
+      </div>
+      <div class="nav-item" :class="{active:page==='revenue'}" @click="page='revenue';loadRevenue()">
+        <span class="nav-ico">💶</span><span class="nav-txt">Revenue &amp; MRR</span>
+      </div>
+      <div class="nav-item" :class="{active:page==='funnel'}" @click="page='funnel';loadFunnel()">
+        <span class="nav-ico">🔄</span><span class="nav-txt">Conversion Funnel</span>
+      </div>
+      <div class="nav-item" :class="{active:page==='health'}" @click="page='health';loadHealth()">
+        <span class="nav-ico"><span class="health-dot"></span></span><span class="nav-txt">System Health</span>
+      </div>
+      <div class="nav-item" :class="{active:page==='agent-health'}" @click="page='agent-health';loadAgentHealth()">
+        <span class="nav-ico">🩺</span><span class="nav-txt">Agent Health</span>
+      </div>
+
       <div class="nav-section">Nutzer &amp; Agenten</div>
       <div class="nav-item" :class="{active:page==='users'}" @click="page='users';loadUsers()">
-        👥 Nutzer
-        <span style="margin-left:auto;font-size:.65rem;background:rgba(108,92,231,.2);color:var(--pu-l);padding:1px 7px;border-radius:10px" x-show="stats" x-text="stats?.users?.total||''"></span>
+        <span class="nav-ico">👥</span><span class="nav-txt">Nutzer</span>
+        <span class="nav-n" x-show="stats" x-text="stats?.users?.total||''"></span>
       </div>
-      <div class="nav-item" :class="{active:page==='agents'}" @click="page='agents';loadAllAgents()">🤖 Agenten</div>
-      <div class="nav-item" :class="{active:page==='activity'}" @click="page='activity';loadActivity()">📋 Live-Aktivität</div>
-      <div class="nav-section">Tools</div>
-      <div class="nav-item" :class="{active:page==='costs'}" @click="page='costs';loadCosts()">💰 LLM-Kosten</div>
-      <div class="nav-item" :class="{active:page==='broadcast'}" @click="page='broadcast'">📢 Broadcast</div>
-      <div class="nav-item" :class="{active:page==='promo'}" @click="page='promo'">🎟️ Promo-Codes</div>
-    </div>
-    <div class="sb-footer">
-      <div style="font-size:.72rem;color:var(--muted);margin-bottom:8px" x-text="adminEmail"></div>
-      <a href="/app" style="font-size:.76rem;color:var(--muted);text-decoration:none">← Zurück zum Dashboard</a>
-    </div>
-  </div>
+      <div class="nav-item" :class="{active:page==='agents'}" @click="page='agents';loadAllAgents()">
+        <span class="nav-ico">🤖</span><span class="nav-txt">Agenten</span>
+      </div>
+      <div class="nav-item" :class="{active:page==='activity'}" @click="page='activity';loadActivity()">
+        <span class="nav-ico">⚡</span><span class="nav-txt">Live-Aktivität</span>
+      </div>
+      <div class="nav-item" :class="{active:page==='feedback'}" @click="page='feedback';loadFeedback()">
+        <span class="nav-ico">⭐</span><span class="nav-txt">Feedback</span>
+      </div>
 
+      <div class="nav-section">Plattform</div>
+      <div class="nav-item" :class="{active:page==='costs'}" @click="page='costs';loadCosts()">
+        <span class="nav-ico">💰</span><span class="nav-txt">LLM-Kosten</span>
+      </div>
+      <div class="nav-item" :class="{active:page==='rate-limits'}" @click="page='rate-limits';loadRateLimits()">
+        <span class="nav-ico">🚦</span><span class="nav-txt">Rate Limits</span>
+      </div>
+      <div class="nav-item" :class="{active:page==='cost-alerts'}" @click="page='cost-alerts';loadCostAlerts()">
+        <span class="nav-ico">🚨</span><span class="nav-txt">Kosten-Alerts</span>
+        <span class="nav-n red" x-show="costAlertCount>0" x-text="costAlertCount"></span>
+      </div>
+
+      <div class="nav-section">Inhalte</div>
+      <div class="nav-item" :class="{active:page==='templates'}" @click="page='templates';loadTemplates()">
+        <span class="nav-ico">📋</span><span class="nav-txt">Templates</span>
+      </div>
+      <div class="nav-item" :class="{active:page==='changelog'}" @click="page='changelog';loadChangelog()">
+        <span class="nav-ico">📝</span><span class="nav-txt">Changelog</span>
+      </div>
+      <div class="nav-item" :class="{active:page==='announcement'}" @click="page='announcement'">
+        <span class="nav-ico">📢</span><span class="nav-txt">Ankündigung</span>
+      </div>
+
+      <div class="nav-section">Tools</div>
+      <div class="nav-item" :class="{active:page==='broadcast'}" @click="page='broadcast'">
+        <span class="nav-ico">📧</span><span class="nav-txt">Broadcast</span>
+      </div>
+      <div class="nav-item" :class="{active:page==='promo'}" @click="page='promo'">
+        <span class="nav-ico">🎟️</span><span class="nav-txt">Promo &amp; Trial</span>
+      </div>
+      <div class="nav-item" :class="{active:page==='cron'}" @click="page='cron';loadCronLogs()">
+        <span class="nav-ico">⚙️</span><span class="nav-txt">Cron &amp; Wartung</span>
+      </div>
+      <div class="nav-item" :class="{active:page==='exports'}" @click="page='exports'">
+        <span class="nav-ico">📤</span><span class="nav-txt">Exports</span>
+      </div>
+    </div>
+
+    <div class="sb-footer">
+      <div class="sb-admin-email" x-text="adminEmail"></div>
+      <div class="sb-links">
+        <a href="/app">← App</a>
+        <a href="/admin" @click.prevent="location.reload()">↺ Reload</a>
+      </div>
+    </div>
+  </div><!-- /sidebar -->
+
+  <!-- MAIN -->
   <div class="main">
 
-    <!-- OVERVIEW -->
+    <!-- ANNOUNCEMENT BANNER -->
+    <div x-show="announcement" class="ann-bar" :class="'ann-'+(announcement?.type||'info')">
+      <span x-text="announcement?.text"></span>
+      <button @click="clearAnnouncement()" style="background:none;border:none;color:inherit;cursor:pointer;font-size:1.1rem;opacity:.7">×</button>
+    </div>
+
+    <!-- ── OVERVIEW ── -->
     <div class="page" x-show="page==='overview'">
       <div class="ph">
-        <div><div class="ph-title">Admin Dashboard</div><div class="ph-sub" x-text="'Stand: '+lastRefresh"></div></div>
-        <button class="btn btn-ghost btn-sm" @click="loadOverview()">↺ Reload</button>
+        <div><div class="ph-title">📊 Dashboard</div><div class="ph-sub" x-text="'Letzte Aktualisierung: '+lastRefresh"></div></div>
+        <div class="ph-actions">
+          <button class="btn btn-ghost btn-sm" @click="loadSnapshot()">↺ Snapshot</button>
+          <button class="btn btn-ghost btn-sm" @click="loadOverview()">↺ Vollbild</button>
+        </div>
       </div>
+
+      <!-- Live Snapshot -->
+      <div class="snapshot-bar" x-show="snapshot">
+        <div class="snap-item">
+          <div class="snap-n" x-text="snapshot?.msgs_last_hour||0"></div>
+          <div class="snap-l">Msgs letzte Stunde</div>
+        </div>
+        <div class="snap-item">
+          <div class="snap-n" x-text="snapshot?.active_agents_now||0"></div>
+          <div class="snap-l">Aktive Agenten</div>
+        </div>
+        <div class="snap-item">
+          <div class="snap-n" x-text="snapshot?.new_users_today||0"></div>
+          <div class="snap-l">Neue Nutzer heute</div>
+        </div>
+        <div class="snap-item">
+          <div class="snap-n" x-text="snapshot?.leads_today||0"></div>
+          <div class="snap-l">Leads heute</div>
+        </div>
+        <div class="snap-item">
+          <div class="snap-n" x-text="'$'+(snapshot?.costs_today_usd||0).toFixed(3)"></div>
+          <div class="snap-l">API-Kosten heute</div>
+        </div>
+      </div>
+
       <template x-if="!stats"><div style="text-align:center;padding:60px;color:var(--muted)">⏳ Lade…</div></template>
       <template x-if="stats">
         <div>
           <!-- Revenue Hero -->
-          <div class="rev-hero" style="margin-bottom:20px">
+          <div class="rev-hero">
             <div>
-              <div class="rev-hero-mrr" x-text="'€'+(parseInt(stats.users.pro||0)*19).toLocaleString('de-DE')"></div>
-              <div class="rev-hero-label">MRR (geschätzt)</div>
+              <div class="rev-mrr" x-text="'€'+(parseInt(stats.users.pro||0)*19).toLocaleString('de-DE')"></div>
+              <div class="rev-label">Geschätzter MRR</div>
             </div>
-            <div class="rev-hero-stats">
+            <div class="rev-stats">
               <div class="rev-stat"><div class="rev-stat-n" x-text="stats.users.pro||0"></div><div class="rev-stat-l">Pro-Nutzer</div></div>
-              <div class="rev-stat"><div class="rev-stat-n" x-text="'€'+((parseInt(stats.users.pro||0)*19*12)).toLocaleString('de-DE')"></div><div class="rev-stat-l">ARR</div></div>
-              <div class="rev-stat"><div class="rev-stat-n" x-text="stats.users.new_week||0"></div><div class="rev-stat-l">Neu diese Woche</div></div>
+              <div class="rev-stat"><div class="rev-stat-n" x-text="'€'+((parseInt(stats.users.pro||0)*228)).toLocaleString('de-DE')"></div><div class="rev-stat-l">ARR</div></div>
+              <div class="rev-stat"><div class="rev-stat-n" x-text="stats.users.new_week||0"></div><div class="rev-stat-l">Neu / Woche</div></div>
               <div class="rev-stat"><div class="rev-stat-n" x-text="stats.leads?.total||0"></div><div class="rev-stat-l">Leads 30d</div></div>
             </div>
+            <button class="btn btn-ghost btn-sm" @click="page='revenue';loadRevenue()">Details →</button>
           </div>
+
           <div class="grid-4">
-            <div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,#6c5ce7,#a29bfe)"></div><div class="stat-icon">👥</div><div class="stat-n" x-text="(stats.users.total||0).toLocaleString('de-DE')"></div><div class="stat-l">Nutzer gesamt</div><div class="stat-trend trend-up">+<span x-text="stats.users.new_week"></span> diese Woche</div></div>
-            <div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,#00b894,#00cec9)"></div><div class="stat-icon">💬</div><div class="stat-n" x-text="parseInt(stats.messages.month||0).toLocaleString('de-DE')"></div><div class="stat-l">Nachrichten 30d</div><div class="stat-sub" x-text="parseInt(stats.messages.total||0).toLocaleString('de-DE')+' gesamt'"></div></div>
-            <div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,#f59e0b,#f0c040)"></div><div class="stat-icon">🤖</div><div class="stat-n" x-text="stats.agents.total"></div><div class="stat-l">Agenten</div><div class="stat-sub" x-text="stats.agents.active+' aktiv · '+(stats.agents.total-stats.agents.active)+' inaktiv'"></div></div>
-            <div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,#e94560,#fd9644)"></div><div class="stat-icon">📈</div><div class="stat-n" x-text="stats.users.pro&&stats.users.total>0?Math.round((stats.users.pro/stats.users.total)*100)+'%':'—'"></div><div class="stat-l">Conversion Rate</div><div class="stat-sub">Free → Pro</div></div>
+            <div class="stat-card"><div class="stat-bar" style="background:linear-gradient(90deg,#6c5ce7,#a29bfe)"></div><div class="stat-ico">👥</div><div class="stat-n" x-text="(stats.users.total||0).toLocaleString('de-DE')"></div><div class="stat-l">Nutzer gesamt</div><div class="stat-trend trend-up">+<span x-text="stats.users.new_week||0"></span> diese Woche</div></div>
+            <div class="stat-card"><div class="stat-bar" style="background:linear-gradient(90deg,#00b894,#00cec9)"></div><div class="stat-ico">💬</div><div class="stat-n" x-text="parseInt(stats.messages.month||0).toLocaleString('de-DE')"></div><div class="stat-l">Nachrichten 30d</div><div class="stat-sub" x-text="parseInt(stats.messages.total||0).toLocaleString('de-DE')+' gesamt'"></div></div>
+            <div class="stat-card"><div class="stat-bar" style="background:linear-gradient(90deg,#f59e0b,#f0c040)"></div><div class="stat-ico">🤖</div><div class="stat-n" x-text="stats.agents.total||0"></div><div class="stat-l">Agenten</div><div class="stat-sub" x-text="(stats.agents.active||0)+' aktiv'"></div></div>
+            <div class="stat-card" style="cursor:pointer" @click="page='funnel';loadFunnel()"><div class="stat-bar" style="background:linear-gradient(90deg,#e94560,#fd9644)"></div><div class="stat-ico">📈</div><div class="stat-n" x-text="stats.users.pro&&stats.users.total?Math.round((stats.users.pro/stats.users.total)*100)+'%':'—'"></div><div class="stat-l">Conversion Rate</div><div class="stat-sub">→ Funnel ansehen</div></div>
           </div>
+
           <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px">
-            <div class="card"><div class="card-title">Nachrichten pro Tag (30 Tage)</div><div class="chart-wrap"><canvas id="msgChart"></canvas></div></div>
+            <div class="card"><div class="card-hdr"><div class="card-hdr-title">📈 Nachrichten / Tag (30d)</div></div><div class="chart-wrap"><canvas id="msgChart"></canvas></div></div>
             <div class="card">
-              <div class="card-title">Plan-Verteilung</div>
-              <div class="chart-wrap-sm"><canvas id="planChart"></canvas></div>
-              <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:.73rem;color:var(--muted)">
-                <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#6c5ce7;margin-right:4px;vertical-align:middle"></span>Pro <strong style="color:var(--white)" x-text="stats.users.pro"></strong></span>
-                <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.12);margin-right:4px;vertical-align:middle"></span>Free <strong style="color:var(--white)" x-text="parseInt(stats.users.total)-parseInt(stats.users.pro)"></strong></span>
+              <div class="card-hdr"><div class="card-hdr-title">🎯 Plan-Verteilung</div></div>
+              <div class="chart-sm"><canvas id="planChart"></canvas></div>
+              <div style="display:flex;gap:16px;margin-top:12px;font-size:.73rem;flex-wrap:wrap">
+                <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:#6c5ce7;display:inline-block"></span>Pro: <b style="color:var(--white)" x-text="stats.users.pro||0"></b></span>
+                <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.12);display:inline-block"></span>Free: <b style="color:var(--white)" x-text="(parseInt(stats.users.total||0)-parseInt(stats.users.pro||0))"></b></span>
               </div>
             </div>
           </div>
+
           <div class="card">
-            <div class="card-title">Top Agenten nach Nachrichten</div>
+            <div class="card-hdr"><div class="card-hdr-title">🏆 Top Agenten nach Nachrichten</div><button class="btn btn-xs btn-ghost" @click="page='agents';loadAllAgents()">Alle →</button></div>
             <table>
-              <tr><th>Agent</th><th>Besitzer</th><th>Nachrichten</th><th>Status</th></tr>
-              <template x-for="a in stats.topAgents" :key="a.id">
+              <tr><th>Agent</th><th>Besitzer</th><th>Nachrichten</th><th>Status</th><th></th></tr>
+              <template x-for="a in stats.topAgents||[]" :key="a.id">
                 <tr>
                   <td><span x-text="a.emoji+' '"></span><strong x-text="a.name" style="color:var(--white)"></strong></td>
-                  <td style="color:var(--muted);font-size:.76rem" x-text="a.owner"></td>
+                  <td class="td-trunc" style="color:var(--muted);font-size:.76rem" x-text="a.owner"></td>
                   <td><strong x-text="(a.total_messages||0).toLocaleString('de-DE')" style="color:var(--pu-l)"></strong></td>
-                  <td><span class="badge" :class="a.is_active?'b-green':'b-free'" x-text="a.is_active?'Aktiv':'Inaktiv'"></span></td>
+                  <td>
+                    <span style="display:flex;align-items:center;gap:5px">
+                      <span class="status-dot" :class="a.is_active?'ok':'err'"></span>
+                      <span style="font-size:.76rem" x-text="a.is_active?'Aktiv':'Inaktiv'"></span>
+                    </span>
+                  </td>
+                  <td><button class="btn btn-xs btn-ghost" @click="quickImpersonate(a.owner)">Login als</button></td>
                 </tr>
               </template>
             </table>
@@ -283,156 +468,261 @@ textarea.inp{resize:vertical;min-height:90px;line-height:1.5}
       </template>
     </div>
 
-    <!-- REVENUE -->
+    <!-- ── REVENUE ── -->
     <div class="page" x-show="page==='revenue'">
-      <div class="ph"><div><div class="ph-title">💶 Revenue &amp; MRR</div><div class="ph-sub">Abonnements, Wachstum, Conversion</div></div><button class="btn btn-ghost btn-sm" @click="loadRevenue()">↺</button></div>
+      <div class="ph"><div><div class="ph-title">💶 Revenue &amp; MRR</div><div class="ph-sub">Abonnements, Wachstum, Churn</div></div><button class="btn btn-ghost btn-sm" @click="loadRevenue()">↺</button></div>
       <template x-if="!revenue"><div style="text-align:center;padding:60px;color:var(--muted)">⏳ Lade…</div></template>
       <template x-if="revenue">
         <div>
           <div class="grid-4">
-            <div class="stat-card"><div class="stat-icon">💶</div><div class="stat-n" x-text="'€'+(revenue.mrr_eur||0).toLocaleString('de-DE')"></div><div class="stat-l">MRR (geschätzt)</div><div class="stat-sub" x-text="'ARR: €'+(revenue.arr_eur||0).toLocaleString('de-DE')"></div></div>
-            <div class="stat-card"><div class="stat-icon">⭐</div><div class="stat-n" x-text="revenue.paying_users||0"></div><div class="stat-l">Zahlende Nutzer</div><div class="stat-trend trend-up" x-show="revenue.new_30d>0">+<span x-text="revenue.new_30d"></span> / 30 Tage</div></div>
-            <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-n" x-text="revenue.trialing_users||0"></div><div class="stat-l">Im Trial</div><div class="stat-sub">14-Tage Pro Trial</div></div>
-            <div class="stat-card">
-              <div class="stat-icon">📈</div>
-              <div class="stat-n" x-text="revenue.paying_users&&(revenue.paying_users+revenue.free_users)>0?Math.round((revenue.paying_users/(revenue.paying_users+revenue.free_users+revenue.trialing_users))*100)+'%':'—'"></div>
-              <div class="stat-l">Conversion Rate</div>
-              <div class="stat-sub" x-text="(revenue.free_users||0)+' Free-Nutzer'"></div>
+            <div class="stat-card"><div class="stat-bar" style="background:linear-gradient(90deg,#6c5ce7,#00b894)"></div><div class="stat-ico">💶</div><div class="stat-n" x-text="'€'+(revenue.mrr_eur||0).toLocaleString('de-DE')"></div><div class="stat-l">MRR</div><div class="stat-sub" x-text="'ARR: €'+(revenue.arr_eur||0).toLocaleString('de-DE')"></div></div>
+            <div class="stat-card"><div class="stat-ico">⭐</div><div class="stat-n" x-text="revenue.paying_users||0"></div><div class="stat-l">Zahlende Nutzer</div><div class="stat-trend trend-up" x-show="revenue.new_30d>0">+<span x-text="revenue.new_30d"></span> / 30d</div></div>
+            <div class="stat-card"><div class="stat-ico">⏳</div><div class="stat-n" x-text="revenue.trialing_users||0"></div><div class="stat-l">Im Trial</div><div class="stat-sub">14-Tage Pro</div></div>
+            <div class="stat-card"><div class="stat-ico">📈</div>
+              <div class="stat-n" x-text="(revenue.paying_users||(0))&&(parseInt(revenue.paying_users)+parseInt(revenue.free_users)+parseInt(revenue.trialing_users))>0?Math.round((parseInt(revenue.paying_users)/(parseInt(revenue.paying_users)+parseInt(revenue.free_users)+parseInt(revenue.trialing_users)))*100)+'%':'—'"></div>
+              <div class="stat-l">Conversion</div><div class="stat-sub" x-text="(revenue.free_users||0)+' Free-Nutzer'"></div>
             </div>
           </div>
-          <div class="card"><div class="card-title">Neue Anmeldungen pro Monat (6 Monate)</div><div class="chart-wrap"><canvas id="growthChart"></canvas></div></div>
+          <div class="card"><div class="card-hdr"><div class="card-hdr-title">📅 Neue Anmeldungen / Monat</div></div><div class="chart-wrap"><canvas id="growthChart"></canvas></div></div>
         </div>
       </template>
     </div>
 
-    <!-- HEALTH -->
+    <!-- ── CONVERSION FUNNEL ── -->
+    <div class="page" x-show="page==='funnel'">
+      <div class="ph"><div><div class="ph-title">🔄 Conversion Funnel</div><div class="ph-sub">Von Registrierung bis Pro-Abonnement</div></div><button class="btn btn-ghost btn-sm" @click="loadFunnel()">↺</button></div>
+      <template x-if="!funnel"><div style="text-align:center;padding:60px;color:var(--muted)">⏳ Lade…</div></template>
+      <template x-if="funnel">
+        <div>
+          <div style="max-width:680px">
+            <div class="funnel-step">
+              <div class="funnel-n" x-text="funnel.total.toLocaleString('de-DE')"></div>
+              <div class="funnel-lbl">👥 Registrierungen gesamt</div>
+              <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:100%;background:linear-gradient(90deg,#6c5ce7,#a29bfe)"></div></div>
+              <div class="funnel-pct">100%</div>
+            </div>
+            <div class="funnel-step">
+              <div class="funnel-n" x-text="funnel.trialed.toLocaleString('de-DE')"></div>
+              <div class="funnel-lbl">⏳ Trial aktiviert</div>
+              <div class="funnel-bar-wrap"><div class="funnel-bar" :style="'width:'+Math.round((funnel.trialed/funnel.total)*100)+'%;background:linear-gradient(90deg,#f59e0b,#f0c040)'"></div></div>
+              <div class="funnel-pct" x-text="Math.round((funnel.trialed/funnel.total)*100)+'%'"></div>
+            </div>
+            <div class="funnel-step">
+              <div class="funnel-n" x-text="funnel.converted.toLocaleString('de-DE')"></div>
+              <div class="funnel-lbl">⭐ Zu Pro konvertiert</div>
+              <div class="funnel-bar-wrap"><div class="funnel-bar" :style="'width:'+Math.round((funnel.converted/funnel.total)*100)+'%;background:linear-gradient(90deg,#00b894,#00cec9)'"></div></div>
+              <div class="funnel-pct" x-text="Math.round((funnel.converted/funnel.total)*100)+'%'"></div>
+            </div>
+            <div class="funnel-step">
+              <div class="funnel-n" x-text="funnel.active30d.toLocaleString('de-DE')"></div>
+              <div class="funnel-lbl">🔥 Aktiv in 30d</div>
+              <div class="funnel-bar-wrap"><div class="funnel-bar" :style="'width:'+Math.round((funnel.active30d/funnel.total)*100)+'%;background:linear-gradient(90deg,#a29bfe,#6c5ce7)'"></div></div>
+              <div class="funnel-pct" x-text="Math.round((funnel.active30d/funnel.total)*100)+'%'"></div>
+            </div>
+            <div class="funnel-step" style="border-color:rgba(233,69,96,.2)">
+              <div class="funnel-n" style="color:var(--red)" x-text="funnel.churned.toLocaleString('de-DE')"></div>
+              <div class="funnel-lbl" style="color:var(--red)">📉 Churned (Trial abgelaufen)</div>
+              <div class="funnel-bar-wrap"><div class="funnel-bar" :style="'width:'+Math.round((funnel.churned/funnel.total)*100)+'%;background:var(--red)'"></div></div>
+              <div class="funnel-pct" style="color:var(--red)" x-text="Math.round((funnel.churned/funnel.total)*100)+'%'"></div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:14px;max-width:680px">
+            <div class="card-hdr"><div class="card-hdr-title">📅 Signups &amp; Conversions / Tag (30d)</div></div>
+            <div class="chart-wrap"><canvas id="funnelChart"></canvas></div>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- ── HEALTH ── -->
     <div class="page" x-show="page==='health'">
-      <div class="ph"><div><div class="ph-title">⚡ System Health</div><div class="ph-sub">Datenbankstatus und Server-Performance</div></div><button class="btn btn-ghost btn-sm" @click="loadHealth()">↺ Prüfen</button></div>
+      <div class="ph"><div><div class="ph-title">⚡ System Health</div><div class="ph-sub">DB-Status, Memory, Tabellengrössen</div></div><button class="btn btn-ghost btn-sm" @click="loadHealth()">↺ Prüfen</button></div>
       <template x-if="!health"><div style="text-align:center;padding:60px;color:var(--muted)">⏳ Prüfe System…</div></template>
       <template x-if="health">
         <div>
           <div class="grid-4">
             <div class="stat-card" :style="health.db_latency_ms<100?'border-color:rgba(0,184,148,.25)':'border-color:rgba(233,69,96,.25)'">
-              <div class="stat-card-bar" :style="'background:'+( health.db_latency_ms<50?'linear-gradient(90deg,#00b894,#00cec9)':health.db_latency_ms<100?'linear-gradient(90deg,#f0c040,#f59e0b)':'linear-gradient(90deg,#e94560,#fd9644)')"></div>
-              <div class="stat-icon">🗄️</div>
+              <div class="stat-bar" :style="'background:'+( health.db_latency_ms<50?'linear-gradient(90deg,#00b894,#00cec9)':health.db_latency_ms<100?'linear-gradient(90deg,#f0c040,#f59e0b)':'linear-gradient(90deg,#e94560,#fd9644)')"></div>
+              <div class="stat-ico">🗄️</div>
               <div class="stat-n" :style="health.db_latency_ms<100?'color:var(--green)':'color:var(--red)'" x-text="health.db_latency_ms+'ms'"></div>
               <div class="stat-l">DB-Latenz</div>
-              <div class="status-cell" style="margin-top:6px" :class="health.db_latency_ms<50?'status-ok':health.db_latency_ms<100?'status-warn':'status-err'">
-                <div class="status-dot"></div>
-                <span style="font-size:.72rem;font-weight:600" x-text="health.db_latency_ms<50?'Excellent':health.db_latency_ms<100?'Gut':'Langsam'"></span>
+              <div style="display:flex;align-items:center;gap:5px;margin-top:6px">
+                <span class="status-dot" :class="health.db_latency_ms<50?'ok':health.db_latency_ms<100?'warn':'err'"></span>
+                <span style="font-size:.73rem;font-weight:600" :class="health.db_latency_ms<50?'tl-ok':health.db_latency_ms<100?'tl-warn':'tl-err'" x-text="health.db_latency_ms<50?'Excellent':health.db_latency_ms<100?'Gut':'Langsam'"></span>
               </div>
             </div>
-            <div class="stat-card"><div class="stat-icon">💾</div><div class="stat-n" style="font-size:1.2rem" x-text="health.db_size||'?'"></div><div class="stat-l">Datenbankgrösse</div></div>
-            <div class="stat-card"><div class="stat-icon">🧠</div><div class="stat-n" x-text="health.memory_mb+'MB'"></div><div class="stat-l">Heap Memory</div><div class="stat-sub" x-text="'Node.js '+health.node_version"></div></div>
-            <div class="stat-card"><div class="stat-icon">⏱️</div><div class="stat-n" style="font-size:1.1rem" x-text="Math.floor((health.uptime_s||0)/3600)+'h '+(Math.floor((health.uptime_s||0)%3600/60))+'m'"></div><div class="stat-l">Uptime</div></div>
+            <div class="stat-card"><div class="stat-ico">💾</div><div class="stat-n" style="font-size:1.2rem" x-text="health.db_size||'?'"></div><div class="stat-l">DB-Größe</div></div>
+            <div class="stat-card"><div class="stat-ico">🧠</div><div class="stat-n" x-text="health.memory_mb+'MB'"></div><div class="stat-l">Heap Memory</div><div class="stat-sub" x-text="health.node_version"></div></div>
+            <div class="stat-card"><div class="stat-ico">⏱️</div><div class="stat-n" style="font-size:1.1rem" x-text="Math.floor((health.uptime_s||0)/3600)+'h '+(Math.floor((health.uptime_s||0)%3600/60))+'m'"></div><div class="stat-l">Uptime</div></div>
           </div>
-          <div class="card">
-            <div class="card-title">Tabellengrössen</div>
-            <table>
-              <tr><th>Tabelle</th><th>Zeilen (geschätzt)</th><th>Anteil</th></tr>
-              <template x-for="t in health.top_tables" :key="t.tablename">
-                <tr>
-                  <td style="font-family:monospace;font-size:.78rem;color:var(--pu-l)" x-text="t.tablename"></td>
-                  <td><strong x-text="parseInt(t.rows).toLocaleString('de-DE')" style="color:var(--white)"></strong></td>
-                  <td style="width:240px">
-                    <div class="health-bar">
-                      <div class="health-fill" :style="'width:'+Math.min(100,parseInt(t.rows)/Math.max(1,parseInt(health.top_tables[0]?.rows))*100)+'%;background:var(--purple)'"></div>
-                    </div>
-                  </td>
-                </tr>
-              </template>
-            </table>
-          </div>
-          <div class="card" x-show="parseInt(health.active_locks)>0" style="border-color:rgba(233,69,96,.3)">
-            <div style="color:var(--red);font-weight:600">⚠️ <span x-text="health.active_locks"></span> aktive DB-Locks</div>
-            <div style="font-size:.82rem;margin-top:4px;color:var(--muted)">Könnte die Performance beeinflussen. Prüfe laufende Transaktionen.</div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-hdr"><div class="card-hdr-title">📊 Tabellengrössen (Top 10)</div></div>
+              <table>
+                <tr><th>Tabelle</th><th>Zeilen</th><th>Anteil</th></tr>
+                <template x-for="t in health.top_tables||[]" :key="t.tablename">
+                  <tr>
+                    <td class="td-mono" style="color:var(--pu-l)" x-text="t.tablename"></td>
+                    <td><strong x-text="parseInt(t.rows).toLocaleString('de-DE')" style="color:var(--white)"></strong></td>
+                    <td style="width:120px"><div class="hbar"><div class="hbar-fill" :style="'width:'+Math.min(100,parseInt(t.rows)/Math.max(1,parseInt(health.top_tables[0]?.rows))*100)+'%;background:var(--purple)'"></div></div></td>
+                  </tr>
+                </template>
+              </table>
+            </div>
+            <div class="card">
+              <div class="card-hdr"><div class="card-hdr-title">🔐 Sicherheit &amp; Locks</div></div>
+              <div class="metric-row"><span class="metric-lbl">Aktive DB-Locks</span><span class="metric-val" :class="parseInt(health.active_locks)>0?'tl-err':'tl-ok'" x-text="health.active_locks||0"></span></div>
+              <div class="metric-row"><span class="metric-lbl">Node.js Version</span><span class="metric-val td-mono" x-text="health.node_version"></span></div>
+              <div class="metric-row"><span class="metric-lbl">DB-Verbindungslatenz</span><span class="metric-val" :class="health.db_latency_ms<100?'tl-ok':'tl-err'" x-text="health.db_latency_ms+'ms'"></span></div>
+              <div class="metric-row"><span class="metric-lbl">Heap Used / Uptime</span><span class="metric-val" x-text="health.memory_mb+'MB / '+Math.floor((health.uptime_s||0)/3600)+'h'"></span></div>
+              <div style="margin-top:14px">
+                <button class="btn btn-ghost btn-sm" @click="loadHealth()">↺ Neu prüfen</button>
+              </div>
+            </div>
           </div>
         </div>
       </template>
     </div>
 
-    <!-- USERS -->
+    <!-- ── AGENT HEALTH ── -->
+    <div class="page" x-show="page==='agent-health'">
+      <div class="ph"><div><div class="ph-title">🩺 Agent Health</div><div class="ph-sub">Inaktive, fehlerhafte und ungenutzte Agenten</div></div><button class="btn btn-ghost btn-sm" @click="loadAgentHealth()">↺</button></div>
+      <template x-if="!agentHealth"><div style="text-align:center;padding:60px;color:var(--muted)">⏳ Lade…</div></template>
+      <template x-if="agentHealth">
+        <div>
+          <div class="grid-3">
+            <div class="stat-card"><div class="stat-bar" style="background:linear-gradient(90deg,#e94560,#fd9644)"></div><div class="stat-n" style="color:var(--red)" x-text="agentHealth.inactive?.length||0"></div><div class="stat-l">Inaktive Agenten</div></div>
+            <div class="stat-card"><div class="stat-bar" style="background:linear-gradient(90deg,#f59e0b,#f0c040)"></div><div class="stat-n" style="color:var(--gold)" x-text="agentHealth.no_messages?.length||0"></div><div class="stat-l">Ohne Nachrichten</div></div>
+            <div class="stat-card"><div class="stat-bar" style="background:linear-gradient(90deg,#00b894,#00cec9)"></div><div class="stat-n" style="color:var(--green)" x-text="agentHealth.top_active?.length||0"></div><div class="stat-l">Heute aktiv</div></div>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-hdr"><div class="card-hdr-title" style="color:var(--gold)">⚠️ Aktive Agenten ohne Nachrichten</div></div>
+              <template x-if="!agentHealth.no_messages?.length"><div class="empty">✅ Alle aktiven Agenten haben Nachrichten</div></template>
+              <table x-show="agentHealth.no_messages?.length">
+                <tr><th>Agent</th><th>Besitzer</th><th>Erstellt</th><th></th></tr>
+                <template x-for="a in agentHealth.no_messages||[]" :key="a.id">
+                  <tr>
+                    <td><span x-text="a.emoji+' '"></span><strong x-text="a.name" style="color:var(--white)"></strong></td>
+                    <td style="font-size:.76rem;color:var(--muted)" x-text="a.email"></td>
+                    <td style="font-size:.74rem;color:var(--muted)" x-text="new Date(a.created_at).toLocaleDateString('de-DE')"></td>
+                    <td><button class="btn btn-xs btn-ghost" @click="quickSearch(a.email)">Nutzer</button></td>
+                  </tr>
+                </template>
+              </table>
+            </div>
+            <div class="card">
+              <div class="card-hdr"><div class="card-hdr-title" style="color:var(--green)">🔥 Heute aktivste Agenten</div></div>
+              <table>
+                <tr><th>Agent</th><th>Plan</th><th>Heute</th><th>Gesamt</th></tr>
+                <template x-for="a in agentHealth.top_active||[]" :key="a.id">
+                  <tr>
+                    <td><span x-text="a.emoji+' '"></span><strong x-text="a.name" style="color:var(--white)"></strong><div style="font-size:.7rem;color:var(--muted)" x-text="a.email"></div></td>
+                    <td><span class="badge" :class="a.plan==='pro'?'b-pro':'b-free'" x-text="a.plan"></span></td>
+                    <td><strong x-text="a.msgs_today||0" style="color:var(--green)"></strong></td>
+                    <td style="color:var(--muted)" x-text="(a.total_messages||0).toLocaleString('de-DE')"></td>
+                  </tr>
+                </template>
+              </table>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- ── USERS ── -->
     <div class="page" x-show="page==='users'">
       <div class="ph">
         <div><div class="ph-title">👥 Nutzer</div><div class="ph-sub" x-text="users.length+' geladen'"></div></div>
-        <div style="display:flex;gap:8px">
-          <input class="inp" style="width:240px" placeholder="🔍 E-Mail oder Name suchen…" x-model="userSearch" @input.debounce.400ms="searchUsers()">
-          <button class="btn btn-ghost btn-sm" @click="loadUsers()">↺ Alle laden</button>
+        <div class="ph-actions">
+          <input class="inp" style="width:240px" placeholder="🔍 E-Mail oder Name…" x-model="userSearch" @input.debounce.400ms="searchUsers()">
+          <button class="btn btn-ghost btn-sm" @click="loadUsers()">↺ Alle</button>
+          <a :href="'/api/admin/users/export'" class="btn btn-ghost btn-sm">📤 CSV</a>
         </div>
       </div>
       <div class="card" style="padding:0;overflow:hidden">
         <table>
-          <thead><tr><th>Nutzer</th><th>Plan</th><th>Agenten</th><th>Msgs/Mo</th><th>Registriert</th><th style="text-align:right">Aktionen</th></tr></thead>
+          <thead><tr><th>Nutzer</th><th>Plan</th><th>Agenten</th><th>Msgs/Mo</th><th>Trial bis</th><th>Registriert</th><th style="text-align:right">Aktionen</th></tr></thead>
           <tbody>
             <template x-for="u in users" :key="u.id">
               <tr :style="u.deleted_at?'opacity:.4':''">
                 <td>
                   <div style="display:flex;align-items:center;gap:9px">
-                    <div class="user-avatar" x-text="(u.name||u.email||'?')[0].toUpperCase()"></div>
+                    <div class="user-av" x-text="(u.name||u.email||'?')[0].toUpperCase()"></div>
                     <div>
-                      <div style="font-size:.84rem;font-weight:600;color:var(--white)" x-text="u.name||'—'"></div>
-                      <div style="font-size:.72rem;color:var(--muted)" x-text="u.email"></div>
+                      <div style="font-size:.84rem;font-weight:600;color:var(--white);display:flex;align-items:center;gap:6px">
+                        <span x-text="u.name||'—'"></span>
+                        <span class="badge b-admin" x-show="u.is_admin">ADMIN</span>
+                      </div>
+                      <div style="font-size:.71rem;color:var(--muted)" x-text="u.email"></div>
                     </div>
-                    <span class="badge b-admin" x-show="u.is_admin">ADMIN</span>
-                    <span class="badge" style="background:rgba(233,69,96,.08);color:var(--muted)" x-show="u.deleted_at">Gelöscht</span>
                   </div>
                 </td>
                 <td>
-                  <div style="display:flex;align-items:center;gap:6px">
-                    <select class="inp" style="padding:3px 8px;font-size:.74rem" :value="u.plan" @change="changePlan(u.id,$event.target.value,u)">
-                      <option value="free">Free</option>
-                      <option value="pro">Pro</option>
-                      <option value="enterprise">Enterprise</option>
+                  <div style="display:flex;align-items:center;gap:5px">
+                    <select class="inp" style="padding:3px 8px;font-size:.73rem;width:auto" :value="u.plan" @change="changePlan(u.id,$event.target.value,u)">
+                      <option value="free">Free</option><option value="pro">Pro</option><option value="enterprise">Enterprise</option>
                     </select>
                     <span class="badge b-trial" x-show="u.trial_ends_at&&u.plan==='pro'">Trial</span>
                   </div>
                 </td>
-                <td><span x-text="u.agent_count||0" style="color:var(--pu-l);font-weight:700"></span></td>
+                <td style="color:var(--pu-l);font-weight:700" x-text="u.agent_count||0"></td>
                 <td>
                   <span x-text="(u.msg_count_month||0).toLocaleString('de-DE')"></span>
                   <span style="color:var(--muted);font-size:.7rem"> / <span x-text="u.plan==='pro'?'10k':'500'"></span></span>
                 </td>
-                <td style="color:var(--muted);font-size:.75rem;white-space:nowrap" x-text="new Date(u.created_at).toLocaleDateString('de-DE')"></td>
+                <td style="font-size:.75rem;color:var(--gold)" x-show="u.trial_ends_at" x-text="new Date(u.trial_ends_at).toLocaleDateString('de-DE')"></td>
+                <td x-show="!u.trial_ends_at" style="color:var(--muted)">—</td>
+                <td style="color:var(--muted);font-size:.74rem;white-space:nowrap" x-text="new Date(u.created_at).toLocaleDateString('de-DE')"></td>
                 <td>
-                  <div style="display:flex;gap:4px;justify-content:flex-end">
+                  <div style="display:flex;gap:4px;justify-content:flex-end;flex-wrap:wrap">
                     <button class="btn btn-xs btn-ghost" @click="openEmail(u)" title="E-Mail senden">✉️</button>
                     <button class="btn btn-xs btn-ghost" @click="impersonate(u.id)" title="Als Nutzer einloggen">👁️</button>
-                    <button class="btn btn-xs btn-ghost" @click="toggleAdmin(u)" :title="u.is_admin?'Admin entziehen':'Admin geben'">⚙️</button>
-                    <button class="btn btn-xs btn-danger" @click="deleteUser(u.id)" x-show="!u.deleted_at" title="Löschen">✕</button>
+                    <button class="btn btn-xs btn-ghost" @click="openExtendTrial(u)" title="Trial verlängern">⏳</button>
+                    <button class="btn btn-xs btn-ghost" @click="toggleAdmin(u)" :title="u.is_admin?'Admin entziehen':'Admin machen'">⚙️</button>
+                    <button class="btn btn-xs btn-danger" @click="deleteUser(u.id)" x-show="!u.deleted_at">✕</button>
                   </div>
                 </td>
               </tr>
             </template>
           </tbody>
         </table>
-        <template x-if="users.length===0"><div class="empty">Keine Nutzer. Suche oder lade alle.</div></template>
+        <template x-if="users.length===0"><div class="empty">Keine Nutzer. Suche verwenden oder alle laden.</div></template>
       </div>
     </div>
 
-    <!-- AGENTS -->
+    <!-- ── AGENTS ── -->
     <div class="page" x-show="page==='agents'">
       <div class="ph">
-        <div><div class="ph-title">🤖 Alle Agenten</div><div class="ph-sub" x-text="allAgents.length+' Agenten auf der Plattform'"></div></div>
-        <input class="inp" style="width:220px" placeholder="🔍 Name oder E-Mail…" x-model="agentFilter">
+        <div><div class="ph-title">🤖 Agenten</div><div class="ph-sub" x-text="allAgents.length+' auf der Plattform'"></div></div>
+        <div class="ph-actions">
+          <input class="inp" style="width:220px" placeholder="🔍 Name oder E-Mail…" x-model="agentFilter">
+          <a :href="'/api/admin/agents/export'" class="btn btn-ghost btn-sm">📤 CSV</a>
+        </div>
       </div>
       <div class="card" style="padding:0;overflow:hidden">
         <table>
-          <thead><tr><th>Agent</th><th>Besitzer</th><th>Plan</th><th>Features</th><th>Nachrichten</th><th>Modell</th><th>Status</th><th>Erstellt</th></tr></thead>
+          <thead><tr><th>Agent</th><th>Besitzer</th><th>Plan</th><th>Modell</th><th>Features</th><th>Nachrichten</th><th>Status</th><th>Erstellt</th></tr></thead>
           <tbody>
             <template x-for="a in allAgents.filter(a=>!agentFilter||a.name.toLowerCase().includes(agentFilter.toLowerCase())||a.owner_email.toLowerCase().includes(agentFilter.toLowerCase()))" :key="a.id">
               <tr>
                 <td><span x-text="a.emoji+' '"></span><strong x-text="a.name" style="color:var(--white)"></strong></td>
-                <td><div style="font-size:.78rem;color:var(--white)" x-text="a.owner_name"></div><div style="font-size:.7rem;color:var(--muted)" x-text="a.owner_email"></div></td>
+                <td><div style="font-size:.78rem;color:var(--white)" x-text="a.owner_name"></div><div class="td-trunc" style="font-size:.7rem;color:var(--muted)" x-text="a.owner_email"></div></td>
                 <td><span class="badge" :class="a.owner_plan==='pro'?'b-pro':'b-free'" x-text="a.owner_plan"></span></td>
+                <td class="td-mono" style="font-size:.7rem;color:var(--muted)" x-text="(a.model||'claude-sonnet-4-6').replace('claude-','').replace('-latest','')"></td>
                 <td style="font-size:.7rem">
-                  <span x-show="a.rag_enabled" class="tag" style="margin-right:2px">RAG</span>
-                  <span x-show="a.whatsapp_enabled" class="tag" style="color:#25d366;margin-right:2px">WA</span>
-                  <span x-show="a.telegram_enabled" class="tag" style="color:#0088cc;margin-right:2px">TG</span>
-                  <span x-show="a.voice_enabled" class="tag" style="color:var(--pu-l)">Voice</span>
+                  <span x-show="a.rag_enabled" class="badge b-free" style="margin-right:2px">RAG</span>
+                  <span x-show="a.whatsapp_enabled" class="badge" style="background:rgba(37,211,102,.08);color:#25d366;border:1px solid rgba(37,211,102,.15);margin-right:2px">WA</span>
+                  <span x-show="a.telegram_enabled" class="badge" style="background:rgba(0,136,204,.08);color:#0088cc;border:1px solid rgba(0,136,204,.15);margin-right:2px">TG</span>
+                  <span x-show="a.voice_enabled" class="badge b-pro">Voice</span>
                 </td>
                 <td><strong x-text="(a.total_messages||0).toLocaleString('de-DE')" style="color:var(--pu-l)"></strong></td>
-                <td style="font-size:.7rem;font-family:monospace;color:var(--muted)" x-text="(a.model||'claude-sonnet-4-6').replace('claude-','').replace('-latest','')"></td>
-                <td><span class="badge" :class="a.is_active?'b-green':'b-free'" x-text="a.is_active?'Aktiv':'Inaktiv'"></span></td>
+                <td>
+                  <span style="display:flex;align-items:center;gap:5px">
+                    <span class="status-dot" :class="a.is_active?'ok':'err'"></span>
+                    <span style="font-size:.75rem" x-text="a.is_active?'Aktiv':'Inaktiv'"></span>
+                  </span>
+                </td>
                 <td style="color:var(--muted);font-size:.73rem;white-space:nowrap" x-text="new Date(a.created_at).toLocaleDateString('de-DE')"></td>
               </tr>
             </template>
@@ -442,15 +732,12 @@ textarea.inp{resize:vertical;min-height:90px;line-height:1.5}
       </div>
     </div>
 
-    <!-- ACTIVITY -->
+    <!-- ── ACTIVITY ── -->
     <div class="page" x-show="page==='activity'">
-      <div class="ph"><div><div class="ph-title">📋 Live-Aktivität</div><div class="ph-sub">Letzte 50 Nutzer-Nachrichten plattformweit</div></div><button class="btn btn-ghost btn-sm" @click="loadActivity()">↺</button></div>
+      <div class="ph"><div><div class="ph-title">⚡ Live-Aktivität</div><div class="ph-sub">Letzte 50 Nachrichten plattformweit</div></div><button class="btn btn-ghost btn-sm" @click="loadActivity()">↺ Refresh</button></div>
       <div class="card" style="padding:0;overflow:hidden">
-        <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
-          <div style="display:flex;align-items:center;gap:8px;font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-l)">
-            <span class="health-dot" style="animation:pdot 1.2s ease-in-out infinite"></span> Live-Aktivität
-          </div>
-          <button class="btn btn-xs btn-ghost" @click="loadActivity()">↺ Refresh</button>
+        <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-l)">
+          <span class="health-dot" style="animation-duration:1.2s"></span> Live-Feed — aktualisiert manuell
         </div>
         <div class="live-feed">
           <template x-for="a in activity" :key="a.id">
@@ -458,12 +745,9 @@ textarea.inp{resize:vertical;min-height:90px;line-height:1.5}
               <div class="live-dot"></div>
               <div class="live-content">
                 <div class="live-line"><strong x-text="a.agent_name"></strong>: <span x-text="a.preview||'[Nachricht]'"></span></div>
-                <div class="live-meta">
-                  <span x-text="new Date(a.created_at).toLocaleString('de-DE',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'})"></span>
-                  · <span x-text="a.owner_email"></span>
-                </div>
+                <div class="live-meta" x-text="new Date(a.created_at).toLocaleString('de-DE',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'})+' · '+a.owner_email"></div>
               </div>
-              <span class="live-badge" x-text="a.source"></span>
+              <span class="live-tag" x-text="a.source"></span>
             </div>
           </template>
           <template x-if="activity.length===0"><div class="empty">Keine Aktivität vorhanden</div></template>
@@ -471,26 +755,58 @@ textarea.inp{resize:vertical;min-height:90px;line-height:1.5}
       </div>
     </div>
 
-    <!-- LLM COSTS -->
+    <!-- ── FEEDBACK ── -->
+    <div class="page" x-show="page==='feedback'">
+      <div class="ph"><div><div class="ph-title">⭐ Feedback</div><div class="ph-sub">Nutzer-Bewertungen der KI-Antworten</div></div><button class="btn btn-ghost btn-sm" @click="loadFeedback()">↺</button></div>
+      <template x-if="!feedback"><div style="text-align:center;padding:60px;color:var(--muted)">⏳ Lade…</div></template>
+      <template x-if="feedback">
+        <div>
+          <div class="grid-4" style="margin-bottom:20px">
+            <div class="stat-card"><div class="stat-ico">⭐</div><div class="stat-n" x-text="feedback.summary.total||0"></div><div class="stat-l">Bewertungen gesamt</div></div>
+            <div class="stat-card"><div class="stat-bar" style="background:linear-gradient(90deg,#00b894,#00cec9)"></div><div class="stat-n" style="color:var(--green)" x-text="feedback.summary.thumbs_up||0"></div><div class="stat-l">👍 Positiv</div></div>
+            <div class="stat-card"><div class="stat-bar" style="background:linear-gradient(90deg,#e94560,#fd9644)"></div><div class="stat-n" style="color:var(--red)" x-text="feedback.summary.thumbs_down||0"></div><div class="stat-l">👎 Negativ</div></div>
+            <div class="stat-card"><div class="stat-n" style="font-size:1.3rem" x-text="feedback.summary.total>0?Math.round((feedback.summary.thumbs_up/feedback.summary.total)*100)+'%':'—'"></div><div class="stat-l">Zufriedenheitsrate</div></div>
+          </div>
+          <div class="card">
+            <div class="card-hdr"><div class="card-hdr-title">💬 Kommentare mit Feedback</div></div>
+            <table>
+              <tr><th>Bewertung</th><th>Agent</th><th>Besitzer</th><th>Kommentar</th><th>Zeit</th></tr>
+              <template x-for="f in feedback.recent" :key="f.id">
+                <tr>
+                  <td><span x-text="f.rating===1?'👍':'👎'"></span></td>
+                  <td style="font-size:.8rem" x-text="(f.agent_emoji||'')+' '+(f.agent_name||'')"></td>
+                  <td style="font-size:.74rem;color:var(--muted)" x-text="f.owner_email"></td>
+                  <td style="font-size:.79rem;color:var(--text);max-width:300px" x-text="f.comment"></td>
+                  <td style="font-size:.73rem;color:var(--muted);white-space:nowrap" x-text="new Date(f.created_at).toLocaleDateString('de-DE')"></td>
+                </tr>
+              </template>
+              <template x-if="!feedback.recent?.length"><tr><td colspan="5"><div class="empty">Noch keine Feedback-Kommentare</div></td></tr></template>
+            </table>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- ── LLM COSTS ── -->
     <div class="page" x-show="page==='costs'">
       <div class="ph"><div><div class="ph-title">💰 LLM-Kosten</div><div class="ph-sub">Plattformweite API-Ausgaben</div></div><button class="btn btn-ghost btn-sm" @click="loadCosts()">↺</button></div>
       <template x-if="!costs"><div style="text-align:center;padding:60px;color:var(--muted)">⏳ Lade…</div></template>
       <template x-if="costs">
         <div>
           <div class="grid-4">
-            <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-n">'$'<span x-text="parseFloat(costs.totals.total||0).toFixed(2)"></span></div><div class="stat-l">Gesamt</div></div>
-            <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-n">'$'<span x-text="parseFloat(costs.totals.month||0).toFixed(2)"></span></div><div class="stat-l">Dieser Monat</div></div>
-            <div class="stat-card"><div class="stat-icon">📆</div><div class="stat-n">'$'<span x-text="parseFloat(costs.totals.week||0).toFixed(2)"></span></div><div class="stat-l">Diese Woche</div></div>
-            <div class="stat-card"><div class="stat-icon">🔢</div><div class="stat-n" style="font-size:1.1rem" x-text="parseInt(costs.totals.total_tokens||0).toLocaleString('de-DE')"></div><div class="stat-l">Tokens gesamt</div></div>
+            <div class="stat-card"><div class="stat-bar" style="background:linear-gradient(90deg,#6c5ce7,#a29bfe)"></div><div class="stat-ico">💰</div><div class="stat-n" x-text="'$'+parseFloat(costs.totals.total||0).toFixed(2)"></div><div class="stat-l">Gesamt</div></div>
+            <div class="stat-card"><div class="stat-ico">📅</div><div class="stat-n" x-text="'$'+parseFloat(costs.totals.month||0).toFixed(2)"></div><div class="stat-l">Dieser Monat</div></div>
+            <div class="stat-card"><div class="stat-ico">📆</div><div class="stat-n" x-text="'$'+parseFloat(costs.totals.week||0).toFixed(2)"></div><div class="stat-l">Diese Woche</div></div>
+            <div class="stat-card"><div class="stat-ico">🔢</div><div class="stat-n" style="font-size:1rem" x-text="parseInt(costs.totals.total_tokens||0).toLocaleString('de-DE')"></div><div class="stat-l">Tokens gesamt</div></div>
           </div>
           <div class="grid-2">
             <div class="card">
-              <div class="card-title">Kosten nach Modell</div>
+              <div class="card-hdr"><div class="card-hdr-title">🤖 Nach Modell</div></div>
               <table>
                 <tr><th>Modell</th><th>Calls</th><th>Kosten ($)</th></tr>
                 <template x-for="m in costs.byModel" :key="m.model">
                   <tr>
-                    <td style="font-family:monospace;font-size:.76rem;color:var(--pu-l)" x-text="m.model"></td>
+                    <td class="td-mono" style="font-size:.75rem;color:var(--pu-l)" x-text="m.model"></td>
                     <td style="color:var(--muted)" x-text="parseInt(m.calls).toLocaleString('de-DE')"></td>
                     <td><strong x-text="'$'+parseFloat(m.cost).toFixed(4)" style="color:var(--gold)"></strong></td>
                   </tr>
@@ -498,7 +814,7 @@ textarea.inp{resize:vertical;min-height:90px;line-height:1.5}
               </table>
             </div>
             <div class="card">
-              <div class="card-title">Top Nutzer nach Kosten (30d)</div>
+              <div class="card-hdr"><div class="card-hdr-title">👑 Top Nutzer nach Kosten (30d)</div></div>
               <table>
                 <tr><th>Nutzer</th><th>Plan</th><th>Kosten ($)</th></tr>
                 <template x-for="u in costs.byUser" :key="u.email">
@@ -515,61 +831,270 @@ textarea.inp{resize:vertical;min-height:90px;line-height:1.5}
       </template>
     </div>
 
-    <!-- BROADCAST -->
-    <div class="page" x-show="page==='broadcast'">
-      <div class="ph"><div><div class="ph-title">📢 Broadcast E-Mail</div><div class="ph-sub">An alle oder gefilterte Nutzer senden</div></div></div>
-      <div class="card" style="max-width:660px">
-        <div class="field"><label>Empfänger</label>
-          <select class="inp inp-full" x-model="broadcast.plan">
-            <option value="all">Alle Nutzer</option>
-            <option value="pro">Nur Pro-Nutzer</option>
-            <option value="free">Nur Free-Nutzer</option>
-          </select>
+    <!-- ── RATE LIMITS ── -->
+    <div class="page" x-show="page==='rate-limits'">
+      <div class="ph"><div><div class="ph-title">🚦 Rate Limits</div><div class="ph-sub">Aktive Rate-Limit-Einträge</div></div><button class="btn btn-ghost btn-sm" @click="loadRateLimits()">↺</button></div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <table>
+          <thead><tr><th>Key (IP / Nutzer)</th><th>Anfragen</th><th>Fenster endet</th></tr></thead>
+          <tbody>
+            <template x-for="r in rateLimits" :key="r.key">
+              <tr>
+                <td class="td-mono" style="font-size:.76rem;color:var(--pu-l)" x-text="r.key"></td>
+                <td><span style="font-weight:700" :style="r.count>=10?'color:var(--red)':r.count>=5?'color:var(--gold)':'color:var(--white)'" x-text="r.count"></span></td>
+                <td style="color:var(--muted);font-size:.75rem" x-text="new Date(r.window_end).toLocaleString('de-DE')"></td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+        <template x-if="rateLimits.length===0"><div class="empty">✅ Keine aktiven Rate-Limit-Einträge</div></template>
+      </div>
+    </div>
+
+    <!-- ── COST ALERTS ── -->
+    <div class="page" x-show="page==='cost-alerts'">
+      <div class="ph"><div><div class="ph-title">🚨 Kosten-Alerts</div><div class="ph-sub">Nutzer mit mehr als $1 API-Kosten in 24h</div></div><button class="btn btn-ghost btn-sm" @click="loadCostAlerts()">↺</button></div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <table>
+          <thead><tr><th>Nutzer</th><th>Plan</th><th>Calls heute</th><th>Kosten heute ($)</th><th></th></tr></thead>
+          <tbody>
+            <template x-for="a in costAlerts" :key="a.email">
+              <tr>
+                <td><div style="font-size:.82rem;font-weight:600;color:var(--white)" x-text="a.name"></div><div style="font-size:.71rem;color:var(--muted)" x-text="a.email"></div></td>
+                <td><span class="badge" :class="a.plan==='pro'?'b-pro':'b-free'" x-text="a.plan"></span></td>
+                <td x-text="a.calls"></td>
+                <td><strong x-text="'$'+parseFloat(a.cost_today).toFixed(4)" style="color:var(--red)"></strong></td>
+                <td><button class="btn btn-xs btn-ghost" @click="openEmail({email:a.email,name:a.name})">✉️</button></td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+        <template x-if="costAlerts.length===0"><div class="empty">✅ Keine Nutzer über $1 Kosten heute</div></template>
+      </div>
+    </div>
+
+    <!-- ── TEMPLATES ── -->
+    <div class="page" x-show="page==='templates'">
+      <div class="ph">
+        <div><div class="ph-title">📋 Agent Templates</div><div class="ph-sub" x-text="templates.length+' Templates im Marketplace'"></div></div>
+        <button class="btn btn-purple btn-sm" @click="openTemplateModal()">+ Template erstellen</button>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <table>
+          <thead><tr><th>Template</th><th>Kategorie</th><th>Öffentlich</th><th>Nutzungen</th><th>Aktionen</th></tr></thead>
+          <tbody>
+            <template x-for="t in templates" :key="t.id">
+              <tr>
+                <td><div style="display:flex;align-items:center;gap:9px"><div style="font-size:1.3rem" x-text="t.emoji"></div><div><div style="font-size:.84rem;font-weight:600;color:var(--white)" x-text="t.name"></div><div style="font-size:.7rem;color:var(--muted)" x-text="t.description?.slice(0,50)"></div></div></div></td>
+                <td style="font-size:.78rem;color:var(--muted)" x-text="t.category||'—'"></td>
+                <td><span class="badge" :class="t.is_public?'b-green':'b-red'" x-text="t.is_public?'Ja':'Nein'"></span></td>
+                <td style="color:var(--pu-l);font-weight:700" x-text="t.use_count||0"></td>
+                <td>
+                  <div style="display:flex;gap:5px">
+                    <button class="btn btn-xs btn-ghost" @click="openTemplateModal(t)">✏️</button>
+                    <button class="btn btn-xs btn-danger" @click="deleteTemplate(t.id)">✕</button>
+                  </div>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+        <template x-if="templates.length===0"><div class="empty">Noch keine Templates</div></template>
+      </div>
+    </div>
+
+    <!-- ── CHANGELOG ── -->
+    <div class="page" x-show="page==='changelog'">
+      <div class="ph">
+        <div><div class="ph-title">📝 Changelog</div><div class="ph-sub">Sichtbar für alle Nutzer im Dashboard</div></div>
+        <button class="btn btn-purple btn-sm" @click="openChangelogModal()">+ Eintrag erstellen</button>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <table>
+          <thead><tr><th>Version</th><th>Titel</th><th>Datum</th><th></th></tr></thead>
+          <tbody>
+            <template x-for="e in changelogEntries" :key="e.id">
+              <tr>
+                <td class="td-mono" style="color:var(--pu-l)" x-text="e.version||'—'"></td>
+                <td style="font-size:.84rem;font-weight:600;color:var(--white)" x-text="e.title"></td>
+                <td style="color:var(--muted);font-size:.74rem;white-space:nowrap" x-text="new Date(e.created_at).toLocaleDateString('de-DE')"></td>
+                <td><button class="btn btn-xs btn-danger" @click="deleteChangelog(e.id)">✕</button></td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+        <template x-if="!changelogEntries.length"><div class="empty">Noch keine Changelog-Einträge</div></template>
+      </div>
+    </div>
+
+    <!-- ── ANNOUNCEMENT ── -->
+    <div class="page" x-show="page==='announcement'">
+      <div class="ph"><div><div class="ph-title">📢 Ankündigung</div><div class="ph-sub">Banner für alle Nutzer sichtbar</div></div></div>
+      <div style="max-width:640px">
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-hdr"><div class="card-hdr-title">Aktuelle Ankündigung</div></div>
+          <template x-if="announcement">
+            <div>
+              <div class="ann-bar" :class="'ann-'+(announcement?.type||'info')" style="border-radius:var(--r-sm);margin-bottom:12px">
+                <span x-text="announcement.text"></span>
+              </div>
+              <div style="font-size:.76rem;color:var(--muted);margin-bottom:12px">Gesetzt: <span x-text="new Date(announcement.set_at).toLocaleString('de-DE')"></span></div>
+              <button class="btn btn-danger btn-sm" @click="clearAnnouncement()">🗑️ Ankündigung entfernen</button>
+            </div>
+          </template>
+          <template x-if="!announcement"><div style="color:var(--muted);font-size:.82rem;padding:12px 0">Keine aktive Ankündigung.</div></template>
         </div>
-        <div class="field"><label>Betreff</label><input class="inp inp-full" x-model="broadcast.subject" placeholder="z.B. Neue Features im August"></div>
-        <div class="field">
-          <label>Text (Zeilenumbrüche → &lt;br&gt;)</label>
-          <textarea class="inp inp-full" x-model="broadcast.body" rows="9" placeholder="Hallo,&#10;&#10;wir haben neue Features…&#10;&#10;Viele Grüße,&#10;Das AgentKontor Team"></textarea>
-        </div>
-        <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
-          <button class="btn btn-purple" @click="sendBroadcast()" :disabled="broadcastSending||!broadcast.subject||!broadcast.body">
-            <span x-text="broadcastSending?'Wird gesendet…':'📢 Jetzt senden'"></span>
-          </button>
-          <div style="font-size:.8rem;color:var(--green);font-weight:600" x-show="broadcastResult" x-text="broadcastResult"></div>
-        </div>
-        <div style="font-size:.75rem;color:var(--muted);line-height:1.6;background:rgba(255,255,255,.02);padding:12px;border-radius:8px;border:1px solid var(--border)">
-          ⚠️ E-Mails werden einzeln sequenziell versandt. Bei vielen Nutzern kann dies Minuten dauern.
-          SMTP muss in den Render-Env-Variablen konfiguriert sein.
+        <div class="card">
+          <div class="card-hdr"><div class="card-hdr-title">Neue Ankündigung setzen</div></div>
+          <div class="field"><label>Typ</label>
+            <select class="inp" x-model="newAnn.type">
+              <option value="info">🔵 Info</option><option value="warn">🟡 Warnung</option><option value="err">🔴 Fehler/Wartung</option>
+            </select>
+          </div>
+          <div class="field"><label>Text</label><input class="inp" x-model="newAnn.text" placeholder="z.B. Geplante Wartung am 15. um 3 Uhr…"></div>
+          <div class="field"><label>Link (optional)</label><input class="inp" x-model="newAnn.url" placeholder="https://status.agentkontor.de"></div>
+          <button class="btn btn-purple" @click="setAnnouncement()" :disabled="!newAnn.text">📢 Ankündigung aktivieren</button>
         </div>
       </div>
     </div>
 
-    <!-- PROMO -->
-    <div class="page" x-show="page==='promo'">
-      <div class="ph"><div><div class="ph-title">🎟️ Promo-Codes &amp; Direktzuweisung</div></div></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:860px">
-        <div class="card">
-          <div class="card-title">Promo-Code erstellen</div>
-          <div class="field"><label>Code (wird zu Großbuchstaben)</label><input class="inp inp-full" x-model="promo.code" placeholder="LAUNCH50" @input="promo.code=promo.code.toUpperCase()"></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div class="field"><label>Plan</label><select class="inp inp-full" x-model="promo.plan"><option value="pro">Pro</option><option value="enterprise">Enterprise</option></select></div>
-            <div class="field"><label>Tage</label><input class="inp inp-full" type="number" x-model="promo.days" placeholder="30"></div>
-          </div>
-          <button class="btn btn-purple" @click="createPromo()" :disabled="!promo.code||!promo.days">Code erstellen</button>
-          <template x-if="promoCreated">
-            <div style="margin-top:14px">
-              <div style="color:var(--green);font-size:.82rem;margin-bottom:6px">✓ Code <strong x-text="promoCreated"></strong> erstellt!</div>
-              <div class="code" x-text="'https://agentkontor.de/app?promo='+promoCreated"></div>
-            </div>
-          </template>
+    <!-- ── BROADCAST ── -->
+    <div class="page" x-show="page==='broadcast'">
+      <div class="ph"><div><div class="ph-title">📧 Broadcast E-Mail</div><div class="ph-sub">An alle oder gefilterte Nutzer</div></div></div>
+      <div class="card" style="max-width:680px">
+        <div class="field"><label>Empfänger</label>
+          <select class="inp" x-model="broadcast.plan">
+            <option value="all">Alle Nutzer</option>
+            <option value="pro">Pro-Nutzer</option>
+            <option value="free">Free-Nutzer</option>
+          </select>
         </div>
+        <div class="field"><label>Betreff</label><input class="inp" x-model="broadcast.subject" placeholder="z.B. Neue Features im August"></div>
+        <div class="field"><label>Text (Zeilenumbrüche → &lt;br&gt;)</label><textarea class="inp" x-model="broadcast.body" rows="8" placeholder="Hallo,&#10;&#10;wir haben neue Features für euch…"></textarea></div>
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+          <button class="btn btn-purple" @click="sendBroadcast()" :disabled="broadcastSending||!broadcast.subject||!broadcast.body">
+            <span x-text="broadcastSending?'⏳ Wird gesendet…':'📧 Jetzt senden'"></span>
+          </button>
+          <div style="font-size:.8rem;color:var(--green);font-weight:600" x-show="broadcastResult" x-text="broadcastResult"></div>
+        </div>
+        <div style="font-size:.75rem;color:var(--muted);background:rgba(255,255,255,.02);padding:12px;border-radius:8px;border:1px solid var(--border)">
+          ⚠️ E-Mails werden einzeln versandt. SMTP muss konfiguriert sein.
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PROMO & TRIAL ── -->
+    <div class="page" x-show="page==='promo'">
+      <div class="ph"><div><div class="ph-title">🎟️ Promo-Codes &amp; Trial</div></div></div>
+      <div class="grid-2" style="max-width:900px">
+        <div>
+          <div class="card">
+            <div class="card-hdr"><div class="card-hdr-title">Promo-Code erstellen</div></div>
+            <div class="field"><label>Code</label><input class="inp" x-model="promo.code" placeholder="LAUNCH50" @input="promo.code=promo.code.toUpperCase()"></div>
+            <div class="inp-row">
+              <div class="field"><label>Plan</label><select class="inp" x-model="promo.plan"><option value="pro">Pro</option><option value="enterprise">Enterprise</option></select></div>
+              <div class="field"><label>Tage</label><input class="inp" type="number" x-model="promo.days" placeholder="30" min="1" max="365"></div>
+            </div>
+            <button class="btn btn-purple" @click="createPromo()" :disabled="!promo.code||!promo.days">Code erstellen</button>
+            <template x-if="promoCreated">
+              <div style="margin-top:12px">
+                <div style="color:var(--green);font-size:.82rem;margin-bottom:6px">✓ Code <strong x-text="promoCreated"></strong> erstellt!</div>
+                <div class="code" x-text="'https://agentkontor.de/app?promo='+promoCreated"></div>
+              </div>
+            </template>
+          </div>
+
+          <div class="card">
+            <div class="card-hdr"><div class="card-hdr-title">Trial verlängern</div></div>
+            <div class="field"><label>Nutzer (E-Mail)</label><input class="inp" x-model="extendEmail" placeholder="user@example.com"></div>
+            <div class="field"><label>Tage</label><input class="inp" type="number" x-model="extendDays" placeholder="14" min="1" max="90"></div>
+            <button class="btn btn-gold" @click="extendTrialByEmail()" :disabled="!extendEmail">⏳ Trial verlängern</button>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-hdr"><div class="card-hdr-title">Direkte Plan-Zuweisung</div></div>
+            <div class="field"><label>Nutzer (E-Mail oder ID)</label><input class="inp" x-model="directEmail" placeholder="user@example.com"></div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <button class="btn btn-green" @click="directPlan('pro')" :disabled="!directEmail">→ Auf Pro schalten</button>
+              <button class="btn btn-ghost" @click="directPlan('enterprise')" :disabled="!directEmail">→ Auf Enterprise schalten</button>
+              <button class="btn btn-danger" @click="directPlan('free')" :disabled="!directEmail">→ Auf Free zurücksetzen</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-hdr"><div class="card-hdr-title">Nutzer impersonieren</div></div>
+            <div class="field"><label>Nutzer-ID</label><input class="inp" x-model="impersonateId" placeholder="42" type="number"></div>
+            <button class="btn btn-ghost" @click="impersonate(impersonateId)" :disabled="!impersonateId">👁️ Als Nutzer einloggen (1h Token)</button>
+            <div style="font-size:.74rem;color:var(--muted);margin-top:8px">Token wird im localStorage gespeichert. Öffnet App in neuem Tab.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CRON & WARTUNG ── -->
+    <div class="page" x-show="page==='cron'">
+      <div class="ph"><div><div class="ph-title">⚙️ Cron &amp; Wartung</div><div class="ph-sub">Automatische Jobs und manuelle Wartung</div></div></div>
+      <div class="grid-2">
+        <div>
+          <div class="card">
+            <div class="card-hdr"><div class="card-hdr-title">🔧 Manuelle Aktionen</div></div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:var(--r-sm)">
+                <div><div style="font-size:.84rem;font-weight:600;color:var(--white)">🗑️ Cleanup &amp; Cron-Jobs auslösen</div><div style="font-size:.73rem;color:var(--muted);margin-top:2px">Stale Memory, abgelaufene Tokens, Trial-Downgrades</div></div>
+                <button class="btn btn-ghost btn-sm" @click="runCron()" :disabled="cronRunning" x-text="cronRunning?'⏳ Läuft…':'▶ Ausführen'"></button>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:var(--r-sm)">
+                <div><div style="font-size:.84rem;font-weight:600;color:var(--white)">📊 Kosten-Snapshot</div><div style="font-size:.73rem;color:var(--muted);margin-top:2px">Aktuellen Plattform-Snapshot laden</div></div>
+                <button class="btn btn-ghost btn-sm" @click="loadSnapshot()">▶ Laden</button>
+              </div>
+            </div>
+            <div x-show="cronResult" style="margin-top:12px">
+              <div style="font-size:.74rem;font-weight:700;color:var(--green);margin-bottom:6px">✓ Ergebnis:</div>
+              <div class="code" x-text="cronResult"></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-hdr"><div class="card-hdr-title">📋 Cron-Verlauf (letzte 50)</div><button class="btn btn-xs btn-ghost" @click="loadCronLogs()">↺</button></div>
+            <table>
+              <tr><th>Job</th><th>Ergebnis</th><th>Zeit</th></tr>
+              <template x-for="log in cronLogs" :key="log.created_at">
+                <tr>
+                  <td class="td-mono" style="font-size:.76rem;color:var(--pu-l)" x-text="log.job"></td>
+                  <td style="font-size:.74rem;color:var(--muted);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="log.result"></td>
+                  <td style="font-size:.73rem;color:var(--muted);white-space:nowrap" x-text="new Date(log.created_at).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})"></td>
+                </tr>
+              </template>
+              <template x-if="!cronLogs.length"><tr><td colspan="3"><div class="empty" style="padding:20px">Noch keine Cron-Logs</div></td></tr></template>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── EXPORTS ── -->
+    <div class="page" x-show="page==='exports'">
+      <div class="ph"><div><div class="ph-title">📤 Exports</div><div class="ph-sub">Daten als CSV exportieren</div></div></div>
+      <div style="max-width:560px">
         <div class="card">
-          <div class="card-title">Direktzuweisung</div>
-          <div class="field"><label>Nutzer (E-Mail oder ID)</label><input class="inp inp-full" x-model="directEmail" placeholder="user@example.com"></div>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <button class="btn btn-green" @click="directPlan('pro')" :disabled="!directEmail">→ Auf Pro schalten</button>
-            <button class="btn btn-gold" @click="extendTrial()" :disabled="!directEmail" style="background:rgba(240,192,64,.1);color:var(--gold);border:1px solid rgba(240,192,64,.2)">→ Trial um 14 Tage verlängern</button>
-            <button class="btn btn-ghost" @click="directPlan('free')" :disabled="!directEmail">→ Auf Free zurücksetzen</button>
+          <div class="card-hdr"><div class="card-hdr-title">Verfügbare Exports</div></div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:var(--r-sm)">
+              <div><div style="font-size:.86rem;font-weight:600;color:var(--white)">👥 Alle Nutzer</div><div style="font-size:.73rem;color:var(--muted);margin-top:2px">ID, E-Mail, Name, Plan, Agenten, Nachrichten, Erstellt, Trial</div></div>
+              <a href="/api/admin/users/export" class="btn btn-ghost btn-sm">📤 CSV</a>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:var(--r-sm)">
+              <div><div style="font-size:.86rem;font-weight:600;color:var(--white)">🤖 Alle Agenten</div><div style="font-size:.73rem;color:var(--muted);margin-top:2px">ID, Name, Modell, Features, Besitzer, Nachrichten, Erstellt</div></div>
+              <a href="/api/admin/agents/export" class="btn btn-ghost btn-sm">📤 CSV</a>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:var(--r-sm)">
+              <div><div style="font-size:.86rem;font-weight:600;color:var(--white)">💰 LLM-Kosten (DATEV-Format)</div><div style="font-size:.73rem;color:var(--muted);margin-top:2px">Für Steuerberater optimierter CSV-Export</div></div>
+              <a href="/api/invoices/datev-export" class="btn btn-ghost btn-sm">📤 DATEV</a>
+            </div>
+          </div>
+          <div style="font-size:.74rem;color:var(--muted);margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+            ⚠️ Exports enthalten personenbezogene Daten. Nur für interne Zwecke verwenden. DSGVO beachten.
           </div>
         </div>
       </div>
@@ -584,15 +1109,76 @@ textarea.inp{resize:vertical;min-height:90px;line-height:1.5}
   <div class="modal">
     <div class="modal-title">
       ✉️ E-Mail an <span x-text="emailModal.user?.name||emailModal.user?.email"></span>
-      <button @click="emailModal.open=false" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.4rem;line-height:1">×</button>
+      <button @click="emailModal.open=false" class="modal-close">×</button>
     </div>
-    <div class="field"><label>Betreff</label><input class="inp inp-full" x-model="emailModal.subject" placeholder="Betreff"></div>
-    <div class="field"><label>Nachricht</label><textarea class="inp inp-full" x-model="emailModal.body" rows="7" placeholder="Deine Nachricht…"></textarea></div>
+    <div class="field"><label>Betreff</label><input class="inp" x-model="emailModal.subject" placeholder="Betreff"></div>
+    <div class="field"><label>Nachricht</label><textarea class="inp" x-model="emailModal.body" rows="7" placeholder="Deine Nachricht…"></textarea></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" @click="emailModal.open=false">Abbrechen</button>
       <button class="btn btn-purple" @click="sendEmail()" :disabled="emailModal.sending||!emailModal.subject">
-        <span x-text="emailModal.sending?'Sende…':'✉️ Senden'"></span>
+        <span x-text="emailModal.sending?'⏳ Sende…':'✉️ Senden'"></span>
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- TEMPLATE MODAL -->
+<div class="modal-bg" x-show="templateModal.open" x-cloak @click.self="templateModal.open=false">
+  <div class="modal modal-lg">
+    <div class="modal-title">
+      <span x-text="templateModal.editId?'Template bearbeiten':'Template erstellen'"></span>
+      <button @click="templateModal.open=false" class="modal-close">×</button>
+    </div>
+    <div class="inp-row">
+      <div class="field"><label>Name</label><input class="inp" x-model="templateModal.data.name" placeholder="z.B. Immobilien-Agent"></div>
+      <div class="field"><label>Emoji</label><input class="inp" x-model="templateModal.data.emoji" placeholder="🏠" maxlength="4"></div>
+    </div>
+    <div class="inp-row">
+      <div class="field"><label>Kategorie</label><input class="inp" x-model="templateModal.data.category" placeholder="Immobilien, Gastro, E-Commerce…"></div>
+      <div class="field"><label>Ton</label>
+        <select class="inp" x-model="templateModal.data.tone">
+          <option value="professionell">Professionell</option><option value="freundlich">Freundlich</option>
+          <option value="locker">Locker</option><option value="formal">Formal</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label>Beschreibung</label><input class="inp" x-model="templateModal.data.description" placeholder="Kurze Beschreibung für den Marketplace…"></div>
+    <div class="field"><label>System-Prompt</label><textarea class="inp" x-model="templateModal.data.system_prompt" rows="6" placeholder="Du bist ein KI-Assistent für…"></textarea></div>
+    <div class="field"><label>Begrüßungstext</label><input class="inp" x-model="templateModal.data.greeting" placeholder="Hallo! Wie kann ich helfen?"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" @click="templateModal.open=false">Abbrechen</button>
+      <button class="btn btn-purple" @click="saveTemplate()">💾 Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHANGELOG MODAL -->
+<div class="modal-bg" x-show="changelogModal.open" x-cloak @click.self="changelogModal.open=false">
+  <div class="modal">
+    <div class="modal-title">📝 Changelog-Eintrag erstellen <button @click="changelogModal.open=false" class="modal-close">×</button></div>
+    <div class="inp-row">
+      <div class="field"><label>Version</label><input class="inp" x-model="changelogModal.version" placeholder="3.1"></div>
+      <div class="field"><label>Titel</label><input class="inp" x-model="changelogModal.title" placeholder="🚀 Neue Features"></div>
+    </div>
+    <div class="field"><label>Inhalt (Markdown-ähnlich)</label><textarea class="inp" x-model="changelogModal.body" rows="7" placeholder="- Neue Funktion X&#10;- Verbesserte Performance Y&#10;- Bugfix Z"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" @click="changelogModal.open=false">Abbrechen</button>
+      <button class="btn btn-purple" @click="saveChangelog()">📝 Veröffentlichen</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXTEND TRIAL MODAL -->
+<div class="modal-bg" x-show="extendModal.open" x-cloak @click.self="extendModal.open=false">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-title">⏳ Trial verlängern für <span x-text="extendModal.user?.name||extendModal.user?.email"></span> <button @click="extendModal.open=false" class="modal-close">×</button></div>
+    <div class="field"><label>Tage verlängern</label><input class="inp" type="number" x-model="extendModal.days" placeholder="14" min="1" max="90"></div>
+    <div x-show="extendModal.user?.trial_ends_at" style="font-size:.78rem;color:var(--muted);margin-bottom:14px">
+      Aktuell bis: <strong style="color:var(--gold)" x-text="extendModal.user?.trial_ends_at?new Date(extendModal.user.trial_ends_at).toLocaleDateString('de-DE'):'—'"></strong>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" @click="extendModal.open=false">Abbrechen</button>
+      <button class="btn btn-gold" @click="doExtendTrial()">⏳ Trial verlängern</button>
     </div>
   </div>
 </div>
@@ -600,13 +1186,30 @@ textarea.inp{resize:vertical;min-height:90px;line-height:1.5}
 <script>
 function admin(){
   return {
-    page:'overview', ready:false, authorized:false, adminEmail:'', toasts:[],
-    lastRefresh:'—', stats:null, revenue:null, health:null, costs:null,
-    users:[], allAgents:[], activity:[], agentFilter:'', userSearch:'',
+    page:'overview', ready:false, authorized:false, adminEmail:'',
+    toasts:[], lastRefresh:'—', charts:{},
+
+    // Data stores
+    stats:null, revenue:null, health:null, costs:null, funnel:null,
+    agentHealth:null, feedback:null, announcement:null, snapshot:null,
+    users:[], allAgents:[], activity:[], cronLogs:[], templates:[],
+    changelogEntries:[], rateLimits:[], costAlerts:[], costAlertCount:0,
+
+    // Filters
+    userSearch:'', agentFilter:'', globalSearch:'', searchRes:{users:[],agents:[]}, showSearchResults:false,
+
+    // Forms
     broadcast:{plan:'all',subject:'',body:''}, broadcastSending:false, broadcastResult:'',
-    promo:{code:'',plan:'pro',days:30}, promoCreated:'', directEmail:'',
+    promo:{code:'',plan:'pro',days:30}, promoCreated:'', directEmail:'', impersonateId:'',
+    extendEmail:'', extendDays:14,
+    newAnn:{type:'info',text:'',url:''},
+    cronRunning:false, cronResult:'',
+
+    // Modals
     emailModal:{open:false,user:null,subject:'',body:'',sending:false},
-    charts:{},
+    templateModal:{open:false,editId:null,data:{name:'',emoji:'🤖',description:'',category:'',system_prompt:'',greeting:'',tone:'professionell'}},
+    changelogModal:{open:false,version:'',title:'',body:''},
+    extendModal:{open:false,user:null,days:14},
 
     async init(){
       const token=localStorage.getItem('ak_token');
@@ -621,9 +1224,17 @@ function admin(){
           this.adminEmail=md.user?.email||'admin';
           this.stats=await r.json();
           this.lastRefresh=new Date().toLocaleTimeString('de-DE');
+          // Load announcement
+          const ann=await this.api('/admin/announcement').catch(()=>({}));
+          this.announcement=ann.announcement||null;
+          // Load snapshot
+          this.loadSnapshot();
+          // Load cost alerts count
+          const ca=await this.api('/admin/cost-alerts').catch(()=>({alerts:[]}));
+          this.costAlertCount=(ca.alerts||[]).length;
           this.$nextTick(()=>this.drawOverviewCharts());
         }
-      }catch{}
+      }catch(e){console.error(e);}
       this.ready=true;
     },
 
@@ -639,40 +1250,100 @@ function admin(){
     toast(msg,type='ok'){const id=Date.now();this.toasts.push({id,msg,type});setTimeout(()=>this.toasts=this.toasts.filter(t=>t.id!==id),3500);},
 
     async loadOverview(){try{this.stats=await this.api('/admin/stats');this.lastRefresh=new Date().toLocaleTimeString('de-DE');this.$nextTick(()=>this.drawOverviewCharts());}catch(e){this.toast(e.message,'err');}},
-    async loadRevenue(){try{this.revenue=await this.api('/admin/revenue');this.$nextTick(()=>this.drawRevenueCharts());}catch(e){this.toast(e.message,'err');}},
+    async loadRevenue(){try{this.revenue=await this.api('/admin/revenue');this.$nextTick(()=>this.drawRevenueChart());}catch(e){this.toast(e.message,'err');}},
     async loadHealth(){try{this.health=await this.api('/admin/health');}catch(e){this.toast(e.message,'err');}},
+    async loadFunnel(){try{this.funnel=await this.api('/admin/funnel');this.$nextTick(()=>this.drawFunnelChart());}catch(e){this.toast(e.message,'err');}},
+    async loadAgentHealth(){try{this.agentHealth=await this.api('/admin/agent-health');}catch(e){this.toast(e.message,'err');}},
     async loadUsers(){try{const d=await this.api('/admin/users');this.users=d.users;}catch(e){this.toast(e.message,'err');}},
     async searchUsers(){if(!this.userSearch.trim()){this.loadUsers();return;}try{const d=await this.api('/admin/users/search?q='+encodeURIComponent(this.userSearch));this.users=d.users;}catch(e){this.toast(e.message,'err');}},
     async loadAllAgents(){try{const d=await this.api('/admin/agents');this.allAgents=d.agents;}catch(e){this.toast(e.message,'err');}},
     async loadActivity(){try{const d=await this.api('/admin/activity');this.activity=d.activity;}catch(e){this.toast(e.message,'err');}},
     async loadCosts(){try{this.costs=await this.api('/admin/llm-costs');}catch(e){this.toast(e.message,'err');}},
+    async loadFeedback(){try{this.feedback=await this.api('/admin/feedback');}catch(e){this.toast(e.message,'err');}},
+    async loadRateLimits(){try{const d=await this.api('/admin/rate-limits');this.rateLimits=d.limits||[];}catch(e){this.toast(e.message,'err');}},
+    async loadCostAlerts(){try{const d=await this.api('/admin/cost-alerts');this.costAlerts=d.alerts||[];this.costAlertCount=this.costAlerts.length;}catch(e){this.toast(e.message,'err');}},
+    async loadCronLogs(){try{const d=await this.api('/admin/cron/logs');this.cronLogs=d.logs||[];}catch(e){this.toast(e.message,'err');}},
+    async loadTemplates(){try{const d=await this.api('/admin/templates');this.templates=d.templates||[];}catch(e){this.toast(e.message,'err');}},
+    async loadChangelog(){try{const d=await this.api('/admin/changelog');this.changelogEntries=d.entries||[];}catch(e){this.toast(e.message,'err');}},
+    async loadSnapshot(){try{this.snapshot=await this.api('/admin/snapshot');}catch(e){}},
 
+    // Search
+    async runSearch(){
+      const q=this.globalSearch.trim();
+      if(q.length<2){this.searchRes={users:[],agents:[]};return;}
+      try{const d=await this.api('/admin/search?q='+encodeURIComponent(q));this.searchRes=d;}catch{}
+    },
+    quickSearch(email){this.userSearch=email;this.page='users';this.searchUsers();},
+    async quickImpersonate(ownerEmail){
+      try{const d=await this.api('/admin/users/search?q='+encodeURIComponent(ownerEmail));if(d.users.length)await this.impersonate(d.users[0].id);}catch(e){this.toast(e.message,'err');}
+    },
+
+    // User actions
     async changePlan(id,plan,user){try{await this.api('/admin/users/'+id+'/plan','PUT',{plan});user.plan=plan;this.toast('Plan → '+plan);}catch(e){this.toast(e.message,'err');}},
-    async toggleAdmin(user){try{await this.api('/admin/users/'+user.id+'/admin','PUT',{is_admin:!user.is_admin});user.is_admin=!user.is_admin;this.toast(user.is_admin?'Admin-Rechte erteilt':'Admin-Rechte entzogen');}catch(e){this.toast(e.message,'err');}},
-    async deleteUser(id){if(!confirm('Nutzer wirklich löschen? Unwiderruflich!'))return;try{await this.api('/admin/users/'+id+'/hard','DELETE');this.users=this.users.filter(u=>u.id!==id);this.toast('Nutzer gelöscht');}catch(e){this.toast(e.message,'err');}},
-    async impersonate(id){try{const d=await this.api('/admin/users/'+id+'/impersonate','POST');localStorage.setItem('ak_token',d.token);this.toast('Eingeloggt als Nutzer (1h)');setTimeout(()=>window.open('/app','_blank'),400);}catch(e){this.toast(e.message,'err');}},
+    async toggleAdmin(user){try{await this.api('/admin/users/'+user.id+'/admin','PUT',{is_admin:!user.is_admin});user.is_admin=!user.is_admin;this.toast(user.is_admin?'Admin-Rechte erteilt':'Entzogen');}catch(e){this.toast(e.message,'err');}},
+    async deleteUser(id){if(!confirm('Nutzer wirklich löschen? Unwiderruflich!'))return;try{await this.api('/admin/users/'+id+'/hard','DELETE');this.users=this.users.filter(u=>u.id!==id);this.toast('Gelöscht');}catch(e){this.toast(e.message,'err');}},
+    async impersonate(id){try{const d=await this.api('/admin/users/'+id+'/impersonate','POST');localStorage.setItem('ak_token',d.token);this.toast('Eingeloggt (1h Token)');setTimeout(()=>window.open('/app','_blank'),400);}catch(e){this.toast(e.message,'err');}},
     openEmail(user){this.emailModal={open:true,user,subject:'',body:'',sending:false};},
     async sendEmail(){this.emailModal.sending=true;try{await this.api('/admin/users/'+this.emailModal.user.id+'/email','POST',{subject:this.emailModal.subject,body:this.emailModal.body});this.toast('E-Mail gesendet');this.emailModal.open=false;}catch(e){this.toast(e.message,'err');}this.emailModal.sending=false;},
-    async sendBroadcast(){if(!confirm('Wirklich an alle '+this.broadcast.plan+'-Nutzer senden?'))return;this.broadcastSending=true;this.broadcastResult='';try{const d=await this.api('/admin/broadcast','POST',this.broadcast);this.broadcastResult='✓ '+d.sent+'/'+d.total+' gesendet';this.toast('Broadcast: '+d.sent+' E-Mails');}catch(e){this.toast(e.message,'err');}this.broadcastSending=false;},
-    async createPromo(){try{const d=await this.api('/admin/promo','POST',this.promo);this.promoCreated=d.code;this.toast('Promo-Code: '+d.code);}catch(e){this.toast(e.message,'err');}},
-    async directPlan(plan){const q=this.directEmail.trim();if(!q)return;try{const d=await this.api('/admin/users/search?q='+encodeURIComponent(q));if(!d.users.length){this.toast('Nutzer nicht gefunden','err');return;}await this.api('/admin/users/'+d.users[0].id+'/plan','PUT',{plan});this.toast(d.users[0].email+' → '+plan);}catch(e){this.toast(e.message,'err');}},
-    async extendTrial(){const q=this.directEmail.trim();if(!q)return;try{const d=await this.api('/admin/users/search?q='+encodeURIComponent(q));if(!d.users.length){this.toast('Nutzer nicht gefunden','err');return;}const u=d.users[0];const newEnd=new Date(Math.max(Date.now(),new Date(u.trial_ends_at||Date.now()).getTime())+14*24*60*60*1000);await this.api('/admin/users/'+u.id+'/plan','PUT',{plan:'pro'});this.toast('Trial verlängert für '+u.email);}catch(e){this.toast(e.message,'err');}},
+    openExtendTrial(user){this.extendModal={open:true,user,days:14};},
+    async doExtendTrial(){try{await this.api('/admin/users/'+this.extendModal.user.id+'/extend-trial','POST',{days:this.extendModal.days});this.toast('Trial verlängert');this.extendModal.open=false;this.loadUsers();}catch(e){this.toast(e.message,'err');}},
 
+    // Broadcast
+    async sendBroadcast(){if(!confirm('Wirklich senden?'))return;this.broadcastSending=true;this.broadcastResult='';try{const d=await this.api('/admin/broadcast','POST',this.broadcast);this.broadcastResult='✓ '+d.sent+'/'+d.total+' gesendet';}catch(e){this.toast(e.message,'err');}this.broadcastSending=false;},
+
+    // Promo
+    async createPromo(){try{const d=await this.api('/admin/promo','POST',this.promo);this.promoCreated=d.code;this.toast('Code erstellt: '+d.code);}catch(e){this.toast(e.message,'err');}},
+    async directPlan(plan){const q=this.directEmail.trim();if(!q)return;try{const d=await this.api('/admin/users/search?q='+encodeURIComponent(q));if(!d.users.length){this.toast('Nicht gefunden','err');return;}await this.api('/admin/users/'+d.users[0].id+'/plan','PUT',{plan});this.toast(d.users[0].email+' → '+plan);}catch(e){this.toast(e.message,'err');}},
+    async extendTrialByEmail(){const q=this.extendEmail.trim();if(!q)return;try{const d=await this.api('/admin/users/search?q='+encodeURIComponent(q));if(!d.users.length){this.toast('Nicht gefunden','err');return;}await this.api('/admin/users/'+d.users[0].id+'/extend-trial','POST',{days:this.extendDays});this.toast('Trial verlängert für '+d.users[0].email);}catch(e){this.toast(e.message,'err');}},
+
+    // Templates
+    openTemplateModal(t){
+      if(t){this.templateModal={open:true,editId:t.id,data:{name:t.name,emoji:t.emoji,description:t.description||'',category:t.category||'',system_prompt:t.system_prompt||'',greeting:t.greeting||'',tone:t.tone||'professionell'}};}
+      else{this.templateModal={open:true,editId:null,data:{name:'',emoji:'🤖',description:'',category:'',system_prompt:'',greeting:'Hallo! Wie kann ich helfen?',tone:'professionell'}};}
+    },
+    async saveTemplate(){
+      const d=this.templateModal.data;
+      if(!d.name||!d.system_prompt){this.toast('Name und System-Prompt erforderlich','err');return;}
+      try{
+        if(this.templateModal.editId)await this.api('/admin/templates/'+this.templateModal.editId,'PUT',d);
+        else await this.api('/admin/templates','POST',d);
+        this.toast('Template gespeichert');this.templateModal.open=false;this.loadTemplates();
+      }catch(e){this.toast(e.message,'err');}
+    },
+    async deleteTemplate(id){if(!confirm('Template löschen?'))return;try{await this.api('/admin/templates/'+id,'DELETE');this.templates=this.templates.filter(t=>t.id!==id);this.toast('Template gelöscht');}catch(e){this.toast(e.message,'err');}},
+
+    // Changelog
+    openChangelogModal(){this.changelogModal={open:true,version:'',title:'',body:''};},
+    async saveChangelog(){if(!this.changelogModal.title||!this.changelogModal.body){this.toast('Titel und Inhalt erforderlich','err');return;}try{await this.api('/admin/changelog','POST',this.changelogModal);this.toast('Veröffentlicht');this.changelogModal.open=false;this.loadChangelog();}catch(e){this.toast(e.message,'err');}},
+    async deleteChangelog(id){if(!confirm('Eintrag löschen?'))return;try{await this.api('/admin/changelog/'+id,'DELETE');this.changelogEntries=this.changelogEntries.filter(e=>e.id!==id);this.toast('Gelöscht');}catch(e){this.toast(e.message,'err');}},
+
+    // Announcement
+    async setAnnouncement(){try{const d=await this.api('/admin/announcement','POST',this.newAnn);this.announcement=d.announcement;this.toast('Ankündigung aktiv');this.newAnn={type:'info',text:'',url:''};}catch(e){this.toast(e.message,'err');}},
+    async clearAnnouncement(){try{await this.api('/admin/announcement','POST',{text:null});this.announcement=null;this.toast('Ankündigung entfernt');}catch(e){this.toast(e.message,'err');}},
+
+    // Cron
+    async runCron(){this.cronRunning=true;this.cronResult='';try{const d=await this.api('/admin/cron/run','POST');this.cronResult=(d.results||[]).join('\n');this.toast('Cron abgeschlossen');this.loadCronLogs();}catch(e){this.toast(e.message,'err');}this.cronRunning=false;},
+
+    // Charts
     drawOverviewCharts(){
-      Object.values(this.charts).forEach(c=>{try{c.destroy();}catch{}});
-      this.charts={};
+      Object.values(this.charts).forEach(c=>{try{c.destroy();}catch{}});this.charts={};
       if(!this.stats)return;
       const msgEl=document.getElementById('msgChart');
-      if(msgEl)this.charts.msg=new Chart(msgEl,{type:'line',data:{labels:(this.stats.msgsByDay||[]).map(d=>new Date(d.day).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})),datasets:[{label:'Nachrichten',data:(this.stats.msgsByDay||[]).map(d=>d.count),borderColor:'#6c5ce7',backgroundColor:'rgba(108,92,231,.1)',fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#6c5ce7'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a5a80',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#5a5a80',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}}}}});
+      if(msgEl)this.charts.msg=new Chart(msgEl,{type:'line',data:{labels:(this.stats.msgsByDay||[]).map(d=>new Date(d.day).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})),datasets:[{label:'Nachrichten',data:(this.stats.msgsByDay||[]).map(d=>d.count),borderColor:'#6c5ce7',backgroundColor:'rgba(108,92,231,.1)',fill:true,tension:0.4,pointRadius:2,pointBackgroundColor:'#6c5ce7',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#52528a',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#52528a',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}}}}});
       const planEl=document.getElementById('planChart');
-      if(planEl&&this.stats.users){const pro=parseInt(this.stats.users.pro)||0,free=parseInt(this.stats.users.total)-pro;this.charts.plan=new Chart(planEl,{type:'doughnut',data:{labels:['Pro','Free'],datasets:[{data:[pro,free],backgroundColor:['rgba(108,92,231,.85)','rgba(255,255,255,.1)'],borderColor:['#6c5ce7','rgba(255,255,255,.08)'],borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'72%'}});}
+      if(planEl&&this.stats.users){const pro=parseInt(this.stats.users.pro)||0,free=parseInt(this.stats.users.total)-pro;this.charts.plan=new Chart(planEl,{type:'doughnut',data:{labels:['Pro','Free'],datasets:[{data:[pro,Math.max(0,free)],backgroundColor:['rgba(108,92,231,.85)','rgba(255,255,255,.1)'],borderColor:['#6c5ce7','rgba(255,255,255,.07)'],borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'74%'}});}
     },
-    drawRevenueCharts(){
-      Object.values(this.charts).forEach(c=>{try{c.destroy();}catch{}});
-      this.charts={};
+    drawRevenueChart(){
+      Object.values(this.charts).forEach(c=>{try{c.destroy();}catch{}});this.charts={};
       if(!this.revenue)return;
       const el=document.getElementById('growthChart');
-      if(el)this.charts.growth=new Chart(el,{type:'bar',data:{labels:(this.revenue.monthly_signups||[]).map(d=>new Date(d.month).toLocaleDateString('de-DE',{month:'short',year:'2-digit'})),datasets:[{label:'Neue Nutzer',data:(this.revenue.monthly_signups||[]).map(d=>d.signups),backgroundColor:'rgba(108,92,231,.6)',borderColor:'#6c5ce7',borderWidth:1,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a5a80',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#5a5a80',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}}}}});
+      if(el)this.charts.growth=new Chart(el,{type:'bar',data:{labels:(this.revenue.monthly_signups||[]).map(d=>new Date(d.month).toLocaleDateString('de-DE',{month:'short',year:'2-digit'})),datasets:[{label:'Neue Nutzer',data:(this.revenue.monthly_signups||[]).map(d=>d.signups),backgroundColor:'rgba(108,92,231,.6)',borderColor:'#6c5ce7',borderWidth:1,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#52528a',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#52528a',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}}}}});
+    },
+    drawFunnelChart(){
+      Object.values(this.charts).forEach(c=>{try{c.destroy();}catch{}});this.charts={};
+      if(!this.funnel)return;
+      const el=document.getElementById('funnelChart');
+      if(el)this.charts.funnel=new Chart(el,{type:'bar',data:{labels:(this.funnel.daily||[]).map(d=>new Date(d.day).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})),datasets:[{label:'Signups',data:(this.funnel.daily||[]).map(d=>d.signups),backgroundColor:'rgba(108,92,231,.5)',borderRadius:4},{label:'Pro gleicher Tag',data:(this.funnel.daily||[]).map(d=>d.pro_same_day||0),backgroundColor:'rgba(0,184,148,.5)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{color:'#7272a2',font:{size:11}}}},scales:{x:{ticks:{color:'#52528a',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#52528a',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}}}}});
     },
   };
 }
