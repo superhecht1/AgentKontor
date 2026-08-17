@@ -319,6 +319,57 @@ input:checked+.slider::before{transform:translateX(18px)}
 
 
 
+
+/* ── AGENT STORE ── */
+.store-hero{background:linear-gradient(135deg,rgba(124,58,237,.12),rgba(245,158,11,.07),rgba(56,189,248,.06));border:1px solid rgba(124,58,237,.18);border-radius:var(--r-lg);padding:36px;text-align:center;margin-bottom:28px;position:relative;overflow:hidden}
+.store-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 50% -10%,rgba(124,58,237,.15),transparent);pointer-events:none}
+.store-title{font-size:1.8rem;font-weight:800;color:var(--white);letter-spacing:-.05em;margin-bottom:6px}
+.store-subtitle{font-size:.9rem;color:var(--muted-l);margin-bottom:20px}
+.store-search{max-width:480px;margin:0 auto;position:relative}
+.store-search input{padding-left:40px;font-size:.9rem;border-radius:12px}
+.store-search-ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.cat-tabs{display:flex;gap:8px;margin-bottom:24px;overflow-x:auto;padding-bottom:4px;flex-wrap:nowrap}
+.cat-tab{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:20px;border:1px solid var(--border);background:rgba(255,255,255,.03);cursor:pointer;font-size:.82rem;font-weight:500;color:var(--muted-l);transition:all .15s;white-space:nowrap;flex-shrink:0}
+.cat-tab:hover{border-color:var(--border-h);color:var(--white)}
+.cat-tab.on{border-color:rgba(124,58,237,.4);background:rgba(124,58,237,.1);color:var(--v-l)}
+.cat-tab-count{font-size:.65rem;background:rgba(255,255,255,.1);padding:1px 6px;border-radius:10px;font-weight:700}
+/* Agent Karte */
+.mkt-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:all .18s;display:flex;flex-direction:column;position:relative}
+.mkt-card:hover{border-color:var(--border-h);transform:translateY(-2px);box-shadow:var(--shadow-sm)}
+.mkt-card.installed{border-color:rgba(16,185,129,.25)}
+.mkt-card-header{padding:20px 18px 14px;border-bottom:1px solid var(--border);position:relative}
+.mkt-badge-featured{position:absolute;top:12px;right:12px;font-size:.6rem;background:linear-gradient(90deg,var(--amber),var(--v-l));color:#000;padding:2px 8px;border-radius:10px;font-weight:800}
+.mkt-card-ico{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:10px;border:2px solid rgba(255,255,255,.08)}
+.mkt-card-name{font-size:.95rem;font-weight:800;color:var(--white);letter-spacing:-.02em;margin-bottom:3px}
+.mkt-card-tagline{font-size:.77rem;color:var(--muted-l);line-height:1.4;margin-bottom:10px}
+.mkt-card-body{padding:14px 18px;flex:1}
+.mkt-card-desc{font-size:.78rem;color:var(--muted-l);line-height:1.5;margin-bottom:12px}
+.mkt-card-chips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px}
+.mkt-chip{font-size:.65rem;padding:3px 8px;border-radius:10px;background:rgba(255,255,255,.05);color:var(--muted-l);border:1px solid rgba(255,255,255,.07)}
+.mkt-card-foot{padding:12px 18px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.mkt-rating{display:flex;align-items:center;gap:3px;font-size:.75rem;color:var(--amber)}
+.mkt-install-count{font-size:.72rem;color:var(--muted);flex:1}
+.mkt-install-btn{padding:8px 14px;border-radius:9px;font-size:.8rem;font-weight:700;border:none;cursor:pointer;transition:all .18s;font-family:inherit}
+.mkt-install-btn.not-installed{background:var(--v);color:#fff;box-shadow:0 2px 10px var(--v-glow)}
+.mkt-install-btn.not-installed:hover{background:var(--v-l);transform:translateY(-1px)}
+.mkt-install-btn.installed{background:rgba(16,185,129,.12);color:var(--emerald);border:1px solid rgba(16,185,129,.2)}
+/* Preview Modal */
+.preview-modal{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:400;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)}
+.preview-modal-box{background:var(--bg3);border:1px solid rgba(124,58,237,.2);border-radius:var(--r-lg);width:100%;max-width:640px;max-height:90vh;overflow-y:auto;box-shadow:0 60px 120px rgba(0,0,0,.8)}
+.preview-modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.preview-modal-body{padding:20px 24px}
+.preview-conv{background:#09080a;border:1px solid var(--border);border-radius:var(--r-sm);padding:14px;display:flex;flex-direction:column;gap:10px;max-height:220px;overflow-y:auto}
+.prev-msg-row{display:flex;gap:8px;max-width:90%}
+.prev-msg-row.user{align-self:flex-end;flex-direction:row-reverse}
+.prev-msg-bbl{padding:8px 12px;border-radius:12px;font-size:.8rem;line-height:1.5}
+.prev-msg-row.assistant .prev-msg-bbl{background:rgba(255,255,255,.06);color:var(--text);border-bottom-left-radius:2px}
+.prev-msg-row.user .prev-msg-bbl{background:linear-gradient(135deg,var(--v),var(--v-d));color:#fff;border-bottom-right-radius:2px}
+/* Stars */
+.star-rating{display:flex;gap:3px;cursor:pointer}
+.star-rating span{font-size:1.2rem;transition:transform .12s}
+.star-rating span:hover{transform:scale(1.2)}
+/* Grid */
+.mkt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
 /* ── SUPER AGENT ── */
 .super-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:8px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden}
 .super-card:hover{border-color:var(--border-h)}
@@ -673,6 +724,11 @@ input:checked+.slider::before{transform:translateX(18px)}
       <div class="nav-item" :class="{on:page==='agents'}" @click="page='agents'"><span class="nav-ico">🤖</span><span class="nav-lbl">Agenten</span><span class="nav-badge" x-show="agents.length" x-text="agents.length"></span></div>
       <div class="nav-item" :class="{on:page==='analytics'}" @click="page='analytics';loadAnalytics()"><span class="nav-ico">📊</span><span class="nav-lbl">Analytics</span><span class="nav-badge" x-show="dashLeads>0" x-text="dashLeads+' Leads'"></span></div>
       <div class="nav-item" :class="{on:page==='conversations'}" @click="page='conversations';loadConvAgents()"><span class="nav-ico">💬</span><span class="nav-lbl">Gespräche</span></div>
+      <div class="nav-group-label">🛒 Store</div>
+      <div class="nav-item" :class="{on:page==='marketplace'}" @click="page='marketplace';loadMarketplace()">
+        <span class="nav-ico">🛒</span><span class="nav-lbl">Agent Store</span>
+        <span class="nav-badge" style="background:var(--amber);color:#000">NEU</span>
+      </div>
       <div class="nav-group-label">🤖 Super Agent</div>
       <div class="nav-item" :class="{on:page==='super'}" @click="page='super';loadSuperSessions()">
         <span class="nav-ico">🦾</span><span class="nav-lbl">Super Agent</span>
@@ -1307,6 +1363,197 @@ X-AgentKontor-Signature: sha256=…
 
 
 
+
+
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <!-- ── AGENT STORE (MARKETPLACE) ──                               -->
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <div class="page" x-show="page==='marketplace'">
+
+        <!-- Hero -->
+        <div class="store-hero">
+          <div style="font-size:2.5rem;margin-bottom:10px;position:relative;z-index:1">🛒</div>
+          <div class="store-title" style="position:relative;z-index:1">Agent Store</div>
+          <div class="store-subtitle" style="position:relative;z-index:1">Fertig konfigurierte KI-Agenten für deine Branche — ein Klick und einsatzbereit</div>
+          <div class="store-search" style="position:relative;z-index:1">
+            <span class="store-search-ico">🔍</span>
+            <input class="inp" x-model="marketplaceSearch" placeholder="Agent suchen…" @input="marketplaceTab='all'">
+          </div>
+          <div style="display:flex;gap:20px;justify-content:center;margin-top:16px;position:relative;z-index:1">
+            <div style="text-align:center">
+              <div style="font-size:1.4rem;font-weight:800;color:var(--white);font-family:'JetBrains Mono',monospace" x-text="marketplaceAgents.length"></div>
+              <div style="font-size:.72rem;color:var(--muted-l)">Agenten</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:1.4rem;font-weight:800;color:var(--white);font-family:'JetBrains Mono',monospace" x-text="marketplaceCategories.length"></div>
+              <div style="font-size:.72rem;color:var(--muted-l)">Branchen</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:1.4rem;font-weight:800;color:var(--white);font-family:'JetBrains Mono',monospace" x-text="marketplaceMyInstalls.length"></div>
+              <div style="font-size:.72rem;color:var(--muted-l)">Installiert</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs" style="margin-bottom:16px">
+          <div class="tab" :class="{on:marketplaceTab==='featured'}" @click="marketplaceTab='featured';marketplaceCategory=''">⭐ Featured</div>
+          <div class="tab" :class="{on:marketplaceTab==='all'}"      @click="marketplaceTab='all'">🛒 Alle</div>
+          <div class="tab" :class="{on:marketplaceTab==='installed'}" @click="marketplaceTab='installed';marketplaceCategory=''">✅ Installiert (<span x-text="marketplaceMyInstalls.length"></span>)</div>
+        </div>
+
+        <!-- Kategorie-Filter -->
+        <div class="cat-tabs" x-show="marketplaceTab!=='installed'">
+          <div class="cat-tab" :class="{on:!marketplaceCategory}" @click="marketplaceCategory=''">
+            <span>🌟 Alle</span>
+            <span class="cat-tab-count" x-text="marketplaceAgents.length"></span>
+          </div>
+          <template x-for="cat in marketplaceCategories" :key="cat.slug">
+            <div class="cat-tab" :class="{on:marketplaceCategory===cat.slug}" @click="marketplaceCategory=cat.slug;marketplaceTab='all'">
+              <span x-text="cat.emoji+' '+cat.name"></span>
+              <span class="cat-tab-count" x-text="cat.agent_count"></span>
+            </div>
+          </template>
+        </div>
+
+        <!-- Agenten-Grid -->
+        <div class="empty" x-show="!filteredMarketplace.length">
+          <div class="empty-ico">🔍</div>
+          <h3>Keine Agenten gefunden</h3>
+          <p x-show="marketplaceTab==='installed'">Du hast noch keine Agenten installiert.</p>
+          <p x-show="marketplaceSearch&&marketplaceTab!=='installed'">Keine Ergebnisse für „<span x-text="marketplaceSearch"></span>"</p>
+        </div>
+
+        <div class="mkt-grid">
+          <template x-for="agent in filteredMarketplace" :key="agent.id">
+            <div class="mkt-card" :class="{installed:agent.is_installed}">
+
+              <!-- Featured Badge -->
+              <div class="mkt-badge-featured" x-show="agent.is_featured">⭐ Featured</div>
+
+              <div class="mkt-card-header" :style="'border-top:3px solid '+(agent.color||'var(--v)')">
+                <div class="mkt-card-ico" :style="'background:'+(agent.color||'var(--v)')+'18;border-color:'+(agent.color||'var(--v)')+'30'" x-text="agent.emoji"></div>
+                <div class="mkt-card-name" x-text="agent.name"></div>
+                <div class="mkt-card-tagline" x-text="agent.tagline"></div>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span style="font-size:.68rem;padding:2px 8px;border-radius:10px;font-weight:600"
+                    :style="'background:'+(agent.category_color||'var(--v)')+'15;color:'+(agent.category_color||'var(--v-l)')"
+                    x-text="(agent.category_emoji||'')+' '+(agent.category_name||agent.category_slug)"></span>
+                </div>
+              </div>
+
+              <div class="mkt-card-body">
+                <div class="mkt-card-desc" x-text="agent.description"></div>
+                <!-- Quick Chips Preview -->
+                <div class="mkt-card-chips">
+                  <template x-for="chip in (typeof agent.quick_chips==='string'?JSON.parse(agent.quick_chips):agent.quick_chips||[]).slice(0,3)" :key="chip">
+                    <span class="mkt-chip" x-text="chip"></span>
+                  </template>
+                </div>
+                <!-- Tags -->
+                <div style="display:flex;flex-wrap:wrap;gap:3px">
+                  <template x-for="tag in (agent.tags||[]).slice(0,4)" :key="tag">
+                    <span style="font-size:.61rem;color:var(--muted);font-family:'JetBrains Mono',monospace" x-text="#"+tag></span>
+                  </template>
+                </div>
+              </div>
+
+              <div class="mkt-card-foot">
+                <!-- Rating -->
+                <div>
+                  <div class="mkt-rating">
+                    <template x-for="i in [1,2,3,4,5]" :key="i">
+                      <span x-text="i<=(agent.rating_avg||0)?'★':'☆'"></span>
+                    </template>
+                    <span style="font-size:.7rem;color:var(--muted);margin-left:2px" x-text="agent.rating_count>0?'('+agent.rating_count+')':''"></span>
+                  </div>
+                  <div class="mkt-install-count" x-text="(agent.install_count||0)+' Installationen'"></div>
+                </div>
+
+                <div style="display:flex;gap:6px">
+                  <!-- Preview Button -->
+                  <button class="btn btn-ghost btn-xs" @click="selectedMarketplaceAgent=agent" title="Vorschau">👁</button>
+                  <!-- Install Button -->
+                  <button class="mkt-install-btn" :class="agent.is_installed?'installed':'not-installed'"
+                    @click="agent.is_installed?null:installAgent(agent)"
+                    :disabled="installingId===agent.id||agent.is_installed">
+                    <span x-show="installingId===agent.id" class="spinning">◌</span>
+                    <span x-show="installingId!==agent.id" x-text="agent.is_installed?'✅ Installiert':'+ Installieren'"></span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Preview Modal -->
+        <div class="preview-modal" x-show="selectedMarketplaceAgent" x-cloak @click.self="selectedMarketplaceAgent=null">
+          <div class="preview-modal-box">
+            <div class="preview-modal-header">
+              <div style="width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0"
+                :style="'background:'+(selectedMarketplaceAgent?.color||'var(--v)')+'18;border:2px solid '+(selectedMarketplaceAgent?.color||'var(--v)')+'30'"
+                x-text="selectedMarketplaceAgent?.emoji"></div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:1rem;font-weight:800;color:var(--white)" x-text="selectedMarketplaceAgent?.name"></div>
+                <div style="font-size:.77rem;color:var(--muted-l)" x-text="selectedMarketplaceAgent?.tagline"></div>
+              </div>
+              <button class="modal-close" @click="selectedMarketplaceAgent=null">×</button>
+            </div>
+            <div class="preview-modal-body">
+              <!-- Demo-Gespräch -->
+              <div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Demo-Gespräch</div>
+              <div class="preview-conv">
+                <!-- Begrüßung -->
+                <div class="prev-msg-row assistant">
+                  <div style="width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0" :style="'background:'+(selectedMarketplaceAgent?.color||'var(--v)')+'18'" x-text="selectedMarketplaceAgent?.emoji"></div>
+                  <div class="prev-msg-bbl" x-text="selectedMarketplaceAgent?.greeting"></div>
+                </div>
+                <!-- Preview Messages -->
+                <template x-for="(msg,i) in (typeof selectedMarketplaceAgent?.preview_messages==='string'?JSON.parse(selectedMarketplaceAgent?.preview_messages||'[]'):selectedMarketplaceAgent?.preview_messages||[])" :key="i">
+                  <div class="prev-msg-row" :class="msg.role">
+                    <div x-show="msg.role==='assistant'" style="width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0" :style="'background:'+(selectedMarketplaceAgent?.color||'var(--v)')+'18'" x-text="selectedMarketplaceAgent?.emoji"></div>
+                    <div x-show="msg.role==='user'" style="width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.8rem">👤</div>
+                    <div class="prev-msg-bbl" x-text="msg.content"></div>
+                  </div>
+                </template>
+              </div>
+
+              <!-- System Prompt Preview -->
+              <div style="margin-top:16px">
+                <div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">System-Prompt (Vorschau)</div>
+                <div style="background:#09080a;border:1px solid var(--border);border-radius:7px;padding:10px 12px;font-size:.73rem;color:var(--muted-l);line-height:1.5;max-height:120px;overflow-y:auto" x-text="(selectedMarketplaceAgent?.system_prompt||'').slice(0,400)+'...'"></div>
+              </div>
+
+              <!-- Features -->
+              <div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:6px">
+                <template x-for="chip in (typeof selectedMarketplaceAgent?.quick_chips==='string'?JSON.parse(selectedMarketplaceAgent?.quick_chips||'[]'):selectedMarketplaceAgent?.quick_chips||[])" :key="chip">
+                  <span class="chip" x-text="chip"></span>
+                </template>
+              </div>
+
+              <!-- Bewertung abgeben -->
+              <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)" x-show="selectedMarketplaceAgent?.is_installed">
+                <div style="font-size:.74rem;color:var(--muted-l);margin-bottom:6px">Deine Bewertung:</div>
+                <div class="star-rating">
+                  <template x-for="i in [1,2,3,4,5]" :key="i">
+                    <span @click="rateAgent(selectedMarketplaceAgent.id,i)" style="cursor:pointer;font-size:1.4rem" x-text="i<=(selectedMarketplaceAgent?.user_rating||0)?'★':'☆'" :style="i<=(selectedMarketplaceAgent?.user_rating||0)?'color:var(--amber)':'color:var(--muted)'"></span>
+                  </template>
+                </div>
+              </div>
+
+              <!-- Install CTA -->
+              <div style="display:flex;gap:10px;margin-top:18px">
+                <button class="btn btn-ghost" style="flex:1" @click="selectedMarketplaceAgent=null">Schließen</button>
+                <button class="btn btn-primary" style="flex:2;font-size:.9rem"
+                  @click="installAgent(selectedMarketplaceAgent);selectedMarketplaceAgent=null"
+                  :disabled="selectedMarketplaceAgent?.is_installed||installingId===selectedMarketplaceAgent?.id"
+                  x-text="selectedMarketplaceAgent?.is_installed?'✅ Bereits installiert':'+ Jetzt installieren'">
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- ══════════════════════════════════════════════════════════════ -->
       <!-- ── SUPER AGENT PAGE ──                                        -->
@@ -3114,6 +3361,10 @@ insightFunnel:{sessions:0,engaged:0,leads:0,rate:0},
 insightTopQ:[],insightHeatmap:[],insightScore:{},
 // A/B results
 abResults:{},
+// Marketplace
+marketplaceAgents:[],marketplaceCategories:[],marketplaceMyInstalls:[],
+marketplaceTab:'featured',marketplaceSearch:'',marketplaceCategory:'',
+selectedMarketplaceAgent:null,installingId:null,
 // Super Agent
 superSessions:[],superProfiles:[],superCollabs:[],
 superGoal:'',superContext:'',superModel:'claude-sonnet-4-6',
@@ -3676,6 +3927,47 @@ toggleDay(day){
 
 
 
+
+// ── MARKETPLACE ────────────────────────────────────────────────────────────
+async loadMarketplace(){
+  const [ag,cat,my]=await Promise.all([
+    this.api('/marketplace?limit=50'),
+    this.api('/marketplace/categories'),
+    this.api('/marketplace/my/installs'),
+  ]);
+  if(ag.agents)this.marketplaceAgents=ag.agents;
+  if(cat.categories)this.marketplaceCategories=cat.categories;
+  if(my.installations)this.marketplaceMyInstalls=my.installations;
+},
+get filteredMarketplace(){
+  let list=this.marketplaceAgents;
+  if(this.marketplaceCategory)list=list.filter(a=>a.category_slug===this.marketplaceCategory);
+  if(this.marketplaceSearch)list=list.filter(a=>
+    a.name.toLowerCase().includes(this.marketplaceSearch.toLowerCase())||
+    a.tagline.toLowerCase().includes(this.marketplaceSearch.toLowerCase())||
+    (a.tags||[]).some(t=>t.includes(this.marketplaceSearch.toLowerCase()))
+  );
+  if(this.marketplaceTab==='featured')list=list.filter(a=>a.is_featured);
+  if(this.marketplaceTab==='installed')list=list.filter(a=>a.is_installed);
+  return list;
+},
+async installAgent(mktAgent){
+  if(this.installingId)return;
+  this.installingId=mktAgent.id;
+  const d=await this.api('/marketplace/'+mktAgent.id+'/install','POST',{});
+  this.installingId=null;
+  if(d.error){this.toast(d.error,'err');return;}
+  if(d.alreadyInstalled){this.toast('Bereits installiert — öffne Agenten-Liste','info');return;}
+  this.toast('✅ '+mktAgent.name+' installiert! Findest du unter Agenten.');
+  await this.loadMarketplace();
+  await this.loadAgents();
+},
+async rateAgent(id,rating){
+  await this.api('/marketplace/'+id+'/rate','POST',{rating});
+  this.toast('Bewertung gespeichert ✓');
+  await this.loadMarketplace();
+},
+
 // ── SUPER AGENT ────────────────────────────────────────────────────────────
 async loadSuperSessions(){
   const d=await this.api('/super?limit=30');
@@ -3960,7 +4252,7 @@ get cmdResults(){
     {label:'Einstellungen',icon:'⚙️',action:()=>{this.page='settings';this.closeCmd();}},
     {label:'API Keys',icon:'🔑',action:()=>{this.page='keys';this.loadKeys();this.closeCmd();}},
     {label:'Gespräche',icon:'💬',action:()=>{this.page='conversations';this.loadConvAgents();this.closeCmd();}},
-    {label:'Abrechnung',icon:'💳',action:()=>{this.page='billing';this.closeCmd();}},{label:'Super Agent',icon:'🦾',action:()=>{this.page='super';this.loadSuperSessions();this.closeCmd();}},{label:'Planner',icon:'🧭',action:()=>{this.page='planner';this.loadPlans();this.closeCmd();}},{label:'Freigaben',icon:'✅',action:()=>{this.page='approvals';this.loadApprovals();this.closeCmd();}},{label:'Tools',icon:'⚙️',action:()=>{this.page='tools';this.loadTools();this.closeCmd();}},{label:'Memory',icon:'🧠',action:()=>{this.page='memory';this.loadMemory();this.closeCmd();}},{label:'Tasks',icon:'⚡',action:()=>{this.page='tasks';this.loadTasks();this.closeCmd();}},
+    {label:'Abrechnung',icon:'💳',action:()=>{this.page='billing';this.closeCmd();}},{label:'Agent Store',icon:'🛒',action:()=>{this.page='marketplace';this.loadMarketplace();this.closeCmd();}},{label:'Super Agent',icon:'🦾',action:()=>{this.page='super';this.loadSuperSessions();this.closeCmd();}},{label:'Planner',icon:'🧭',action:()=>{this.page='planner';this.loadPlans();this.closeCmd();}},{label:'Freigaben',icon:'✅',action:()=>{this.page='approvals';this.loadApprovals();this.closeCmd();}},{label:'Tools',icon:'⚙️',action:()=>{this.page='tools';this.loadTools();this.closeCmd();}},{label:'Memory',icon:'🧠',action:()=>{this.page='memory';this.loadMemory();this.closeCmd();}},{label:'Tasks',icon:'⚡',action:()=>{this.page='tasks';this.loadTasks();this.closeCmd();}},
     ...this.agents.map(a=>({label:a.name,icon:a.emoji,action:()=>{this.editAgent(a);this.closeCmd();}})),
   ];
   if(!q)return cmds.slice(0,8);
