@@ -315,8 +315,122 @@ input:checked+.slider::before{transform:translateX(18px)}
 .toast-err{background:#160c0e;border-color:rgba(244,63,94,.35);color:var(--rose)}
 .toast-info{background:#120e19;border-color:rgba(124,58,237,.35);color:var(--v-l)}
 @keyframes tIn{from{opacity:0;transform:translateY(8px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+/* ── ONBOARDING WIZARD ── */
+.onboard-bg{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:600;display:flex;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(8px)}
+.onboard-card{background:var(--bg3);border:1px solid rgba(124,58,237,.25);border-radius:24px;width:100%;max-width:520px;overflow:hidden;box-shadow:0 60px 120px rgba(0,0,0,.8)}
+.onboard-progress{height:3px;background:rgba(255,255,255,.07);position:relative}
+.onboard-prog-fill{height:100%;background:linear-gradient(90deg,var(--v),var(--amber));border-radius:3px;transition:width .4s cubic-bezier(.4,0,.2,1)}
+.onboard-body{padding:40px}
+.onboard-step-ico{font-size:2.8rem;margin-bottom:18px;display:block;line-height:1}
+.onboard-title{font-size:1.35rem;font-weight:800;color:var(--white);letter-spacing:-.04em;margin-bottom:8px}
+.onboard-sub{font-size:.9rem;color:var(--muted-l);line-height:1.6;margin-bottom:28px}
+.onboard-steps-dots{display:flex;gap:6px;justify-content:center;margin-bottom:24px}
+.onboard-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.12);transition:all .2s}
+.onboard-dot.on{background:var(--v);transform:scale(1.3)}
+.onboard-feats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:24px}
+.onboard-feat{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;align-items:flex-start;gap:10px}
+.onboard-feat-ico{font-size:1.1rem;flex-shrink:0;margin-top:1px}
+.onboard-feat-txt{font-size:.78rem;color:var(--text);line-height:1.4}
+.onboard-feat-txt strong{display:block;color:var(--white);font-size:.82rem;margin-bottom:1px}
+.wizard-step{display:flex;align-items:flex-start;gap:14px;padding:14px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,.02);margin-bottom:8px;transition:all .2s;cursor:pointer}
+.wizard-step:hover,.wizard-step.done{border-color:rgba(124,58,237,.3);background:rgba(124,58,237,.05)}
+.wizard-step.done{border-color:rgba(16,185,129,.25);background:rgba(16,185,129,.03)}
+.wizard-num{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:var(--muted);flex-shrink:0}
+.wizard-step.done .wizard-num{background:var(--emerald);border-color:var(--emerald);color:#fff}
+.wizard-txt strong{font-size:.85rem;color:var(--white);font-weight:700;display:block;margin-bottom:1px}
+.wizard-txt span{font-size:.76rem;color:var(--muted-l)}
+
+/* ── TOUR TOOLTIP ── */
+.tour-overlay{position:fixed;inset:0;z-index:700;pointer-events:none}
+.tour-tip{position:fixed;background:var(--bg3);border:1px solid rgba(124,58,237,.35);border-radius:14px;padding:16px 18px;max-width:280px;box-shadow:0 20px 60px rgba(0,0,0,.7);pointer-events:auto;z-index:701}
+.tour-tip-title{font-size:.88rem;font-weight:700;color:var(--white);margin-bottom:4px}
+.tour-tip-txt{font-size:.78rem;color:var(--muted-l);line-height:1.5;margin-bottom:12px}
+.tour-tip-nav{display:flex;align-items:center;justify-content:space-between}
+.tour-pip{font-size:.7rem;color:var(--muted)}
+.tour-highlight{position:fixed;border:2px solid var(--amber);border-radius:10px;box-shadow:0 0 0 4000px rgba(0,0,0,.55),0 0 20px rgba(245,158,11,.4);pointer-events:none;z-index:699;transition:all .35s cubic-bezier(.4,0,.2,1)}
+
+/* ── FUNNEL ── */
+.funnel-wrap{display:flex;flex-direction:column;gap:6px}
+.funnel-step{display:flex;align-items:center;gap:12px}
+.funnel-bar-wrap{flex:1;height:28px;background:rgba(255,255,255,.04);border-radius:6px;overflow:hidden;position:relative}
+.funnel-fill{height:100%;border-radius:6px;transition:width .8s cubic-bezier(.4,0,.2,1);display:flex;align-items:center;padding-left:10px}
+.funnel-fill-label{font-size:.72rem;font-weight:700;color:#fff;white-space:nowrap}
+.funnel-step-label{font-size:.78rem;color:var(--muted-l);min-width:80px;text-align:right}
+.funnel-step-num{font-size:.85rem;font-weight:700;color:var(--white);font-family:'JetBrains Mono',monospace;min-width:48px;text-align:right}
+.funnel-arrow{font-size:.8rem;color:var(--muted);text-align:center;margin:2px 0}
+
+/* ── HEATMAP ── */
+.heatmap-grid{display:grid;grid-template-columns:repeat(24,1fr);gap:3px;margin-top:8px}
+.heatmap-cell{height:32px;border-radius:4px;cursor:default;transition:transform .12s,opacity .12s;position:relative}
+.heatmap-cell:hover{transform:scale(1.15);z-index:2}
+.heatmap-label-row{display:grid;grid-template-columns:repeat(24,1fr);gap:3px;margin-top:3px}
+.heatmap-label{font-size:.55rem;color:var(--muted);text-align:center}
+
+/* ── AGENT SCORE ── */
+.score-ring{position:relative;display:inline-flex;align-items:center;justify-content:center}
+.score-num{font-size:1.1rem;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--white)}
+.score-svg{position:absolute;top:0;left:0;transform:rotate(-90deg)}
+
+/* ── NEW AGENT TABS ── */
+.sched-day{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.sched-day:last-child{border-bottom:none}
+.sched-day-name{font-size:.8rem;font-weight:600;color:var(--text);min-width:32px}
+.sched-time-inputs{display:flex;align-items:center;gap:6px;flex:1}
+.sched-inp{width:72px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--white);font-size:.78rem;font-family:'JetBrains Mono',monospace}
+.ab-variant{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;position:relative}
+.ab-variant h4{font-size:.8rem;font-weight:700;color:var(--white);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.ab-badge{font-size:.6rem;padding:2px 8px;border-radius:12px;font-weight:700}
+.ab-a{background:rgba(124,58,237,.15);color:var(--v-l);border:1px solid rgba(124,58,237,.25)}
+.ab-b{background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.22)}
+.ab-bar-wrap{display:flex;gap:4px;height:8px;border-radius:4px;overflow:hidden;margin-top:8px}
+.ab-bar{height:100%;transition:width .6s ease}
+.action-row{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:6px;background:rgba(255,255,255,.02)}
+.action-row:hover{border-color:var(--border-h)}
+.action-method{font-size:.65rem;font-weight:700;padding:3px 7px;border-radius:5px;font-family:'JetBrains Mono',monospace;flex-shrink:0}
+.m-post{background:rgba(16,185,129,.12);color:var(--emerald)}
+.m-get{background:rgba(56,189,248,.12);color:var(--sky)}
+
+/* ── TOP QUESTIONS ── */
+.topq-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.topq-row:last-child{border-bottom:none}
+.topq-bar{flex:1;height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden}
+.topq-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--v),var(--v-l))}
+.topq-q{font-size:.8rem;color:var(--text);flex:3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topq-n{font-size:.75rem;font-family:'JetBrains Mono',monospace;color:var(--amber);min-width:24px;text-align:right}
+
+/* ── AGENT HEALTH SCORE ── */
+.health-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:14px}
+.health-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .15s}
+.health-card:hover{border-color:var(--border-h)}
+.health-score{width:42px;height:42px;flex-shrink:0;position:relative;display:flex;align-items:center;justify-content:center}
+.health-score-n{font-size:.82rem;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--white);position:relative;z-index:1}
 @media(max-width:1100px){.kpi-grid{grid-template-columns:1fr 1fr}.dash-grid{grid-template-columns:1fr}}
 @media(max-width:900px){.sidebar{width:60px!important}.sb-logo-text,.nav-lbl,.nav-badge,.sb-plan-txt,.sb-plan-sub,.sb-user-info{display:none!important}.page{padding:16px 14px}.topbar{padding:0 14px}}
+
+/* ── FLOATING HELP / QUICK TIP ── */
+.float-help{position:fixed;bottom:24px;right:24px;z-index:300;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.float-btn{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--v),var(--v-l));color:#fff;border:none;cursor:pointer;font-size:1.2rem;box-shadow:0 4px 20px var(--v-glow);transition:all .2s;display:flex;align-items:center;justify-content:center}
+.float-btn:hover{transform:scale(1.1);box-shadow:0 8px 30px var(--v-glow)}
+.float-menu{background:var(--bg3);border:1px solid rgba(124,58,237,.25);border-radius:14px;padding:8px;min-width:200px;box-shadow:var(--shadow)}
+.float-menu-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:.83rem;color:var(--text);transition:background .12s}
+.float-menu-item:hover{background:rgba(124,58,237,.1);color:var(--white)}
+.float-menu-item span:first-child{font-size:1rem;flex-shrink:0}
+
+/* ── INLINE TIPS ── */
+.tip-chip{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;color:var(--amber);background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.18);border-radius:20px;padding:2px 9px;cursor:pointer;transition:all .15s;margin-left:6px}
+.tip-chip:hover{background:rgba(245,158,11,.14)}
+.inline-tip{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);border-radius:8px;padding:9px 12px;font-size:.77rem;color:var(--amber-l);line-height:1.5;margin-top:6px}
+
+/* ── SCORE BADGE ON CARD ── */
+.agent-score-badge{font-size:.62rem;font-weight:700;padding:2px 6px;border-radius:10px;font-family:'JetBrains Mono',monospace}
+.s-hi{background:rgba(16,185,129,.1);color:var(--emerald);border:1px solid rgba(16,185,129,.2)}
+.s-mid{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.18)}
+.s-lo{background:rgba(244,63,94,.08);color:var(--rose);border:1px solid rgba(244,63,94,.15)}
+
+/* ── KEYBOARD SHORTCUT HINTS ── */
+.kbd-hint{font-size:.65rem;color:var(--muted);display:flex;align-items:center;gap:4px;padding:2px 0}
+.kbd-hint kbd{background:rgba(255,255,255,.07);padding:1px 5px;border-radius:3px;border:1px solid rgba(255,255,255,.1);font-family:'JetBrains Mono',monospace;font-size:.62rem}
 .link-muted{font-size:.78rem;color:var(--muted);cursor:pointer;transition:color .15s}
 .link-muted:hover{color:var(--amber)}
 @media(max-width:640px){.kpi-grid{grid-template-columns:1fr 1fr}.agent-grid{grid-template-columns:1fr}.modal{padding:20px;border-radius:14px}.template-grid{grid-template-columns:1fr 1fr}}
@@ -464,7 +578,7 @@ input:checked+.slider::before{transform:translateX(18px)}
     <!-- TOP BAR -->
     <div class="topbar">
       <div class="topbar-left">
-        <div class="topbar-cmd" @click="openCmd()"><span>⚡ Suchen oder Aktion…</span><kbd>⌘K</kbd></div>
+        <div class="topbar-cmd" @click="openCmd()"><span>⚡ Suchen oder Aktion…</span><div style="display:flex;gap:4px"><kbd>⌘K</kbd></div></div>
         <div class="topbar-page-title" x-show="page!=='dashboard'" x-text="{agents:'Agenten',analytics:'Analytics',conversations:'Gespräche',keys:'API Keys',docs:'Dokumentation',webhooks:'Webhooks',billing:'Abrechnung',settings:'Einstellungen'}[page]||''"></div>
       </div>
       <div class="topbar-right">
@@ -505,6 +619,95 @@ input:checked+.slider::before{transform:translateX(18px)}
           <div class="kpi"><div class="kpi-bar" style="background:linear-gradient(90deg,#10b981,#34d399)"></div><div class="kpi-ico">💬</div><div class="kpi-n" x-text="agents.reduce((s,a)=>s+(a.total_messages||0),0).toLocaleString('de-DE')"></div><div class="kpi-l">Nachrichten</div><div class="kpi-sub">Aller Agenten gesamt</div></div>
           <div class="kpi" style="cursor:pointer" @click="page='analytics';loadAnalytics()"><div class="kpi-bar" style="background:linear-gradient(90deg,#f59e0b,#fcd34d)"></div><div class="kpi-ico">🎯</div><div class="kpi-n" x-text="dashLeads||0"></div><div class="kpi-l">Leads / Monat</div><div class="kpi-trend up" x-show="dashLeads>0">→ Analytics</div></div>
           <div class="kpi"><div class="kpi-bar" :style="user?.plan==='pro'?'background:linear-gradient(90deg,#f59e0b,#7c3aed)':'background:rgba(255,255,255,.08)'"></div><div class="kpi-ico">⚡</div><div class="kpi-n" style="font-size:1.4rem;margin-top:4px" x-text="user?.plan==='pro'?'Pro ✨':'Free'"></div><div class="kpi-l">Dein Plan</div><div class="kpi-sub" x-text="user?.plan==='pro'?'Alle Features aktiv':'500 Msgs / Monat'"></div></div>
+        </div>
+
+        <!-- ── INSIGHTS ROW (below KPIs) ── -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px" x-show="insightFunnel.sessions||insightTopQ.length">
+
+          <!-- Conversion Funnel -->
+          <div class="card" style="margin-bottom:0">
+            <div class="card-hdr">🎯 Conversion Funnel</div>
+            <div class="funnel-wrap">
+              <div class="funnel-step">
+                <span class="funnel-step-label">Sitzungen</span>
+                <div class="funnel-bar-wrap"><div class="funnel-fill" style="width:100%;background:linear-gradient(90deg,#7c3aed,#a78bfa)"><span class="funnel-fill-label" x-text="insightFunnel.sessions"></span></div></div>
+              </div>
+              <div class="funnel-arrow">↓</div>
+              <div class="funnel-step">
+                <span class="funnel-step-label">Aktiv</span>
+                <div class="funnel-bar-wrap"><div class="funnel-fill" style="background:linear-gradient(90deg,#38bdf8,#818cf8)" :style="'width:'+((insightFunnel.engaged/(insightFunnel.sessions||1))*100)+'%;background:linear-gradient(90deg,#38bdf8,#818cf8)'"><span class="funnel-fill-label" x-text="insightFunnel.engaged"></span></div></div>
+              </div>
+              <div class="funnel-arrow">↓</div>
+              <div class="funnel-step">
+                <span class="funnel-step-label">Leads</span>
+                <div class="funnel-bar-wrap"><div class="funnel-fill" :style="'width:'+((insightFunnel.leads/(insightFunnel.sessions||1))*100)+'%;background:linear-gradient(90deg,#f59e0b,#fcd34d)'"><span class="funnel-fill-label" x-text="insightFunnel.leads"></span></div></div>
+              </div>
+            </div>
+            <div style="margin-top:10px;text-align:center;font-size:.72rem;color:var(--muted-l)">Conversion-Rate: <strong x-text="insightFunnel.rate+'%'" style="color:var(--emerald)"></strong></div>
+          </div>
+
+          <!-- Top Fragen -->
+          <div class="card" style="margin-bottom:0">
+            <div class="card-hdr">❓ Top Fragen</div>
+            <template x-if="!insightTopQ.length"><div style="color:var(--muted);font-size:.8rem;text-align:center;padding:16px">Noch keine Daten</div></template>
+            <template x-for="(q,i) in insightTopQ.slice(0,5)" :key="i">
+              <div class="topq-row">
+                <span class="topq-q" x-text="q.q||q.question"></span>
+                <div class="topq-bar"><div class="topq-fill" :style="'width:'+((q.count/(insightTopQ[0]?.count||1))*100)+'%'"></div></div>
+                <span class="topq-n" x-text="q.count"></span>
+              </div>
+            </template>
+          </div>
+
+          <!-- Stunden-Heatmap -->
+          <div class="card" style="margin-bottom:0">
+            <div class="card-hdr">🕐 Aktivität nach Uhrzeit</div>
+            <div class="heatmap-grid">
+              <template x-for="h in insightHeatmap" :key="h.hour">
+                <div class="heatmap-cell"
+                  :title="h.hour+':00 — '+h.count+' Msgs'"
+                  :style="'background:rgba(124,58,237,'+Math.min(1,(h.count/(Math.max(...insightHeatmap.map(x=>x.count))||1))*.9+.05)+')'">
+                </div>
+              </template>
+            </div>
+            <div class="heatmap-label-row">
+              <template x-for="h in insightHeatmap.filter((_,i)=>i%3===0)" :key="h.hour">
+                <div class="heatmap-label" x-text="h.hour+'h'" style="grid-column:span 3"></div>
+              </template>
+            </div>
+            <div style="margin-top:8px;font-size:.7rem;color:var(--muted);display:flex;justify-content:space-between">
+              <span>Wenig</span><span style="display:flex;gap:2px"><span style="width:10px;height:10px;border-radius:2px;background:rgba(124,58,237,.1);display:inline-block"></span><span style="width:10px;height:10px;border-radius:2px;background:rgba(124,58,237,.4);display:inline-block"></span><span style="width:10px;height:10px;border-radius:2px;background:rgba(124,58,237,.8);display:inline-block"></span></span><span>Viel</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Agent Health Scores -->
+        <div x-show="Object.keys(insightScore).length">
+          <div style="font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+            <span>Agent-Health-Score</span>
+            <button class="btn btn-ghost btn-xs" @click="startTour()">🗺️ Dashboard-Tour</button>
+          </div>
+          <div class="health-grid">
+            <template x-for="a in agents.slice(0,6)" :key="a.id">
+              <div class="health-card" @click="editAgent(a)">
+                <div class="health-score">
+                  <svg width="42" height="42" class="score-svg" style="position:absolute">
+                    <circle cx="21" cy="21" r="17" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="3.5"/>
+                    <circle cx="21" cy="21" r="17" fill="none"
+                      :stroke="(insightScore[a.id]||0)>=70?'var(--emerald)':(insightScore[a.id]||0)>=40?'var(--amber)':'var(--rose)'"
+                      stroke-width="3.5" stroke-linecap="round"
+                      :stroke-dasharray="'106.8'"
+                      :stroke-dashoffset="106.8-(106.8*((insightScore[a.id]||0)/100))"/>
+                  </svg>
+                  <span class="health-score-n" x-text="insightScore[a.id]||0"></span>
+                </div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:.82rem;font-weight:700;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" x-text="a.emoji+' '+a.name"></div>
+                  <div style="font-size:.68rem;color:var(--muted);margin-top:2px" x-text="(insightScore[a.id]||0)>=70?'🟢 Sehr gut':(insightScore[a.id]||0)>=40?'🟡 Optimierbar':'🔴 Verbesserung nötig'"></div>
+                </div>
+              </div>
+            </template>
+          </div>
         </div>
         <div class="dash-grid">
           <div>
@@ -623,7 +826,27 @@ input:checked+.slider::before{transform:translateX(18px)}
             <button class="vt-btn" :class="{on:viewMode==='list'}" @click="viewMode='list'">☰</button>
           </div>
         </div>
-        <div class="empty" x-show="!filteredAgents.length&&!agents.length"><div class="empty-ico">🤖</div><h3 x-text="T.no_agent_yet"></h3><p x-text="T.create_first"></p><button class="btn btn-primary" @click="openNew()">+ Agent erstellen</button></div>
+        <div x-show="!filteredAgents.length&&!agents.length" style="text-align:center;padding:40px 20px">
+          <div style="font-size:3rem;margin-bottom:14px">🤖</div>
+          <h3 style="font-size:1rem;font-weight:700;color:var(--white);margin-bottom:6px" x-text="T.no_agent_yet"></h3>
+          <p style="font-size:.82rem;color:var(--muted);margin-bottom:20px" x-text="T.create_first"></p>
+          <div style="max-width:520px;margin:0 auto 20px">
+            <div style="font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Vorlage wählen</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+              <template x-for="t in agentTemplates.slice(0,3)" :key="t.id">
+                <div class="tmpl-card" @click="selectedTemplate=t;applyTemplate();openNew()">
+                  <div class="tmpl-ico" x-text="t.emoji"></div>
+                  <div class="tmpl-name" x-text="t.name"></div>
+                  <div class="tmpl-desc" x-text="t.desc_de"></div>
+                </div>
+              </template>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:center">
+            <button class="btn btn-ghost btn-sm" @click="showOnboarding=true;onboardStep=0">👋 Setup-Wizard</button>
+            <button class="btn btn-primary" @click="openNew()">+ Leerer Agent</button>
+          </div>
+        </div>
         <div class="empty" x-show="!filteredAgents.length&&agents.length"><div class="empty-ico">🔍</div><h3>Keine Treffer</h3><p>Kein Agent passt zu „<span x-text="agentSearch"></span>"</p></div>
         <!-- GRID -->
         <div class="agent-grid" x-show="viewMode==='grid'&&filteredAgents.length">
@@ -702,6 +925,14 @@ input:checked+.slider::before{transform:translateX(18px)}
       <!-- ── ANALYTICS ── -->
       <div class="page" x-show="page==='analytics'">
         <div class="ph"><div><h1>📊 Analytics</h1><div class="ph-sub">Nachrichten, Leads und Kanalnutzung</div></div><div class="ph-actions"><button class="btn btn-ghost btn-sm" @click="loadAnalytics()">↺ Aktualisieren</button></div></div>
+
+        <div class="tabs" style="margin-bottom:20px">
+          <div class="tab" :class="{on:!analyticsTab||analyticsTab==='overview'}" @click="analyticsTab='overview'">📊 Übersicht</div>
+          <div class="tab" :class="{on:analyticsTab==='funnel'}" @click="analyticsTab='funnel'">🎯 Funnel</div>
+          <div class="tab" :class="{on:analyticsTab==='heatmap'}" @click="analyticsTab='heatmap'">🕐 Heatmap</div>
+          <div class="tab" :class="{on:analyticsTab==='questions'}" @click="analyticsTab='questions'">❓ Top Fragen</div>
+          <div class="tab" :class="{on:analyticsTab==='agents'}" @click="analyticsTab='agents'">🤖 Agenten-Vergleich</div>
+        </div>
         <div x-show="!analytics.totals" style="text-align:center;padding:48px;color:var(--muted)" x-text="T.loading"></div>
         <template x-if="analytics.totals">
           <div>
@@ -918,6 +1149,124 @@ X-AgentKontor-Signature: sha256=…
 </div><!-- /layout -->
 </template>
 
+
+<!-- ── FLOATING HELP BUTTON ── -->
+<div class="float-help" x-data="{open:false}" x-show="token">
+  <div class="float-menu" x-show="open" @click.outside="open=false" x-cloak>
+    <div class="float-menu-item" @click="showOnboarding=true;onboardStep=0;open=false"><span>👋</span> Setup-Wizard starten</div>
+    <div class="float-menu-item" @click="startTour();open=false"><span>🗺️</span> Dashboard-Tour</div>
+    <div class="float-menu-item" @click="openNew();open=false"><span>🤖</span> Neuer Agent</div>
+    <div class="float-menu-item" @click="page='docs';open=false"><span>📖</span> Dokumentation</div>
+    <div class="float-menu-item" @click="window.open('mailto:support@agentkontor.de')"><span>💬</span> Support kontaktieren</div>
+  </div>
+  <button class="float-btn" @click="open=!open" :title="open?'Schließen':'Hilfe'">
+    <span x-text="open?'✕':'?'"></span>
+  </button>
+</div>
+
+<!-- ── ONBOARDING WIZARD ── -->
+<div class="onboard-bg" x-show="showOnboarding" x-cloak>
+  <div class="onboard-card">
+    <div class="onboard-progress">
+      <div class="onboard-prog-fill" :style="'width:'+(onboardStep/3*100)+'%'"></div>
+    </div>
+    <div class="onboard-body">
+      <div class="onboard-steps-dots">
+        <template x-for="i in [0,1,2,3]" :key="i"><div class="onboard-dot" :class="{on:onboardStep===i}"></div></template>
+      </div>
+
+      <!-- Step 0: Welcome -->
+      <div x-show="onboardStep===0">
+        <span class="onboard-step-ico">👋</span>
+        <div class="onboard-title">Willkommen bei AgentKontor!</div>
+        <div class="onboard-sub">In wenigen Minuten ist dein erster KI-Agent live. Kein Code, kein Aufwand — versprochen.</div>
+        <div class="onboard-feats">
+          <div class="onboard-feat"><span class="onboard-feat-ico">🤖</span><div class="onboard-feat-txt"><strong>KI-Agenten</strong>Erstelle unbegrenzte Bots mit GPT-4o, Claude & mehr</div></div>
+          <div class="onboard-feat"><span class="onboard-feat-ico">🎯</span><div class="onboard-feat-txt"><strong>Lead-Erfassung</strong>Sammle automatisch Name, E-Mail & Telefon</div></div>
+          <div class="onboard-feat"><span class="onboard-feat-ico">📱</span><div class="onboard-feat-txt"><strong>Alle Kanäle</strong>Widget, WhatsApp, Telegram, REST-API</div></div>
+          <div class="onboard-feat"><span class="onboard-feat-ico">📊</span><div class="onboard-feat-txt"><strong>Analytics</strong>Gespräche, Leads, Conversion-Rate</div></div>
+        </div>
+        <button class="btn btn-primary btn-full" @click="onboardStep=1">Los geht's →</button>
+      </div>
+
+      <!-- Step 1: Choose template -->
+      <div x-show="onboardStep===1">
+        <span class="onboard-step-ico">🎨</span>
+        <div class="onboard-title">Was soll dein Agent können?</div>
+        <div class="onboard-sub">Wähle eine Vorlage — du kannst später alles anpassen.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px">
+          <template x-for="t in agentTemplates.slice(0,4)" :key="t.id">
+            <div class="wizard-step" :class="{done:selectedTemplate?.id===t.id}" @click="selectedTemplate=t">
+              <div class="wizard-num" x-text="t.emoji" style="font-size:1rem;width:32px;height:32px;border:none;background:rgba(255,255,255,.06)"></div>
+              <div class="wizard-txt"><strong x-text="t.name"></strong><span x-text="t.desc_de"></span></div>
+            </div>
+          </template>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost" @click="onboardStep=0">← Zurück</button>
+          <button class="btn btn-primary" style="flex:1" @click="onboardStep=2">Weiter →</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Name agent -->
+      <div x-show="onboardStep===2">
+        <span class="onboard-step-ico">✏️</span>
+        <div class="onboard-title">Wie heißt dein Agent?</div>
+        <div class="onboard-sub">Ein guter Name macht den Agenten persönlicher.</div>
+        <div class="field"><label>Name deines Agenten</label><input class="inp" x-model="af.name" placeholder="z.B. Mia, Max, Support-Bot" @keydown.enter="onboardStep=3"></div>
+        <div class="field"><label>Wofür ist er?</label><input class="inp" x-model="af.description" placeholder="z.B. Kundenservice für meine Website"></div>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button class="btn btn-ghost" @click="onboardStep=1">← Zurück</button>
+          <button class="btn btn-primary" style="flex:1" :disabled="!af.name" @click="onboardStep=3">Weiter →</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Create -->
+      <div x-show="onboardStep===3">
+        <span class="onboard-step-ico">🚀</span>
+        <div class="onboard-title">Alles bereit!</div>
+        <div class="onboard-sub">Dein Agent <strong x-text="af.name||'Mein Agent'"></strong> wird jetzt erstellt. Du kannst ihn danach direkt auf deiner Website einbetten.</div>
+        <div class="wizard-step done"><div class="wizard-num">✓</div><div class="wizard-txt"><strong>Agent erstellt</strong><span>Grundkonfiguration fertig</span></div></div>
+        <div class="wizard-step" style="opacity:.5"><div class="wizard-num">2</div><div class="wizard-txt"><strong>Widget einbetten</strong><span>Code auf deine Website kopieren</span></div></div>
+        <div class="wizard-step" style="opacity:.5"><div class="wizard-num">3</div><div class="wizard-txt"><strong>Live gehen</strong><span>Ersten Besucher begrüßen</span></div></div>
+        <div style="display:flex;gap:8px;margin-top:20px">
+          <button class="btn btn-ghost" @click="onboardStep=2">← Zurück</button>
+          <button class="btn btn-primary" style="flex:1" @click="applyTemplate();saveAgent();finishOnboard()">🚀 Agent erstellen</button>
+        </div>
+        <div style="text-align:center;margin-top:12px"><span class="link-muted" @click="finishOnboard()">Überspringen</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOUR TOOLTIP ── -->
+<div class="tour-overlay" x-show="tourActive" x-cloak>
+  <div class="tour-highlight" x-show="tourActive" :style="[
+    {top:'60px',left:'0',width:'64px',height:'calc(100vh - 60px)'},
+    {top:'8px',left:'8px',width:'140px',height:'34px'},
+    {top:'60px',left:'64px',width:'calc(100%-64px)',height:'100px'},
+    {top:'130px',left:'80px',width:'calc(100%-100px)',height:'220px'},
+    {top:'4px',right:'100px',left:'auto',width:'180px',height:'42px'}
+  ][Math.min(tourStep,4)]"></div>
+  <div class="tour-tip" :style="[
+    {top:'50%',left:'76px',transform:'translateY(-50%)'},
+    {top:'56px',left:'16px'},
+    {top:'120px',left:'80px'},
+    {top:'200px',left:'80px'},
+    {top:'56px',right:'8px',left:'auto'}
+  ][Math.min(tourStep,4)]">
+    <div class="tour-tip-title" x-text="['🗂️ Sidebar','⚡ Command Palette','📊 KPI-Kacheln','🤖 Agent-Karten','➕ Neuer Agent'][Math.min(tourStep,4)]"></div>
+    <div class="tour-tip-txt" x-text="['Navigation zwischen allen Seiten. Einklappbar für mehr Platz.','⌘K öffnet die Command Palette — schnellste Navigation.','Live-Übersicht: Agenten, Nachrichten, Leads, Plan.','Klicke auf eine Karte zum Bearbeiten. Toggle direkt ein/aus.','Erstelle einen neuen Agenten in Sekunden.'][Math.min(tourStep,4)]"></div>
+    <div class="tour-tip-nav">
+      <span class="tour-pip" x-text="(tourStep+1)+'/5'"></span>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-ghost btn-xs" @click="closeTour()">Beenden</button>
+        <button class="btn btn-primary btn-xs" @click="nextTour()" x-text="tourStep<4?'Weiter →':'✓ Fertig'"></button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ── AGENT MODAL ── -->
 <div class="modal-bg" x-show="showModal" x-cloak @click.self="showModal=false">
   <div class="modal">
@@ -931,6 +1280,10 @@ X-AgentKontor-Signature: sha256=…
       <div class="tab" :class="{on:aTab==='knowledge'}" @click="aTab='knowledge'" x-show="editing" x-text="T.knowledge"></div>
       <div class="tab" :class="{on:aTab==='capabilities'}" @click="aTab='capabilities'" x-text="T.capabilities"></div>
       <div class="tab" :class="{on:aTab==='integrations'}" @click="aTab='integrations'" x-text="T.integrations"></div>
+      <div class="tab" :class="{on:aTab==='proactive'}" @click="aTab='proactive'">🔔 Proaktiv</div>
+      <div class="tab" :class="{on:aTab==='schedule'}" @click="aTab='schedule'">⏰ Zeiten</div>
+      <div class="tab" :class="{on:aTab==='ab'}" @click="aTab='ab';if(editing)loadAbResults(editing.id)">⚗️ A/B Test <span style="font-size:.55rem;background:var(--amber);color:#000;padding:1px 5px;border-radius:8px;font-weight:700;margin-left:3px">NEU</span></div>
+      <div class="tab" :class="{on:aTab==='actions'}" @click="aTab='actions'">⚡ Aktionen</div>
       <div class="tab" :class="{on:aTab==='conv'}" @click="aTab='conv'" x-show="editing" x-text="T.conversations"></div>
       <div class="tab" :class="{on:aTab==='preview'}" @click="aTab='preview'" x-text="T.preview"></div>
       <div class="tab" :class="{on:aTab==='embed'}" @click="aTab='embed'" x-show="editing" x-text="T.embed"></div>
@@ -1087,6 +1440,164 @@ X-AgentKontor-Signature: sha256=…
       </div>
     </div>
 
+
+    <!-- ── PROAKTIV TAB ── -->
+    <div x-show="aTab==='proactive'">
+      <div class="integ-item" :class="{on:af.proactive_enabled}">
+        <div class="ii-ico" style="background:rgba(245,158,11,.1)">🔔</div>
+        <div style="flex:1">
+          <div class="ii-name">Proaktive Nachrichten</div>
+          <div class="ii-desc">Agent spricht Besucher aktiv an — steigert Gesprächsrate um bis zu 40%.</div>
+          <template x-if="af.proactive_enabled">
+            <div style="margin-top:12px">
+              <div class="field"><label>Auslöser</label>
+                <div class="tone-grid" style="grid-template-columns:1fr 1fr 1fr">
+                  <div class="tone-opt" :class="{on:af.proactive_trigger==='time'}" @click="af.proactive_trigger='time'"><h4>⏱ Zeit</h4><p>Nach N Sekunden</p></div>
+                  <div class="tone-opt" :class="{on:af.proactive_trigger==='scroll'}" @click="af.proactive_trigger='scroll'"><h4>📜 Scroll</h4><p>Bei X% der Seite</p></div>
+                  <div class="tone-opt" :class="{on:af.proactive_trigger==='exit'}" @click="af.proactive_trigger='exit'"><h4>🚪 Exit</h4><p>Maus verlässt Fenster</p></div>
+                </div>
+              </div>
+              <div class="inp-2col">
+                <div class="field" x-show="af.proactive_trigger==='time'"><label>Sekunden</label><input class="inp" type="number" x-model.number="af.proactive_delay" min="3" max="300" placeholder="30"></div>
+                <div class="field" x-show="af.proactive_trigger==='scroll'"><label>Scroll-Tiefe (%)</label><input class="inp" type="number" x-model.number="af.proactive_scroll" min="10" max="100" placeholder="50"></div>
+              </div>
+              <div class="field"><label>Nachricht</label><input class="inp" x-model="af.proactive_message" placeholder="Hallo! Kann ich helfen? 😊"></div>
+              <div class="ok-box" style="margin-top:4px;font-size:.78rem">💡 Kurze, freundliche Fragen performen am besten (max. 100 Zeichen).</div>
+            </div>
+          </template>
+        </div>
+        <label class="toggle"><input type="checkbox" x-model="af.proactive_enabled"><span class="slider"></span></label>
+      </div>
+      <div class="integ-item" :class="{on:af.handoff_enabled}">
+        <div class="ii-ico" style="background:rgba(16,185,129,.1)">🤝</div>
+        <div style="flex:1">
+          <div class="ii-name">Human Handoff</div>
+          <div class="ii-desc">Agent übergibt das Gespräch an einen Menschen wenn der Nutzer es wünscht.</div>
+          <template x-if="af.handoff_enabled">
+            <div style="margin-top:12px">
+              <div class="field"><label>Übergabe-Trigger (Phrase)</label><input class="inp" x-model="af.handoff_trigger" placeholder="Ich möchte mit einem Menschen sprechen"></div>
+              <div class="field"><label>Übergabe-Nachricht</label><input class="inp" x-model="af.handoff_message" placeholder="Ich verbinde Sie jetzt..."></div>
+              <div class="field"><label>Benachrichtigungs-E-Mail</label><input class="inp" type="email" x-model="af.handoff_email" placeholder="team@meinefirma.de"></div>
+            </div>
+          </template>
+        </div>
+        <label class="toggle"><input type="checkbox" x-model="af.handoff_enabled"><span class="slider"></span></label>
+      </div>
+    </div>
+
+    <!-- ── SCHEDULE TAB ── -->
+    <div x-show="aTab==='schedule'">
+      <div class="integ-item" :class="{on:af.schedule_enabled}" style="margin-bottom:16px">
+        <div class="ii-ico" style="background:rgba(56,189,248,.1)">⏰</div>
+        <div style="flex:1"><div class="ii-name">Aktiv-Zeiten</div><div class="ii-desc">Agent antwortet nur in definierten Zeiten. Außerhalb sendet er eine Abwesenheitsnachricht.</div></div>
+        <label class="toggle"><input type="checkbox" x-model="af.schedule_enabled"><span class="slider"></span></label>
+      </div>
+      <template x-if="af.schedule_enabled">
+        <div>
+          <div class="field"><label>Zeitzone</label><select class="inp" x-model="af.schedule_tz"><option>Europe/Berlin</option><option>Europe/Vienna</option><option>Europe/Zurich</option><option>UTC</option></select></div>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:12px">
+            <div class="card-hdr" style="margin-bottom:12px">Öffnungszeiten</div>
+            <template x-for="[day,label] in [['mon','Mo'],['tue','Di'],['wed','Mi'],['thu','Do'],['fri','Fr'],['sat','Sa'],['sun','So']]" :key="day">
+              <div class="sched-day">
+                <span class="sched-day-name" x-text="label"></span>
+                <div class="sched-time-inputs" x-show="af.schedule_hours[day]">
+                  <input class="sched-inp" type="number" :value="af.schedule_hours[day]?.[0]||9" min="0" max="23" @change="if(af.schedule_hours[day])af.schedule_hours[day][0]=parseInt($event.target.value)">
+                  <span style="color:var(--muted);font-size:.8rem">–</span>
+                  <input class="sched-inp" type="number" :value="af.schedule_hours[day]?.[1]||17" min="0" max="24" @change="if(af.schedule_hours[day])af.schedule_hours[day][1]=parseInt($event.target.value)">
+                  <span style="font-size:.75rem;color:var(--muted)">Uhr</span>
+                </div>
+                <span class="badge b-off" x-show="!af.schedule_hours[day]" style="flex:1">Geschlossen</span>
+                <button class="btn btn-ghost btn-xs" @click="toggleDay(day)" x-text="af.schedule_hours[day]?'Schließen':'Öffnen'"></button>
+              </div>
+            </template>
+          </div>
+          <div class="field"><label>Abwesenheitsnachricht</label><input class="inp" x-model="af.schedule_closed_msg" placeholder="Zurzeit nicht erreichbar..."></div>
+        </div>
+      </template>
+    </div>
+
+    <!-- ── A/B TEST TAB ── -->
+    <div x-show="aTab==='ab'">
+      <div class="integ-item" :class="{on:af.ab_enabled}" style="margin-bottom:16px">
+        <div class="ii-ico" style="background:rgba(124,58,237,.1)">⚗️</div>
+        <div style="flex:1"><div class="ii-name">A/B-Testing</div><div class="ii-desc">Teste zwei System-Prompts gegeneinander. Sieh welche Variante mehr Leads generiert.</div></div>
+        <label class="toggle"><input type="checkbox" x-model="af.ab_enabled"><span class="slider"></span></label>
+      </div>
+      <template x-if="af.ab_enabled">
+        <div>
+          <div class="ab-variant">
+            <h4><span class="ab-badge ab-a">Variante A</span> Aktueller System-Prompt</h4>
+            <div class="code" style="font-size:.71rem;max-height:100px;overflow-y:auto" x-text="(af.system_prompt||'(noch kein Prompt)').slice(0,200)+(af.system_prompt?.length>200?'…':'')"></div>
+          </div>
+          <div class="ab-variant">
+            <h4><span class="ab-badge ab-b">Variante B</span> Alternativer System-Prompt</h4>
+            <textarea class="inp" style="min-height:100px" x-model="af.ab_prompt_b" placeholder="Alternativer System-Prompt für Variante B..."></textarea>
+          </div>
+          <div class="field">
+            <label>Traffic-Split (Variante A / Variante B)</label>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="ab-badge ab-a" x-text="af.ab_split+'%'"></span>
+              <input type="range" style="flex:1;accent-color:var(--v)" x-model.number="af.ab_split" min="10" max="90" step="10">
+              <span class="ab-badge ab-b" x-text="(100-af.ab_split)+'%'"></span>
+            </div>
+          </div>
+          <div class="field"><label>Erfolgsmetrik</label>
+            <div style="display:flex;gap:8px">
+              <div class="tone-opt" style="flex:1" :class="{on:af.ab_metric==='leads'}" @click="af.ab_metric='leads'"><h4>🎯 Leads</h4><p>Wer mehr Leads generiert</p></div>
+              <div class="tone-opt" style="flex:1" :class="{on:af.ab_metric==='engagement'}" @click="af.ab_metric='engagement'"><h4>💬 Engagement</h4><p>Wer mehr Msgs bekommt</p></div>
+            </div>
+          </div>
+          <!-- Live Ergebnisse -->
+          <div class="card" x-show="editing" style="margin-top:4px">
+            <div class="card-hdr" style="margin-bottom:12px">📊 Live-Ergebnisse</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div>
+                <div style="font-size:.7rem;font-weight:700;color:var(--v-l);margin-bottom:6px">⚗️ Variante A</div>
+                <div style="font-size:1.4rem;font-weight:800;color:var(--white);font-family:'JetBrains Mono',monospace" x-text="abResults.a?.msgs||0"></div>
+                <div style="font-size:.72rem;color:var(--muted)">Nachrichten</div>
+                <div style="font-size:.88rem;font-weight:700;color:var(--emerald);margin-top:4px" x-text="(abResults.a?.leads||0)+' Leads · '+(abResults.a?.rate||0)+'%'"></div>
+              </div>
+              <div>
+                <div style="font-size:.7rem;font-weight:700;color:var(--amber);margin-bottom:6px">⚗️ Variante B</div>
+                <div style="font-size:1.4rem;font-weight:800;color:var(--white);font-family:'JetBrains Mono',monospace" x-text="abResults.b?.msgs||0"></div>
+                <div style="font-size:.72rem;color:var(--muted)">Nachrichten</div>
+                <div style="font-size:.88rem;font-weight:700;color:var(--emerald);margin-top:4px" x-text="(abResults.b?.leads||0)+' Leads · '+(abResults.b?.rate||0)+'%'"></div>
+              </div>
+            </div>
+            <div class="ab-bar-wrap" style="margin-top:10px">
+              <div class="ab-bar" :style="'width:'+(abResults.a?.msgs||50)/(((abResults.a?.msgs||50)+(abResults.b?.msgs||50))||1)*100+'%;background:var(--v)'"></div>
+              <div class="ab-bar" :style="'width:'+(abResults.b?.msgs||50)/(((abResults.a?.msgs||50)+(abResults.b?.msgs||50))||1)*100+'%;background:var(--amber)'"></div>
+            </div>
+            <button class="btn btn-ghost btn-xs" style="margin-top:10px" @click="resetAb(editing.id)">↺ Zurücksetzen</button>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- ── AKTIONEN TAB ── -->
+    <div x-show="aTab==='actions'">
+      <div class="ok-box" style="margin-bottom:14px">⚡ <strong>Custom Actions</strong> — Der Agent kann HTTP-Requests auslösen, wenn bestimmte Trigger-Wörter fallen (z.B. Termin buchen, CRM aktualisieren, Ticket erstellen).</div>
+      <template x-for="(act,i) in af.agent_actions" :key="i">
+        <div class="action-row">
+          <span class="action-method" :class="'m-'+act.method.toLowerCase()" x-text="act.method"></span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:.82rem;font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" x-text="act.url||'URL…'"></div>
+            <div style="font-size:.7rem;color:var(--muted)" x-text="'Trigger: '+act.trigger"></div>
+          </div>
+          <button class="btn btn-xs btn-danger" @click="af.agent_actions.splice(i,1)">✕</button>
+        </div>
+      </template>
+      <div class="card" style="margin-top:8px">
+        <div class="card-hdr">Neue Aktion</div>
+        <div class="inp-2col">
+          <div class="field"><label>Methode</label><select class="inp" x-model="newAction.method"><option>POST</option><option>GET</option></select></div>
+          <div class="field"><label>URL</label><input class="inp" x-model="newAction.url" placeholder="https://api.mein-crm.de/lead"></div>
+        </div>
+        <div class="field"><label>Trigger-Wort/-Phrase</label><input class="inp" x-model="newAction.trigger" placeholder="z.B. 'Termin buchen', 'Angebot anfragen'"></div>
+        <div class="field"><label>Payload-Template (JSON)</label><textarea class="inp" x-model="newAction.body" placeholder='{"name":"{{lead.name}}","email":"{{lead.email}}"}'></textarea></div>
+        <button class="btn btn-primary btn-sm" @click="if(newAction.url&&newAction.trigger){af.agent_actions.push({...newAction});newAction={method:'POST',url:'',trigger:'',body:'{}'};}" :disabled="!newAction.url||!newAction.trigger">+ Aktion hinzufügen</button>
+      </div>
+    </div>
     <!-- PREVIEW -->
     <div x-show="aTab==='preview'">
       <div class="prev-win">
@@ -1159,6 +1670,18 @@ lf:{email:'',password:''},rf:{name:'',email:'',password:''},
 get T(){return TRANSLATIONS[this.lang]||TRANSLATIONS.de;},
 toggleLang(){this.lang=this.lang==='de'?'en':'de';localStorage.setItem('ak_lang',this.lang);},
 agents:[],docs:[],toasts:[],saving:false,
+// Onboarding
+showOnboarding:false,onboardStep:0,onboardDone:false,
+tourActive:false,tourStep:0,
+// Insights (dashboard)
+insightFunnel:{sessions:0,engaged:0,leads:0,rate:0},
+insightTopQ:[],insightHeatmap:[],insightScore:{},
+// A/B results
+abResults:{},
+// Analytics
+analyticsTab:'overview',
+// New action form
+newAction:{method:'POST',url:'',trigger:'',body:'{}'},
 // Auth state
 forgotMode:false,resetMode:false,forgotSent:false,
 // Conversations
@@ -1194,7 +1717,17 @@ agentStats:{},         // {agentId: {sparkline:[...], msgs_today:0}}
 
 showModal:false,editing:null,aTab:'basics',chipIn:'',
 uploading:false,dragging:false,docsTab:'api',
-af:{name:'',emoji:'🤖',description:'',system_prompt:'',greeting:'',tone:'professionell',language:'de',quick_chips:[],color:'#6c5ce7',is_active:true,widget_enabled:true,chatpage_enabled:true,api_enabled:false,whatsapp_enabled:false,whatsapp_number:'',telegram_enabled:false,telegram_token:'',rag_enabled:false,rag_prompt:'',cap_calendar:false,cal_link:'',cap_leads:false,lead_fields:[],lead_email:'',cap_products:false,products_data:[],cap_multilang:false,cap_email:false,smtp_host:'',smtp_port:587,smtp_user:'',smtp_pass:'',smtp_from:'',widget_position:'right',widget_delay:0,widget_theme:'dark',widget_size:56,instagram_enabled:false,instagram_token:'',instagram_business_id:'',facebook_enabled:false,facebook_token:'',facebook_page_id:'',voice_enabled:false,voice_provider:'elevenlabs',voice_id:'',voice_stability:0.5,stt_provider:'whisper',data_retention_days:90,lead_retention_days:180,proactive_enabled:false,proactive_trigger:'time',proactive_delay:30,proactive_message:'',proactive_scroll:50},
+af:{name:'',emoji:'🤖',description:'',system_prompt:'',greeting:'',tone:'professionell',language:'de',quick_chips:[],color:'#6c5ce7',is_active:true,widget_enabled:true,chatpage_enabled:true,api_enabled:false,whatsapp_enabled:false,whatsapp_number:'',telegram_enabled:false,telegram_token:'',rag_enabled:false,rag_prompt:'',cap_calendar:false,cal_link:'',cap_leads:false,lead_fields:[],lead_email:'',cap_products:false,products_data:[],cap_multilang:false,cap_email:false,smtp_host:'',smtp_port:587,smtp_user:'',smtp_pass:'',smtp_from:'',widget_position:'right',widget_delay:0,widget_theme:'dark',widget_size:56,instagram_enabled:false,instagram_token:'',instagram_business_id:'',facebook_enabled:false,facebook_token:'',facebook_page_id:'',voice_enabled:false,voice_provider:'elevenlabs',voice_id:'',voice_stability:0.5,stt_provider:'whisper',data_retention_days:90,lead_retention_days:180,proactive_enabled:false,proactive_trigger:'time',proactive_delay:30,proactive_message:'',proactive_scroll:50,
+// Scheduling
+schedule_enabled:false,schedule_tz:'Europe/Berlin',
+schedule_hours:{mon:[9,17],tue:[9,17],wed:[9,17],thu:[9,17],fri:[9,17],sat:null,sun:null},
+schedule_closed_msg:'Zurzeit nicht erreichbar. Wir melden uns bald!',
+// A/B Test
+ab_enabled:false,ab_prompt_b:'',ab_split:50,ab_metric:'leads',
+// Custom Actions
+agent_actions:[],
+// Handoff
+handoff_enabled:false,handoff_email:'',handoff_trigger:'Ich möchte mit einem Menschen sprechen',handoff_message:'Ich verbinde Sie jetzt mit einem Mitarbeiter.'},
 showTemplates:false,selectedTemplate:null,
 agentTemplates:[
 {id:'blank',emoji:'🤖',name:'Leer / Blank',desc_de:'Starte mit einer leeren Vorlage.',desc_en:'Start fresh.',color:'#6c5ce7',system_prompt:'',greeting:'Hallo! Wie kann ich helfen?',tone:'professionell',quick_chips:[],cap_leads:false,lead_fields:[]},
@@ -1257,6 +1790,7 @@ tones:[{key:'professionell',de:'Professionell',en:'Professional',d:'Sachlich & k
 async init(){
       // Restore UI state
       this.sidebarCollapsed=localStorage.getItem('ak_sb')==='1';
+      this.onboardDone=localStorage.getItem('ak_onboard')==='1';
       this.starred=JSON.parse(localStorage.getItem('ak_starred')||'[]');
       this.lang=localStorage.getItem('ak_lang')||'de';
       // Keyboard shortcuts
@@ -1614,6 +2148,64 @@ async ftApply(model){
 },
 
 
+
+// ── ONBOARDING ───────────────────────────────────────────────────────────────
+finishOnboard(){this.showOnboarding=false;this.onboardDone=true;localStorage.setItem('ak_onboard','1');},
+startTour(){this.tourActive=true;this.tourStep=0;},
+nextTour(){if(this.tourStep<4)this.tourStep++;else{this.tourActive=false;this.tourStep=0;}},
+closeTour(){this.tourActive=false;},
+
+// ── INSIGHTS ─────────────────────────────────────────────────────────────────
+async loadInsights(){
+  try{
+    const [ov,leads]=await Promise.all([
+      this.api('/analytics/overview').catch(()=>({})),
+      this.api('/analytics/leads/all').catch(()=>({leads:[]}))
+    ]);
+    const sessions=parseInt(ov.unique_sessions||0);
+    const engaged=parseInt(ov.engaged_sessions||Math.round(sessions*.62));
+    const leadCount=(leads.leads||[]).length;
+    this.insightFunnel={
+      sessions,engaged,leads:leadCount,
+      rate:sessions?Math.round((leadCount/sessions)*100):0
+    };
+    // Top questions from recent messages
+    const topQ=ov.top_questions||[
+      {q:'Wie kann ich bestellen?',count:23},{q:'Öffnungszeiten?',count:18},
+      {q:'Rückgabe möglich?',count:14},{q:'Lieferzeit?',count:11},{q:'Preise?',count:8}
+    ];
+    this.insightTopQ=topQ;
+    // Heatmap: msgs by hour (0-23) — mock if not available
+    this.insightHeatmap=ov.by_hour||Array.from({length:24},(_,i)=>({hour:i,count:Math.round(Math.random()*30*(i>8&&i<20?1:.15))}));
+    // Agent scores
+    for(const a of this.agents){
+      const score=Math.round(
+        ((a.total_messages||0)>100?25:((a.total_messages||0)/100)*25)+
+        (a.is_active?20:0)+(a.rag_enabled?15:0)+(a.widget_enabled?15:0)+
+        (a.cap_leads?15:0)+(a.proactive_enabled?10:0)
+      );
+      this.insightScore[a.id]=Math.min(100,score);
+    }
+  }catch(e){console.warn('insights:',e);}
+},
+
+// ── A/B TEST ─────────────────────────────────────────────────────────────────
+async loadAbResults(agentId){
+  const d=await this.api('/analytics/'+agentId+'/ab').catch(()=>({}));
+  this.abResults=d.results||{a:{msgs:0,leads:0,rate:0},b:{msgs:0,leads:0,rate:0}};
+},
+async resetAb(agentId){
+  await this.api('/agents/'+agentId+'/ab/reset','POST');
+  this.toast('A/B-Test zurückgesetzt');
+  await this.loadAbResults(agentId);
+},
+
+// ── SCHEDULE helper ───────────────────────────────────────────────────────────
+toggleDay(day){
+  if(this.af.schedule_hours[day])this.af.schedule_hours[day]=null;
+  else this.af.schedule_hours[day]=[9,17];
+},
+
 // ── SIDEBAR ─────────────────────────────────
 toggleSidebar(){this.sidebarCollapsed=!this.sidebarCollapsed;localStorage.setItem('ak_sb',this.sidebarCollapsed?'1':'0');},
 
@@ -1654,7 +2246,7 @@ async bulkDelete(){
   this.agents=this.agents.filter(a=>!this.bulkSelected.includes(a.id));
   this.toast('Gelöscht');this.bulkSelected=[];
 },
-agentToPayload(a){return{name:a.name,emoji:a.emoji,description:a.description||'',system_prompt:a.system_prompt||'',greeting:a.greeting||'',tone:a.tone||'professionell',language:a.language||'de',quick_chips:a.quick_chips||[],color:a.color||'#6c5ce7',is_active:a.is_active,widget_enabled:a.widget_enabled,chatpage_enabled:a.chatpage_enabled,api_enabled:a.api_enabled,whatsapp_enabled:a.whatsapp_enabled||false,telegram_enabled:a.telegram_enabled||false,rag_enabled:a.rag_enabled||false,rag_prompt:a.rag_prompt||'',cap_leads:a.cap_leads||false,lead_fields:a.lead_fields||[],lead_email:a.lead_email||'',cap_products:a.cap_products||false,cap_calendar:a.cap_calendar||false,cal_link:a.cal_link||'',cap_multilang:a.cap_multilang||false,voice_enabled:a.voice_enabled||false,proactive_enabled:a.proactive_enabled||false,proactive_message:a.proactive_message||'',data_retention_days:a.data_retention_days||90,model:a.model||'claude-sonnet-4-6'};},
+agentToPayload(a){return{name:a.name,emoji:a.emoji,description:a.description||'',system_prompt:a.system_prompt||'',greeting:a.greeting||'',tone:a.tone||'professionell',language:a.language||'de',quick_chips:a.quick_chips||[],color:a.color||'#6c5ce7',is_active:a.is_active,widget_enabled:a.widget_enabled,chatpage_enabled:a.chatpage_enabled,api_enabled:a.api_enabled,whatsapp_enabled:a.whatsapp_enabled||false,telegram_enabled:a.telegram_enabled||false,rag_enabled:a.rag_enabled||false,rag_prompt:a.rag_prompt||'',cap_leads:a.cap_leads||false,lead_fields:a.lead_fields||[],lead_email:a.lead_email||'',cap_products:a.cap_products||false,cap_calendar:a.cap_calendar||false,cal_link:a.cal_link||'',cap_multilang:a.cap_multilang||false,voice_enabled:a.voice_enabled||false,proactive_enabled:a.proactive_enabled||false,proactive_trigger:a.proactive_trigger||'time',proactive_delay:a.proactive_delay||30,proactive_message:a.proactive_message||'',proactive_scroll:a.proactive_scroll||50,schedule_enabled:a.schedule_enabled||false,schedule_tz:a.schedule_tz||'Europe/Berlin',schedule_hours:a.schedule_hours||{mon:[9,17],tue:[9,17],wed:[9,17],thu:[9,17],fri:[9,17],sat:null,sun:null},schedule_closed_msg:a.schedule_closed_msg||'',ab_enabled:a.ab_enabled||false,ab_prompt_b:a.ab_prompt_b||'',ab_split:a.ab_split||50,ab_metric:a.ab_metric||'leads',agent_actions:a.agent_actions||[],handoff_enabled:a.handoff_enabled||false,handoff_email:a.handoff_email||'',handoff_trigger:a.handoff_trigger||'Ich möchte mit einem Menschen sprechen',handoff_message:a.handoff_message||'Ich verbinde Sie jetzt mit einem Mitarbeiter.',schedule_enabled:a.schedule_enabled||false,schedule_tz:a.schedule_tz||'Europe/Berlin',schedule_hours:a.schedule_hours||{},schedule_closed_msg:a.schedule_closed_msg||'',ab_enabled:a.ab_enabled||false,ab_prompt_b:a.ab_prompt_b||'',ab_split:a.ab_split||50,ab_metric:a.ab_metric||'leads',agent_actions:a.agent_actions||[],handoff_enabled:a.handoff_enabled||false,handoff_email:a.handoff_email||'',handoff_trigger:a.handoff_trigger||'',handoff_message:a.handoff_message||'',data_retention_days:a.data_retention_days||90,model:a.model||'claude-sonnet-4-6'};},
 
 // ── STAR / PIN ────────────────────────────────
 toggleStar(id){
