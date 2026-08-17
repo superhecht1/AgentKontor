@@ -540,6 +540,13 @@ input:checked+.slider::before{transform:translateX(18px)}
       <div class="nav-item" :class="{on:page==='agents'}" @click="page='agents'"><span class="nav-ico">🤖</span><span class="nav-lbl">Agenten</span><span class="nav-badge" x-show="agents.length" x-text="agents.length"></span></div>
       <div class="nav-item" :class="{on:page==='analytics'}" @click="page='analytics';loadAnalytics()"><span class="nav-ico">📊</span><span class="nav-lbl">Analytics</span><span class="nav-badge" x-show="dashLeads>0" x-text="dashLeads+' Leads'"></span></div>
       <div class="nav-item" :class="{on:page==='conversations'}" @click="page='conversations';loadConvAgents()"><span class="nav-ico">💬</span><span class="nav-lbl">Gespräche</span></div>
+      <div class="nav-group-label">Agent-Kern</div>
+      <div class="nav-item" :class="{on:page==='tools'}" @click="page='tools';loadTools()"><span class="nav-ico">⚙️</span><span class="nav-lbl">Tools</span></div>
+      <div class="nav-item" :class="{on:page==='memory'}" @click="page='memory';loadMemory()"><span class="nav-ico">🧠</span><span class="nav-lbl">Memory</span></div>
+      <div class="nav-item" :class="{on:page==='tasks'}" @click="page='tasks';loadTasks()">
+        <span class="nav-ico">⚡</span><span class="nav-lbl">Tasks</span>
+        <span class="nav-badge" x-show="taskStats.pending||taskStats.failed" :style="taskStats.failed?'background:var(--rose)':''" x-text="taskStats.failed||taskStats.pending||''"></span>
+      </div>
       <div class="nav-group-label">Entwickler</div>
       <div class="nav-item" :class="{on:page==='keys'}" @click="page='keys';loadKeys()"><span class="nav-ico">🔑</span><span class="nav-lbl">API Keys</span></div>
       <div class="nav-item" :class="{on:page==='docs'}" @click="page='docs'"><span class="nav-ico">📖</span><span class="nav-lbl">Docs</span></div>
@@ -1144,6 +1151,336 @@ X-AgentKontor-Signature: sha256=…
         </div>
       </div>
 
+
+      <!-- ── TOOLS PAGE ── -->
+      <div class="page" x-show="page==='tools'">
+        <div class="ph">
+          <div><h1>⚙️ Tool-System</h1><div class="ph-sub">Funktionen die dein Agent aufrufen kann</div></div>
+          <div class="ph-actions">
+            <button class="btn btn-ghost btn-sm" @click="seedBuiltins()">🌱 Builtins anlegen</button>
+            <button class="btn btn-primary btn-sm" @click="toolsTab='create';editingTool=null">+ Neues Tool</button>
+          </div>
+        </div>
+        <div class="tabs">
+          <div class="tab" :class="{on:toolsTab==='list'}"   @click="toolsTab='list'">📋 Tool-Registry</div>
+          <div class="tab" :class="{on:toolsTab==='create'}" @click="toolsTab='create'">➕ Tool erstellen</div>
+          <div class="tab" :class="{on:toolsTab==='assign'}" @click="toolsTab='assign'">🔗 Agenten zuweisen</div>
+          <div class="tab" :class="{on:toolsTab==='calls'}"  @click="toolsTab='calls'">📜 Aufruf-Log</div>
+        </div>
+
+        <!-- Tool-Liste -->
+        <div x-show="toolsTab==='list'">
+          <div class="empty" x-show="!toolsList.length"><div class="empty-ico">⚙️</div><h3>Noch keine Tools</h3><p>Erstelle ein Tool oder lege Builtins an.</p></div>
+          <template x-for="t in toolsList" :key="t.id">
+            <div class="integ-item" style="margin-bottom:8px">
+              <div class="ii-ico" :style="t.type==='builtin'?'background:rgba(124,58,237,.12)':t.type==='http'?'background:rgba(56,189,248,.1)':'background:rgba(245,158,11,.1)'">
+                <span x-text="t.type==='builtin'?'🔧':t.type==='http'?'🌐':'⚙️'"></span>
+              </div>
+              <div style="flex:1;min-width:0">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div class="ii-name" x-text="t.name"></div>
+                  <span class="badge b-v" x-text="t.type"></span>
+                  <span class="badge b-on" x-show="t.enabled">Aktiv</span>
+                  <span class="badge b-off" x-show="!t.enabled">Inaktiv</span>
+                </div>
+                <div class="ii-desc" x-text="t.description"></div>
+                <div style="font-size:.7rem;color:var(--muted);margin-top:4px" x-show="t.config?.url">
+                  <span style="font-family:'JetBrains Mono',monospace" x-text="(t.config?.method||'POST')+' '+t.config?.url"></span>
+                </div>
+              </div>
+              <div style="display:flex;gap:6px;flex-shrink:0">
+                <button class="btn btn-xs btn-ghost" @click="testTool(t)">▶ Test</button>
+                <button class="btn btn-xs btn-ghost" @click="newTool={...t};editingTool=t;toolsTab='create'">✏️</button>
+                <button class="btn btn-xs btn-danger" @click="deleteTool(t.id)" x-show="t.user_id">✕</button>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Tool erstellen/bearbeiten -->
+        <div x-show="toolsTab==='create'" style="max-width:680px">
+          <div class="card">
+            <div class="card-hdr" x-text="editingTool?'Tool bearbeiten':'Neues Tool'"></div>
+            <div class="inp-2col">
+              <div class="field"><label>Name *</label><input class="inp" x-model="newTool.name" placeholder="get_price, send_crm_lead…"></div>
+              <div class="field"><label>Typ</label>
+                <div style="display:flex;gap:6px">
+                  <div class="tone-opt" style="flex:1;padding:7px" :class="{on:newTool.type==='http'}" @click="newTool.type='http'"><h4>🌐 HTTP</h4></div>
+                  <div class="tone-opt" style="flex:1;padding:7px" :class="{on:newTool.type==='builtin'}" @click="newTool.type='builtin'"><h4>🔧 Builtin</h4></div>
+                </div>
+              </div>
+            </div>
+            <div class="field"><label>Beschreibung (erklärt dem LLM wann es das Tool nutzen soll) *</label><input class="inp" x-model="newTool.description" placeholder="Gibt den aktuellen Preis eines Produkts zurück."></div>
+            <template x-if="newTool.type==='http'">
+              <div>
+                <div class="section-title">HTTP-Konfiguration</div>
+                <div class="inp-2col">
+                  <div class="field"><label>Methode</label><select class="inp" x-model="newTool.config.method"><option>POST</option><option>GET</option><option>PUT</option><option>PATCH</option></select></div>
+                  <div class="field"><label>URL</label><input class="inp" x-model="newTool.config.url" placeholder="https://api.mein-crm.de/leads"></div>
+                </div>
+                <div class="field"><label>Auth-Header (optional)</label><input class="inp" x-model="newTool.config.headers.Authorization" placeholder="Bearer {{API_KEY}}"></div>
+                <div class="field"><label>Body-Template (JSON, {{variable}} für Params)</label><textarea class="inp" x-model="newTool.config.body_template_str" placeholder='{"name":"{{name}}","email":"{{email}}"}'></textarea></div>
+              </div>
+            </template>
+            <div class="section-title">Parameter-Schema</div>
+            <div class="field"><label>Parameter (JSON Schema — properties)</label>
+              <textarea class="inp" style="min-height:100px;font-family:'JetBrains Mono',monospace;font-size:.75rem"
+                :value="JSON.stringify(newTool.parameters?.properties||{},null,2)"
+                @change="try{newTool.parameters={type:'object',properties:JSON.parse($event.target.value),required:newTool.parameters?.required||[]}}catch{}"
+                placeholder='{"name":{"type":"string","description":"Name des Kunden"}}'></textarea>
+            </div>
+            <div class="inp-2col">
+              <div class="field"><label>Timeout (Sekunden)</label><input class="inp" type="number" x-model.number="newTool.timeout_s" min="1" max="120" placeholder="10"></div>
+              <div class="field"><label>Rate-Limit (pro Minute)</label><input class="inp" type="number" x-model.number="newTool.rate_limit" min="1" max="1000" placeholder="60"></div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-ghost" @click="toolsTab='list';editingTool=null">Abbrechen</button>
+              <button class="btn btn-primary" @click="saveTool()">💾 Tool speichern</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Agenten zuweisen -->
+        <div x-show="toolsTab==='assign'">
+          <div class="card">
+            <div class="card-hdr">Tools pro Agent aktivieren</div>
+            <template x-for="agent in agents" :key="agent.id">
+              <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+                <div style="font-size:.85rem;font-weight:700;color:var(--white);margin-bottom:8px" x-text="agent.emoji+' '+agent.name"></div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px">
+                  <template x-for="t in toolsList" :key="t.id">
+                    <div @click="assignTool(agent.id,t.id,!agent.tool_ids?.includes(t.id))"
+                      style="padding:5px 10px;border-radius:8px;border:1px solid;cursor:pointer;font-size:.76rem;transition:all .15s"
+                      :style="(t.assigned_agents||[]).includes(agent.id)?'border-color:var(--v);background:rgba(124,58,237,.1);color:var(--v-l)':'border-color:var(--border);color:var(--muted-l)'">
+                      <span x-text="(t.assigned_agents||[]).includes(agent.id)?'✓ ':''"></span><span x-text="t.name"></span>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- Aufruf-Log -->
+        <div x-show="toolsTab==='calls'">
+          <div class="card" style="padding:0;overflow:hidden">
+            <div class="card-hdr" style="padding:13px 16px;border-bottom:1px solid var(--border)">📜 Letzte Tool-Aufrufe</div>
+            <div class="empty" style="padding:28px" x-show="!toolCalls.length"><div class="empty-ico">📜</div><h3>Noch keine Aufrufe</h3></div>
+            <template x-for="c in toolCalls" :key="c.id">
+              <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04)">
+                <span :style="c.status==='ok'?'color:var(--emerald)':c.status==='timeout'?'color:var(--amber)':'color:var(--rose)'" x-text="c.status==='ok'?'✅':c.status==='timeout'?'⏱':'❌'"></span>
+                <span style="font-size:.82rem;font-weight:600;color:var(--white);flex:1" x-text="c.tool_name||'Unbekannt'"></span>
+                <span style="font-size:.71rem;font-family:'JetBrains Mono',monospace;color:var(--muted)" x-text="(c.duration_ms||0)+'ms'"></span>
+                <span style="font-size:.71rem;color:var(--muted)" x-text="new Date(c.created_at).toLocaleString('de-DE')"></span>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── MEMORY PAGE ── -->
+      <div class="page" x-show="page==='memory'">
+        <div class="ph">
+          <div><h1>🧠 Agent Memory</h1><div class="ph-sub">Langzeit-, Kontakt- und Business-Wissen</div></div>
+          <div class="ph-actions">
+            <select class="inp" style="width:auto;padding:6px 10px;font-size:.8rem" x-model="memoryAgent" @change="loadMemory()">
+              <template x-for="a in agents" :key="a.id"><option :value="a.id" x-text="a.emoji+' '+a.name"></option></template>
+            </select>
+            <button class="btn btn-ghost btn-sm" @click="loadMemory()">↺</button>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 320px;gap:14px;align-items:start">
+          <div>
+            <div class="tabs">
+              <div class="tab" :class="{on:memoryTab==='longterm'}"  @click="memoryTab='longterm';loadMemory()">🗂 Langzeit</div>
+              <div class="tab" :class="{on:memoryTab==='session'}"   @click="memoryTab='session';loadMemory()">💬 Session</div>
+              <div class="tab" :class="{on:memoryTab==='contact'}"   @click="memoryTab='contact';loadMemory()">👤 Kontakte</div>
+              <div class="tab" :class="{on:memoryTab==='business'}"  @click="memoryTab='business';loadMemory()">🏢 Business</div>
+            </div>
+
+            <!-- Neuer Eintrag -->
+            <div class="card" style="margin-bottom:12px">
+              <div class="card-hdr">+ Neuer Eintrag (<span x-text="memoryTab"></span>)</div>
+              <div class="inp-2col">
+                <div class="field"><label>Key</label><input class="inp" x-model="memoryNewKey" placeholder="z.B. lieblingsfarbe, firmenname…" @keydown.enter="addMemory()"></div>
+                <div class="field"><label>Wert</label><input class="inp" x-model="memoryNewValue" placeholder="Wert" @keydown.enter="addMemory()"></div>
+              </div>
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-primary btn-sm" @click="addMemory()">Speichern</button>
+                <button class="btn btn-danger btn-sm" @click="clearMemoryScope()">🗑 Alle <span x-text="memoryTab"></span> löschen</button>
+              </div>
+            </div>
+
+            <!-- Einträge -->
+            <div class="empty" x-show="!memoryEntries.length"><div class="empty-ico">🧠</div><h3>Kein Memory</h3><p>Keine <span x-text="memoryTab"></span>-Einträge für diesen Agenten.</p></div>
+            <div class="card" style="padding:0;overflow:hidden" x-show="memoryEntries.length">
+              <template x-for="m in memoryEntries" :key="m.id">
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04)">
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:.82rem;font-weight:600;color:var(--white)" x-text="m.key"></div>
+                    <div style="font-size:.78rem;color:var(--text);margin-top:2px;word-break:break-word" x-text="m.value"></div>
+                  </div>
+                  <div style="flex-shrink:0;text-align:right">
+                    <span class="badge b-v" x-text="m.source"></span>
+                    <div style="font-size:.65rem;color:var(--muted);margin-top:3px" x-text="new Date(m.updated_at).toLocaleDateString('de-DE')"></div>
+                    <div x-show="m.confidence<1" style="font-size:.65rem;color:var(--amber)" x-text="Math.round(m.confidence*100)+'% sicher'"></div>
+                  </div>
+                  <button class="btn btn-xs btn-danger" @click="deleteMemory(m.id)">✕</button>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <!-- Kontakte Sidebar -->
+          <div>
+            <div class="card" style="padding:0;overflow:hidden">
+              <div class="card-hdr" style="padding:13px 16px;border-bottom:1px solid var(--border)">👤 Kontakte</div>
+              <div class="empty" style="padding:20px" x-show="!memoryContacts.length"><div style="font-size:1.5rem;margin-bottom:6px">👤</div><p style="font-size:.78rem">Noch keine Kontakte erfasst</p></div>
+              <template x-for="c in memoryContacts" :key="c.id">
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;transition:background .12s" @click="loadContact(c.id)" :style="selectedContact?.id===c.id?'background:rgba(124,58,237,.07)':''">
+                  <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--v),var(--amber));display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:#fff;flex-shrink:0" x-text="(c.name||c.email||'?')[0].toUpperCase()"></div>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:.82rem;font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" x-text="c.name||c.email||c.external_id"></div>
+                    <div style="font-size:.7rem;color:var(--muted)" x-text="c.memory_count+' Erinnerungen · '+c.channel"></div>
+                  </div>
+                </div>
+              </template>
+            </div>
+            <!-- Kontakt-Detail -->
+            <div class="card" style="margin-top:10px" x-show="selectedContact">
+              <div class="card-hdr" x-text="selectedContact?.name||selectedContact?.email||'Kontakt'"></div>
+              <template x-for="m in selectedContact?.memories||[]" :key="m.id">
+                <div style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+                  <div style="font-size:.75rem;color:var(--muted-l)" x-text="m.key"></div>
+                  <div style="font-size:.82rem;color:var(--text)" x-text="m.value"></div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TASKS PAGE ── -->
+      <div class="page" x-show="page==='tasks'">
+        <div class="ph">
+          <div><h1>⚡ Task-Engine</h1><div class="ph-sub">Hintergrundaufgaben mit Status-Tracking</div></div>
+          <div class="ph-actions">
+            <button class="btn btn-ghost btn-sm" @click="loadTasks()">↺</button>
+            <button class="btn btn-primary btn-sm" @click="tasksTab='create'">+ Neuer Task</button>
+          </div>
+        </div>
+
+        <!-- KPIs -->
+        <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:20px">
+          <div class="kpi"><div class="kpi-bar" style="background:rgba(255,255,255,.1)"></div><div class="kpi-n" style="font-size:1.5rem" x-text="taskStats.pending||0"></div><div class="kpi-l">Wartend</div></div>
+          <div class="kpi"><div class="kpi-bar" style="background:linear-gradient(90deg,#38bdf8,#818cf8)"></div><div class="kpi-n" style="font-size:1.5rem;color:var(--sky)" x-text="taskStats.running||0"></div><div class="kpi-l">Läuft</div></div>
+          <div class="kpi"><div class="kpi-bar" style="background:linear-gradient(90deg,#f59e0b,#fcd34d)"></div><div class="kpi-n" style="font-size:1.5rem;color:var(--amber)" x-text="taskStats.waiting||0"></div><div class="kpi-l">Wartet</div></div>
+          <div class="kpi"><div class="kpi-bar" style="background:linear-gradient(90deg,#10b981,#34d399)"></div><div class="kpi-n" style="font-size:1.5rem;color:var(--emerald)" x-text="taskStats.completed||0"></div><div class="kpi-l">Erledigt</div></div>
+          <div class="kpi"><div class="kpi-bar" style="background:linear-gradient(90deg,#f43f5e,#fb7185)"></div><div class="kpi-n" style="font-size:1.5rem;color:var(--rose)" x-text="taskStats.failed||0"></div><div class="kpi-l">Fehlgeschlagen</div></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 340px;gap:14px;align-items:start">
+          <div>
+            <div class="tabs">
+              <div class="tab" :class="{on:tasksTab==='all'}"       @click="tasksTab='all';loadTasks()">Alle</div>
+              <div class="tab" :class="{on:tasksTab==='pending'}"   @click="tasksTab='pending';loadTasks()">⏳ Wartend</div>
+              <div class="tab" :class="{on:tasksTab==='running'}"   @click="tasksTab='running';loadTasks()">▶️ Aktiv</div>
+              <div class="tab" :class="{on:tasksTab==='failed'}"    @click="tasksTab='failed';loadTasks()">❌ Fehler</div>
+              <div class="tab" :class="{on:tasksTab==='completed'}" @click="tasksTab='completed';loadTasks()">✅ Erledigt</div>
+              <div class="tab" :class="{on:tasksTab==='create'}"    @click="tasksTab='create'">+ Neu</div>
+            </div>
+
+            <!-- Task-Liste -->
+            <div x-show="tasksTab!=='create'">
+              <div class="empty" x-show="!tasksList.length"><div class="empty-ico">⚡</div><h3>Keine Tasks</h3><p>Noch keine Aufgaben in diesem Filter.</p></div>
+              <template x-for="t in tasksList" :key="t.id">
+                <div class="agent-list-row" @click="loadTaskDetail(t)" :class="{selected:selectedTask?.id===t.id}">
+                  <div style="width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;background:rgba(255,255,255,.05)" x-text="taskStatusIcon(t.status)"></div>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:.85rem;font-weight:700;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" x-text="t.title"></div>
+                    <div style="font-size:.72rem;color:var(--muted);margin-top:2px" x-text="(t.agent_emoji||'')+(t.agent_name?' '+t.agent_name+' · ':' ')+t.type"></div>
+                  </div>
+                  <div style="flex-shrink:0;text-align:right">
+                    <span class="badge" :style="'background:'+taskStatusColor(t.status)+'18;color:'+taskStatusColor(t.status)+';border:1px solid '+taskStatusColor(t.status)+'33'" x-text="t.status"></span>
+                    <div style="font-size:.68rem;color:var(--muted);margin-top:3px" x-text="new Date(t.created_at).toLocaleDateString('de-DE')"></div>
+                  </div>
+                  <div style="display:flex;gap:4px;flex-shrink:0">
+                    <button class="btn btn-xs btn-ghost" @click.stop="runTask(t.id)"   x-show="['pending','failed'].includes(t.status)" title="Ausführen">▶</button>
+                    <button class="btn btn-xs btn-ghost" @click.stop="retryTask(t.id)" x-show="t.status==='failed'" title="Retry">↺</button>
+                    <button class="btn btn-xs btn-ghost" @click.stop="cancelTask(t.id)"x-show="['pending','waiting'].includes(t.status)" title="Abbrechen">⏹</button>
+                    <button class="btn btn-xs btn-danger" @click.stop="deleteTask(t.id)" title="Löschen">✕</button>
+                  </div>
+                </div>
+              </template>
+            </div>
+
+            <!-- Task erstellen -->
+            <div x-show="tasksTab==='create'" style="max-width:600px">
+              <div class="card">
+                <div class="card-hdr">Neuen Task erstellen</div>
+                <div class="field"><label>Titel *</label><input class="inp" x-model="newTask.title" placeholder="Kundendaten exportieren, E-Mail senden…"></div>
+                <div class="field"><label>Beschreibung</label><textarea class="inp" x-model="newTask.description" placeholder="Details zur Aufgabe…"></textarea></div>
+                <div class="inp-2col">
+                  <div class="field"><label>Typ</label>
+                    <select class="inp" x-model="newTask.type">
+                      <option value="generic">Generisch</option>
+                      <option value="http_call">HTTP-Aufruf</option>
+                      <option value="email">E-Mail</option>
+                      <option value="rag_index">RAG-Indizierung</option>
+                    </select>
+                  </div>
+                  <div class="field"><label>Agent (optional)</label>
+                    <select class="inp" x-model="newTask.agentId">
+                      <option value="">Kein Agent</option>
+                      <template x-for="a in agents" :key="a.id"><option :value="a.id" x-text="a.emoji+' '+a.name"></option></template>
+                    </select>
+                  </div>
+                </div>
+                <div style="display:flex;gap:8px">
+                  <button class="btn btn-ghost" @click="tasksTab='all'">Abbrechen</button>
+                  <button class="btn btn-primary" @click="createTask()">⚡ Task erstellen</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Task-Detail & Logs -->
+          <div x-show="selectedTask">
+            <div class="card">
+              <div class="card-hdr" x-text="selectedTask?.title||'Task'"></div>
+              <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+                <div style="display:flex;justify-content:space-between">
+                  <span style="font-size:.78rem;color:var(--muted-l)">Status</span>
+                  <span class="badge" :style="'background:'+taskStatusColor(selectedTask?.status)+'18;color:'+taskStatusColor(selectedTask?.status)+';border:1px solid '+taskStatusColor(selectedTask?.status)+'33'" x-text="selectedTask?.status"></span>
+                </div>
+                <div style="display:flex;justify-content:space-between" x-show="selectedTask?.type">
+                  <span style="font-size:.78rem;color:var(--muted-l)">Typ</span>
+                  <span style="font-size:.78rem;color:var(--text)" x-text="selectedTask?.type"></span>
+                </div>
+                <div style="display:flex;justify-content:space-between" x-show="selectedTask?.retry_count>0">
+                  <span style="font-size:.78rem;color:var(--muted-l)">Versuche</span>
+                  <span style="font-size:.78rem;color:var(--amber)" x-text="selectedTask?.retry_count+'/'+selectedTask?.max_retries"></span>
+                </div>
+                <div x-show="selectedTask?.error_msg" style="background:var(--rose-bg);border:1px solid rgba(244,63,94,.2);border-radius:6px;padding:8px;font-size:.75rem;color:var(--rose)" x-text="selectedTask?.error_msg"></div>
+              </div>
+              <!-- Logs -->
+              <div class="card-hdr" style="margin-bottom:8px">📋 Ausführungs-Log</div>
+              <div style="max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:4px">
+                <div class="empty" style="padding:16px" x-show="!taskLogs.length"><p style="font-size:.78rem">Keine Logs</p></div>
+                <template x-for="l in taskLogs" :key="l.id">
+                  <div style="padding:6px 8px;border-radius:6px;font-size:.74rem;line-height:1.4;display:flex;gap:8px"
+                    :style="l.level==='error'?'background:rgba(244,63,94,.06);color:var(--rose)':l.level==='warn'?'background:rgba(245,158,11,.06);color:var(--amber)':'background:rgba(255,255,255,.03);color:var(--text)'">
+                    <span style="font-family:'JetBrains Mono',monospace;color:var(--muted);flex-shrink:0" x-text="new Date(l.created_at).toLocaleTimeString('de-DE')"></span>
+                    <span x-text="l.message"></span>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /layout -->
@@ -1680,6 +2017,13 @@ insightTopQ:[],insightHeatmap:[],insightScore:{},
 abResults:{},
 // Analytics
 analyticsTab:'overview',
+// Tools
+toolsList:[],toolsTab:'list',newTool:{name:'',description:'',type:'http',parameters:{type:'object',properties:{},required:[]},config:{url:'',method:'POST',headers:{},body_template:{}}},editingTool:null,toolCalls:[],
+// Memory
+memoryEntries:[],memoryTab:'longterm',memoryAgent:'',memoryNewKey:'',memoryNewValue:'',memoryContacts:[],selectedContact:null,
+// Tasks
+tasksList:[],taskStats:{pending:0,running:0,completed:0,failed:0},tasksTab:'all',selectedTask:null,taskLogs:[],newTask:{title:'',description:'',type:'generic',agentId:''},
+
 // New action form
 newAction:{method:'POST',url:'',trigger:'',body:'{}'},
 // Auth state
@@ -2206,6 +2550,80 @@ toggleDay(day){
   else this.af.schedule_hours[day]=[9,17];
 },
 
+
+// ── TOOLS ─────────────────────────────────────────────────────────────────
+async loadTools(){const d=await this.api('/tools');if(d.tools)this.toolsList=d.tools;const c=await this.api('/tools/calls?limit=20');if(c.calls)this.toolCalls=c.calls;},
+async saveTool(){
+  const d=this.editingTool
+    ?await this.api('/tools/'+this.editingTool.id,'PUT',this.newTool)
+    :await this.api('/tools','POST',this.newTool);
+  if(d.error){this.toast(d.error,'err');return;}
+  this.toast('Tool gespeichert ✓');this.editingTool=null;
+  this.newTool={name:'',description:'',type:'http',parameters:{type:'object',properties:{},required:[]},config:{url:'',method:'POST',headers:{},body_template:{}}};
+  await this.loadTools();
+},
+async deleteTool(id){if(!confirm('Tool löschen?'))return;await this.api('/tools/'+id,'DELETE');this.toolsList=this.toolsList.filter(t=>t.id!==id);this.toast('Gelöscht');},
+async testTool(tool){
+  const input=prompt('Test-Input (JSON)','{}');
+  if(input===null)return;
+  try{
+    const parsed=JSON.parse(input);
+    const d=await this.api('/tools/'+tool.id+'/test','POST',{input:parsed});
+    alert(d.success?'✅ Ergebnis:
+'+JSON.stringify(d.result,null,2):'❌ Fehler: '+d.error);
+  }catch{alert('Ungültiges JSON');}
+},
+async assignTool(agentId,toolId,enabled){await this.api('/tools/assign','POST',{agentId,toolId,enabled});this.toast(enabled?'Tool zugewiesen':'Tool entfernt');},
+async seedBuiltins(){const d=await this.api('/tools/seed-builtins','POST');this.toast(d.created+' Builtin-Tools angelegt');await this.loadTools();},
+
+// ── MEMORY ─────────────────────────────────────────────────────────────────
+async loadMemory(){
+  const agId=this.memoryAgent||this.agents[0]?.id;
+  if(!agId)return;
+  const d=await this.api('/memory?agentId='+agId+'&scope='+this.memoryTab);
+  if(d.entries)this.memoryEntries=d.entries;
+  const c=await this.api('/memory/contacts?limit=30');
+  if(c.contacts)this.memoryContacts=c.contacts;
+},
+async addMemory(){
+  if(!this.memoryNewKey||!this.memoryNewValue){this.toast('Key und Wert erforderlich','err');return;}
+  const agId=this.memoryAgent||this.agents[0]?.id;
+  await this.api('/memory','POST',{agentId:agId,scope:this.memoryTab,key:this.memoryNewKey,value:this.memoryNewValue});
+  this.memoryNewKey='';this.memoryNewValue='';
+  this.toast('Gespeichert ✓');await this.loadMemory();
+},
+async deleteMemory(id){await this.api('/memory/'+id,'DELETE');this.memoryEntries=this.memoryEntries.filter(m=>m.id!==id);this.toast('Gelöscht');},
+async clearMemoryScope(){
+  const agId=this.memoryAgent||this.agents[0]?.id;
+  if(!agId||!confirm('Alle '+this.memoryTab+'-Einträge löschen?'))return;
+  const d=await this.api('/memory/agent/'+agId+'?scope='+this.memoryTab,'DELETE');
+  this.toast(d.deleted+' Einträge gelöscht');await this.loadMemory();
+},
+async loadContact(id){const d=await this.api('/memory/contacts/'+id);if(d.contact)this.selectedContact={...d.contact,memories:d.memories};},
+
+// ── TASKS ─────────────────────────────────────────────────────────────────
+async loadTasks(){
+  const d=await this.api('/tasks?status='+(this.tasksTab==='all'?'':this.tasksTab)+'&limit=50');
+  if(d.tasks)this.tasksList=d.tasks;
+  if(d.byStatus)this.taskStats=d.byStatus;
+  const s=await this.api('/tasks/stats/summary');
+  if(s.summary)this.taskStats={...this.taskStats,...s.summary};
+},
+async createTask(){
+  if(!this.newTask.title){this.toast('Titel erforderlich','err');return;}
+  const d=await this.api('/tasks','POST',{...this.newTask,agentId:this.newTask.agentId||undefined});
+  if(d.error){this.toast(d.error,'err');return;}
+  this.toast('Task erstellt ✓');this.newTask={title:'',description:'',type:'generic',agentId:''};
+  await this.loadTasks();
+},
+async runTask(id){const d=await this.api('/tasks/'+id+'/run','POST');this.toast(d.success?'✅ Ausgeführt':'❌ '+d.error,d.success?'ok':'err');await this.loadTasks();},
+async retryTask(id){await this.api('/tasks/'+id+'/retry','POST');this.toast('Retry ausgelöst');await this.loadTasks();},
+async cancelTask(id){await this.api('/tasks/'+id+'/cancel','POST');this.toast('Abgebrochen');await this.loadTasks();},
+async deleteTask(id){if(!confirm('Task löschen?'))return;await this.api('/tasks/'+id,'DELETE');this.tasksList=this.tasksList.filter(t=>t.id!==id);},
+async loadTaskDetail(task){this.selectedTask=task;const d=await this.api('/tasks/'+task.id);if(d.logs)this.taskLogs=d.logs;},
+taskStatusColor(s){return{pending:'var(--muted-l)',running:'var(--sky)',waiting:'var(--amber)',completed:'var(--emerald)',failed:'var(--rose)',cancelled:'var(--muted)'}[s]||'var(--muted)'},
+taskStatusIcon(s){return{pending:'⏳',running:'▶️',waiting:'⏸',completed:'✅',failed:'❌',cancelled:'🚫'}[s]||'❓'},
+
 // ── SIDEBAR ─────────────────────────────────
 toggleSidebar(){this.sidebarCollapsed=!this.sidebarCollapsed;localStorage.setItem('ak_sb',this.sidebarCollapsed?'1':'0');},
 
@@ -2221,7 +2639,7 @@ get cmdResults(){
     {label:'Einstellungen',icon:'⚙️',action:()=>{this.page='settings';this.closeCmd();}},
     {label:'API Keys',icon:'🔑',action:()=>{this.page='keys';this.loadKeys();this.closeCmd();}},
     {label:'Gespräche',icon:'💬',action:()=>{this.page='conversations';this.loadConvAgents();this.closeCmd();}},
-    {label:'Abrechnung',icon:'💳',action:()=>{this.page='billing';this.closeCmd();}},
+    {label:'Abrechnung',icon:'💳',action:()=>{this.page='billing';this.closeCmd();}},{label:'Tools',icon:'⚙️',action:()=>{this.page='tools';this.loadTools();this.closeCmd();}},{label:'Memory',icon:'🧠',action:()=>{this.page='memory';this.loadMemory();this.closeCmd();}},{label:'Tasks',icon:'⚡',action:()=>{this.page='tasks';this.loadTasks();this.closeCmd();}},
     ...this.agents.map(a=>({label:a.name,icon:a.emoji,action:()=>{this.editAgent(a);this.closeCmd();}})),
   ];
   if(!q)return cmds.slice(0,8);
