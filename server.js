@@ -56,6 +56,7 @@ async function initDb() {
     'migrations/004_add_missing_agent_columns.sql',
     'migrations/005_agent_phase1.sql',
     'migrations/006_planner_approvals.sql',
+    'migrations/007_integrations_webagent.sql',
   ];
   for (const file of sqls) {
     const fp = path.join(__dirname, file);
@@ -203,8 +204,12 @@ app.use('/api/memory',    require('./routes/memory'));
 app.use('/api/tasks',     require('./routes/tasks'));
 
 // ── Phase 2: Planner, Approval-System ──────────────────────────────────────
-app.use('/api/planner',   require('./routes/planner'));
-app.use('/api/approvals', require('./routes/approvals'));
+app.use('/api/planner',        require('./routes/planner'));
+app.use('/api/approvals',      require('./routes/approvals'));
+
+// ── Phase 3+4: Integrations, Web-Agent ─────────────────────────────────────
+app.use('/api/integrations',   require('./routes/integrations'));
+app.use('/api/web',            require('./routes/web-agent'));
 
 try {
   app.use('/api/rag', require('./routes/rag'));
