@@ -49,9 +49,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-seri
 .plan-free{background:rgba(255,255,255,.06);color:var(--muted)}
 .plan-pro{background:rgba(108,92,231,.2);color:var(--pu-l);border:1px solid rgba(108,92,231,.3)}
 .sb-nav{flex:1;padding:10px 8px;overflow-y:auto}
-.nav-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:9px;font-size:.85rem;font-weight:500;color:var(--muted);cursor:pointer;transition:all .2s;margin-bottom:2px}
-.nav-item:hover,.nav-item.active{background:rgba(108,92,231,.12);color:var(--white)}
-.nav-item.active{color:var(--pu-l)}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;font-size:.84rem;font-weight:500;color:var(--muted);cursor:pointer;transition:all .18s;margin-bottom:1px;position:relative}
+.nav-item:hover{background:rgba(255,255,255,.04);color:var(--white)}
+.nav-item.active{background:rgba(108,92,231,.14);color:var(--pu-l);font-weight:600}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:60%;background:var(--purple);border-radius:0 3px 3px 0}
+.nav-badge{margin-left:auto;font-size:.6rem;background:var(--purple);color:#fff;padding:1px 6px;border-radius:10px;font-weight:700}
 .nav-section{font-size:.66rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding:14px 12px 5px}
 .upgrade-btn{margin:8px 10px;background:linear-gradient(135deg,rgba(108,92,231,.15),rgba(162,155,254,.08));border:1px solid rgba(108,92,231,.25);border-radius:10px;padding:11px;cursor:pointer;transition:all .2s;text-align:left}
 .upgrade-btn:hover{background:rgba(108,92,231,.2)}
@@ -67,29 +69,41 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-seri
 .sb-action:hover{border-color:rgba(108,92,231,.3);color:var(--pu-l)}
 .sb-action.danger:hover{border-color:rgba(233,69,96,.3);color:var(--red)}
 .main{flex:1;overflow-y:auto;background:var(--bg)}
-.page{padding:28px 32px;max-width:1200px}
-.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:14px}
-.ph-title{font-size:1.4rem;font-weight:700;color:var(--white);letter-spacing:-.02em}
-.ph-sub{font-size:.82rem;color:var(--muted);margin-top:2px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px}
+.page{padding:32px 36px;max-width:1280px;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:14px}
+.ph-title{font-size:1.5rem;font-weight:800;color:var(--white);letter-spacing:-.03em}
+.ph-sub{font-size:.82rem;color:var(--muted);margin-top:3px;line-height:1.4}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px}
 .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px}
-.stat-n{font-size:1.9rem;font-weight:700;color:var(--pu-l);line-height:1}
-.stat-l{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:4px}
-.stat-sub{font-size:.72rem;color:var(--muted);margin-top:2px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 22px;position:relative;overflow:hidden;transition:border-color .2s}
+.stat-card:hover{border-color:rgba(108,92,231,.25)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--purple),var(--pu-l));opacity:0;transition:opacity .2s}
+.stat-card:hover::before{opacity:1}
+.stat-n{font-size:2.1rem;font-weight:800;color:var(--white);line-height:1;letter-spacing:-.04em}
+.stat-l{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:5px;font-weight:600}
+.stat-sub{font-size:.72rem;color:var(--muted);margin-top:3px}
+.stat-icon{position:absolute;top:18px;right:18px;font-size:1.4rem;opacity:.25}
+.stat-trend{font-size:.72rem;margin-top:6px}
+.trend-up{color:var(--green)}
+.trend-dn{color:var(--red)}
 .tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:22px;flex-wrap:wrap}
 .tab{padding:8px 14px;font-size:.83rem;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s}
 .tab:hover{color:var(--white)}.tab.active{color:var(--pu-l);border-bottom-color:var(--pu-l)}
-.agent-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:13px}
-.agent-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:all .25s}
-.agent-card:hover{border-color:rgba(108,92,231,.3);transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,0,0,.3)}
-.ac-stripe{height:3px}.ac-body{padding:16px}
-.ac-header{display:flex;align-items:center;gap:11px;margin-bottom:9px}
-.ac-av{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
-.ac-name{font-size:.92rem;font-weight:700;color:var(--white)}
-.ac-desc{font-size:.74rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px}
-.ac-badges{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:9px}
+.agent-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.agent-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;transition:all .2s;position:relative}
+.agent-card:hover{border-color:rgba(108,92,231,.35);transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.4)}
+.ac-stripe{height:4px;transition:height .2s}
+.agent-card:hover .ac-stripe{height:5px}
+.ac-body{padding:18px}
+.ac-header{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.ac-av{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;transition:transform .2s}
+.agent-card:hover .ac-av{transform:scale(1.05)}
+.ac-name{font-size:.95rem;font-weight:700;color:var(--white);line-height:1.2}
+.ac-model{font-size:.66rem;color:var(--muted);margin-top:2px;font-family:monospace}
+.ac-desc{font-size:.75rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px}
+.ac-badges{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:10px}
 .badge{font-size:.6rem;padding:2px 6px;border-radius:20px;font-weight:600}
 .b-active{background:rgba(0,184,148,.12);color:var(--green);border:1px solid rgba(0,184,148,.2)}
 .b-off{background:rgba(233,69,96,.08);color:var(--red);border:1px solid rgba(233,69,96,.15)}
@@ -105,7 +119,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-seri
 .empty h3{font-size:1rem;font-weight:600;color:var(--white);margin-bottom:6px}
 .empty p{font-size:.82rem;margin-bottom:20px}
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)}
-.modal{background:var(--bg3);border:1px solid rgba(108,92,231,.2);border-radius:18px;width:100%;max-width:680px;max-height:92vh;overflow-y:auto;padding:30px;box-shadow:0 40px 100px rgba(0,0,0,.6)}
+.modal{background:var(--bg3);border:1px solid rgba(108,92,231,.18);border-radius:20px;width:100%;max-width:680px;max-height:92vh;overflow-y:auto;padding:32px;box-shadow:0 60px 120px rgba(0,0,0,.7)}
 .modal-sm{max-width:460px}.modal-lg{max-width:920px}
 .modal-title{font-size:1.1rem;font-weight:700;color:var(--white);margin-bottom:22px}
 .modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;padding-top:18px;border-top:1px solid var(--border)}
@@ -225,6 +239,8 @@ input:checked+.slider:before{transform:translateX(18px)}
 .toast.err{border-color:rgba(233,69,96,.3);color:var(--red)}.toast.err::before{content:"✕"}
 @keyframes si{from{transform:translateX(16px);opacity:0}to{transform:translateX(0);opacity:1}}
 @media(max-width:768px){.sidebar{display:none}.page{padding:16px 13px}.inp-row,.grid-4,.grid-3,.template-grid{grid-template-columns:1fr}}
+@media(max-width:900px){.grid-4{grid-template-columns:repeat(2,1fr)!important}.sidebar{width:200px}.page{padding:20px 18px}}
+@media(max-width:640px){.grid-4{grid-template-columns:1fr 1fr!important}.app{flex-direction:column}.sidebar{width:100%;height:auto;border-right:none;border-bottom:1px solid var(--border)}.sb-nav{display:flex;flex-direction:row;padding:6px;overflow-x:auto}.sb-logo{padding:12px 16px}.nav-section{display:none}.main{overflow-y:auto}.page{padding:16px 14px}.agent-grid{grid-template-columns:1fr}.modal{padding:20px;border-radius:14px}.grid-3{grid-template-columns:1fr}}
 </style>
 <script>
 window.onerror=function(msg,src,line,col,err){
@@ -240,12 +256,19 @@ window.addEventListener('unhandledrejection',function(e){
 </head>
 <noscript><div style="position:fixed;inset:0;background:#0c0c1e;display:flex;align-items:center;justify-content:center;color:#fff;font-family:sans-serif;text-align:center;padding:24px"><div><div style="font-size:2rem;margin-bottom:16px">⚠️</div><h2>JavaScript erforderlich</h2><p style="color:#888;margin-top:8px">AgentKontor benötigt JavaScript. Bitte aktiviere JavaScript in deinem Browser.</p></div></div></noscript>
 <body x-data="app()" x-init="init()">
+<div class="toast-wrap">
+  <template x-for="t in toasts" :key="t.id">
+    <div class="toast" :class="'toast-'+t.type" x-text="t.msg"
+         style="cursor:pointer" @click="toasts=toasts.filter(x=>x.id!==t.id)"></div>
+  </template>
+</div>
 
 <!-- AUTH -->
 <div x-show="!user" x-cloak>
   <div class="auth-screen">
     <div class="auth-card">
       <div class="auth-logo">Agent<span>Kontor</span></div>
+      <p style="text-align:center;font-size:.78rem;color:var(--muted);margin-top:-20px;margin-bottom:24px">Dein KI-Agent. Deine Regeln.</p>
       <div class="auth-tabs">
         <div class="auth-tab" :class="{active:authTab==='login'}" @click="authTab='login';authErr=''" x-text="T.signin"></div>
         <div class="auth-tab" :class="{active:authTab==='register'}" @click="authTab='register';authErr=''" x-text="T.register"></div>
@@ -325,30 +348,92 @@ window.addEventListener('unhandledrejection',function(e){
 
   <div class="main">
 
+    <!-- TRIAL BANNER -->
+    <div x-show="user?.trial_ends_at && user?.plan==='pro'" x-cloak
+         style="background:linear-gradient(90deg,rgba(108,92,231,.15),rgba(162,155,254,.08));border-bottom:1px solid rgba(108,92,231,.2);padding:10px 32px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:.82rem;color:var(--pu-l)">⏳ Pro Trial aktiv bis
+        <strong x-text="new Date(user.trial_ends_at).toLocaleDateString('de-DE')"></strong>
+      </span>
+      <button class="btn btn-purple btn-sm" style="margin-left:auto;padding:5px 14px;font-size:.76rem" @click="checkout()">Jetzt upgraden →</button>
+    </div>
+
     <!-- DASHBOARD -->
     <div class="page" x-show="page==='dashboard'">
       <div class="ph">
-        <div><div class="ph-title" x-text="T.dashboard"></div><div class="ph-sub" x-text="T.welcome_back+', '+user?.name"></div></div>
+        <div>
+          <div class="ph-title" x-text="(new Date().getHours()<12?'Guten Morgen':new Date().getHours()<18?'Guten Tag':'Guten Abend')+', '+( user?.name?.split(' ')[0]||'')+'!'"></div>
+          <div class="ph-sub" x-text="agents.length===0?'Erstelle deinen ersten KI-Agenten':agents.length+' Agent'+(agents.length!==1?'en':'')+'  · '+agents.filter(a=>a.is_active).length+' aktiv'"></div>
+        </div>
         <button class="btn btn-purple btn-sm" @click="openNew()">+ <span x-text="T.new_agent"></span></button>
       </div>
-      <div class="grid-4" style="margin-bottom:24px">
-        <div class="stat-card"><div class="stat-n" x-text="agents.length"></div><div class="stat-l" x-text="T.agents"></div></div>
-        <div class="stat-card"><div class="stat-n" x-text="agents.filter(a=>a.is_active).length"></div><div class="stat-l" x-text="T.active"></div></div>
-        <div class="stat-card"><div class="stat-n" x-text="agents.reduce((s,a)=>s+(a.total_messages||0),0)"></div><div class="stat-l" x-text="T.messages"></div></div>
-        <div class="stat-card" style="cursor:pointer" @click="page='analytics';loadAnalytics()"><div class="stat-n">→</div><div class="stat-l">Analytics</div></div>
+      <div class="grid-4" style="margin-bottom:28px">
+        <div class="stat-card">
+          <div class="stat-icon">🤖</div>
+          <div class="stat-n" x-text="agents.length"></div>
+          <div class="stat-l">Agenten</div>
+          <div class="stat-sub" x-text="agents.filter(a=>a.is_active).length+' aktiv'"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💬</div>
+          <div class="stat-n" x-text="(agents.reduce((s,a)=>s+(a.total_messages||0),0)).toLocaleString('de')"></div>
+          <div class="stat-l">Nachrichten</div>
+          <div class="stat-sub">Gesamt</div>
+        </div>
+        <div class="stat-card" style="cursor:pointer" @click="page='analytics';loadAnalytics()">
+          <div class="stat-icon">📊</div>
+          <div class="stat-n" x-text="dashLeads||0"></div>
+          <div class="stat-l">Leads</div>
+          <div class="stat-sub">Dieser Monat</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⚡</div>
+          <div class="stat-n" x-text="user?.plan==='pro'?'Pro':'Free'"></div>
+          <div class="stat-l">Plan</div>
+          <div class="stat-sub" x-show="user?.trial_ends_at" style="color:var(--gold)" x-text="'Trial bis '+new Date(user.trial_ends_at).toLocaleDateString('de')"></div>
+          <div class="stat-sub" x-show="!user?.trial_ends_at" x-text="user?.plan==='pro'?'Aktiv':'500 Msg/Mo'"></div>
+        </div>
       </div>
-      <div style="font-size:.86rem;font-weight:600;color:var(--white);margin-bottom:12px" x-text="T.your_agents"></div>
+      <!-- Quick Actions wenn keine Agenten -->
       <template x-if="agents.length===0">
-        <div class="empty"><div class="empty-icon">🤖</div><h3 x-text="T.no_agent_yet"></h3><p x-text="T.create_first"></p><button class="btn btn-purple btn-sm" @click="openNew()">+ <span x-text="T.new_agent"></span></button></div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px">
+          <div style="background:rgba(108,92,231,.06);border:1px dashed rgba(108,92,231,.2);border-radius:14px;padding:20px;text-align:center;cursor:pointer" @click="openNew()">
+            <div style="font-size:1.6rem;margin-bottom:8px">🤖</div>
+            <div style="font-size:.86rem;font-weight:700;color:var(--white);margin-bottom:4px">Agent erstellen</div>
+            <div style="font-size:.73rem;color:var(--muted)">Widget, WhatsApp, Telegram</div>
+          </div>
+          <div style="background:rgba(0,184,148,.04);border:1px dashed rgba(0,184,148,.2);border-radius:14px;padding:20px;text-align:center;cursor:pointer" @click="page='templates';loadTemplates()">
+            <div style="font-size:1.6rem;margin-bottom:8px">📋</div>
+            <div style="font-size:.86rem;font-weight:700;color:var(--white);margin-bottom:4px">Template wählen</div>
+            <div style="font-size:.73rem;color:var(--muted)">Fertige Agenten klonen</div>
+          </div>
+          <div style="background:rgba(240,192,64,.04);border:1px dashed rgba(240,192,64,.2);border-radius:14px;padding:20px;text-align:center;cursor:pointer" @click="page='docs'">
+            <div style="font-size:1.6rem;margin-bottom:8px">📖</div>
+            <div style="font-size:.86rem;font-weight:700;color:var(--white);margin-bottom:4px">API-Docs</div>
+            <div style="font-size:.73rem;color:var(--muted)">Integration in 5 Minuten</div>
+          </div>
+        </div>
       </template>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px" x-show="agents.length>0">
+        <div style="font-size:.88rem;font-weight:700;color:var(--white)">Deine Agenten</div>
+        <div style="display:flex;gap:8px">
+          <input class="inp" style="width:180px;padding:6px 12px;font-size:.78rem" placeholder="🔍 Suchen..." x-model="agentSearch">
+        </div>
+      </div>
       <div class="agent-grid">
-        <template x-for="a in agents" :key="a.id">
+        <template x-for="a in agents.filter(a=>!agentSearch||a.name.toLowerCase().includes(agentSearch.toLowerCase()))" :key="a.id">
           <div class="agent-card" @click="editAgent(a)">
             <div class="ac-stripe" :style="'background:'+a.color"></div>
             <div class="ac-body">
               <div class="ac-header">
-                <div class="ac-av" :style="'background:'+a.color+'18;border:1px solid '+a.color+'33'" x-text="a.emoji"></div>
-                <div><div class="ac-name" x-text="a.name"></div><div class="ac-desc" x-text="a.description||'—'"></div></div>
+                <div class="ac-av" :style="'background:'+a.color+'22;border:1px solid '+a.color+'44'" x-text="a.emoji"></div>
+                <div style="min-width:0">
+                  <div class="ac-name" x-text="a.name"></div>
+                  <div class="ac-model" x-text="(a.model||'claude-sonnet-4-6').replace('claude-','').replace('-latest','')"></div>
+                </div>
+                <div style="margin-left:auto;font-size:.65rem;padding:2px 7px;border-radius:20px;font-weight:700;white-space:nowrap"
+                     :class="a.is_active?'b-active':'b-off'"
+                     x-text="a.is_active?'Aktiv':'Inaktiv'"></div>
               </div>
               <div class="ac-badges">
                 <span class="badge" :class="a.is_active?'b-active':'b-off'" x-text="a.is_active?T.active_badge:T.inactive_badge"></span>
@@ -358,9 +443,12 @@ window.addEventListener('unhandledrejection',function(e){
                 <span class="badge b-tg" x-show="a.telegram_enabled">TG</span>
                 <span class="badge b-rag" x-show="a.rag_enabled">RAG</span>
               </div>
-              <div class="ac-stats"><span><strong x-text="a.total_messages||0"></strong> msgs</span>
-                  <button class="btn btn-xs btn-ghost" style="margin-left:auto;font-size:.64rem;padding:2px 7px" @click.stop="cloneAgent(a.id)" title="Klonen">⧉</button>
-                </div>
+              <div class="ac-stats">
+                <span><strong x-text="(a.total_messages||0).toLocaleString('de')"></strong> Nachrichten</span>
+                <span x-show="a.rag_enabled" style="color:var(--teal)">· RAG</span>
+                <span x-show="a.voice_enabled" style="color:var(--pu-l)">· Voice</span>
+                <button class="btn btn-xs btn-ghost" style="margin-left:auto;font-size:.64rem;padding:2px 7px" @click.stop="cloneAgent(a.id)" title="Klonen">⧉</button>
+              </div>
             </div>
           </div>
         </template>
@@ -369,16 +457,46 @@ window.addEventListener('unhandledrejection',function(e){
 
     <!-- AGENTS PAGE -->
     <div class="page" x-show="page==='agents'">
-      <div class="ph"><div><div class="ph-title" x-text="T.my_agents"></div></div><button class="btn btn-purple btn-sm" @click="openNew()">+ <span x-text="T.new_agent"></span></button></div>
-      <template x-if="agents.length===0"><div class="empty"><div class="empty-icon">🤖</div><h3 x-text="T.no_agent_yet"></h3><button class="btn btn-purple btn-sm" @click="openNew()">+ <span x-text="T.new_agent"></span></button></div></template>
+      <div class="ph">
+        <div><div class="ph-title" x-text="T.my_agents"></div><div class="ph-sub" x-text="agents.length+' Agenten · '+agents.filter(a=>a.is_active).length+' aktiv'"></div></div>
+        <div style="display:flex;gap:8px">
+          <input class="inp" style="width:180px;padding:7px 12px;font-size:.78rem" placeholder="🔍 Suchen..." x-model="agentSearch">
+          <button class="btn btn-purple btn-sm" @click="openNew()">+ Agent</button>
+        </div>
+      </div>
+      <template x-if="agents.length===0">
+        <div class="empty"><div class="empty-icon">🤖</div><h3 x-text="T.no_agent_yet"></h3><p x-text="T.create_first"></p><button class="btn btn-purple btn-sm" @click="openNew()">+ Agent erstellen</button></div>
+      </template>
       <div class="agent-grid">
-        <template x-for="a in agents" :key="a.id">
+        <template x-for="a in agents.filter(a=>!agentSearch||a.name.toLowerCase().includes(agentSearch.toLowerCase()))" :key="a.id">
           <div class="agent-card" @click="editAgent(a)">
             <div class="ac-stripe" :style="'background:'+a.color"></div>
             <div class="ac-body">
-              <div class="ac-header"><div class="ac-av" :style="'background:'+a.color+'18'" x-text="a.emoji"></div><div><div class="ac-name" x-text="a.name"></div><div class="ac-desc" x-text="a.description||'—'"></div></div></div>
-              <div class="ac-badges"><span class="badge" :class="a.is_active?'b-active':'b-off'" x-text="a.is_active?T.active_badge:T.inactive_badge"></span></div>
-              <div class="ac-stats"><span><strong x-text="a.total_messages||0"></strong> msgs</span></div>
+              <div class="ac-header">
+                <div class="ac-av" :style="'background:'+a.color+'22;border:1px solid '+a.color+'44'" x-text="a.emoji"></div>
+                <div style="min-width:0;flex:1">
+                  <div class="ac-name" x-text="a.name"></div>
+                  <div class="ac-model" x-text="(a.model||'claude-sonnet-4-6').replace('claude-','').replace('-latest','')"></div>
+                </div>
+                <div style="font-size:.65rem;padding:2px 8px;border-radius:20px;font-weight:700;flex-shrink:0"
+                     :class="a.is_active?'b-active':'b-off'"
+                     x-text="a.is_active?'Aktiv':'Inaktiv'"></div>
+              </div>
+              <div class="ac-badges">
+                <span class="badge b-purple" x-show="a.widget_enabled">Widget</span>
+                <span class="badge b-gold" x-show="a.api_enabled">API</span>
+                <span class="badge b-wa" x-show="a.whatsapp_enabled">WA</span>
+                <span class="badge b-tg" x-show="a.telegram_enabled">TG</span>
+                <span class="badge b-rag" x-show="a.rag_enabled">RAG</span>
+                <span class="badge" style="background:rgba(162,155,254,.1);color:var(--pu-l);border:1px solid rgba(162,155,254,.2)" x-show="a.voice_enabled">Voice</span>
+              </div>
+              <div class="ac-stats">
+                <span><strong x-text="(a.total_messages||0).toLocaleString('de')"></strong> Nachrichten</span>
+                <div style="display:flex;gap:5px;margin-left:auto">
+                  <button class="btn btn-xs btn-ghost" @click.stop="cloneAgent(a.id)" title="Klonen">⧉</button>
+                  <button class="btn btn-xs btn-ghost" @click.stop="editAgent(a);aTab='conv'" title="Gespräche">💬</button>
+                </div>
+              </div>
             </div>
           </div>
         </template>
@@ -397,11 +515,31 @@ window.addEventListener('unhandledrejection',function(e){
       <template x-if="analyticsLoading"><div style="text-align:center;padding:60px;color:var(--muted)">⏳ <span x-text="T.loading"></span></div></template>
       <template x-if="!analyticsLoading&&analytics">
         <div>
-          <div class="grid-4" style="margin-bottom:18px">
-            <div class="stat-card"><div class="stat-n" x-text="analytics.totals?.total_messages||0"></div><div class="stat-l" x-text="T.messages"></div></div>
-            <div class="stat-card"><div class="stat-n" x-text="analytics.totals?.unique_sessions||0"></div><div class="stat-l">Chats</div></div>
-            <div class="stat-card"><div class="stat-n" x-text="allLeads.length"></div><div class="stat-l">Leads</div></div>
-            <div class="stat-card"><div class="stat-n" x-text="analytics.totals?.active_agents||0"></div><div class="stat-l" x-text="T.active"></div></div>
+          <div class="grid-4" style="margin-bottom:20px">
+            <div class="stat-card">
+              <div class="stat-icon">💬</div>
+              <div class="stat-n" x-text="(analytics.totals?.total_messages||0).toLocaleString('de')"></div>
+              <div class="stat-l">Nachrichten</div>
+              <div class="stat-sub">30 Tage</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">👥</div>
+              <div class="stat-n" x-text="(analytics.totals?.unique_sessions||0).toLocaleString('de')"></div>
+              <div class="stat-l">Gespräche</div>
+              <div class="stat-sub">Unique Sessions</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">🎯</div>
+              <div class="stat-n" x-text="allLeads.length"></div>
+              <div class="stat-l">Leads</div>
+              <div class="stat-sub" x-text="allLeads.filter(l=>l.score>=7).length+' hot leads'"></div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">🤖</div>
+              <div class="stat-n" x-text="analytics.totals?.active_agents||0"></div>
+              <div class="stat-l">Aktive Agenten</div>
+              <div class="stat-sub" x-text="agents.length+' gesamt'"></div>
+            </div>
           </div>
           <div style="display:grid;grid-template-columns:2fr 1fr;gap:13px;margin-bottom:18px">
             <div class="chart-card"><h3 x-text="T.msgs_per_day"></h3><div class="chart-wrap"><canvas id="chartLine"></canvas></div></div>
@@ -443,6 +581,11 @@ window.addEventListener('unhandledrejection',function(e){
                     <td x-text="lead.agent_emoji+' '+lead.agent_name"></td>
                     <td style="font-size:.72rem;color:var(--muted)" x-text="JSON.stringify(lead.data).slice(0,60)+'…'"></td>
                     <td><span class="badge b-purple" x-text="lead.source"></span></td>
+                    <td x-show="lead.score">
+                      <span style="font-size:.72rem;font-weight:700;padding:2px 7px;border-radius:10px"
+                        :style="lead.score>=7?'background:rgba(0,184,148,.15);color:var(--green)':lead.score>=4?'background:rgba(240,192,64,.1);color:var(--gold)':'background:rgba(233,69,96,.1);color:var(--red)'"
+                        x-text="'★ '+lead.score+'/10'"></span>
+                    </td>
                     <td style="white-space:nowrap;color:var(--muted);font-size:.74rem" x-text="new Date(lead.created_at).toLocaleDateString('de-DE')"></td>
                   </tr>
                 </template>
@@ -457,7 +600,7 @@ window.addEventListener('unhandledrejection',function(e){
     <div class="page" x-show="page==='keys'">
       <div class="ph"><div><div class="ph-title">API Keys</div></div><button class="btn btn-purple btn-sm" @click="showNewKey=true">+ Key</button></div>
       <template x-if="newKeyRev"><div class="card" style="border-color:rgba(0,184,148,.3);margin-bottom:14px"><div style="color:var(--green);font-weight:600;margin-bottom:7px">✓ Key erstellt — nur einmal sichtbar!</div><div class="code" x-text="newKeyRev"></div></div></template>
-      <template x-if="apiKeys.length===0"><div class="empty"><div class="empty-icon">🔑</div><h3>Keine Keys</h3></div></template>
+      <template x-if="apiKeys.length===0"><div class="empty"><div class="empty-icon">🔑</div><h3>Noch keine API-Keys</h3><p style="font-size:.82rem;color:var(--muted);margin-top:6px">Erstelle einen Key um den Chat-API zu nutzen</p></div></template>
       <template x-for="k in apiKeys" :key="k.id">
         <div class="key-row">
           <div style="flex:1"><div style="font-size:.82rem;font-weight:500;color:var(--white)" x-text="k.label"></div><div style="display:flex;align-items:center;gap:7px;margin-top:2px"><span class="key-prefix" x-text="k.key_prefix+'••••••••'"></span><span style="font-size:.68rem;color:var(--muted)" x-text="k.agent_name?'Agent: '+k.agent_name:''"></span></div></div>
@@ -1695,7 +1838,7 @@ convSearch:'',convSearchResults:[],
 // Voice
 availableVoices:[],
 // Models
-availableModels:[],
+availableModels:[], agentSearch:'', dashLeads:0,
 // Actions
 agentActions:[],showNewAction:false,
 newAction:{tool_type:'web_search',tool_name:'web_search',tool_desc:'',config:{url:''}},
@@ -1785,12 +1928,16 @@ async saveAgent(){
   this.toast('Gespeichert ✓');
   if(!this.editing&&d.agent){this.editing=d.agent;this.aTab='embed';}
   await this.loadAgents();
+      const dl=await this.api('/analytics/overview').catch(()=>({}));
+      this.dashLeads=dl.lead_count_this_month||0;
 },
 
 async delAgent(){
   if(!confirm('Agent wirklich löschen?'))return;
   await this.api('/agents/'+this.editing.id,'DELETE');
-  this.showModal=false;this.editing=null;await this.loadAgents();this.toast('Gelöscht');
+  this.showModal=false;this.editing=null;await this.loadAgents();
+      const dl=await this.api('/analytics/overview').catch(()=>({}));
+      this.dashLeads=dl.lead_count_this_month||0;this.toast('Gelöscht');
 },
 
 addChip(){const v=this.chipIn.trim();if(!v||this.af.quick_chips.length>=5)return;this.af.quick_chips.push(v);this.chipIn='';},
