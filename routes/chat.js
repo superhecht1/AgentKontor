@@ -100,8 +100,8 @@ router.get('/widget-config/:publicId', async (req, res) => {
   } catch(e) { res.status(500).json({ error: 'Fehler' }); }
 });
 
-// ── BUILD SYSTEM PROMPT ───────────────────────────────────
-async function buildSystemPrompt(pool, agent, memory) {
+// ── BUILD SYSTEM PROMPT (mit Memory-Injektion) ───────────
+async function buildSystemPrompt(pool, agent, memory, sessionId, contactId) {
   let sys = agent.system_prompt || 'Du bist ein hilfreicher KI-Assistent.';
 
   if (agent.cap_calendar && agent.cal_link)
@@ -113,12 +113,25 @@ async function buildSystemPrompt(pool, agent, memory) {
   if (agent.cap_multilang)
     sys += '\n\nAntworte immer in der Sprache des Nutzers.';
 
-  // Persistent memory injection
-  if (memory?.facts?.length) {
+  // Legacy memory injection
+  if (memory?.facts?.length)
     sys += `\n\nBekannte Informationen über diesen Nutzer:\n${memory.facts.map(f => `- ${f}`).join('\n')}`;
-  }
-  if (memory?.summary) {
+  if (memory?.summary)
     sys += `\n\nZusammenfassung früherer Gespräche: ${memory.summary}`;
+
+  // ── Phase-1 Memory-Manager Injection ──────────────────────────────
+  try {
+    const { memoryManager } = require('../utils/memory-manager');
+    const memCtx = await memoryManager.buildMemoryContext(pool, {
+      agentId:   agent.id,
+      userId:    agent.user_id,
+      sessionId,
+      contactId: contactId || null,
+    });
+    if (memCtx) sys += memCtx;
+  } catch (e) {
+    // Memory-Manager optional — kein Hard-Fail
+    console.warn('[chat] memory-manager:', e.message);
   }
 
   return sys;
