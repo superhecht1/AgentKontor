@@ -317,6 +317,41 @@ input:checked+.slider::before{transform:translateX(18px)}
 @keyframes tIn{from{opacity:0;transform:translateY(8px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
 
 
+
+/* ── INTEGRATIONS ── */
+.integ-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:8px;transition:border-color .2s}
+.integ-connected{border-color:rgba(16,185,129,.2);background:rgba(16,185,129,.02)}
+.integ-icon-big{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0}
+.provider-btn{padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.03);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:7px;font-size:.8rem;color:var(--text)}
+.provider-btn:hover,.provider-btn.on{border-color:rgba(124,58,237,.4);background:rgba(124,58,237,.08);color:var(--white)}
+.cal-event{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.cal-event:last-child{border-bottom:none}
+.cal-dot{width:10px;height:10px;border-radius:50%;background:var(--v);margin-top:4px;flex-shrink:0}
+.email-row{display:flex;align-items:flex-start;gap:10px;padding:10px 13px;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;transition:background .12s}
+.email-row:hover{background:rgba(255,255,255,.02)}
+.email-unread .email-subject{color:var(--white);font-weight:700}
+.email-priority{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.ep-high{background:var(--rose)}.ep-normal{background:var(--amber)}.ep-low{background:var(--muted)}
+.lead-qual-row{display:flex;align-items:center;gap:10px;padding:9px 13px;border-bottom:1px solid rgba(255,255,255,.04)}
+
+/* ── WEB AGENT ── */
+.search-result{padding:12px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;transition:background .12s}
+.search-result:hover{background:rgba(255,255,255,.02)}
+.search-result:last-child{border-bottom:none}
+.search-result-title{font-size:.85rem;font-weight:600;color:var(--v-l);margin-bottom:3px}
+.search-result-url{font-size:.67rem;color:var(--emerald);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.search-result-snippet{font-size:.76rem;color:var(--muted-l);line-height:1.4}
+.research-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:8px;cursor:pointer;transition:all .15s}
+.research-card:hover{border-color:var(--border-h)}
+.research-card.active{border-color:rgba(124,58,237,.4)}
+.research-step{display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.03)}
+.research-step:last-child{border-bottom:none}
+.compare-table{width:100%;border-collapse:collapse;font-size:.79rem}
+.compare-table th{padding:9px 12px;background:rgba(124,58,237,.08);color:var(--v-l);font-weight:700;font-size:.7rem;letter-spacing:.05em;text-align:left;border-bottom:1px solid rgba(124,58,237,.15)}
+.compare-table td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text);vertical-align:top}
+.compare-table tr:last-child td{border-bottom:none}
+.compare-table tr:hover td{background:rgba(255,255,255,.02)}
+.scrape-content{background:#09080a;border:1px solid var(--border);border-radius:var(--r-sm);padding:14px;font-size:.77rem;color:var(--text);line-height:1.6;max-height:360px;overflow-y:auto;white-space:pre-wrap;word-break:break-word}
 /* ── PLANNER ── */
 .plan-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:8px;cursor:pointer;transition:all .15s}
 .plan-card:hover{border-color:var(--border-h);transform:translateY(-1px)}
@@ -586,6 +621,13 @@ input:checked+.slider::before{transform:translateX(18px)}
       <div class="nav-item" :class="{on:page==='agents'}" @click="page='agents'"><span class="nav-ico">🤖</span><span class="nav-lbl">Agenten</span><span class="nav-badge" x-show="agents.length" x-text="agents.length"></span></div>
       <div class="nav-item" :class="{on:page==='analytics'}" @click="page='analytics';loadAnalytics()"><span class="nav-ico">📊</span><span class="nav-lbl">Analytics</span><span class="nav-badge" x-show="dashLeads>0" x-text="dashLeads+' Leads'"></span></div>
       <div class="nav-item" :class="{on:page==='conversations'}" @click="page='conversations';loadConvAgents()"><span class="nav-ico">💬</span><span class="nav-lbl">Gespräche</span></div>
+      <div class="nav-group-label">Phase 3+4</div>
+      <div class="nav-item" :class="{on:page==='integrations'}" @click="page='integrations';loadIntegrations()">
+        <span class="nav-ico">🔌</span><span class="nav-lbl">Integrationen</span>
+      </div>
+      <div class="nav-item" :class="{on:page==='webagent'}" @click="page='webagent';loadResearch()">
+        <span class="nav-ico">🌐</span><span class="nav-lbl">Web-Agent</span>
+      </div>
       <div class="nav-group-label">Autonomie</div>
       <div class="nav-item" :class="{on:page==='planner'}" @click="page='planner';loadPlans()">
         <span class="nav-ico">🧭</span><span class="nav-lbl">Planner</span>
@@ -1206,6 +1248,392 @@ X-AgentKontor-Signature: sha256=…
       </div>
 
 
+
+
+      <!-- ── INTEGRATIONS PAGE ── -->
+      <div class="page" x-show="page==='integrations'">
+        <div class="ph">
+          <div><h1>🔌 Integrationen</h1><div class="ph-sub">Kalender · E-Mail · CRM · Dokumente verbinden</div></div>
+          <div class="ph-actions"><button class="btn btn-ghost btn-sm" @click="loadIntegrations()">↺</button></div>
+        </div>
+        <div class="tabs">
+          <div class="tab" :class="{on:integrationsTab==='overview'}"  @click="integrationsTab='overview'">🔌 Verbindungen</div>
+          <div class="tab" :class="{on:integrationsTab==='calendar'}"  @click="integrationsTab='calendar';loadCalEvents()">📅 Kalender</div>
+          <div class="tab" :class="{on:integrationsTab==='email'}"     @click="integrationsTab='email';loadEmails()">✉️ E-Mail</div>
+          <div class="tab" :class="{on:integrationsTab==='crm'}"       @click="integrationsTab='crm'">🎯 CRM / Leads</div>
+          <div class="tab" :class="{on:integrationsTab==='documents'}" @click="integrationsTab='documents'">📄 Dokumente</div>
+          <div class="tab" :class="{on:integrationsTab==='connect'}"   @click="integrationsTab='connect'">+ Verbinden</div>
+        </div>
+
+        <!-- Übersicht: Verbundene Integrationen -->
+        <div x-show="integrationsTab==='overview'">
+          <div class="empty" x-show="!integrationsList.length"><div class="empty-ico">🔌</div><h3>Noch keine Integrationen</h3><p>Verbinde Kalender, E-Mail oder CRM.</p><button class="btn btn-primary" @click="integrationsTab='connect'">+ Verbinden</button></div>
+          <template x-for="i in integrationsList" :key="i.id">
+            <div class="integ-card" :class="{integ-connected:i.is_active}">
+              <div style="display:flex;align-items:center;gap:12px">
+                <div class="integ-icon-big" :style="'background:'+{calendar:'rgba(56,189,248,.1)',email:'rgba(245,158,11,.1)',crm:'rgba(124,58,237,.1)',document:'rgba(16,185,129,.1)'}[i.integration]||'rgba(255,255,255,.05)'">
+                  <span x-text="{calendar:'📅',email:'✉️',crm:'🎯',document:'📄'}[i.integration]||'🔌'"></span>
+                </div>
+                <div style="flex:1;min-width:0">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <span style="font-size:.88rem;font-weight:700;color:var(--white)" x-text="i.label||i.integration"></span>
+                    <span class="badge b-v" x-text="i.provider"></span>
+                    <span class="badge b-on" x-show="i.is_active">Verbunden</span>
+                  </div>
+                  <div style="font-size:.72rem;color:var(--muted);margin-top:2px" x-text="i.safe_credentials?.email||i.safe_credentials?.imap_user||i.safe_credentials?.url||''"></div>
+                  <div style="font-size:.7rem;color:var(--muted);margin-top:1px" x-show="i.last_error" style="color:var(--rose)" x-text="'Fehler: '+i.last_error"></div>
+                </div>
+                <div style="display:flex;gap:6px;flex-shrink:0">
+                  <button class="btn btn-ghost btn-sm" @click="testIntegration(i.id)">Test</button>
+                  <button class="btn btn-danger btn-xs" @click="deleteIntegration(i.id)">✕</button>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Kalender -->
+        <div x-show="integrationsTab==='calendar'">
+          <div style="display:flex;gap:8px;margin-bottom:16px">
+            <button class="btn btn-primary btn-sm" @click="loadCalEvents()">📅 Termine laden</button>
+            <button class="btn btn-ghost btn-sm" @click="findSlots()">🔍 Freie Slots finden</button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div class="card">
+              <div class="card-hdr">📅 Nächste Termine</div>
+              <div class="empty" style="padding:20px" x-show="!calEvents.length"><p style="font-size:.8rem">Kalender verbinden unter "+ Verbinden"</p></div>
+              <template x-for="e in calEvents" :key="e.id">
+                <div class="cal-event">
+                  <div class="cal-dot" style="background:var(--v)"></div>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:.84rem;font-weight:600;color:var(--white)" x-text="e.title"></div>
+                    <div style="font-size:.72rem;color:var(--muted);margin-top:2px" x-text="new Date(e.start).toLocaleString('de-DE',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})"></div>
+                    <div style="font-size:.71rem;color:var(--muted-l)" x-show="e.location" x-text="'📍 '+e.location"></div>
+                  </div>
+                </div>
+              </template>
+            </div>
+            <div class="card">
+              <div class="card-hdr">⏰ Freie Zeitslots</div>
+              <div class="empty" style="padding:20px" x-show="!calSlots.length"><p style="font-size:.8rem">Klicke "Freie Slots finden"</p></div>
+              <template x-for="(s,i) in calSlots" :key="i">
+                <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+                  <span style="font-size:.82rem;color:var(--text);flex:1" x-text="s.label"></span>
+                  <button class="btn btn-ghost btn-xs" @click="copy(s.start)">Kopieren</button>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <!-- E-Mail -->
+        <div x-show="integrationsTab==='email'">
+          <div style="display:flex;gap:8px;margin-bottom:16px">
+            <button class="btn btn-primary btn-sm" @click="loadEmails()">📬 E-Mails laden</button>
+            <button class="btn btn-ghost btn-sm" @click="prioritizeEmails()">🎯 KI-Priorisierung</button>
+          </div>
+          <div class="card" style="padding:0;overflow:hidden">
+            <div class="empty" style="padding:28px" x-show="!emailList.length"><div class="empty-ico">✉️</div><h3>Keine E-Mails</h3><p>E-Mail-Integration unter "+ Verbinden" einrichten.</p></div>
+            <template x-for="e in emailList" :key="e.id">
+              <div class="email-row" :class="{'email-unread':e.isUnread}">
+                <div class="email-priority" :class="'ep-'+(e.priority||'normal')"></div>
+                <div style="flex:1;min-width:0">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
+                    <span style="font-size:.8rem;color:var(--muted-l);flex-shrink:0;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="e.from?.split('<')[0].trim()||e.from"></span>
+                    <span style="font-size:.7rem;color:var(--muted);flex-shrink:0;margin-left:auto" x-text="e.date?new Date(e.date).toLocaleDateString('de-DE'):''"></span>
+                  </div>
+                  <div class="email-subject" style="font-size:.83rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" x-text="e.subject"></div>
+                  <div style="font-size:.74rem;color:var(--muted-l);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" x-text="e.snippet"></div>
+                  <div x-show="e.reason" style="font-size:.69rem;color:var(--amber);margin-top:2px" x-text="'💡 '+e.reason"></div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- CRM Leads -->
+        <div x-show="integrationsTab==='crm'">
+          <div style="display:flex;gap:8px;margin-bottom:16px">
+            <button class="btn btn-primary btn-sm" @click="qualifyLeads()">🤖 Leads qualifizieren</button>
+          </div>
+          <div class="ok-box" style="margin-bottom:14px">
+            🎯 KI qualifiziert alle unqualifizierten Leads nach BANT (Budget · Authority · Need · Timeline) und vergibt einen Score 0–10.
+          </div>
+          <div style="text-align:center;padding:40px;color:var(--muted);font-size:.82rem">
+            ← Klicke "Leads qualifizieren" — die Ergebnisse erscheinen in <span class="link-muted" @click="page='analytics';analyticsTab='overview';loadAnalytics()">Analytics → Leads</span>
+          </div>
+        </div>
+
+        <!-- Dokument-Analyse -->
+        <div x-show="integrationsTab==='documents'" style="max-width:700px">
+          <div class="card">
+            <div class="card-hdr">📄 Dokument analysieren</div>
+            <div class="field"><label>Agent (für Dokument-Zugriff)</label>
+              <select class="inp" x-model="newCred.credentials.agentId">
+                <template x-for="a in agents" :key="a.id"><option :value="a.id" x-text="a.emoji+' '+a.name"></option></template>
+              </select>
+            </div>
+            <div class="field"><label>Analyse-Typ</label>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+                <div class="tone-opt" :class="{on:docAnalysisType==='summary'}"  @click="docAnalysisType='summary'"><h4>📝 Zusammenfassung</h4><p>Kernaussagen + Fazit</p></div>
+                <div class="tone-opt" :class="{on:docAnalysisType==='risks'}"    @click="docAnalysisType='risks'"><h4>⚠️ Risiko-Analyse</h4><p>Kritische Punkte</p></div>
+                <div class="tone-opt" :class="{on:docAnalysisType==='contract'}" @click="docAnalysisType='contract'"><h4>⚖️ Vertrags-Analyse</h4><p>Klauseln + Verpflichtungen</p></div>
+                <div class="tone-opt" :class="{on:docAnalysisType==='key_info'}" @click="docAnalysisType='key_info'"><h4>🔑 Schlüssel-Daten</h4><p>Parteien, Daten, Beträge</p></div>
+              </div>
+            </div>
+            <div class="field"><label>Dokument-ID (aus RAG-Upload)</label><input class="inp" x-model="selectedDocId" placeholder="Dokument-ID eingeben" type="number"></div>
+            <button class="btn btn-primary" @click="analyzeDoc()" :disabled="!selectedDocId">📄 Analysieren</button>
+          </div>
+          <!-- Ergebnis -->
+          <div class="card" x-show="docAnalysis">
+            <div class="card-hdr">📊 Analyse-Ergebnis</div>
+            <div x-show="typeof docAnalysis==='string'" style="font-size:.84rem;color:var(--text);line-height:1.7;white-space:pre-wrap" x-text="docAnalysis"></div>
+            <div x-show="typeof docAnalysis==='object'&&docAnalysis!==null">
+              <!-- Risk Level -->
+              <div x-show="docAnalysis?.risk_level" style="margin-bottom:14px">
+                <span style="font-size:.78rem;font-weight:700;padding:4px 12px;border-radius:20px"
+                  :style="docAnalysis?.risk_level==='high'?'background:var(--rose-bg);color:var(--rose)':docAnalysis?.risk_level==='medium'?'background:var(--amber-bg);color:var(--amber)':'background:var(--em-bg);color:var(--emerald)'"
+                  x-text="'Risiko: '+docAnalysis?.risk_level?.toUpperCase()"></span>
+              </div>
+              <!-- Summary -->
+              <div x-show="docAnalysis?.summary" style="font-size:.83rem;color:var(--text);line-height:1.6;margin-bottom:12px" x-text="docAnalysis?.summary"></div>
+              <!-- Risks array -->
+              <template x-if="docAnalysis?.risks?.length">
+                <div>
+                  <div class="card-hdr" style="margin-bottom:8px">⚠️ Risiken</div>
+                  <template x-for="(r,i) in docAnalysis?.risks||[]" :key="i">
+                    <div style="padding:8px 10px;border-radius:7px;margin-bottom:6px;border:1px solid"
+                      :style="r.severity==='high'?'background:var(--rose-bg);border-color:rgba(244,63,94,.2)':r.severity==='medium'?'background:var(--amber-bg);border-color:rgba(245,158,11,.2)':'background:var(--em-bg);border-color:rgba(16,185,129,.2)'">
+                      <div style="font-size:.8rem;font-weight:700;color:var(--white);margin-bottom:2px" x-text="r.issue||r.category||r.description"></div>
+                      <div style="font-size:.74rem;color:var(--muted-l)" x-text="r.recommendation||r.description"></div>
+                    </div>
+                  </template>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <!-- Integration verbinden -->
+        <div x-show="integrationsTab==='connect'" style="max-width:560px">
+          <div class="card">
+            <div class="card-hdr">Neue Integration verbinden</div>
+            <div class="field"><label>Typ</label>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+                <div class="provider-btn" :class="{on:newCred.integration==='calendar'}"  @click="newCred.integration='calendar';newCred.provider='google'">📅 Kalender</div>
+                <div class="provider-btn" :class="{on:newCred.integration==='email'}"     @click="newCred.integration='email';newCred.provider='google'">✉️ E-Mail</div>
+                <div class="provider-btn" :class="{on:newCred.integration==='crm'}"       @click="newCred.integration='crm';newCred.provider='custom'">🎯 CRM</div>
+                <div class="provider-btn" :class="{on:newCred.integration==='document'}"  @click="newCred.integration='document';newCred.provider='local'">📄 Dokumente</div>
+              </div>
+            </div>
+            <div class="field"><label>Provider</label>
+              <select class="inp" x-model="newCred.provider">
+                <template x-if="newCred.integration==='calendar'">
+                  <span><option value="google">Google Calendar</option><option value="microsoft">Outlook / Microsoft</option><option value="ical_url">iCal-URL (read-only)</option></span>
+                </template>
+                <template x-if="newCred.integration==='email'">
+                  <span><option value="google">Gmail</option><option value="imap">IMAP/SMTP</option></span>
+                </template>
+                <template x-if="newCred.integration==='crm'">
+                  <span><option value="webhook">Webhook (generic)</option><option value="airtable">Airtable</option><option value="hubspot">HubSpot</option></span>
+                </template>
+              </select>
+            </div>
+            <!-- Google OAuth Token -->
+            <div x-show="newCred.provider==='google'">
+              <div class="ok-box" style="margin-bottom:12px">
+                <strong>Google OAuth:</strong> Generiere einen Access-Token über die <a href="https://developers.google.com/oauthplayground" target="_blank" style="color:var(--v-l)">Google OAuth Playground</a> mit den Scopes: <code style="font-size:.72rem;font-family:'JetBrains Mono',monospace">calendar.readonly calendar.events gmail.readonly gmail.send</code>
+              </div>
+              <div class="field"><label>Access Token</label><input class="inp" type="password" x-model="newCred.credentials.access_token" placeholder="ya29.a..."></div>
+              <div class="field"><label>Refresh Token</label><input class="inp" type="password" x-model="newCred.credentials.refresh_token" placeholder="1//0g..."></div>
+              <div class="field"><label>E-Mail-Adresse</label><input class="inp" type="email" x-model="newCred.credentials.email" placeholder="max@gmail.com"></div>
+            </div>
+            <!-- iCal URL -->
+            <div x-show="newCred.provider==='ical_url'">
+              <div class="field"><label>iCal-URL</label><input class="inp" x-model="newCred.credentials.url" placeholder="https://calendar.google.com/calendar/ical/.../basic.ics"></div>
+            </div>
+            <!-- Webhook -->
+            <div x-show="newCred.provider==='webhook'">
+              <div class="field"><label>Webhook-URL</label><input class="inp" x-model="newCred.credentials.webhook_url" placeholder="https://mein-crm.de/api/leads"></div>
+              <div class="field"><label>API-Key (optional)</label><input class="inp" type="password" x-model="newCred.credentials.api_key" placeholder="Bearer ..."></div>
+            </div>
+            <div class="field"><label>Label (für mehrere Konten)</label><input class="inp" x-model="newCred.label" placeholder="Standard"></div>
+            <button class="btn btn-primary btn-full" @click="saveCredential()">🔌 Verbinden</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── WEB AGENT PAGE ── -->
+      <div class="page" x-show="page==='webagent'">
+        <div class="ph">
+          <div><h1>🌐 Web-Agent</h1><div class="ph-sub">Suchen · Lesen · Vergleichen · Recherchieren</div></div>
+        </div>
+        <div class="tabs">
+          <div class="tab" :class="{on:webTab==='search'}"   @click="webTab='search'">🔍 Suche</div>
+          <div class="tab" :class="{on:webTab==='scrape'}"   @click="webTab='scrape'">📖 Seite lesen</div>
+          <div class="tab" :class="{on:webTab==='compare'}"  @click="webTab='compare'">⚖️ Vergleichen</div>
+          <div class="tab" :class="{on:webTab==='research'}" @click="webTab='research';loadResearch()">🔬 Recherche</div>
+        </div>
+
+        <!-- Websuche -->
+        <div x-show="webTab==='search'">
+          <div style="display:flex;gap:8px;margin-bottom:16px">
+            <input class="inp" style="flex:1" x-model="webQuery" placeholder="Was suchst du?" @keydown.enter="webSearch()">
+            <button class="btn btn-primary" @click="webSearch()">🔍 Suchen</button>
+          </div>
+          <div class="empty" x-show="!webResults.length"><div class="empty-ico">🔍</div><h3>Noch keine Suche</h3><p>Gib eine Suchanfrage ein und klicke Suchen.</p></div>
+          <div class="card" x-show="webResults.length" style="padding:12px 16px">
+            <template x-for="(r,i) in webResults" :key="i">
+              <div class="search-result" @click="webUrl=r.url;webTab='scrape'">
+                <div class="search-result-title" x-text="r.title"></div>
+                <div class="search-result-url" x-text="r.url"></div>
+                <div class="search-result-snippet" x-text="r.snippet"></div>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- Seite lesen -->
+        <div x-show="webTab==='scrape'" style="max-width:800px">
+          <div style="display:flex;gap:8px;margin-bottom:16px">
+            <input class="inp" style="flex:1" x-model="webUrl" placeholder="https://..." @keydown.enter="webScrape()">
+            <button class="btn btn-primary" @click="webScrape()">📖 Lesen</button>
+          </div>
+          <div class="card" x-show="webContent">
+            <div class="card-hdr">
+              <span x-text="webContent?.title||webContent?.url"></span>
+              <a :href="webContent?.url" target="_blank" class="btn btn-ghost btn-xs">🔗 Öffnen</a>
+            </div>
+            <div class="scrape-content" x-text="webContent?.content"></div>
+          </div>
+        </div>
+
+        <!-- Vergleichen -->
+        <div x-show="webTab==='compare'" style="max-width:900px">
+          <div class="card">
+            <div class="card-hdr">⚖️ Quellen vergleichen</div>
+            <div class="field"><label>Vergleichs-Ziel</label><input class="inp" x-model="webCompareGoal" placeholder="Vergleiche diese Anbieter nach Preis, Features und Bewertung"></div>
+            <div class="field"><label>URLs (eine pro Zeile, min. 2)</label><textarea class="inp" style="min-height:100px;font-family:'JetBrains Mono',monospace;font-size:.78rem" x-model="webCompareUrls" placeholder="https://anbieter1.de
+https://anbieter2.de
+https://anbieter3.de"></textarea></div>
+            <button class="btn btn-primary" @click="webCompare()">⚖️ Vergleich erstellen</button>
+          </div>
+          <div class="card" x-show="webCompareResult">
+            <div class="card-hdr">📊 Vergleichs-Tabelle</div>
+            <template x-if="webCompareResult?.headers">
+              <div style="overflow-x:auto;margin-bottom:14px">
+                <table class="compare-table">
+                  <thead><tr><template x-for="h in webCompareResult.headers" :key="h"><th x-text="h"></th></template></tr></thead>
+                  <tbody>
+                    <template x-for="(row,i) in webCompareResult.rows||[]" :key="i">
+                      <tr><template x-for="(cell,j) in row" :key="j"><td x-text="cell"></td></template></tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </template>
+            <div x-show="webCompareResult?.recommendation" style="padding:10px 12px;background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.15);border-radius:8px;font-size:.83rem;color:var(--text);line-height:1.6">
+              <strong style="color:var(--v-l)">Empfehlung:</strong> <span x-text="webCompareResult?.recommendation"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mehrstufige Recherche -->
+        <div x-show="webTab==='research'">
+          <div style="display:grid;grid-template-columns:340px 1fr;gap:14px;align-items:start">
+            <div>
+              <div class="card" style="margin-bottom:12px">
+                <div class="card-hdr">🔬 Neue Recherche</div>
+                <div class="field"><label>Recherche-Ziel</label>
+                  <textarea class="inp" style="min-height:80px" x-model="researchGoal"
+                    placeholder="Finde mir 10 CRM-Anbieter für KMUs, vergleiche Preise und erstelle eine Tabelle…"></textarea>
+                </div>
+                <div class="field"><label>Quellen-Tiefe</label>
+                  <div style="display:flex;gap:6px">
+                    <div class="tone-opt" style="flex:1;padding:7px;text-align:center" :class="{on:researchDepth===2}" @click="researchDepth=2"><h4>Schnell</h4><p>2 Quellen</p></div>
+                    <div class="tone-opt" style="flex:1;padding:7px;text-align:center" :class="{on:researchDepth===4}" @click="researchDepth=4"><h4>Tief</h4><p>4 Quellen</p></div>
+                    <div class="tone-opt" style="flex:1;padding:7px;text-align:center" :class="{on:researchDepth===6}" @click="researchDepth=6"><h4>Max</h4><p>6 Quellen</p></div>
+                  </div>
+                </div>
+                <button class="btn btn-primary btn-full" @click="startResearch()" :disabled="!researchGoal.trim()">🔬 Recherche starten</button>
+              </div>
+              <div class="empty" style="padding:16px" x-show="!researchSessions.length"><p style="font-size:.78rem">Noch keine Recherchen</p></div>
+              <template x-for="s in researchSessions" :key="s.id">
+                <div class="research-card" :class="{active:selectedResearch?.id===s.id}" @click="openResearch(s.id)">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+                    <span style="font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:10px"
+                      :style="s.status==='completed'?'background:var(--em-bg);color:var(--emerald)':s.status==='running'?'background:rgba(56,189,248,.1);color:var(--sky)':'background:var(--rose-bg);color:var(--rose)'"
+                      x-text="s.status"></span>
+                    <span style="font-size:.68rem;color:var(--muted)" x-text="s.source_count+' Quellen'"></span>
+                  </div>
+                  <div style="font-size:.83rem;color:var(--white);line-height:1.3" x-text="s.goal.length>60?s.goal.slice(0,60)+'…':s.goal"></div>
+                  <div style="font-size:.7rem;color:var(--muted);margin-top:4px" x-text="new Date(s.created_at).toLocaleDateString('de-DE')"></div>
+                </div>
+              </template>
+            </div>
+
+            <!-- Recherche-Detail -->
+            <div>
+              <div x-show="!selectedResearch" style="display:flex;align-items:center;justify-content:center;height:300px;color:var(--muted);font-size:.85rem">← Recherche wählen oder neue starten</div>
+              <div x-show="selectedResearch">
+                <div class="card" style="margin-bottom:12px">
+                  <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                    <span style="font-size:.9rem;font-weight:700;color:var(--white);flex:1" x-text="selectedResearch?.goal"></span>
+                    <span style="font-size:.68rem;font-weight:700;padding:3px 9px;border-radius:12px"
+                      :style="selectedResearch?.status==='completed'?'background:var(--em-bg);color:var(--emerald)':selectedResearch?.status==='running'?'background:rgba(56,189,248,.1);color:var(--sky)':'background:var(--rose-bg);color:var(--rose)'"
+                      x-text="selectedResearch?.status==='running'?'▶ Läuft…':selectedResearch?.status"></span>
+                    <button class="btn btn-danger btn-xs" @click="deleteResearch(selectedResearch?.id)">✕</button>
+                  </div>
+                  <!-- Fortschritt -->
+                  <div x-show="selectedResearch?.status==='running'" style="font-size:.78rem;color:var(--sky)">
+                    <template x-for="(step,i) in (selectedResearch?.steps||[])" :key="i">
+                      <div class="research-step">
+                        <span style="font-size:.7rem;font-family:'JetBrains Mono',monospace;color:var(--muted);min-width:50px" x-text="step.type"></span>
+                        <span style="font-size:.75rem;color:var(--muted-l)" x-text="step.query||step.url||''"></span>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+
+                <!-- Vergleichs-Tabelle -->
+                <div class="card" x-show="selectedResearch?.table?.headers">
+                  <div class="card-hdr">📊 Vergleichs-Tabelle</div>
+                  <div style="overflow-x:auto">
+                    <table class="compare-table">
+                      <thead><tr><template x-for="h in selectedResearch?.table?.headers||[]" :key="h"><th x-text="h"></th></template></tr></thead>
+                      <tbody>
+                        <template x-for="(row,i) in selectedResearch?.table?.rows||[]" :key="i">
+                          <tr><template x-for="(cell,j) in row" :key="j"><td x-text="cell"></td></template></tr>
+                        </template>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- Quellen -->
+                <div class="card" x-show="selectedResearch?.sources?.length" style="margin-bottom:12px">
+                  <div class="card-hdr">🔗 Quellen (<span x-text="selectedResearch?.sources?.length"></span>)</div>
+                  <template x-for="(src,i) in (selectedResearch?.sources||[]).slice(0,8)" :key="i">
+                    <div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);display:flex;gap:8px;align-items:flex-start">
+                      <span style="font-size:.7rem;font-weight:700;color:var(--muted);min-width:16px" x-text="i+1+'.'" ></span>
+                      <div>
+                        <a :href="src.url" target="_blank" style="font-size:.78rem;color:var(--v-l);font-weight:600" x-text="src.title||src.url"></a>
+                        <div style="font-size:.71rem;color:var(--muted-l)" x-text="src.snippet?.slice(0,80)"></div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+
+                <!-- Bericht -->
+                <div class="card" x-show="selectedResearch?.result">
+                  <div class="card-hdr">📋 Recherche-Bericht</div>
+                  <div style="font-size:.83rem;color:var(--text);line-height:1.7;white-space:pre-wrap" x-text="selectedResearch?.result"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- ── PLANNER PAGE ── -->
       <div class="page" x-show="page==='planner'" @click.away="if(planPollInterval&&['completed','failed','cancelled'].includes(selectedPlan?.status)){}">
@@ -2366,6 +2794,16 @@ insightFunnel:{sessions:0,engaged:0,leads:0,rate:0},
 insightTopQ:[],insightHeatmap:[],insightScore:{},
 // A/B results
 abResults:{},
+// Integrations
+integrationsList:[],integrationsTab:'overview',
+newCred:{integration:'calendar',provider:'google',label:'Standard',credentials:{}},
+calEvents:[],calSlots:[],emailList:[],emailTab:'inbox',
+leadsList:[],leadsTab:'all',docList:[],selectedDocId:'',docAnalysis:null,docAnalysisType:'summary',
+// Web Agent
+webQuery:'',webResults:[],webUrl:'',webContent:null,
+webCompareUrls:'',webCompareGoal:'',webCompareResult:null,
+researchGoal:'',researchDepth:3,researchSessions:[],selectedResearch:null,researchPoll:null,
+webTab:'search',
 // Planner
 plansList:[],plansTab:'new',selectedPlan:null,planSteps:[],planPollInterval:null,
 planGoal:'',planContext:'',planAgentId:'',planModel:'claude-sonnet-4-6',
@@ -2909,6 +3347,77 @@ toggleDay(day){
 },
 
 
+
+
+// ── INTEGRATIONS ──────────────────────────────────────────────────────────
+async loadIntegrations(){const d=await this.api('/integrations');if(d.integrations)this.integrationsList=d.integrations;},
+async saveCredential(){
+  const d=await this.api('/integrations','POST',this.newCred);
+  if(d.error){this.toast(d.error,'err');return;}
+  this.toast('Verbindung gespeichert ✓');
+  this.newCred={integration:'calendar',provider:'google',label:'Standard',credentials:{}};
+  await this.loadIntegrations();
+},
+async testIntegration(id){
+  const d=await this.api('/integrations/'+id+'/test','POST');
+  this.toast(d.ok?'✅ Verbindung OK: '+(d.sample||''):'❌ '+d.error, d.ok?'ok':'err');
+},
+async deleteIntegration(id){if(!confirm('Integration löschen?'))return;await this.api('/integrations/'+id,'DELETE');await this.loadIntegrations();this.toast('Gelöscht');},
+async loadCalEvents(){const d=await this.api('/integrations/calendar/events?maxResults=20');if(d.events)this.calEvents=d.events;},
+async findSlots(){const d=await this.api('/integrations/calendar/slots?duration=60');if(d.slots)this.calSlots=d.slots;},
+async loadEmails(){const d=await this.api('/integrations/email/messages?maxResults=20');if(d.emails)this.emailList=d.emails;},
+async prioritizeEmails(){const d=await this.api('/integrations/email/prioritize','POST',{maxResults:20});if(d.emails)this.emailList=d.emails;this.toast('Priorisiert ✓');},
+async qualifyLeads(){const d=await this.api('/integrations/crm/qualify','POST',{});this.toast(d.qualified+' Leads qualifiziert');if(this.agents[0])await this.loadDashData();},
+async analyzeDoc(){
+  if(!this.selectedDocId){this.toast('Dokument auswählen','err');return;}
+  this.docAnalysis=null;
+  const d=await this.api('/integrations/document/analyze','POST',{docId:parseInt(this.selectedDocId),agentId:this.agents[0]?.id,analysisType:this.docAnalysisType});
+  if(d.error){this.toast(d.error,'err');}
+  else this.docAnalysis=d.result;
+},
+// ── WEB AGENT ─────────────────────────────────────────────────────────────
+async webSearch(){
+  if(!this.webQuery){this.toast('Suchanfrage eingeben','err');return;}
+  const d=await this.api('/web/search','POST',{query:this.webQuery,maxResults:10});
+  if(d.results)this.webResults=d.results;
+},
+async webScrape(){
+  if(!this.webUrl){this.toast('URL eingeben','err');return;}
+  const d=await this.api('/web/scrape','POST',{url:this.webUrl});
+  if(d.error){this.toast(d.error,'err');}
+  else this.webContent=d;
+},
+async webCompare(){
+  const urls=this.webCompareUrls.split('\n').map(u=>u.trim()).filter(Boolean);
+  if(urls.length<2||!this.webCompareGoal){this.toast('Mindestens 2 URLs + Ziel eingeben','err');return;}
+  this.webCompareResult=null;
+  const d=await this.api('/web/compare','POST',{urls,goal:this.webCompareGoal});
+  if(d.result)this.webCompareResult=d.result;
+  else this.toast(d.error,'err');
+},
+async startResearch(){
+  if(!this.researchGoal){this.toast('Recherche-Ziel eingeben','err');return;}
+  const d=await this.api('/web/research','POST',{goal:this.researchGoal,depth:this.researchDepth});
+  if(d.error){this.toast(d.error,'err');return;}
+  this.toast('Recherche gestartet ✓');
+  this.researchGoal='';
+  await this.loadResearch();
+  this.openResearch(d.sessionId);
+},
+async loadResearch(){const d=await this.api('/web/research?limit=20');if(d.sessions)this.researchSessions=d.sessions;},
+async openResearch(id){
+  this.selectedResearch=null;
+  if(this.researchPoll)clearInterval(this.researchPoll);
+  const poll=async()=>{
+    const d=await this.api('/web/research/'+id).catch(()=>null);
+    if(!d)return;
+    this.selectedResearch=d;
+    if(['completed','failed'].includes(d.status))clearInterval(this.researchPoll);
+  };
+  await poll();
+  this.researchPoll=setInterval(poll,3000);
+},
+async deleteResearch(id){await this.api('/web/research/'+id,'DELETE');this.researchSessions=this.researchSessions.filter(s=>s.id!==id);if(this.selectedResearch?.id===id)this.selectedResearch=null;},
 
 // ── PLANNER ───────────────────────────────────────────────────────────────
 async loadPlans(){const d=await this.api('/planner?limit=30');if(d.plans)this.plansList=d.plans;},
