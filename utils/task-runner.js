@@ -176,6 +176,16 @@ let _isRunning = false;
 async function startBackgroundRunner(intervalMs = 5000) {
   if (_runnerInterval) return;
 
+  // Warten bis Tabelle existiert (Migration muss zuerst laufen)
+  const pool = getPool();
+  try {
+    await pool.query('SELECT 1 FROM agent_tasks LIMIT 1');
+  } catch {
+    console.warn('[task-runner] Tabelle agent_tasks fehlt noch — warte auf Migration');
+    setTimeout(() => startBackgroundRunner(intervalMs), 15000);
+    return;
+  }
+
   console.log(`[task-runner] Background-Runner gestartet (Intervall: ${intervalMs}ms)`);
 
   _runnerInterval = setInterval(async () => {
