@@ -2,7 +2,8 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
 <title>Admin – AgentKontor</title>
 <script src="//unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -12,71 +13,137 @@
 [x-cloak]{display:none!important}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 .app{display:flex;height:100vh;overflow:hidden}
-.sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
-.sb-logo{padding:20px 18px;font-size:1rem;font-weight:800;color:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.sidebar{width:230px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.sb-logo{padding:18px 16px;font-size:1rem;font-weight:800;color:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
 .sb-logo span{color:var(--pu-l)}
-.admin-badge{font-size:.6rem;font-weight:700;padding:2px 6px;border-radius:4px;background:rgba(233,69,96,.2);color:var(--red);border:1px solid rgba(233,69,96,.3)}
-.sb-nav{flex:1;padding:10px 8px}
-.nav-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:9px;font-size:.84rem;font-weight:500;color:var(--muted);cursor:pointer;transition:all .2s;margin-bottom:2px}
-.nav-item:hover,.nav-item.active{background:rgba(108,92,231,.12);color:var(--pu-l)}
-.sb-footer{padding:14px;border-top:1px solid var(--border)}
-.main{flex:1;overflow-y:auto}
-.page{padding:28px 32px;max-width:1300px}
-.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
-.ph-title{font-size:1.3rem;font-weight:700;color:var(--white)}
-.ph-sub{font-size:.82rem;color:var(--muted);margin-top:2px}
-.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px}
-.stat-n{font-size:1.8rem;font-weight:700;color:var(--pu-l);line-height:1}
-.stat-l{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:4px}
-.stat-sub{font-size:.72rem;color:var(--muted);margin-top:2px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:14px}
-.card h3{font-size:.82rem;font-weight:600;color:var(--text);margin-bottom:14px;letter-spacing:.06em;text-transform:uppercase}
-.badge{font-size:.62rem;padding:2px 7px;border-radius:20px;font-weight:600}
-.b-free{background:rgba(255,255,255,.06);color:var(--muted)}
-.b-pro{background:rgba(108,92,231,.12);color:var(--pu-l);border:1px solid rgba(108,92,231,.25)}
-.b-enterprise{background:rgba(0,206,201,.1);color:var(--teal);border:1px solid rgba(0,206,201,.2)}
-table{width:100%;border-collapse:collapse;font-size:.82rem}
-th{padding:8px 12px;text-align:left;color:var(--muted);font-weight:600;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.admin-badge{font-size:.58rem;font-weight:700;padding:2px 7px;border-radius:4px;background:rgba(233,69,96,.2);color:var(--red);border:1px solid rgba(233,69,96,.3);letter-spacing:.05em}
+.sb-nav{flex:1;padding:10px 8px;overflow-y:auto}
+.nav-section{font-size:.64rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding:12px 12px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;font-size:.84rem;font-weight:500;color:var(--muted);cursor:pointer;transition:all .18s;margin-bottom:1px;position:relative}
+.nav-item:hover{background:rgba(255,255,255,.04);color:var(--white)}
+.nav-item.active{background:rgba(108,92,231,.14);color:var(--pu-l);font-weight:600}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:60%;background:var(--purple);border-radius:0 3px 3px 0}
+.sb-footer{padding:12px 14px;border-top:1px solid var(--border)}
+.health-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:5px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.main{flex:1;overflow-y:auto;background:var(--bg)}
+.page{padding:28px 32px;max-width:1400px;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:26px;flex-wrap:wrap;gap:12px}
+.ph-title{font-size:1.4rem;font-weight:800;color:var(--white);letter-spacing:-.03em}
+.ph-sub{font-size:.82rem;color:var(--muted);margin-top:3px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:22px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:14px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;position:relative;overflow:hidden;transition:border-color .2s}
+.stat-card:hover{border-color:rgba(108,92,231,.25)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--purple),var(--pu-l));opacity:0;transition:opacity .2s}
+.stat-card:hover::before{opacity:1}
+.stat-icon{position:absolute;top:16px;right:16px;font-size:1.3rem;opacity:.2}
+.stat-n{font-size:2rem;font-weight:800;color:var(--white);line-height:1;letter-spacing:-.04em}
+.stat-l{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:5px;font-weight:600}
+.stat-sub{font-size:.72rem;color:var(--muted);margin-top:3px}
+.stat-trend{font-size:.74rem;margin-top:6px;font-weight:600}
+.trend-up{color:var(--green)}.trend-dn{color:var(--red)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:14px}
+.card-title{font-size:.78rem;font-weight:700;color:var(--text);margin-bottom:16px;letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between}
+table{width:100%;border-collapse:collapse;font-size:.81rem}
+th{padding:9px 12px;text-align:left;color:var(--muted);font-weight:600;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap}
 td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text);vertical-align:middle}
 tr:hover td{background:rgba(255,255,255,.02)}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:7px;font-size:.78rem;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:all .2s}
+.badge{font-size:.62rem;padding:2px 8px;border-radius:20px;font-weight:600;white-space:nowrap}
+.b-free{background:rgba(255,255,255,.06);color:var(--muted)}
+.b-pro{background:rgba(108,92,231,.12);color:var(--pu-l);border:1px solid rgba(108,92,231,.25)}
+.b-trial{background:rgba(240,192,64,.1);color:var(--gold);border:1px solid rgba(240,192,64,.25)}
+.b-admin{background:rgba(233,69,96,.15);color:var(--red);border:1px solid rgba(233,69,96,.3)}
+.b-green{background:rgba(0,184,148,.1);color:var(--green);border:1px solid rgba(0,184,148,.2)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;font-size:.78rem;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:all .18s}
+.btn:disabled{opacity:.4;cursor:not-allowed}
 .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
-.btn-ghost:hover{border-color:rgba(108,92,231,.4)}
-.btn-purple{background:var(--purple);color:#fff}
-.btn-purple:hover{background:var(--pu-l)}
-.btn-danger{background:rgba(233,69,96,.15);color:var(--red);border:1px solid rgba(233,69,96,.25)}
-.btn-danger:hover{background:rgba(233,69,96,.25)}
+.btn-ghost:hover{border-color:rgba(108,92,231,.4);color:var(--pu-l)}
+.btn-purple{background:var(--purple);color:#fff}.btn-purple:hover{background:var(--pu-l)}
+.btn-danger{background:rgba(233,69,96,.12);color:var(--red);border:1px solid rgba(233,69,96,.2)}.btn-danger:hover{background:rgba(233,69,96,.22)}
 .btn-green{background:rgba(0,184,148,.1);color:var(--green);border:1px solid rgba(0,184,148,.2)}
-.inp{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--white);font-size:.8rem;font-family:inherit}
+.btn-sm{padding:5px 10px;font-size:.74rem;border-radius:7px}
+.btn-xs{padding:3px 8px;font-size:.68rem;border-radius:6px}
+.inp{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;padding:7px 11px;color:var(--white);font-size:.82rem;font-family:inherit;transition:border-color .2s}
 .inp:focus{outline:none;border-color:var(--purple)}
+.inp-full{width:100%}
 select.inp option{background:var(--bg3)}
-.toast-area{position:fixed;bottom:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:6px}
-.toast{background:var(--bg3);border:1px solid rgba(108,92,231,.3);border-radius:9px;padding:10px 14px;font-size:.8rem;color:var(--white);animation:si .3s ease;display:flex;align-items:center;gap:7px}
-.toast.ok{border-color:rgba(0,184,148,.3)}.toast.ok::before{content:'✓';color:var(--green)}
-.toast.err{border-color:rgba(233,69,96,.3);color:var(--red)}.toast.err::before{content:'✕'}
-@keyframes si{from{transform:translateX(16px);opacity:0}to{transform:translateX(0);opacity:1}}
-.chart-wrap{height:180px}
-.search-inp{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--white);font-size:.82rem;width:220px;font-family:inherit}
-.search-inp::placeholder{color:var(--muted)}
-.search-inp:focus{outline:none;border-color:var(--purple)}
-.online-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-right:5px}
+textarea.inp{resize:vertical;min-height:90px;line-height:1.5}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:.74rem;font-weight:600;color:var(--text);margin-bottom:4px}
+.chart-wrap{position:relative;height:200px}
+.chart-wrap-sm{position:relative;height:150px}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.modal{background:var(--bg3);border:1px solid rgba(108,92,231,.18);border-radius:18px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;padding:28px;box-shadow:0 40px 100px rgba(0,0,0,.7)}
+.modal-title{font-size:1.05rem;font-weight:700;color:var(--white);margin-bottom:20px;display:flex;align-items:center;justify-content:space-between}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+.toast-area{position:fixed;bottom:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.toast{background:var(--bg3);border:1px solid rgba(108,92,231,.3);border-radius:10px;padding:11px 16px;font-size:.81rem;color:var(--white);animation:toastIn .3s ease;pointer-events:auto;display:flex;align-items:center;gap:8px;max-width:340px;cursor:pointer}
+.toast.ok{border-color:rgba(0,184,148,.35)}.toast.ok::before{content:'✓';color:var(--green);font-weight:700}
+.toast.err{border-color:rgba(233,69,96,.35)}.toast.err::before{content:'✕';color:var(--red);font-weight:700}
+@keyframes toastIn{from{transform:translateX(16px);opacity:0}to{transform:translateX(0);opacity:1}}
+.sep{height:1px;background:var(--border);margin:16px 0}
+.code{background:#07070f;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:monospace;font-size:.74rem;color:var(--pu-l);overflow-x:auto;white-space:pre-wrap;word-break:break-all}
+.empty{text-align:center;padding:48px 24px;color:var(--muted)}
+.tag{font-size:.65rem;padding:2px 7px;border-radius:20px;background:rgba(255,255,255,.05);color:var(--muted);border:1px solid var(--border)}
+.health-bar{height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;margin-top:4px}
+.health-fill{height:100%;border-radius:3px;transition:width .5s}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--pu-l));display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;color:#fff;flex-shrink:0}
 </style>
 </head>
 <body x-data="admin()" x-init="init()" x-cloak>
 
+<div class="toast-area">
+  <template x-for="t in toasts" :key="t.id">
+    <div class="toast" :class="t.type" x-text="t.msg" @click="toasts=toasts.filter(x=>x.id!==t.id)"></div>
+  </template>
+</div>
+
+<template x-if="!ready">
+  <div style="display:flex;align-items:center;justify-content:center;height:100vh;color:var(--muted)">
+    <div style="text-align:center"><div style="font-size:2rem;margin-bottom:12px">🔐</div><div>Authentifiziere…</div></div>
+  </div>
+</template>
+
+<template x-if="ready && !authorized">
+  <div style="display:flex;align-items:center;justify-content:center;height:100vh">
+    <div style="text-align:center;max-width:360px">
+      <div style="font-size:2.5rem;margin-bottom:16px">🚫</div>
+      <h2 style="color:var(--white);margin-bottom:8px">Kein Admin-Zugriff</h2>
+      <p style="font-size:.85rem;color:var(--muted);margin-bottom:20px">Dein Account hat keine Admin-Rechte. Setze ADMIN_EMAIL in den Render-Env-Variablen.</p>
+      <a href="/app" style="color:var(--pu-l);font-size:.85rem">← Zurück zum Dashboard</a>
+    </div>
+  </div>
+</template>
+
+<template x-if="ready && authorized">
 <div class="app">
   <div class="sidebar">
-    <div class="sb-logo">Agent<span>Kontor</span> <span class="admin-badge">ADMIN</span></div>
-    <nav class="sb-nav">
-      <div class="nav-item" :class="{active:page==='overview'}" @click="page='overview'">📊 Übersicht</div>
-      <div class="nav-item" :class="{active:page==='users'}" @click="page='users';loadUsers()">👥 Nutzer</div>
-      <div class="nav-item" :class="{active:page==='agents'}" @click="page='agents';loadAgents()">🤖 Agenten</div>
-      <div class="nav-item" :class="{active:page==='activity'}" @click="page='activity';loadActivity()">📋 Aktivität</div>
-    </nav>
+    <div class="sb-logo">
+      <span>Agent<span style="color:var(--pu-l)">Kontor</span></span>
+      <span class="admin-badge">ADMIN</span>
+    </div>
+    <div class="sb-nav">
+      <div class="nav-section">Übersicht</div>
+      <div class="nav-item" :class="{active:page==='overview'}" @click="page='overview';loadOverview()">📊 Dashboard</div>
+      <div class="nav-item" :class="{active:page==='revenue'}" @click="page='revenue';loadRevenue()">💶 Revenue &amp; MRR</div>
+      <div class="nav-item" :class="{active:page==='health'}" @click="page='health';loadHealth()"><span class="health-dot"></span>System Health</div>
+      <div class="nav-section">Nutzer &amp; Agenten</div>
+      <div class="nav-item" :class="{active:page==='users'}" @click="page='users';loadUsers()">
+        👥 Nutzer
+        <span style="margin-left:auto;font-size:.65rem;background:rgba(108,92,231,.2);color:var(--pu-l);padding:1px 7px;border-radius:10px" x-show="stats" x-text="stats?.users?.total||''"></span>
+      </div>
+      <div class="nav-item" :class="{active:page==='agents'}" @click="page='agents';loadAllAgents()">🤖 Agenten</div>
+      <div class="nav-item" :class="{active:page==='activity'}" @click="page='activity';loadActivity()">📋 Live-Aktivität</div>
+      <div class="nav-section">Tools</div>
+      <div class="nav-item" :class="{active:page==='costs'}" @click="page='costs';loadCosts()">💰 LLM-Kosten</div>
+      <div class="nav-item" :class="{active:page==='broadcast'}" @click="page='broadcast'">📢 Broadcast</div>
+      <div class="nav-item" :class="{active:page==='promo'}" @click="page='promo'">🎟️ Promo-Codes</div>
+    </div>
     <div class="sb-footer">
-      <div style="font-size:.72rem;color:var(--muted);margin-bottom:8px" x-text="adminUser?.email"></div>
-      <button class="btn btn-ghost" style="width:100%;font-size:.74rem" @click="location.href='/app'">← Zurück zum Dashboard</button>
+      <div style="font-size:.72rem;color:var(--muted);margin-bottom:8px" x-text="adminEmail"></div>
+      <a href="/app" style="font-size:.76rem;color:var(--muted);text-decoration:none">← Zurück zum Dashboard</a>
     </div>
   </div>
 
@@ -85,257 +152,427 @@ select.inp option{background:var(--bg3)}
     <!-- OVERVIEW -->
     <div class="page" x-show="page==='overview'">
       <div class="ph">
-        <div><div class="ph-title">Übersicht</div><div class="ph-sub" x-text="'Zuletzt aktualisiert: '+new Date().toLocaleTimeString('de-DE')" ></div></div>
-        <button class="btn btn-ghost" @click="loadStats()">↺ Aktualisieren</button>
+        <div><div class="ph-title">Admin Dashboard</div><div class="ph-sub" x-text="'Stand: '+lastRefresh"></div></div>
+        <button class="btn btn-ghost btn-sm" @click="loadOverview()">↺ Reload</button>
       </div>
-
+      <template x-if="!stats"><div style="text-align:center;padding:60px;color:var(--muted)">⏳ Lade…</div></template>
       <template x-if="stats">
         <div>
           <div class="grid-4">
-            <div class="stat-card"><div class="stat-n" x-text="stats.users?.total||0"></div><div class="stat-l">Nutzer gesamt</div><div class="stat-sub" x-text="'+'+stats.users?.new_week+' diese Woche'"></div></div>
-            <div class="stat-card"><div class="stat-n" style="color:var(--gold)" x-text="stats.users?.pro||0"></div><div class="stat-l">Pro-Nutzer</div><div class="stat-sub" x-text="'€'+((stats.revenue?.mrr||0))+' MRR'"></div></div>
-            <div class="stat-card"><div class="stat-n" style="color:var(--teal)" x-text="stats.agents?.total||0"></div><div class="stat-l">Agenten</div><div class="stat-sub" x-text="stats.agents?.active+' aktiv'"></div></div>
-            <div class="stat-card"><div class="stat-n" style="color:var(--green)" x-text="stats.messages?.month||0"></div><div class="stat-l">Nachrichten (30 Tage)</div><div class="stat-sub" x-text="stats.leads?.total+' Leads'"></div></div>
+            <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-n" x-text="stats.users.total"></div><div class="stat-l">Nutzer gesamt</div><div class="stat-trend trend-up">+<span x-text="stats.users.new_week"></span> diese Woche</div></div>
+            <div class="stat-card"><div class="stat-icon">⭐</div><div class="stat-n" x-text="stats.users.pro"></div><div class="stat-l">Pro-Nutzer</div><div class="stat-sub" x-text="'MRR ca. €'+(stats.users.pro*19).toLocaleString('de-DE')"></div></div>
+            <div class="stat-card"><div class="stat-icon">💬</div><div class="stat-n" x-text="parseInt(stats.messages.month).toLocaleString('de-DE')"></div><div class="stat-l">Nachrichten 30d</div><div class="stat-sub" x-text="parseInt(stats.messages.total).toLocaleString('de-DE')+' gesamt'"></div></div>
+            <div class="stat-card"><div class="stat-icon">🤖</div><div class="stat-n" x-text="stats.agents.total"></div><div class="stat-l">Agenten</div><div class="stat-sub" x-text="stats.agents.active+' aktiv'"></div></div>
           </div>
-
-          <!-- MRR highlight -->
-          <div style="background:linear-gradient(135deg,rgba(108,92,231,.12),rgba(0,206,201,.08));border:1px solid rgba(108,92,231,.2);border-radius:12px;padding:20px;margin-bottom:14px;display:flex;align-items:center;gap:24px">
-            <div><div style="font-size:2.4rem;font-weight:700;color:var(--white)">€<span x-text="stats.revenue?.mrr||0"></span></div><div style="font-size:.76rem;color:var(--muted);margin-top:2px">Monthly Recurring Revenue</div></div>
-            <div style="height:40px;width:1px;background:var(--border)"></div>
-            <div><div style="font-size:1.4rem;font-weight:700;color:var(--pu-l)" x-text="stats.revenue?.subscribers||0"></div><div style="font-size:.76rem;color:var(--muted)">aktive Abonnenten</div></div>
-            <div style="height:40px;width:1px;background:var(--border)"></div>
-            <div><div style="font-size:1.4rem;font-weight:700;color:var(--teal)" x-text="'€'+(stats.messages?.month&&stats.revenue?.subscribers?(stats.revenue.mrr/Math.max(1,stats.revenue.subscribers)).toFixed(2):0)"></div><div style="font-size:.76rem;color:var(--muted)">ARPU</div></div>
-          </div>
-
-          <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px">
+          <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px">
+            <div class="card"><div class="card-title">Nachrichten pro Tag (30 Tage)</div><div class="chart-wrap"><canvas id="msgChart"></canvas></div></div>
             <div class="card">
-              <h3>Nachrichten (30 Tage)</h3>
-              <div class="chart-wrap"><canvas id="msgChart"></canvas></div>
+              <div class="card-title">Plan-Verteilung</div>
+              <div class="chart-wrap-sm"><canvas id="planChart"></canvas></div>
+              <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:.73rem;color:var(--muted)">
+                <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#6c5ce7;margin-right:4px;vertical-align:middle"></span>Pro <strong style="color:var(--white)" x-text="stats.users.pro"></strong></span>
+                <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.12);margin-right:4px;vertical-align:middle"></span>Free <strong style="color:var(--white)" x-text="parseInt(stats.users.total)-parseInt(stats.users.pro)"></strong></span>
+              </div>
             </div>
-            <div class="card">
-              <h3>Top Agenten</h3>
-              <template x-for="a in stats.topAgents?.slice(0,6)" :key="a.id">
-                <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
-                  <span x-text="a.emoji" style="font-size:1rem"></span>
-                  <div style="flex:1;min-width:0">
-                    <div style="font-size:.8rem;font-weight:600;color:var(--white);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="a.name"></div>
-                    <div style="font-size:.68rem;color:var(--muted)" x-text="a.owner"></div>
-                  </div>
-                  <div style="font-size:.78rem;color:var(--pu-l);font-weight:700;flex-shrink:0" x-text="a.total_messages"></div>
-                </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Top Agenten nach Nachrichten</div>
+            <table>
+              <tr><th>Agent</th><th>Besitzer</th><th>Nachrichten</th><th>Status</th></tr>
+              <template x-for="a in stats.topAgents" :key="a.id">
+                <tr>
+                  <td><span x-text="a.emoji+' '"></span><strong x-text="a.name" style="color:var(--white)"></strong></td>
+                  <td style="color:var(--muted);font-size:.76rem" x-text="a.owner"></td>
+                  <td><strong x-text="(a.total_messages||0).toLocaleString('de-DE')" style="color:var(--pu-l)"></strong></td>
+                  <td><span class="badge" :class="a.is_active?'b-green':'b-free'" x-text="a.is_active?'Aktiv':'Inaktiv'"></span></td>
+                </tr>
               </template>
-            </div>
+            </table>
           </div>
         </div>
       </template>
-      <template x-if="!stats"><div style="text-align:center;padding:60px;color:var(--muted)">⏳ Lade Daten…</div></template>
+    </div>
+
+    <!-- REVENUE -->
+    <div class="page" x-show="page==='revenue'">
+      <div class="ph"><div><div class="ph-title">💶 Revenue &amp; MRR</div><div class="ph-sub">Abonnements, Wachstum, Conversion</div></div><button class="btn btn-ghost btn-sm" @click="loadRevenue()">↺</button></div>
+      <template x-if="!revenue"><div style="text-align:center;padding:60px;color:var(--muted)">⏳ Lade…</div></template>
+      <template x-if="revenue">
+        <div>
+          <div class="grid-4">
+            <div class="stat-card"><div class="stat-icon">💶</div><div class="stat-n" x-text="'€'+(revenue.mrr_eur||0).toLocaleString('de-DE')"></div><div class="stat-l">MRR (geschätzt)</div><div class="stat-sub" x-text="'ARR: €'+(revenue.arr_eur||0).toLocaleString('de-DE')"></div></div>
+            <div class="stat-card"><div class="stat-icon">⭐</div><div class="stat-n" x-text="revenue.paying_users||0"></div><div class="stat-l">Zahlende Nutzer</div><div class="stat-trend trend-up" x-show="revenue.new_30d>0">+<span x-text="revenue.new_30d"></span> / 30 Tage</div></div>
+            <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-n" x-text="revenue.trialing_users||0"></div><div class="stat-l">Im Trial</div><div class="stat-sub">14-Tage Pro Trial</div></div>
+            <div class="stat-card">
+              <div class="stat-icon">📈</div>
+              <div class="stat-n" x-text="revenue.paying_users&&(revenue.paying_users+revenue.free_users)>0?Math.round((revenue.paying_users/(revenue.paying_users+revenue.free_users+revenue.trialing_users))*100)+'%':'—'"></div>
+              <div class="stat-l">Conversion Rate</div>
+              <div class="stat-sub" x-text="(revenue.free_users||0)+' Free-Nutzer'"></div>
+            </div>
+          </div>
+          <div class="card"><div class="card-title">Neue Anmeldungen pro Monat (6 Monate)</div><div class="chart-wrap"><canvas id="growthChart"></canvas></div></div>
+        </div>
+      </template>
+    </div>
+
+    <!-- HEALTH -->
+    <div class="page" x-show="page==='health'">
+      <div class="ph"><div><div class="ph-title">⚡ System Health</div><div class="ph-sub">Datenbankstatus und Server-Performance</div></div><button class="btn btn-ghost btn-sm" @click="loadHealth()">↺ Prüfen</button></div>
+      <template x-if="!health"><div style="text-align:center;padding:60px;color:var(--muted)">⏳ Prüfe System…</div></template>
+      <template x-if="health">
+        <div>
+          <div class="grid-4">
+            <div class="stat-card" :style="health.db_latency_ms<100?'border-color:rgba(0,184,148,.3)':'border-color:rgba(233,69,96,.3)'">
+              <div class="stat-icon">🗄️</div>
+              <div class="stat-n" :style="health.db_latency_ms<100?'color:var(--green)':'color:var(--red)'" x-text="health.db_latency_ms+'ms'"></div>
+              <div class="stat-l">DB-Latenz</div>
+              <div class="stat-sub" x-text="health.db_latency_ms<50?'✅ Excellent':health.db_latency_ms<100?'🟡 Gut':'🔴 Langsam'"></div>
+            </div>
+            <div class="stat-card"><div class="stat-icon">💾</div><div class="stat-n" style="font-size:1.2rem" x-text="health.db_size||'?'"></div><div class="stat-l">Datenbankgrösse</div></div>
+            <div class="stat-card"><div class="stat-icon">🧠</div><div class="stat-n" x-text="health.memory_mb+'MB'"></div><div class="stat-l">Heap Memory</div><div class="stat-sub" x-text="'Node.js '+health.node_version"></div></div>
+            <div class="stat-card"><div class="stat-icon">⏱️</div><div class="stat-n" style="font-size:1.1rem" x-text="Math.floor((health.uptime_s||0)/3600)+'h '+(Math.floor((health.uptime_s||0)%3600/60))+'m'"></div><div class="stat-l">Uptime</div></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Tabellengrössen</div>
+            <table>
+              <tr><th>Tabelle</th><th>Zeilen (geschätzt)</th><th>Anteil</th></tr>
+              <template x-for="t in health.top_tables" :key="t.tablename">
+                <tr>
+                  <td style="font-family:monospace;font-size:.78rem;color:var(--pu-l)" x-text="t.tablename"></td>
+                  <td><strong x-text="parseInt(t.rows).toLocaleString('de-DE')" style="color:var(--white)"></strong></td>
+                  <td style="width:240px">
+                    <div class="health-bar">
+                      <div class="health-fill" :style="'width:'+Math.min(100,parseInt(t.rows)/Math.max(1,parseInt(health.top_tables[0]?.rows))*100)+'%;background:var(--purple)'"></div>
+                    </div>
+                  </td>
+                </tr>
+              </template>
+            </table>
+          </div>
+          <div class="card" x-show="parseInt(health.active_locks)>0" style="border-color:rgba(233,69,96,.3)">
+            <div style="color:var(--red);font-weight:600">⚠️ <span x-text="health.active_locks"></span> aktive DB-Locks</div>
+            <div style="font-size:.82rem;margin-top:4px;color:var(--muted)">Könnte die Performance beeinflussen. Prüfe laufende Transaktionen.</div>
+          </div>
+        </div>
+      </template>
     </div>
 
     <!-- USERS -->
     <div class="page" x-show="page==='users'">
       <div class="ph">
-        <div><div class="ph-title">Nutzer</div><div class="ph-sub" x-text="users.length+' Nutzer gesamt'"></div></div>
-        <input class="search-inp" type="text" placeholder="Suche nach E-Mail oder Name…" x-model="userSearch">
+        <div><div class="ph-title">👥 Nutzer</div><div class="ph-sub" x-text="users.length+' geladen'"></div></div>
+        <div style="display:flex;gap:8px">
+          <input class="inp" style="width:240px" placeholder="🔍 E-Mail oder Name suchen…" x-model="userSearch" @input.debounce.400ms="searchUsers()">
+          <button class="btn btn-ghost btn-sm" @click="loadUsers()">↺ Alle laden</button>
+        </div>
       </div>
       <div class="card" style="padding:0;overflow:hidden">
         <table>
-          <thead><tr><th>Nutzer</th><th>Plan</th><th>Agenten</th><th>Nachrichten/Mo</th><th>Registriert</th><th>Aktionen</th></tr></thead>
+          <thead><tr><th>Nutzer</th><th>Plan</th><th>Agenten</th><th>Msgs/Mo</th><th>Registriert</th><th style="text-align:right">Aktionen</th></tr></thead>
           <tbody>
-            <template x-for="u in filteredUsers" :key="u.id">
-              <tr>
+            <template x-for="u in users" :key="u.id">
+              <tr :style="u.deleted_at?'opacity:.4':''">
                 <td>
-                  <div style="font-weight:600;color:var(--white)" x-text="u.name"></div>
-                  <div style="font-size:.72rem;color:var(--muted)" x-text="u.email"></div>
-                  <span x-show="u.is_admin" style="font-size:.6rem;background:rgba(233,69,96,.15);color:var(--red);padding:1px 5px;border-radius:3px;margin-top:2px;display:inline-block">ADMIN</span>
+                  <div style="display:flex;align-items:center;gap:9px">
+                    <div class="user-avatar" x-text="(u.name||u.email||'?')[0].toUpperCase()"></div>
+                    <div>
+                      <div style="font-size:.84rem;font-weight:600;color:var(--white)" x-text="u.name||'—'"></div>
+                      <div style="font-size:.72rem;color:var(--muted)" x-text="u.email"></div>
+                    </div>
+                    <span class="badge b-admin" x-show="u.is_admin">ADMIN</span>
+                    <span class="badge" style="background:rgba(233,69,96,.08);color:var(--muted)" x-show="u.deleted_at">Gelöscht</span>
+                  </div>
                 </td>
                 <td>
-                  <select class="inp" style="width:100px" :value="u.plan" @change="changePlan(u.id, $event.target.value)">
-                    <option value="free">Free</option>
-                    <option value="pro">Pro</option>
-                    <option value="enterprise">Enterprise</option>
-                  </select>
+                  <div style="display:flex;align-items:center;gap:6px">
+                    <select class="inp" style="padding:3px 8px;font-size:.74rem" :value="u.plan" @change="changePlan(u.id,$event.target.value,u)">
+                      <option value="free">Free</option>
+                      <option value="pro">Pro</option>
+                      <option value="enterprise">Enterprise</option>
+                    </select>
+                    <span class="badge b-trial" x-show="u.trial_ends_at&&u.plan==='pro'">Trial</span>
+                  </div>
                 </td>
-                <td x-text="u.agent_count||0"></td>
+                <td><span x-text="u.agent_count||0" style="color:var(--pu-l);font-weight:700"></span></td>
                 <td>
-                  <span x-text="u.msg_count_month||0"></span>
+                  <span x-text="(u.msg_count_month||0).toLocaleString('de-DE')"></span>
+                  <span style="color:var(--muted);font-size:.7rem"> / <span x-text="u.plan==='pro'?'10k':'500'"></span></span>
                 </td>
-                <td style="font-size:.75rem;color:var(--muted);white-space:nowrap" x-text="new Date(u.created_at).toLocaleDateString('de-DE')"></td>
+                <td style="color:var(--muted);font-size:.75rem;white-space:nowrap" x-text="new Date(u.created_at).toLocaleDateString('de-DE')"></td>
                 <td>
-                  <div style="display:flex;gap:5px">
-                    <button class="btn btn-ghost" style="font-size:.7rem;padding:3px 8px" @click="deleteUser(u.id, u.email)">🗑</button>
+                  <div style="display:flex;gap:4px;justify-content:flex-end">
+                    <button class="btn btn-xs btn-ghost" @click="openEmail(u)" title="E-Mail senden">✉️</button>
+                    <button class="btn btn-xs btn-ghost" @click="impersonate(u.id)" title="Als Nutzer einloggen">👁️</button>
+                    <button class="btn btn-xs btn-ghost" @click="toggleAdmin(u)" :title="u.is_admin?'Admin entziehen':'Admin geben'">⚙️</button>
+                    <button class="btn btn-xs btn-danger" @click="deleteUser(u.id)" x-show="!u.deleted_at" title="Löschen">✕</button>
                   </div>
                 </td>
               </tr>
             </template>
           </tbody>
         </table>
+        <template x-if="users.length===0"><div class="empty">Keine Nutzer. Suche oder lade alle.</div></template>
       </div>
     </div>
 
     <!-- AGENTS -->
     <div class="page" x-show="page==='agents'">
       <div class="ph">
-        <div><div class="ph-title">Alle Agenten</div><div class="ph-sub" x-text="adminAgents.length+' Agenten'"></div></div>
-        <input class="search-inp" type="text" placeholder="Agent oder Betreiber suchen…" x-model="agentSearch">
+        <div><div class="ph-title">🤖 Alle Agenten</div><div class="ph-sub" x-text="allAgents.length+' Agenten auf der Plattform'"></div></div>
+        <input class="inp" style="width:220px" placeholder="🔍 Name oder E-Mail…" x-model="agentFilter">
       </div>
       <div class="card" style="padding:0;overflow:hidden">
         <table>
-          <thead><tr><th>Agent</th><th>Betreiber</th><th>Nachrichten</th><th>Features</th><th>Erstellt</th></tr></thead>
+          <thead><tr><th>Agent</th><th>Besitzer</th><th>Plan</th><th>Features</th><th>Nachrichten</th><th>Modell</th><th>Status</th><th>Erstellt</th></tr></thead>
           <tbody>
-            <template x-for="a in filteredAgents" :key="a.id">
+            <template x-for="a in allAgents.filter(a=>!agentFilter||a.name.toLowerCase().includes(agentFilter.toLowerCase())||a.owner_email.toLowerCase().includes(agentFilter.toLowerCase()))" :key="a.id">
               <tr>
-                <td>
-                  <div style="display:flex;align-items:center;gap:8px">
-                    <span x-text="a.emoji" style="font-size:1.1rem"></span>
-                    <div>
-                      <div style="font-weight:600;color:var(--white)" x-text="a.name"></div>
-                      <div style="font-size:.7rem" :style="a.is_active?'color:var(--green)':'color:var(--muted)'" x-text="a.is_active?'● Aktiv':'● Inaktiv'"></div>
-                    </div>
-                  </div>
+                <td><span x-text="a.emoji+' '"></span><strong x-text="a.name" style="color:var(--white)"></strong></td>
+                <td><div style="font-size:.78rem;color:var(--white)" x-text="a.owner_name"></div><div style="font-size:.7rem;color:var(--muted)" x-text="a.owner_email"></div></td>
+                <td><span class="badge" :class="a.owner_plan==='pro'?'b-pro':'b-free'" x-text="a.owner_plan"></span></td>
+                <td style="font-size:.7rem">
+                  <span x-show="a.rag_enabled" class="tag" style="margin-right:2px">RAG</span>
+                  <span x-show="a.whatsapp_enabled" class="tag" style="color:#25d366;margin-right:2px">WA</span>
+                  <span x-show="a.telegram_enabled" class="tag" style="color:#0088cc;margin-right:2px">TG</span>
+                  <span x-show="a.voice_enabled" class="tag" style="color:var(--pu-l)">Voice</span>
                 </td>
-                <td>
-                  <div style="font-size:.8rem" x-text="a.owner_name"></div>
-                  <div style="font-size:.7rem;color:var(--muted)" x-text="a.owner_email"></div>
-                  <span class="badge" :class="'b-'+a.owner_plan" x-text="(a.owner_plan||'free').toUpperCase()"></span>
-                </td>
-                <td style="font-weight:700;color:var(--pu-l)" x-text="a.total_messages||0"></td>
-                <td>
-                  <div style="display:flex;gap:4px;flex-wrap:wrap">
-                    <span class="badge b-pro" x-show="a.rag_enabled">RAG</span>
-                    <span class="badge" style="background:rgba(37,211,102,.1);color:#25d366;border:1px solid rgba(37,211,102,.2)" x-show="a.whatsapp_enabled">WA</span>
-                    <span class="badge" style="background:rgba(0,136,204,.1);color:#0088cc;border:1px solid rgba(0,136,204,.2)" x-show="a.telegram_enabled">TG</span>
-                  </div>
-                </td>
-                <td style="font-size:.75rem;color:var(--muted);white-space:nowrap" x-text="new Date(a.created_at).toLocaleDateString('de-DE')"></td>
+                <td><strong x-text="(a.total_messages||0).toLocaleString('de-DE')" style="color:var(--pu-l)"></strong></td>
+                <td style="font-size:.7rem;font-family:monospace;color:var(--muted)" x-text="(a.model||'claude-sonnet-4-6').replace('claude-','').replace('-latest','')"></td>
+                <td><span class="badge" :class="a.is_active?'b-green':'b-free'" x-text="a.is_active?'Aktiv':'Inaktiv'"></span></td>
+                <td style="color:var(--muted);font-size:.73rem;white-space:nowrap" x-text="new Date(a.created_at).toLocaleDateString('de-DE')"></td>
               </tr>
             </template>
           </tbody>
         </table>
+        <template x-if="allAgents.length===0"><div class="empty">Keine Agenten geladen</div></template>
       </div>
     </div>
 
     <!-- ACTIVITY -->
     <div class="page" x-show="page==='activity'">
-      <div class="ph">
-        <div><div class="ph-title">Aktivität</div><div class="ph-sub">Letzte 50 Nachrichten</div></div>
-        <button class="btn btn-ghost" @click="loadActivity()">↺</button>
-      </div>
+      <div class="ph"><div><div class="ph-title">📋 Live-Aktivität</div><div class="ph-sub">Letzte 50 Nutzer-Nachrichten plattformweit</div></div><button class="btn btn-ghost btn-sm" @click="loadActivity()">↺</button></div>
       <div class="card" style="padding:0;overflow:hidden">
         <table>
-          <thead><tr><th>Zeit</th><th>Agent</th><th>Betreiber</th><th>Kanal</th><th>Nachricht</th></tr></thead>
+          <thead><tr><th>Zeit</th><th>Agent</th><th>Besitzer</th><th>Kanal</th><th>Nachricht (Vorschau)</th></tr></thead>
           <tbody>
             <template x-for="a in activity" :key="a.id">
               <tr>
-                <td style="font-size:.72rem;color:var(--muted);white-space:nowrap" x-text="new Date(a.created_at).toLocaleString('de-DE')"></td>
-                <td style="font-size:.8rem;color:var(--white)" x-text="a.agent_name"></td>
-                <td style="font-size:.72rem;color:var(--muted)" x-text="a.owner_email"></td>
-                <td><span class="badge b-pro" x-text="a.source"></span></td>
-                <td style="font-size:.78rem;color:var(--text);max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="a.preview"></td>
+                <td style="white-space:nowrap;color:var(--muted);font-size:.74rem" x-text="new Date(a.created_at).toLocaleString('de-DE',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'})"></td>
+                <td style="font-size:.8rem;font-weight:600;color:var(--white)" x-text="a.agent_name"></td>
+                <td style="font-size:.73rem;color:var(--muted)" x-text="a.owner_email"></td>
+                <td><span class="badge b-free" x-text="a.source"></span></td>
+                <td style="font-size:.78rem;color:var(--text);max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="a.preview"></td>
               </tr>
             </template>
           </tbody>
         </table>
+        <template x-if="activity.length===0"><div class="empty">Keine Aktivität vorhanden</div></template>
       </div>
     </div>
 
+    <!-- LLM COSTS -->
+    <div class="page" x-show="page==='costs'">
+      <div class="ph"><div><div class="ph-title">💰 LLM-Kosten</div><div class="ph-sub">Plattformweite API-Ausgaben</div></div><button class="btn btn-ghost btn-sm" @click="loadCosts()">↺</button></div>
+      <template x-if="!costs"><div style="text-align:center;padding:60px;color:var(--muted)">⏳ Lade…</div></template>
+      <template x-if="costs">
+        <div>
+          <div class="grid-4">
+            <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-n">'$'<span x-text="parseFloat(costs.totals.total||0).toFixed(2)"></span></div><div class="stat-l">Gesamt</div></div>
+            <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-n">'$'<span x-text="parseFloat(costs.totals.month||0).toFixed(2)"></span></div><div class="stat-l">Dieser Monat</div></div>
+            <div class="stat-card"><div class="stat-icon">📆</div><div class="stat-n">'$'<span x-text="parseFloat(costs.totals.week||0).toFixed(2)"></span></div><div class="stat-l">Diese Woche</div></div>
+            <div class="stat-card"><div class="stat-icon">🔢</div><div class="stat-n" style="font-size:1.1rem" x-text="parseInt(costs.totals.total_tokens||0).toLocaleString('de-DE')"></div><div class="stat-l">Tokens gesamt</div></div>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title">Kosten nach Modell</div>
+              <table>
+                <tr><th>Modell</th><th>Calls</th><th>Kosten ($)</th></tr>
+                <template x-for="m in costs.byModel" :key="m.model">
+                  <tr>
+                    <td style="font-family:monospace;font-size:.76rem;color:var(--pu-l)" x-text="m.model"></td>
+                    <td style="color:var(--muted)" x-text="parseInt(m.calls).toLocaleString('de-DE')"></td>
+                    <td><strong x-text="'$'+parseFloat(m.cost).toFixed(4)" style="color:var(--gold)"></strong></td>
+                  </tr>
+                </template>
+              </table>
+            </div>
+            <div class="card">
+              <div class="card-title">Top Nutzer nach Kosten (30d)</div>
+              <table>
+                <tr><th>Nutzer</th><th>Plan</th><th>Kosten ($)</th></tr>
+                <template x-for="u in costs.byUser" :key="u.email">
+                  <tr>
+                    <td><div style="font-size:.8rem;font-weight:600;color:var(--white)" x-text="u.name"></div><div style="font-size:.7rem;color:var(--muted)" x-text="u.email"></div></td>
+                    <td><span class="badge" :class="u.plan==='pro'?'b-pro':'b-free'" x-text="u.plan"></span></td>
+                    <td><strong x-text="'$'+parseFloat(u.cost).toFixed(4)" style="color:var(--gold)"></strong></td>
+                  </tr>
+                </template>
+              </table>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- BROADCAST -->
+    <div class="page" x-show="page==='broadcast'">
+      <div class="ph"><div><div class="ph-title">📢 Broadcast E-Mail</div><div class="ph-sub">An alle oder gefilterte Nutzer senden</div></div></div>
+      <div class="card" style="max-width:660px">
+        <div class="field"><label>Empfänger</label>
+          <select class="inp inp-full" x-model="broadcast.plan">
+            <option value="all">Alle Nutzer</option>
+            <option value="pro">Nur Pro-Nutzer</option>
+            <option value="free">Nur Free-Nutzer</option>
+          </select>
+        </div>
+        <div class="field"><label>Betreff</label><input class="inp inp-full" x-model="broadcast.subject" placeholder="z.B. Neue Features im August"></div>
+        <div class="field">
+          <label>Text (Zeilenumbrüche → &lt;br&gt;)</label>
+          <textarea class="inp inp-full" x-model="broadcast.body" rows="9" placeholder="Hallo,&#10;&#10;wir haben neue Features…&#10;&#10;Viele Grüße,&#10;Das AgentKontor Team"></textarea>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+          <button class="btn btn-purple" @click="sendBroadcast()" :disabled="broadcastSending||!broadcast.subject||!broadcast.body">
+            <span x-text="broadcastSending?'Wird gesendet…':'📢 Jetzt senden'"></span>
+          </button>
+          <div style="font-size:.8rem;color:var(--green);font-weight:600" x-show="broadcastResult" x-text="broadcastResult"></div>
+        </div>
+        <div style="font-size:.75rem;color:var(--muted);line-height:1.6;background:rgba(255,255,255,.02);padding:12px;border-radius:8px;border:1px solid var(--border)">
+          ⚠️ E-Mails werden einzeln sequenziell versandt. Bei vielen Nutzern kann dies Minuten dauern.
+          SMTP muss in den Render-Env-Variablen konfiguriert sein.
+        </div>
+      </div>
+    </div>
+
+    <!-- PROMO -->
+    <div class="page" x-show="page==='promo'">
+      <div class="ph"><div><div class="ph-title">🎟️ Promo-Codes &amp; Direktzuweisung</div></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:860px">
+        <div class="card">
+          <div class="card-title">Promo-Code erstellen</div>
+          <div class="field"><label>Code (wird zu Großbuchstaben)</label><input class="inp inp-full" x-model="promo.code" placeholder="LAUNCH50" @input="promo.code=promo.code.toUpperCase()"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="field"><label>Plan</label><select class="inp inp-full" x-model="promo.plan"><option value="pro">Pro</option><option value="enterprise">Enterprise</option></select></div>
+            <div class="field"><label>Tage</label><input class="inp inp-full" type="number" x-model="promo.days" placeholder="30"></div>
+          </div>
+          <button class="btn btn-purple" @click="createPromo()" :disabled="!promo.code||!promo.days">Code erstellen</button>
+          <template x-if="promoCreated">
+            <div style="margin-top:14px">
+              <div style="color:var(--green);font-size:.82rem;margin-bottom:6px">✓ Code <strong x-text="promoCreated"></strong> erstellt!</div>
+              <div class="code" x-text="'https://agentkontor.de/app?promo='+promoCreated"></div>
+            </div>
+          </template>
+        </div>
+        <div class="card">
+          <div class="card-title">Direktzuweisung</div>
+          <div class="field"><label>Nutzer (E-Mail oder ID)</label><input class="inp inp-full" x-model="directEmail" placeholder="user@example.com"></div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button class="btn btn-green" @click="directPlan('pro')" :disabled="!directEmail">→ Auf Pro schalten</button>
+            <button class="btn btn-gold" @click="extendTrial()" :disabled="!directEmail" style="background:rgba(240,192,64,.1);color:var(--gold);border:1px solid rgba(240,192,64,.2)">→ Trial um 14 Tage verlängern</button>
+            <button class="btn btn-ghost" @click="directPlan('free')" :disabled="!directEmail">→ Auf Free zurücksetzen</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+</template>
+
+<!-- EMAIL MODAL -->
+<div class="modal-bg" x-show="emailModal.open" x-cloak @click.self="emailModal.open=false">
+  <div class="modal">
+    <div class="modal-title">
+      ✉️ E-Mail an <span x-text="emailModal.user?.name||emailModal.user?.email"></span>
+      <button @click="emailModal.open=false" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.4rem;line-height:1">×</button>
+    </div>
+    <div class="field"><label>Betreff</label><input class="inp inp-full" x-model="emailModal.subject" placeholder="Betreff"></div>
+    <div class="field"><label>Nachricht</label><textarea class="inp inp-full" x-model="emailModal.body" rows="7" placeholder="Deine Nachricht…"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" @click="emailModal.open=false">Abbrechen</button>
+      <button class="btn btn-purple" @click="sendEmail()" :disabled="emailModal.sending||!emailModal.subject">
+        <span x-text="emailModal.sending?'Sende…':'✉️ Senden'"></span>
+      </button>
+    </div>
   </div>
 </div>
 
-<div class="toast-area">
-  <template x-for="t in toasts" :key="t.id"><div class="toast" :class="t.type" x-text="t.msg"></div></template>
-</div>
-
 <script>
-function admin() {
+function admin(){
   return {
-    page: 'overview', token: null, adminUser: null,
-    stats: null, users: [], adminAgents: [], activity: [],
-    userSearch: '', agentSearch: '', toasts: [],
+    page:'overview', ready:false, authorized:false, adminEmail:'', toasts:[],
+    lastRefresh:'—', stats:null, revenue:null, health:null, costs:null,
+    users:[], allAgents:[], activity:[], agentFilter:'', userSearch:'',
+    broadcast:{plan:'all',subject:'',body:''}, broadcastSending:false, broadcastResult:'',
+    promo:{code:'',plan:'pro',days:30}, promoCreated:'', directEmail:'',
+    emailModal:{open:false,user:null,subject:'',body:'',sending:false},
+    charts:{},
 
-    get filteredUsers() {
-      const q = this.userSearch.toLowerCase();
-      return this.users.filter(u => !q || u.email.toLowerCase().includes(q) || (u.name||'').toLowerCase().includes(q));
-    },
-    get filteredAgents() {
-      const q = this.agentSearch.toLowerCase();
-      return this.adminAgents.filter(a => !q || a.name.toLowerCase().includes(q) || (a.owner_email||'').toLowerCase().includes(q));
+    async init(){
+      const token=localStorage.getItem('ak_token');
+      if(!token){this.ready=true;return;}
+      try{
+        const r=await fetch('/api/admin/stats',{credentials:'include',headers:{Authorization:'Bearer '+token}});
+        if(r.status===403||r.status===401){this.ready=true;return;}
+        if(r.ok){
+          this.authorized=true;
+          const me=await fetch('/api/auth/me',{credentials:'include',headers:{Authorization:'Bearer '+token}}).catch(()=>({json:()=>({})}));
+          const md=await me.json().catch(()=>({}));
+          this.adminEmail=md.user?.email||'admin';
+          this.stats=await r.json();
+          this.lastRefresh=new Date().toLocaleTimeString('de-DE');
+          this.$nextTick(()=>this.drawOverviewCharts());
+        }
+      }catch{}
+      this.ready=true;
     },
 
-    async init() {
-      this.token = localStorage.getItem('ak_token');
-      if (!this.token) { location.href = '/app'; return; }
-      const me = await this.api('/auth/me');
-      if (!me.user) { location.href = '/app'; return; }
-      this.adminUser = me.user;
-      await this.loadStats();
-    },
-
-    async api(path, method = 'GET', body = null) {
-      const opts = { method, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + this.token } };
-      if (body) opts.body = JSON.stringify(body);
-      const r = await fetch('/api' + path, opts);
-      if (r.status === 403) { location.href = '/app'; return {}; }
+    async api(path,method='GET',body=null){
+      const token=localStorage.getItem('ak_token');
+      const opts={method,credentials:'include',headers:{'Content-Type':'application/json',Authorization:'Bearer '+(token||'')}};
+      if(body)opts.body=JSON.stringify(body);
+      const r=await fetch('/api'+path,opts);
+      if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||r.statusText);}
       return r.json();
     },
 
-    async loadStats() {
-      const d = await this.api('/admin/stats');
-      if (d.users) {
-        this.stats = d;
-        this.$nextTick(() => this.renderChart(d.msgsByDay || []));
-      } else {
-        this.toast('Kein Admin-Zugriff', 'err');
-        setTimeout(() => location.href = '/app', 1500);
-      }
-    },
+    toast(msg,type='ok'){const id=Date.now();this.toasts.push({id,msg,type});setTimeout(()=>this.toasts=this.toasts.filter(t=>t.id!==id),3500);},
 
-    renderChart(data) {
-      const ctx = document.getElementById('msgChart');
-      if (!ctx) return;
-      if (this._chart) { try { this._chart.destroy(); } catch {} }
-      this._chart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: data.map(d => new Date(d.day).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })),
-          datasets: [{ data: data.map(d => parseInt(d.count)), borderColor: '#6c5ce7', backgroundColor: 'rgba(108,92,231,.1)', fill: true, tension: .4, pointRadius: 2 }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#5a5a80', font: { size: 9 }, maxTicksLimit: 8 } }, y: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#5a5a80', font: { size: 9 } } } } }
-      });
-    },
+    async loadOverview(){try{this.stats=await this.api('/admin/stats');this.lastRefresh=new Date().toLocaleTimeString('de-DE');this.$nextTick(()=>this.drawOverviewCharts());}catch(e){this.toast(e.message,'err');}},
+    async loadRevenue(){try{this.revenue=await this.api('/admin/revenue');this.$nextTick(()=>this.drawRevenueCharts());}catch(e){this.toast(e.message,'err');}},
+    async loadHealth(){try{this.health=await this.api('/admin/health');}catch(e){this.toast(e.message,'err');}},
+    async loadUsers(){try{const d=await this.api('/admin/users');this.users=d.users;}catch(e){this.toast(e.message,'err');}},
+    async searchUsers(){if(!this.userSearch.trim()){this.loadUsers();return;}try{const d=await this.api('/admin/users/search?q='+encodeURIComponent(this.userSearch));this.users=d.users;}catch(e){this.toast(e.message,'err');}},
+    async loadAllAgents(){try{const d=await this.api('/admin/agents');this.allAgents=d.agents;}catch(e){this.toast(e.message,'err');}},
+    async loadActivity(){try{const d=await this.api('/admin/activity');this.activity=d.activity;}catch(e){this.toast(e.message,'err');}},
+    async loadCosts(){try{this.costs=await this.api('/admin/llm-costs');}catch(e){this.toast(e.message,'err');}},
 
-    async loadUsers() {
-      const d = await this.api('/admin/users');
-      if (d.users) this.users = d.users;
-    },
+    async changePlan(id,plan,user){try{await this.api('/admin/users/'+id+'/plan','PUT',{plan});user.plan=plan;this.toast('Plan → '+plan);}catch(e){this.toast(e.message,'err');}},
+    async toggleAdmin(user){try{await this.api('/admin/users/'+user.id+'/admin','PUT',{is_admin:!user.is_admin});user.is_admin=!user.is_admin;this.toast(user.is_admin?'Admin-Rechte erteilt':'Admin-Rechte entzogen');}catch(e){this.toast(e.message,'err');}},
+    async deleteUser(id){if(!confirm('Nutzer wirklich löschen? Unwiderruflich!'))return;try{await this.api('/admin/users/'+id+'/hard','DELETE');this.users=this.users.filter(u=>u.id!==id);this.toast('Nutzer gelöscht');}catch(e){this.toast(e.message,'err');}},
+    async impersonate(id){try{const d=await this.api('/admin/users/'+id+'/impersonate','POST');localStorage.setItem('ak_token',d.token);this.toast('Eingeloggt als Nutzer (1h)');setTimeout(()=>window.open('/app','_blank'),400);}catch(e){this.toast(e.message,'err');}},
+    openEmail(user){this.emailModal={open:true,user,subject:'',body:'',sending:false};},
+    async sendEmail(){this.emailModal.sending=true;try{await this.api('/admin/users/'+this.emailModal.user.id+'/email','POST',{subject:this.emailModal.subject,body:this.emailModal.body});this.toast('E-Mail gesendet');this.emailModal.open=false;}catch(e){this.toast(e.message,'err');}this.emailModal.sending=false;},
+    async sendBroadcast(){if(!confirm('Wirklich an alle '+this.broadcast.plan+'-Nutzer senden?'))return;this.broadcastSending=true;this.broadcastResult='';try{const d=await this.api('/admin/broadcast','POST',this.broadcast);this.broadcastResult='✓ '+d.sent+'/'+d.total+' gesendet';this.toast('Broadcast: '+d.sent+' E-Mails');}catch(e){this.toast(e.message,'err');}this.broadcastSending=false;},
+    async createPromo(){try{const d=await this.api('/admin/promo','POST',this.promo);this.promoCreated=d.code;this.toast('Promo-Code: '+d.code);}catch(e){this.toast(e.message,'err');}},
+    async directPlan(plan){const q=this.directEmail.trim();if(!q)return;try{const d=await this.api('/admin/users/search?q='+encodeURIComponent(q));if(!d.users.length){this.toast('Nutzer nicht gefunden','err');return;}await this.api('/admin/users/'+d.users[0].id+'/plan','PUT',{plan});this.toast(d.users[0].email+' → '+plan);}catch(e){this.toast(e.message,'err');}},
+    async extendTrial(){const q=this.directEmail.trim();if(!q)return;try{const d=await this.api('/admin/users/search?q='+encodeURIComponent(q));if(!d.users.length){this.toast('Nutzer nicht gefunden','err');return;}const u=d.users[0];const newEnd=new Date(Math.max(Date.now(),new Date(u.trial_ends_at||Date.now()).getTime())+14*24*60*60*1000);await this.api('/admin/users/'+u.id+'/plan','PUT',{plan:'pro'});this.toast('Trial verlängert für '+u.email);}catch(e){this.toast(e.message,'err');}},
 
-    async changePlan(id, plan) {
-      const d = await this.api('/admin/users/' + id + '/plan', 'PUT', { plan });
-      if (d.success) { this.toast('Plan auf ' + plan + ' gesetzt ✓'); this.loadUsers(); }
-      else this.toast(d.error || 'Fehler', 'err');
+    drawOverviewCharts(){
+      Object.values(this.charts).forEach(c=>{try{c.destroy();}catch{}});
+      this.charts={};
+      if(!this.stats)return;
+      const msgEl=document.getElementById('msgChart');
+      if(msgEl)this.charts.msg=new Chart(msgEl,{type:'line',data:{labels:(this.stats.msgsByDay||[]).map(d=>new Date(d.day).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})),datasets:[{label:'Nachrichten',data:(this.stats.msgsByDay||[]).map(d=>d.count),borderColor:'#6c5ce7',backgroundColor:'rgba(108,92,231,.1)',fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#6c5ce7'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a5a80',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#5a5a80',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}}}}});
+      const planEl=document.getElementById('planChart');
+      if(planEl&&this.stats.users){const pro=parseInt(this.stats.users.pro)||0,free=parseInt(this.stats.users.total)-pro;this.charts.plan=new Chart(planEl,{type:'doughnut',data:{labels:['Pro','Free'],datasets:[{data:[pro,free],backgroundColor:['rgba(108,92,231,.85)','rgba(255,255,255,.1)'],borderColor:['#6c5ce7','rgba(255,255,255,.08)'],borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'72%'}});}
     },
-
-    async deleteUser(id, email) {
-      if (!confirm('Nutzer ' + email + ' wirklich löschen? Alle Daten werden gelöscht.')) return;
-      const d = await this.api('/admin/users/' + id, 'DELETE');
-      if (d.success) { this.toast('Gelöscht'); this.loadUsers(); }
-      else this.toast(d.error || 'Fehler', 'err');
+    drawRevenueCharts(){
+      Object.values(this.charts).forEach(c=>{try{c.destroy();}catch{}});
+      this.charts={};
+      if(!this.revenue)return;
+      const el=document.getElementById('growthChart');
+      if(el)this.charts.growth=new Chart(el,{type:'bar',data:{labels:(this.revenue.monthly_signups||[]).map(d=>new Date(d.month).toLocaleDateString('de-DE',{month:'short',year:'2-digit'})),datasets:[{label:'Neue Nutzer',data:(this.revenue.monthly_signups||[]).map(d=>d.signups),backgroundColor:'rgba(108,92,231,.6)',borderColor:'#6c5ce7',borderWidth:1,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a5a80',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#5a5a80',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}}}}});
     },
-
-    async loadAgents() {
-      const d = await this.api('/admin/agents');
-      if (d.agents) this.adminAgents = d.agents;
-    },
-
-    async loadActivity() {
-      const d = await this.api('/admin/activity');
-      if (d.activity) this.activity = d.activity;
-    },
-
-    toast(msg, type = 'ok') {
-      const id = Date.now();
-      this.toasts.push({ id, msg, type });
-      setTimeout(() => this.toasts = this.toasts.filter(t => t.id !== id), 3500);
-    }
   };
 }
 </script>
