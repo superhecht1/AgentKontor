@@ -53,6 +53,7 @@ async function initDb() {
     'migrations/add_security2.sql',
     'migrations/add_features6.sql',
     'migrations/add_indexes.sql',
+    'migrations/004_add_missing_agent_columns.sql',
   ];
   for (const file of sqls) {
     const fp = path.join(__dirname, file);
