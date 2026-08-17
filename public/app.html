@@ -2569,8 +2569,7 @@ async testTool(tool){
   try{
     const parsed=JSON.parse(input);
     const d=await this.api('/tools/'+tool.id+'/test','POST',{input:parsed});
-    alert(d.success?'✅ Ergebnis:
-'+JSON.stringify(d.result,null,2):'❌ Fehler: '+d.error);
+    alert(d.success?'Ergebnis:\n'+JSON.stringify(d.result,null,2):'Fehler: '+d.error);
   }catch{alert('Ungültiges JSON');}
 },
 async assignTool(agentId,toolId,enabled){await this.api('/tools/assign','POST',{agentId,toolId,enabled});this.toast(enabled?'Tool zugewiesen':'Tool entfernt');},
