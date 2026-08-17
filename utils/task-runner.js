@@ -5,7 +5,10 @@
  * Hintergrundverarbeitung per setInterval (kein Bull/Queue nötig für MVP)
  */
 
-const { getPool } = require('./db');
+// Pool wird lazily geholt — nicht beim Import (vor Migration)
+function _getPool() {
+  return require('./db').getPool();
+}
 
 // ── Task erstellen ──────────────────────────────────────────────────────────
 async function create(pool, {
@@ -177,7 +180,7 @@ async function startBackgroundRunner(intervalMs = 5000) {
   if (_runnerInterval) return;
 
   // Warten bis Tabelle existiert (Migration muss zuerst laufen)
-  const pool = getPool();
+  const pool = _getPool();
   try {
     await pool.query('SELECT 1 FROM agent_tasks LIMIT 1');
   } catch {
@@ -192,7 +195,7 @@ async function startBackgroundRunner(intervalMs = 5000) {
     if (_isRunning) return; // Kein paralleler Lauf
     _isRunning = true;
     try {
-      const pool = getPool();
+      const pool = _getPool();
       await pool.query('BEGIN');
       const tasks = await getPending(pool, 5);
       await pool.query('COMMIT');
@@ -205,7 +208,7 @@ async function startBackgroundRunner(intervalMs = 5000) {
     } catch (e) {
       console.error('[task-runner] Runner-Fehler:', e.message);
       try {
-        const pool = getPool();
+        const pool = _getPool();
         await pool.query('ROLLBACK').catch(() => {});
       } catch {}
     } finally {
