@@ -1,7 +1,7 @@
 'use strict';
 const express = require('express');
 const router  = express.Router();
-const { auth } = require('../middleware/auth');
+const auth = require('../middleware/auth');
 const { getPool } = require('../utils/db');
 const { BUILTIN_DEFINITIONS } = require('../utils/tool-executor');
 
