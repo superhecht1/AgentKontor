@@ -933,8 +933,8 @@ input:checked+.slider::before{transform:translateX(18px)}
           <div class="tab" :class="{on:analyticsTab==='questions'}" @click="analyticsTab='questions'">❓ Top Fragen</div>
           <div class="tab" :class="{on:analyticsTab==='agents'}" @click="analyticsTab='agents'">🤖 Agenten-Vergleich</div>
         </div>
-        <div x-show="!analytics.totals" style="text-align:center;padding:48px;color:var(--muted)" x-text="T.loading"></div>
-        <template x-if="analytics.totals">
+        <div x-show="!analytics||!analytics.totals" style="text-align:center;padding:48px;color:var(--muted)" x-text="T.loading"></div>
+        <template x-if="analytics&&analytics.totals">
           <div>
             <div class="kpi-grid">
               <div class="kpi"><div class="kpi-bar" style="background:linear-gradient(90deg,#7c3aed,#a78bfa)"></div><div class="kpi-ico">💬</div><div class="kpi-n" x-text="parseInt(analytics.totals.total_messages||0).toLocaleString('de-DE')"></div><div class="kpi-l">Nachrichten 30d</div></div>
@@ -1741,7 +1741,7 @@ agentTemplates:[
 {id:'rechtsberatung',emoji:'⚖️',name:'Rechtsberatung',desc_de:'Erstberatung, Qualifikation, Terminbuchung',desc_en:'Initial consultation, qualification',color:'#636e72',system_prompt:'Du bist ein Erstkontakt-Assistent für eine Kanzlei. Qualifiziere Mandanten und buche Erstberatungsgespräche. Gib keine konkreten Rechtsratschläge.',greeting:'Guten Tag! Womit kann ich Ihnen behilflich sein?',tone:'professionell',quick_chips:['Erstberatung buchen','Rechtsgebiete','Kontakt','Notfall'],cap_leads:true,lead_fields:['Name','E-Mail','Telefon','Rechtsbereich'],cap_calendar:true},
 ],
 apiKeys:[],showNewKey:false,newKeyRev:null,nkf:{label:'',agentId:''},
-analytics:null,allLeads:[],analyticsLoading:false,_charts:{},agentStats:null,
+analytics:{},allLeads:[],analyticsLoading:false,_charts:{},agentStats:null,
 planData:null,settingsSaving:false,
 pwForm:{current:'',newPw:'',confirm:''},pwErr:'',pwOk:false,
 emailForm:{email:'',password:''},emailErr:'',emailOk:false,
@@ -2246,7 +2246,10 @@ async bulkDelete(){
   this.agents=this.agents.filter(a=>!this.bulkSelected.includes(a.id));
   this.toast('Gelöscht');this.bulkSelected=[];
 },
-agentToPayload(a){return{name:a.name,emoji:a.emoji,description:a.description||'',system_prompt:a.system_prompt||'',greeting:a.greeting||'',tone:a.tone||'professionell',language:a.language||'de',quick_chips:a.quick_chips||[],color:a.color||'#6c5ce7',is_active:a.is_active,widget_enabled:a.widget_enabled,chatpage_enabled:a.chatpage_enabled,api_enabled:a.api_enabled,whatsapp_enabled:a.whatsapp_enabled||false,telegram_enabled:a.telegram_enabled||false,rag_enabled:a.rag_enabled||false,rag_prompt:a.rag_prompt||'',cap_leads:a.cap_leads||false,lead_fields:a.lead_fields||[],lead_email:a.lead_email||'',cap_products:a.cap_products||false,cap_calendar:a.cap_calendar||false,cal_link:a.cal_link||'',cap_multilang:a.cap_multilang||false,voice_enabled:a.voice_enabled||false,proactive_enabled:a.proactive_enabled||false,proactive_trigger:a.proactive_trigger||'time',proactive_delay:a.proactive_delay||30,proactive_message:a.proactive_message||'',proactive_scroll:a.proactive_scroll||50,schedule_enabled:a.schedule_enabled||false,schedule_tz:a.schedule_tz||'Europe/Berlin',schedule_hours:a.schedule_hours||{mon:[9,17],tue:[9,17],wed:[9,17],thu:[9,17],fri:[9,17],sat:null,sun:null},schedule_closed_msg:a.schedule_closed_msg||'',ab_enabled:a.ab_enabled||false,ab_prompt_b:a.ab_prompt_b||'',ab_split:a.ab_split||50,ab_metric:a.ab_metric||'leads',agent_actions:a.agent_actions||[],handoff_enabled:a.handoff_enabled||false,handoff_email:a.handoff_email||'',handoff_trigger:a.handoff_trigger||'Ich möchte mit einem Menschen sprechen',handoff_message:a.handoff_message||'Ich verbinde Sie jetzt mit einem Mitarbeiter.',schedule_enabled:a.schedule_enabled||false,schedule_tz:a.schedule_tz||'Europe/Berlin',schedule_hours:a.schedule_hours||{},schedule_closed_msg:a.schedule_closed_msg||'',ab_enabled:a.ab_enabled||false,ab_prompt_b:a.ab_prompt_b||'',ab_split:a.ab_split||50,ab_metric:a.ab_metric||'leads',agent_actions:a.agent_actions||[],handoff_enabled:a.handoff_enabled||false,handoff_email:a.handoff_email||'',handoff_trigger:a.handoff_trigger||'',handoff_message:a.handoff_message||'',data_retention_days:a.data_retention_days||90,model:a.model||'claude-sonnet-4-6'};},
+agentToPayload(a){
+  const base={name:a.name,emoji:a.emoji,description:a.description||'',system_prompt:a.system_prompt||'',greeting:a.greeting||'',tone:a.tone||'professionell',language:a.language||'de',quick_chips:a.quick_chips||[],color:a.color||'#6c5ce7',is_active:a.is_active,widget_enabled:a.widget_enabled,chatpage_enabled:a.chatpage_enabled,api_enabled:a.api_enabled,whatsapp_enabled:a.whatsapp_enabled||false,telegram_enabled:a.telegram_enabled||false,rag_enabled:a.rag_enabled||false,rag_prompt:a.rag_prompt||'',cap_leads:a.cap_leads||false,lead_fields:a.lead_fields||[],lead_email:a.lead_email||'',cap_products:a.cap_products||false,cap_calendar:a.cap_calendar||false,cal_link:a.cal_link||'',cap_multilang:a.cap_multilang||false,voice_enabled:a.voice_enabled||false,proactive_enabled:a.proactive_enabled||false,proactive_message:a.proactive_message||'',data_retention_days:a.data_retention_days||90,model:a.model||'claude-sonnet-4-6'};
+  return base;
+},
 
 // ── STAR / PIN ────────────────────────────────
 toggleStar(id){
