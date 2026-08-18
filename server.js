@@ -124,6 +124,8 @@ async function initDb() {
       payload JSONB DEFAULT '{}', status TEXT DEFAULT 'pending',
       priority INTEGER DEFAULT 5, retry_count INTEGER DEFAULT 0,
       max_retries INTEGER DEFAULT 3, error_msg TEXT, result JSONB,
+      depends_on INTEGER REFERENCES agent_tasks(id) ON DELETE SET NULL,
+      session_id INTEGER,
       scheduled_at TIMESTAMPTZ DEFAULT now(),
       started_at TIMESTAMPTZ, completed_at TIMESTAMPTZ,
       created_at TIMESTAMPTZ DEFAULT now(), updated_at TIMESTAMPTZ DEFAULT now()
@@ -313,6 +315,12 @@ async function initDb() {
       }
     });
   }
+  // Fehlende Spalten in bereits existierenden Tabellen ergänzen
+  await pool.query("ALTER TABLE agent_tasks ADD COLUMN IF NOT EXISTS depends_on INTEGER REFERENCES agent_tasks(id) ON DELETE SET NULL").catch(()=>{});
+  await pool.query("ALTER TABLE agent_tasks ADD COLUMN IF NOT EXISTS session_id INTEGER").catch(()=>{});
+  await pool.query("ALTER TABLE agent_tasks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now()").catch(()=>{});
+  await pool.query("ALTER TABLE tool_calls ADD COLUMN IF NOT EXISTS agent_id INTEGER REFERENCES agents(id) ON DELETE SET NULL").catch(()=>{});
+  await pool.query("ALTER TABLE approvals ADD COLUMN IF NOT EXISTS goal_id INTEGER").catch(()=>{});
   console.log('✅ Kritische Tabellen geprüft');
 
 
