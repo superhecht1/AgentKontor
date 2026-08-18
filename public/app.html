@@ -4068,14 +4068,21 @@ async delKey(id){if(!confirm('Key löschen?'))return;await this.api('/keys/'+id,
 
 async loadAnalytics(){
   this.analyticsLoading=true;
-  Object.values(this._charts).forEach(c=>{try{c.destroy()}catch{}});this._charts={};
+  this._charts={};
   try{
-    const [ov,leads]=await Promise.all([this.api('/analytics/overview'),this.api('/analytics/leads/all')]);
-    this.analytics=ov;this.allLeads=leads.leads||[];
+    const [ov,leads]=await Promise.all([
+      this.api('/analytics/overview').catch(()=>({})),
+      this.api('/analytics/leads/all').catch(()=>({}))
+    ]);
+    this.analytics=ov||{};
+    this.allLeads=(leads&&leads.leads)||[];
     this.analyticsLoading=false;
-    await this.$nextTick();
-    {this._renderCharts();
-  }catch{this.analyticsLoading=false;}
+    // Charts nach kurzem Delay rendern damit DOM sichtbar ist
+    setTimeout(()=>this._renderCharts(), 100);
+  }catch(e){
+    console.error('Analytics:', e.message);
+    this.analyticsLoading=false;
+  }
 },
 
 
@@ -4144,13 +4151,12 @@ _renderCharts(){
   const a=this.analytics||{};
   const days=(a.byDay||[]).map(d=>parseInt(d.count)||0);
   const chs=a.byChannel||a.bySource||[];
-  this.$nextTick(()=>{
-    this.drawLineChart('chartLine', days, '#7c3aed');
-    if(chs.length){
-      const cm={web:'#7c3aed',widget:'#a29bfe',api:'#f0c040',whatsapp:'#25d366',telegram:'#0088cc'};
-      this.drawDoughnut('chartDoughnut', chs.map(c=>({value:parseInt(c.count)||0})), chs.map(c=>cm[c.source]||'#888'));
-    }
-  });
+  const cm={web:'#7c3aed',widget:'#a29bfe',api:'#f0c040',whatsapp:'#25d366',telegram:'#0088cc'};
+  this.drawLineChart('chartLine', days, '#7c3aed');
+  if(chs.length) this.drawDoughnut('chartDoughnut',
+    chs.map(c=>({value:parseInt(c.count)||0})),
+    chs.map(c=>cm[c.source]||'#888')
+  );
 },
 _makeChart(id,config){
   // Dummy für Kompatibilität — Charts sind jetzt SVG
