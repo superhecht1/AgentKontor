@@ -18,7 +18,34 @@ async function sendMail({ to, subject, html, text, from, replyTo }) {
     process.env.SMTP_FROM ||
     'AgentKontor <noreply@agentkontor.de>';
 
-  // ── 1. Resend API ─────────────────────────────────────────────────────────
+  // ── 1. Brevo API ──────────────────────────────────────────────────────────
+  if (process.env.BREVO_API_KEY) {
+    const resp = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'api-key':      process.env.BREVO_API_KEY,
+        'Content-Type': 'application/json',
+        'Accept':       'application/json',
+      },
+      body: JSON.stringify({
+        sender:   { name: fromAddr.replace(/<.*>/, '').trim() || 'AgentKontor',
+                    email: fromAddr.replace(/.*<(.+)>/, '$1').trim() || fromAddr },
+        to:       (Array.isArray(to) ? to : [to]).map(e => ({ email: e })),
+        subject,
+        htmlContent: html || text || '',
+        textContent: text || '',
+        ...(replyTo ? { replyTo: { email: replyTo } } : {}),
+      }),
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(`Brevo: ${err.message || resp.status}`);
+    }
+    const data = await resp.json().catch(() => ({}));
+    return { provider: 'brevo', id: data.messageId };
+  }
+
+  // ── 2. Resend API ─────────────────────────────────────────────────────────
   if (process.env.RESEND_API_KEY) {
     const resp = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -40,7 +67,7 @@ async function sendMail({ to, subject, html, text, from, replyTo }) {
     return { provider: 'resend', id: data.id };
   }
 
-  // ── 2. SendGrid API ───────────────────────────────────────────────────────
+  // ── 3. SendGrid API ───────────────────────────────────────────────────────
   if (process.env.SENDGRID_API_KEY) {
     const resp = await fetch('https://api.sendgrid.com/v3/mail/send', {
       method: 'POST',
@@ -65,7 +92,7 @@ async function sendMail({ to, subject, html, text, from, replyTo }) {
     return { provider: 'sendgrid' };
   }
 
-  // ── 3. SMTP (Nodemailer) ──────────────────────────────────────────────────
+  // ── 4. SMTP (Nodemailer) ──────────────────────────────────────────────────
   if (process.env.SMTP_HOST) {
     const nodemailer = require('nodemailer');
     const transport = nodemailer.createTransport({
@@ -97,7 +124,7 @@ async function sendMail({ to, subject, html, text, from, replyTo }) {
     return { provider: 'smtp', id: info.messageId };
   }
 
-  // ── 4. Entwicklungs-Fallback ──────────────────────────────────────────────
+  // ── 5. Entwicklungs-Fallback ──────────────────────────────────────────────
   if (process.env.NODE_ENV !== 'production') {
     console.log('\n📧 [MAILER DEV] E-Mail würde gesendet:');
     console.log('  To:', to);
@@ -109,8 +136,8 @@ async function sendMail({ to, subject, html, text, from, replyTo }) {
 
   throw new Error(
     'Kein E-Mail-Provider konfiguriert. ' +
-    'Bitte RESEND_API_KEY (empfohlen), SENDGRID_API_KEY oder SMTP_HOST setzen. ' +
-    'Resend: kostenlos auf resend.com → API Key in Render ENV eintragen.'
+    'Bitte BREVO_API_KEY (Brevo/Sendinblue), RESEND_API_KEY, SENDGRID_API_KEY oder SMTP_HOST setzen. ' +
+    'Brevo: api-key im Brevo-Dashboard unter Transactional → SMTP & API kopieren.'
   );
 }
 
