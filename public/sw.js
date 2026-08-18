@@ -7,10 +7,11 @@
 ═══════════════════════════════════════════════════════ */
 
 const CACHE_NAME   = 'agentkontor-v2'; // Bump bei jedem Deploy
+// NUR same-origin Assets cachen — externe CDN-URLs werden direkt geladen
 const SHELL_ASSETS = [
   '/app.html',
   '/manifest.json',
-  'https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js',
+  '/sw.js',
 ];
 
 // ── Install: Shell cachen ────────────────────────────────────────────────────
@@ -35,30 +36,46 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
-  // API-Calls: immer vom Netzwerk
+  // Externe Domains: IMMER direkt ans Netzwerk, NIEMALS cachen
+  // (fonts.googleapis.com, unpkg.com, cdnjs.cloudflare.com etc.)
+  const isExternal = url.origin !== self.location.origin;
+  if (isExternal) return; // SW tritt zur Seite — Browser handled das direkt
+
+  // API-Calls: immer vom Netzwerk, kein Cache
   if (url.pathname.startsWith('/api/')) {
-    e.respondWith(fetch(e.request).catch(() =>
-      new Response(JSON.stringify({ error: 'Offline — keine Verbindung' }), {
-        status: 503,
-        headers: { 'Content-Type': 'application/json' }
-      })
-    ));
+    e.respondWith(
+      fetch(e.request).catch(() =>
+        new Response(JSON.stringify({ error: 'Offline — keine Verbindung' }), {
+          status: 503,
+          headers: { 'Content-Type': 'application/json' }
+        })
+      )
+    );
     return;
   }
 
-  // App-Shell: Cache-First mit Netzwerk-Fallback
+  // chrome-extension:// und andere nicht-http Schemes: ignorieren
+  if (!url.protocol.startsWith('http')) return;
+
+  // App-Shell (nur same-origin GET): Cache-First
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
       return fetch(e.request).then(response => {
-        // NUR GET-Anfragen cachen — niemals POST/PUT/DELETE
-        if (e.request.method === 'GET' && response.status === 200 && !e.request.url.includes('/api/')) {
+        // NUR: same-origin GET, Status 200, kein API-Call
+        if (
+          e.request.method === 'GET' &&
+          response.status === 200 &&
+          url.origin === self.location.origin &&
+          !url.pathname.startsWith('/api/')
+        ) {
           const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+          caches.open(CACHE_NAME)
+            .then(cache => cache.put(e.request, clone))
+            .catch(() => {}); // Chrome-Extension-Scheme-Fehler ignorieren
         }
         return response;
       }).catch(() => {
-        // Offline-Fallback für Navigation
         if (e.request.mode === 'navigate') {
           return caches.match('/app.html');
         }

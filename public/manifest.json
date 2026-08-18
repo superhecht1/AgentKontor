@@ -1,15 +1,24 @@
 {
   "name": "AgentKontor",
   "short_name": "AgentKontor",
-  "description": "KI-Agenten erstellen, verwalten und automatisch einsetzen",
+  "description": "KI-Agenten erstellen und automatisch einsetzen",
   "start_url": "/app.html",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#0e0d0b",
   "theme_color": "#7c3aed",
-  "categories": ["business", "productivity"],
+  "categories": [
+    "business",
+    "productivity"
+  ],
   "lang": "de",
   "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
@@ -24,7 +33,25 @@
     }
   ],
   "shortcuts": [
-    { "name": "Super Agent Mode", "url": "/app.html#goalmode" },
-    { "name": "Agent Store",      "url": "/app.html#marketplace" }
+    {
+      "name": "Super Agent Mode",
+      "url": "/app.html#goalmode",
+      "icons": [
+        {
+          "src": "/icon.svg",
+          "sizes": "any"
+        }
+      ]
+    },
+    {
+      "name": "Agent Store",
+      "url": "/app.html#marketplace",
+      "icons": [
+        {
+          "src": "/icon.svg",
+          "sizes": "any"
+        }
+      ]
+    }
   ]
 }
