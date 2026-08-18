@@ -6,7 +6,7 @@
    - Assets (Icons etc.)     → Cache-First
 ═══════════════════════════════════════════════════════ */
 
-const CACHE_NAME   = 'agentkontor-v1';
+const CACHE_NAME   = 'agentkontor-v2'; // Bump bei jedem Deploy
 const SHELL_ASSETS = [
   '/app.html',
   '/manifest.json',
@@ -51,8 +51,8 @@ self.addEventListener('fetch', e => {
     caches.match(e.request).then(cached => {
       if (cached) return cached;
       return fetch(e.request).then(response => {
-        // Nur erfolgreiche GET-Anfragen cachen
-        if (e.request.method === 'GET' && response.status === 200) {
+        // NUR GET-Anfragen cachen — niemals POST/PUT/DELETE
+        if (e.request.method === 'GET' && response.status === 200 && !e.request.url.includes('/api/')) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
         }
