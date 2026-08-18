@@ -725,9 +725,51 @@ input:checked+.slider::before{transform:translateX(18px)}
 .link-muted{font-size:.78rem;color:var(--muted);cursor:pointer;transition:color .15s}
 .link-muted:hover{color:var(--amber)}
 @media(max-width:640px){.kpi-grid{grid-template-columns:1fr 1fr}.agent-grid{grid-template-columns:1fr}.modal{padding:20px;border-radius:14px}.template-grid{grid-template-columns:1fr 1fr}}
+
+/* LIGHT THEME */
+[data-theme="light"]{--bg:#f7f5f2;--bg2:#ede9e3;--bg3:#e4ddd6;--card:#ffffff;--card-h:#faf8f5;--border:rgba(0,0,0,.09);--border-h:rgba(0,0,0,.17);--text:#3d3830;--white:#1a1512;--muted:#8a8078;--muted-l:#6b6358;--v:#6d28d9;--v-l:#7c3aed;--v-d:#4c1d95;--v-glow:rgba(109,40,217,.18);--amber:#d97706;--amber-bg:rgba(217,119,6,.08);--sky:#0284c7;--emerald:#059669;--em-bg:rgba(5,150,105,.08);--rose:#e11d48;--rose-bg:rgba(225,29,72,.07);--shadow-sm:0 2px 12px rgba(0,0,0,.1);color-scheme:light}
+[data-theme="light"] .sidebar{background:linear-gradient(180deg,#1a0f2e 0%,#0f172a 100%)}
+[data-theme="light"] .sidebar .nav-lbl,[data-theme="light"] .sidebar .nav-ico,[data-theme="light"] .sidebar .nav-group-label,[data-theme="light"] .sidebar .logo-text{color:rgba(255,255,255,.8)}
+[data-theme="light"] .sidebar .nav-item.on,[data-theme="light"] .sidebar .nav-item:hover{background:rgba(255,255,255,.1);color:#fff}
+[data-theme="light"] .topbar{background:rgba(247,245,242,.93);border-bottom-color:rgba(0,0,0,.08)}
+[data-theme="light"] .inp{background:#fff;border-color:rgba(0,0,0,.13);color:var(--white)}
+[data-theme="light"] .inp:focus{border-color:var(--v-l);background:#fff}
+[data-theme="light"] .card{box-shadow:0 1px 4px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.05)}
+[data-theme="light"] .btn-ghost{background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.12);color:var(--text)}
+[data-theme="light"] .cmd-palette{background:rgba(247,245,242,.97);border-color:rgba(0,0,0,.12);box-shadow:0 24px 80px rgba(0,0,0,.2)}
+[data-theme="light"] .cmd-input{color:var(--white)}
+[data-theme="light"] .tone-opt{background:rgba(0,0,0,.03);border-color:rgba(0,0,0,.09)}
+[data-theme="light"] .tone-opt.on{background:rgba(109,40,217,.07);border-color:rgba(109,40,217,.3)}
+[data-theme="light"] .scrape-content,[data-theme="light"] .preview-conv{background:#eee8e0;border-color:rgba(0,0,0,.09)}
+[data-theme="light"] .store-hero,[data-theme="light"] .goal-hero{background:linear-gradient(135deg,rgba(109,40,217,.08),rgba(245,158,11,.05))}
+[data-theme="light"] .goal-input-wrap{background:rgba(255,255,255,.9);border-color:rgba(109,40,217,.3)}
+[data-theme="light"] .goal-input{color:var(--white)}
+[data-theme="light"] .routing-flow,[data-theme="light"] .decompose-preview{background:rgba(109,40,217,.05)}
+[data-theme="light"] .compare-table th{background:rgba(109,40,217,.07)}
+[data-theme="light"] .agent-msg-bubble{background:rgba(0,0,0,.04);border-color:rgba(0,0,0,.08)}
+[data-theme="light"] .mkt-card,[data-theme="light"] .super-card,[data-theme="light"] .research-card,[data-theme="light"] .goal-card,[data-theme="light"] .plan-card{box-shadow:0 1px 4px rgba(0,0,0,.06)}
+[data-theme="light"] .approval-card.pending{border-color:rgba(217,119,6,.3);background:rgba(217,119,6,.04)}
+[data-theme="light"] .final-result{background:linear-gradient(135deg,rgba(5,150,105,.06),rgba(109,40,217,.04))}
+
 </style>
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" id="theme-color-meta" content="#7c3aed">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="AgentKontor">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () =>
+        navigator.serviceWorker.register("/sw.js").catch(() => {})
+      );
+    }
+  </script>
 </head>
-<body x-data="app()" x-init="init()" x-cloak>
+<body x-data="app()" x-init="initTheme(); init()" x-cloak>
 
 <!-- TOAST -->
 <div class="toast-wrap">
@@ -910,6 +952,17 @@ input:checked+.slider::before{transform:translateX(18px)}
         <div class="topbar-page-title" x-show="page!=='dashboard'" x-text="{agents:'Agenten',analytics:'Analytics',conversations:'Gespräche',keys:'API Keys',docs:'Dokumentation',webhooks:'Webhooks',billing:'Abrechnung',settings:'Einstellungen'}[page]||''"></div>
       </div>
       <div class="topbar-right">
+          <!-- Theme Toggle -->
+          <button @click="toggleTheme()"
+            style="width:36px;height:36px;border-radius:9px;border:1px solid var(--border);background:rgba(128,128,128,.08);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.95rem;transition:all .2s;flex-shrink:0"
+            :title="theme==='dark'?'Helles Design':'Dunkles Design'">
+            <span x-text="theme==='dark'?'☀️':'🌙'"></span>
+          </button>
+          <!-- PWA Install -->
+          <button id="pwa-install-btn"
+            style="display:none;padding:5px 11px;border-radius:8px;border:1px solid rgba(124,58,237,.35);background:rgba(124,58,237,.12);color:var(--v-l);cursor:pointer;font-size:.73rem;font-weight:700;font-family:inherit"
+            title="Als App installieren">📲 App</button>
+
         <button class="topbar-icon-btn" @click="toggleLang()" :title="lang==='de'?'Switch to English':'Auf Deutsch'"><span x-text="lang==='de'?'🇩🇪':'🇬🇧'"></span></button>
         <div style="position:relative">
           <button class="topbar-icon-btn" @click="notifOpen=!notifOpen">🔔<span class="notif-dot" x-show="notifs.length"></span></button>
@@ -3727,6 +3780,8 @@ insightFunnel:{sessions:0,engaged:0,leads:0,rate:0},
 insightTopQ:[],insightHeatmap:[],insightScore:{},
 // A/B results
 abResults:{},
+// Theme
+theme: localStorage.getItem('ak-theme') || 'dark',
 // Goal Mode
 goalsList:[],selectedGoal:null,goalSteps:[],goalMetrics:[],goalActivity:[],
 goalPendingApprovals:[],goalPollInterval:null,goalStats:{},
@@ -4299,6 +4354,18 @@ toggleDay(day){
 
 
 
+
+
+// ── THEME ─────────────────────────────────────────────────────────────────
+toggleTheme(){
+  this.theme = this.theme==='dark' ? 'light' : 'dark';
+  localStorage.setItem('ak-theme', this.theme);
+  document.documentElement.setAttribute('data-theme', this.theme);
+  document.getElementById('theme-color-meta').content = this.theme==='dark' ? '#7c3aed' : '#6d28d9';
+},
+initTheme(){
+  document.documentElement.setAttribute('data-theme', this.theme);
+},
 
 // ── GOAL MODE ───────────────────────────────────────────────────────────────
 async loadGoals(){
@@ -4896,5 +4963,46 @@ toast(msg,type='ok'){const id=Date.now();this.toasts.push({id,msg,type});setTime
 </script>
 <script src="/cookie-banner.js"></script>
 <script src="/cookie-banner.js"></script>
+
+<script>
+/* PWA Install Prompt */
+let _deferredPrompt = null;
+const _installBtn   = document.getElementById('pwa-install-btn');
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _deferredPrompt = e;
+  if (_installBtn) _installBtn.style.display = 'block';
+});
+
+if (_installBtn) {
+  _installBtn.addEventListener('click', async () => {
+    if (!_deferredPrompt) return;
+    _deferredPrompt.prompt();
+    const { outcome } = await _deferredPrompt.userChoice;
+    _deferredPrompt = null;
+    _installBtn.style.display = 'none';
+  });
+}
+
+window.addEventListener('appinstalled', () => {
+  if (_installBtn) _installBtn.style.display = 'none';
+  console.log('AgentKontor als App installiert ✓');
+});
+
+/* Standalone-Mode erkennen */
+if (window.matchMedia('(display-mode: standalone)').matches) {
+  console.log('Läuft als PWA');
+  document.documentElement.classList.add('pwa-mode');
+}
+</script>
+
+<script>
+var _dp=null;var _ib=document.getElementById('pwa-install-btn');
+window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();_dp=e;if(_ib)_ib.style.display='block';});
+if(_ib){_ib.addEventListener('click',async function(){if(!_dp)return;_dp.prompt();await _dp.userChoice;_dp=null;_ib.style.display='none';});}
+window.addEventListener('appinstalled',function(){if(_ib)_ib.style.display='none';});
+if(window.matchMedia('(display-mode: standalone)').matches){document.documentElement.classList.add('pwa-mode');}
+</script>
 </body>
 </html>
