@@ -13,10 +13,13 @@
  */
 
 async function sendMail({ to, subject, html, text, from, replyTo }) {
+  // WICHTIG: fromAddr muss eine in Brevo verifizierte Sender-Adresse sein!
+  // Brevo → Senders & IPs → Senders — dort die verifizierte E-Mail eintragen
   const fromAddr = from ||
     process.env.MAIL_FROM ||
     process.env.SMTP_FROM ||
-    'AgentKontor <noreply@agentkontor.de>';
+    process.env.BREVO_SENDER ||   // Fallback: BREVO_SENDER env var
+    'info@think-cloud.org';     // muss in Brevo verifiziert sein
 
   // ── 1. Brevo API ──────────────────────────────────────────────────────────
   if (process.env.BREVO_API_KEY) {
@@ -37,11 +40,16 @@ async function sendMail({ to, subject, html, text, from, replyTo }) {
         ...(replyTo ? { replyTo: { email: replyTo } } : {}),
       }),
     });
-    if (!resp.ok) {
-      const err = await resp.json().catch(() => ({}));
-      throw new Error(`Brevo: ${err.message || resp.status}`);
-    }
     const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) {
+      // Brevo Fehler-Details loggen
+      console.error('[Brevo Error]', resp.status, JSON.stringify(data));
+      throw new Error(`Brevo ${resp.status}: ${data.message || data.code || 'Unbekannter Fehler'}`);
+    }
+    if (!data.messageId) {
+      console.warn('[Brevo Warning] Keine messageId — E-Mail möglicherweise nicht zugestellt:', data);
+    }
+    console.log('[Brevo] Gesendet:', data.messageId, '→', Array.isArray(to) ? to.join(',') : to);
     return { provider: 'brevo', id: data.messageId };
   }
 
