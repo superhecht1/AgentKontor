@@ -4403,6 +4403,12 @@ async loadGoals(){
   if(g.goals)this.goalsList=g.goals;
   if(s.stats)this.goalStats=s.stats;
 },
+
+async upgrade(plan){
+  const d=await this.api('/stripe/create-checkout','POST',{plan});
+  if(d.url) window.location.href=d.url;
+  else this.toast(d.error||'Fehler','err');
+},
 async startGoal(){
   if(!this.goalInput.trim()){this.toast('Ziel eingeben','err');return;}
   this.goalRunning=true;
@@ -4885,7 +4891,7 @@ async changeEmail(){
 },
 async sendForgot(){
   this.loading=true;this.authErr='';
-  const d=await this.api('/auth/forgot','POST',{email:this.lf.email}).catch(()=>({}));
+  const d=await this.api('/auth/forgot-password','POST',{email:this.lf.email}).catch(()=>({}));
   this.loading=false;
   if(d.success)this.forgotSent=true;
   else this.authErr=d.error||'Fehler';
