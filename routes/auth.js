@@ -257,6 +257,7 @@ router.post('/login', async (req, res) => {
               COALESCE(is_admin, false)             AS is_admin,
               COALESCE(token_version, 1)            AS token_version,
               COALESCE(totp_enabled, false)         AS totp_enabled,
+              COALESCE(email_confirmed, false)      AS email_confirmed,
               totp_secret, totp_backup_codes,
               COALESCE(login_attempts, 0)           AS login_attempts,
               locked_until, deleted_at
@@ -275,18 +276,18 @@ router.post('/login', async (req, res) => {
     }
 
     const valid = await bcrypt.compare(password, user.password_hash);
-    if (!valid) {
-      // Increment failed attempts, lock after 5
-      const pool2 = getPool(req);
-
-    // E-Mail bestätigt?
-    if (user.email_confirmed === false) {
+    // E-Mail bestätigt? (vor Passwort-Fehler-Handling prüfen)
+    if (!user.email_confirmed) {
       return res.status(403).json({
         error: 'Bitte bestätige zuerst deine E-Mail-Adresse.',
-        code: 'EMAIL_NOT_CONFIRMED',
+        code:  'EMAIL_NOT_CONFIRMED',
         email: user.email,
       });
     }
+
+    if (!valid) {
+      // Increment failed attempts, lock after 5
+      const pool2 = getPool(req);
       const attempts = (user.login_attempts || 0) + 1;
       const lockUntil = attempts >= 5 ? new Date(Date.now() + 15 * 60 * 1000) : null;
       await pool2.query('UPDATE users SET login_attempts=$1, locked_until=$2 WHERE id=$3', [attempts, lockUntil, user.id]);
