@@ -72,7 +72,7 @@ router.post('/', auth, async (req, res) => {
       agentId, userId: req.userId,
       scope, contactId, sessionId,
       key, value: String(value),
-      source: 'user', confidence: 1.0,
+      source: 'user',
       metadata: metadata || {},
       ttlSeconds: ttlSeconds ? parseInt(ttlSeconds) : undefined,
     });
@@ -134,23 +134,23 @@ router.get('/contacts', auth, async (req, res) => {
     if (!await tableExists(pool, 'agent_memory')) return res.json({ memories: [] });
     const conditions = ['c.user_id=$1'];
     const params = [req.userId];
-    if (agentId) { conditions.push(`c.id IN (SELECT DISTINCT contact_id::integer FROM agent_memory WHERE agent_id=$${params.length+1})`); params.push(agentId); }
+    if (agentId) { conditions.push(`c.agent_id=$${params.length+1}`); params.push(agentId); }
     if (search)  { conditions.push(`(c.name ILIKE $${params.length+1} OR c.email ILIKE $${params.length+1})`); params.push('%'+search+'%'); }
     params.push(parseInt(limit));
 
     const r = await pool.query(
       `SELECT c.*,
-         (SELECT COUNT(*) FROM agent_memory m WHERE m.contact_id=c.external_id) as memory_count
+         (SELECT COUNT(*) FROM agent_memory m WHERE m.scope='contact' AND m.user_id=c.user_id) as memory_count
        FROM contacts c
        WHERE ${conditions.join(' AND ')}
-       ORDER BY c.last_seen DESC
+       ORDER BY c.created_at DESC
        LIMIT $${params.length}`,
       params
     );
     res.json({ contacts: r.rows });
   } catch (e) {
     console.error('LIST CONTACTS:', e.message);
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ contacts: [] });
   }
 });
 
@@ -170,9 +170,9 @@ router.get('/contacts/:id', auth, async (req, res) => {
       `SELECT m.*, a.name as agent_name, a.emoji as agent_emoji
        FROM agent_memory m
        LEFT JOIN agents a ON a.id = m.agent_id
-       WHERE m.contact_id=$1 AND m.scope='contact'
+       WHERE m.scope='contact' AND m.user_id=$1
        ORDER BY m.updated_at DESC`,
-      [c.external_id]
+      [c.user_id]
     );
     res.json({ contact: c, memories: memories.rows });
   } catch (e) {
