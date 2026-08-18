@@ -1,7 +1,28 @@
 'use strict';
 const express = require('express');
 const router  = express.Router();
+
+// Sicheres Error-Logging: Stack intern, generische Meldung zum Client
+function safeErr(res, e, status = 500, context = '') {
+  const isProd = process.env.NODE_ENV === 'production';
+  if (context) console.error(`[${context}]`, e.message);
+  else console.error(e.message);
+  const msg = isProd
+    ? (status < 500 ? e.message : 'Interner Serverfehler')  // 4xx ok, 5xx generisch
+    : e.message;
+  return res.status(status).json({ error: msg });
+}
+
 const auth = require('../middleware/auth');
+
+// ── Tabellen-Guard: gibt leere Antwort wenn Migration noch nicht gelaufen ──
+async function tableExists(pool, table) {
+  try {
+    await pool.query(`SELECT 1 FROM ${table} LIMIT 1`);
+    return true;
+  } catch { return false; }
+}
+
 const { getPool } = require('../utils/db');
 const { BUILTIN_DEFINITIONS } = require('../utils/tool-executor');
 
@@ -9,6 +30,7 @@ const { BUILTIN_DEFINITIONS } = require('../utils/tool-executor');
 router.get('/', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'tools')) return res.json({ tools: [] });
     const r = await pool.query(
       `SELECT t.*,
          COALESCE(
@@ -204,7 +226,7 @@ router.post('/seed-builtins', auth, async (req, res) => {
     }
     res.json({ success: true, created });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    safeErr(res, e, 500);
   }
 });
 

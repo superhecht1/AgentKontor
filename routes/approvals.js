@@ -1,7 +1,25 @@
 'use strict';
 const express = require('express');
 const router  = express.Router();
+
+// Sicheres Error-Logging: Stack intern, generische Meldung zum Client
+function safeErr(res, e, status = 500, context = '') {
+  const isProd = process.env.NODE_ENV === 'production';
+  if (context) console.error(`[${context}]`, e.message);
+  else console.error(e.message);
+  const msg = isProd
+    ? (status < 500 ? e.message : 'Interner Serverfehler')  // 4xx ok, 5xx generisch
+    : e.message;
+  return res.status(status).json({ error: msg });
+}
+
 const auth = require('../middleware/auth');
+
+async function tableExists(pool, table) {
+  try { await pool.query(`SELECT 1 FROM ${table} LIMIT 1`); return true; }
+  catch { return false; }
+}
+
 const { getPool } = require('../utils/db');
 
 // ── GET /api/approvals  — Approval-Queue ────────────────────────────────────
@@ -9,6 +27,8 @@ router.get('/', auth, async (req, res) => {
   const pool = getPool(req);
   const { status = 'pending', limit = 50 } = req.query;
   try {
+    if (!await tableExists(pool, 'approvals'))
+      return res.json({ approvals: [], byStatus: {} });
     const r = await pool.query(
       `SELECT ap.*,
          a.name  as agent_name,  a.emoji as agent_emoji,

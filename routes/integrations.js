@@ -14,6 +14,12 @@ function safeErr(res, e, status = 500, context = '') {
 }
 
 const auth = require('../middleware/auth');
+
+async function tableExists(pool, table) {
+  try { await pool.query(`SELECT 1 FROM ${table} LIMIT 1`); return true; }
+  catch { return false; }
+}
+
 const { getPool } = require('../utils/db');
 const { callLLM } = require('../utils/llm');
 const { encrypt, decrypt } = require('../utils/crypto-utils');
@@ -22,6 +28,8 @@ const { encrypt, decrypt } = require('../utils/crypto-utils');
 router.get('/', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'integration_credentials'))
+      return res.json({ integrations: [] });
     const r = await pool.query(
       `SELECT id, integration, provider, label, is_active, last_used, last_error, created_at,
          -- Credentials OHNE secrets zurückgeben

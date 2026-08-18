@@ -1,7 +1,28 @@
 'use strict';
 const express = require('express');
 const router  = express.Router();
+
+// Sicheres Error-Logging: Stack intern, generische Meldung zum Client
+function safeErr(res, e, status = 500, context = '') {
+  const isProd = process.env.NODE_ENV === 'production';
+  if (context) console.error(`[${context}]`, e.message);
+  else console.error(e.message);
+  const msg = isProd
+    ? (status < 500 ? e.message : 'Interner Serverfehler')  // 4xx ok, 5xx generisch
+    : e.message;
+  return res.status(status).json({ error: msg });
+}
+
 const auth = require('../middleware/auth');
+
+// ── Tabellen-Guard: gibt leere Antwort wenn Migration noch nicht gelaufen ──
+async function tableExists(pool, table) {
+  try {
+    await pool.query(`SELECT 1 FROM ${table} LIMIT 1`);
+    return true;
+  } catch { return false; }
+}
+
 const { getPool } = require('../utils/db');
 const { taskRunner } = require('../utils/task-runner');
 
@@ -10,6 +31,7 @@ router.get('/', auth, async (req, res) => {
   const pool = getPool(req);
   const { agentId, status, limit = 50, offset = 0 } = req.query;
   try {
+    if (!await tableExists(pool, 'agent_tasks')) return res.json({ tasks: [], total: 0 });
     const tasks = await taskRunner.list(pool, {
       userId: req.userId,
       agentId: agentId ? parseInt(agentId) : undefined,
@@ -112,7 +134,7 @@ router.post('/:id/run', auth, async (req, res) => {
     const result = await taskRunner.runTask(pool, { ...task, status: 'pending' });
     res.json({ success: result.success, result: result.result, error: result.error });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    safeErr(res, e, 500);
   }
 });
 
@@ -164,6 +186,8 @@ router.delete('/:id', auth, async (req, res) => {
 router.get('/stats/summary', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'agent_tasks'))
+      return res.json({ pending:0, running:0, completed:0, failed:0, total:0 });
     const r = await pool.query(
       `SELECT
          COUNT(*) FILTER (WHERE status='pending')   AS pending,

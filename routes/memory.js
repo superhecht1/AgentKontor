@@ -1,7 +1,28 @@
 'use strict';
 const express = require('express');
 const router  = express.Router();
+
+// Sicheres Error-Logging: Stack intern, generische Meldung zum Client
+function safeErr(res, e, status = 500, context = '') {
+  const isProd = process.env.NODE_ENV === 'production';
+  if (context) console.error(`[${context}]`, e.message);
+  else console.error(e.message);
+  const msg = isProd
+    ? (status < 500 ? e.message : 'Interner Serverfehler')  // 4xx ok, 5xx generisch
+    : e.message;
+  return res.status(status).json({ error: msg });
+}
+
 const auth = require('../middleware/auth');
+
+// ── Tabellen-Guard: gibt leere Antwort wenn Migration noch nicht gelaufen ──
+async function tableExists(pool, table) {
+  try {
+    await pool.query(`SELECT 1 FROM ${table} LIMIT 1`);
+    return true;
+  } catch { return false; }
+}
+
 const { getPool } = require('../utils/db');
 const { memoryManager } = require('../utils/memory-manager');
 
@@ -12,6 +33,7 @@ router.get('/', auth, async (req, res) => {
   if (!agentId) return res.status(400).json({ error: 'agentId erforderlich' });
 
   try {
+    if (!await tableExists(pool, 'agent_memory')) return res.json({ memories: [] });
     // Sicherstellen dass Agent dem User gehört
     const check = await pool.query(
       'SELECT id FROM agents WHERE id=$1 AND user_id=$2', [agentId, req.userId]

@@ -1,7 +1,25 @@
 'use strict';
 const express = require('express');
 const router  = express.Router();
+
+// Sicheres Error-Logging: Stack intern, generische Meldung zum Client
+function safeErr(res, e, status = 500, context = '') {
+  const isProd = process.env.NODE_ENV === 'production';
+  if (context) console.error(`[${context}]`, e.message);
+  else console.error(e.message);
+  const msg = isProd
+    ? (status < 500 ? e.message : 'Interner Serverfehler')  // 4xx ok, 5xx generisch
+    : e.message;
+  return res.status(status).json({ error: msg });
+}
+
 const auth = require('../middleware/auth');
+
+async function tableExists(pool, table) {
+  try { await pool.query(`SELECT 1 FROM ${table} LIMIT 1`); return true; }
+  catch { return false; }
+}
+
 const { getPool } = require('../utils/db');
 const { planner } = require('../utils/planner');
 
@@ -32,7 +50,7 @@ router.post('/', auth, async (req, res) => {
     res.status(201).json({ plan, decomposed });
   } catch (e) {
     console.error('CREATE PLAN:', e.message);
-    res.status(500).json({ error: e.message });
+    safeErr(res, e, 500);
   }
 });
 
@@ -41,6 +59,7 @@ router.get('/', auth, async (req, res) => {
   const pool = getPool(req);
   const { agentId, status, limit = 20, offset = 0 } = req.query;
   try {
+    if (!await tableExists(pool, 'agent_plans')) return res.json({ plans: [] });
     const conditions = ['p.user_id=$1'];
     const params = [req.userId];
     let i = 2;
@@ -206,7 +225,7 @@ router.post('/decompose-preview', auth, async (req, res) => {
     });
     res.json({ decomposed });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    safeErr(res, e, 500);
   }
 });
 
