@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="//unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" defer></script>
 <style>
 :root{
   --bg:#0e0d0b;--bg2:#161512;--bg3:#1c1a16;--card:#181614;--card-h:#1e1c18;
@@ -4074,16 +4074,21 @@ async loadAnalytics(){
     const [ov,leads]=await Promise.all([this.api('/analytics/overview'),this.api('/analytics/leads/all')]);
     this.analytics=ov;this.allLeads=leads.leads||[];
     this.analyticsLoading=false;
-    await this.$nextTick();this._renderCharts();
+    await this.$nextTick();
+    if(typeof Chart==='undefined'){
+      await new Promise(r=>setTimeout(r,500)); // Chart.js noch nicht geladen
+    }
+    if(typeof Chart!=='undefined')this._renderCharts();
   }catch{this.analyticsLoading=false;}
 },
 
+_makeChart(id,config){try{const el=document.getElementById(id);if(!el||!el.getContext)return null;const ex=typeof Chart!=='undefined'&&Chart.getChart?Chart.getChart(el):null;if(ex)ex.destroy();return new Chart(el,config);}catch(e){console.warn('Chart err:',id,e.message);return null;}},
 _renderCharts(){
   const days=this.analytics?.byDay||[];const chs=this.analytics?.byChannel||[];
   const lc=document.getElementById('chartLine');
-  if(lc)this._charts.line=new Chart(lc,{type:'line',data:{labels:days.map(d=>new Date(d.day).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})),datasets:[{data:days.map(d=>parseInt(d.count)||0),borderColor:'#6c5ce7',backgroundColor:'rgba(108,92,231,.1)',fill:true,tension:.4,pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5a5a80',font:{size:10},maxTicksLimit:8}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5a5a80',font:{size:10}}}}}});
+  if(lc)this._charts.line=this._makeChart('chartLine',{type:'line',data:{labels:days.map(d=>new Date(d.day).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})),datasets:[{data:days.map(d=>parseInt(d.count)||0),borderColor:'#6c5ce7',backgroundColor:'rgba(108,92,231,.1)',fill:true,tension:.4,pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5a5a80',font:{size:10},maxTicksLimit:8}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5a5a80',font:{size:10}}}}}});
   const dc=document.getElementById('chartDoughnut');
-  if(dc&&chs.length){const cm={web:'#6c5ce7',widget:'#a29bfe',api:'#f0c040',whatsapp:'#25d366',telegram:'#0088cc'};this._charts.d=new Chart(dc,{type:'doughnut',data:{labels:chs.map(c=>c.source),datasets:[{data:chs.map(c=>parseInt(c.count)||0),backgroundColor:chs.map(c=>cm[c.source]||'#5a5a80'),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'65%'}});}
+  if(dc&&chs.length){const cm={web:'#6c5ce7',widget:'#a29bfe',api:'#f0c040',whatsapp:'#25d366',telegram:'#0088cc'};this._charts.d=this._makeChart('chartDoughnut',{type:'doughnut',data:{labels:chs.map(c=>c.source),datasets:[{data:chs.map(c=>parseInt(c.count)||0),backgroundColor:chs.map(c=>cm[c.source]||'#5a5a80'),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'65%'}});}
 },
 
 channelColor(s){return{web:'#6c5ce7',widget:'#a29bfe',api:'#f0c040',whatsapp:'#25d366',telegram:'#0088cc'}[s]||'#5a5a80';},
@@ -4093,7 +4098,7 @@ dlLeads(){window.open('/api/conversations/all/leads/csv','_blank');},
 async loadAgentDetail(id){
   // Lädt Detail-Analytics für einen Agenten (für den Analytics-Tab)
   const d=await this.api('/analytics/'+id);
-  if(d.totals){this.agentStats=d;this.$nextTick(()=>{const ctx=document.getElementById('chartAgentLine');if(!ctx)return;if(this._ac)try{this._ac.destroy()}catch{}const days=d.byDay||[];this._ac=new Chart(ctx,{type:'bar',data:{labels:days.map(d=>new Date(d.day).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})),datasets:[{data:days.map(d=>parseInt(d.count)||0),backgroundColor:'rgba(108,92,231,.5)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5a5a80',font:{size:9},maxTicksLimit:6}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5a5a80',font:{size:9}}}}}});});}
+  if(d.totals){this.agentStats=d;this.$nextTick(()=>{if(!document.getElementById('chartAgentLine'))return;const days=d.byDay||[];this._ac=this._makeChart('chartAgentLine',{type:'bar',data:{labels:days.map(d=>new Date(d.day).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})),datasets:[{data:days.map(d=>parseInt(d.count)||0),backgroundColor:'rgba(108,92,231,.5)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5a5a80',font:{size:9},maxTicksLimit:6}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5a5a80',font:{size:9}}}}}});});}
 },
 
 async loadConversations(agentId,reset=true){
