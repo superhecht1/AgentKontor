@@ -97,13 +97,19 @@ try {
     contentSecurityPolicy: {
       directives: {
         defaultSrc:  ["'self'"],
-        scriptSrc:   ["'self'", "'unsafe-eval'", "'unsafe-inline'", "unpkg.com", "cdnjs.cloudflare.com"],
-        styleSrc:    ["'self'", "'unsafe-inline'", "fonts.googleapis.com"],
-        fontSrc:     ["'self'", "fonts.gstatic.com", "data:"],
-        imgSrc:      ["'self'", "data:", "https:"],
-        connectSrc:  ["'self'", "https://api.anthropic.com", "https://generativelanguage.googleapis.com"],
-        // Note: unsafe-eval ist für Alpine.js x-* Direktiven notwendig
-        // Mitigation: Alpine CDN ist pinned via SRI (empfohlen für Produktion)
+        scriptSrc:   ["'self'", "'unsafe-eval'", "'unsafe-inline'",
+                       "unpkg.com", "https://unpkg.com",
+                       "cdnjs.cloudflare.com", "https://cdnjs.cloudflare.com"],
+        styleSrc:    ["'self'", "'unsafe-inline'",
+                       "fonts.googleapis.com", "https://fonts.googleapis.com"],
+        fontSrc:     ["'self'", "fonts.gstatic.com", "https://fonts.gstatic.com", "data:"],
+        imgSrc:      ["'self'", "data:", "https:", "blob:"],
+        connectSrc:  ["'self'",
+                       "https://api.anthropic.com",
+                       "https://generativelanguage.googleapis.com",
+                       "https://fonts.googleapis.com",
+                       "https://fonts.gstatic.com"],
+        workerSrc:   ["'self'"],  // für Service Worker
         frameSrc:    ["'none'"],
         objectSrc:   ["'none'"],
       },
