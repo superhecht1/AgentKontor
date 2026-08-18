@@ -175,16 +175,16 @@ router.get('/costs', adminOnly, async (req, res) => {
         COALESCE(SUM(cost_usd) FILTER (WHERE created_at>=NOW()-INTERVAL'30 days'),0) AS month_cost,
         COALESCE(SUM(input_tokens+output_tokens),0) AS total_tokens,
         COUNT(DISTINCT agent_id) AS agents_used
-        FROM llm_usage`),
+        FROM llm_usage`).catch(() => ({ rows: [] })),
       pool.query(`SELECT model, COUNT(*) AS calls, SUM(cost_usd) AS cost, SUM(input_tokens) AS input, SUM(output_tokens) AS output
-        FROM llm_usage GROUP BY model ORDER BY cost DESC LIMIT 10`),
+        FROM llm_usage GROUP BY model ORDER BY cost DESC LIMIT 10`).catch(() => ({ rows: [{ total:0, month:0, week:0, total_tokens:0, total_calls:0 }] })),
       pool.query(`SELECT a.name, a.emoji, u.email, SUM(lu.cost_usd) AS cost, COUNT(*) AS calls
         FROM llm_usage lu JOIN agents a ON lu.agent_id=a.id JOIN users u ON a.user_id=u.id
         WHERE lu.created_at>=NOW()-INTERVAL'30 days'
-        GROUP BY a.id,u.email ORDER BY cost DESC LIMIT 10`),
+        GROUP BY a.id,u.email ORDER BY cost DESC LIMIT 10`).catch(() => ({ rows: [{ total:0, month:0, week:0, total_tokens:0, total_calls:0 }] })),
       pool.query(`SELECT DATE(created_at) AS day, SUM(cost_usd) AS cost, COUNT(*) AS calls
         FROM llm_usage WHERE created_at>=NOW()-INTERVAL'30 days'
-        GROUP BY day ORDER BY day ASC`),
+        GROUP BY day ORDER BY day ASC`).catch(() => ({ rows: [{ total:0, month:0, week:0, total_tokens:0, total_calls:0 }] })),
     ]);
     res.json({ totals: totals.rows[0], byModel: byModel.rows, topAgents: topAgents.rows, daily: daily.rows });
   } catch(e) { res.status(500).json({ error: 'Fehler' }); }
@@ -260,7 +260,7 @@ router.post('/users/:id/email', auth, adminOnly, async (req, res) => {
   try {
     const r = await pool.query('SELECT email, name FROM users WHERE id=$1', [req.params.id]);
     if (!r.rows.length) return res.status(404).json({ error: 'Nutzer nicht gefunden' });
-    if (!process.env.SMTP_HOST) return res.status(500).json({ error: 'SMTP nicht konfiguriert' });
+    if (!process.env.SMTP_HOST) return res.status(503).json({ error: 'SMTP nicht konfiguriert. Bitte SMTP_HOST in den Umgebungsvariablen setzen.' });
 
     const nodemailer = require('nodemailer');
     const t = nodemailer.createTransport({
@@ -309,6 +309,16 @@ router.delete('/users/:id/hard', auth, adminOnly, async (req, res) => {
 router.get('/llm-costs', auth, adminOnly, async (req, res) => {
   const pool = getPool(req);
   try {
+    // Tabelle existiert? Falls nicht → leere Antwort
+    const exists = await pool.query(
+      "SELECT 1 FROM information_schema.tables WHERE table_name='llm_usage' LIMIT 1"
+    );
+    if (!exists.rows.length) {
+      return res.json({
+        totals: { total:0, month:0, week:0, total_tokens:0, total_calls:0 },
+        byModel: [], byUser: [], daily: []
+      });
+    }
     const [totals, byModel, byUser, daily] = await Promise.all([
       pool.query(`SELECT
         COALESCE(SUM(cost_usd),0) AS total,
@@ -316,20 +326,26 @@ router.get('/llm-costs', auth, adminOnly, async (req, res) => {
         COALESCE(SUM(cost_usd) FILTER (WHERE created_at>=NOW()-INTERVAL'7 days'),0) AS week,
         COALESCE(SUM(input_tokens+output_tokens),0) AS total_tokens,
         COUNT(*) AS total_calls
-        FROM llm_usage`),
+        FROM llm_usage`).catch(() => ({ rows: [{ total:0, month:0, week:0, total_tokens:0, total_calls:0 }] })),
       pool.query(`SELECT model, COUNT(*) AS calls, ROUND(SUM(cost_usd)::numeric,4) AS cost,
         SUM(input_tokens) AS in_tok, SUM(output_tokens) AS out_tok
-        FROM llm_usage GROUP BY model ORDER BY cost DESC LIMIT 12`),
+        FROM llm_usage GROUP BY model ORDER BY cost DESC LIMIT 12`).catch(() => ({ rows: [{ total:0, month:0, week:0, total_tokens:0, total_calls:0 }] })),
       pool.query(`SELECT u.email, u.name, u.plan, ROUND(SUM(lu.cost_usd)::numeric,4) AS cost, COUNT(*) AS calls
         FROM llm_usage lu JOIN agents a ON lu.agent_id=a.id JOIN users u ON a.user_id=u.id
         WHERE lu.created_at>=NOW()-INTERVAL'30 days'
-        GROUP BY u.id ORDER BY cost DESC LIMIT 15`),
+        GROUP BY u.id ORDER BY cost DESC LIMIT 15`).catch(() => ({ rows: [{ total:0, month:0, week:0, total_tokens:0, total_calls:0 }] })),
       pool.query(`SELECT DATE(created_at) AS day, ROUND(SUM(cost_usd)::numeric,4) AS cost, COUNT(*) AS calls
         FROM llm_usage WHERE created_at>=NOW()-INTERVAL'30 days'
-        GROUP BY day ORDER BY day ASC`),
+        GROUP BY day ORDER BY day ASC`).catch(() => ({ rows: [{ total:0, month:0, week:0, total_tokens:0, total_calls:0 }] })),
     ]);
     res.json({ totals: totals.rows[0], byModel: byModel.rows, byUser: byUser.rows, daily: daily.rows });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) {
+    console.error('LLM-COSTS:', e.message);
+    res.json({
+      totals: { total:0, month:0, week:0, total_tokens:0, total_calls:0 },
+      byModel: [], byUser: [], daily: [], _error: e.message
+    });
+  }
 });
 
 /* ── BROADCAST EMAIL ──────────────────────────────────────── */
@@ -337,7 +353,7 @@ router.post('/broadcast', auth, adminOnly, async (req, res) => {
   const pool = getPool(req);
   const { subject, body, plan_filter } = req.body;
   if (!subject || !body) return res.status(400).json({ error: 'Subject und Body erforderlich' });
-  if (!process.env.SMTP_HOST) return res.status(500).json({ error: 'SMTP nicht konfiguriert' });
+  if (!process.env.SMTP_HOST) return res.status(503).json({ error: 'SMTP nicht konfiguriert. Bitte SMTP_HOST in den Umgebungsvariablen setzen.' });
   try {
     const where = plan_filter && plan_filter !== 'all' ? `AND plan=$1` : '';
     const args  = plan_filter && plan_filter !== 'all' ? [plan_filter] : [];
@@ -346,7 +362,17 @@ router.post('/broadcast', auth, adminOnly, async (req, res) => {
       args
     );
     const nodemailer = require('nodemailer');
-    const t = nodemailer.createTransport({ host: process.env.SMTP_HOST, port: parseInt(process.env.SMTP_PORT||'587'), secure: false, auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } });
+    const t = nodemailer.createTransport({
+      host:             process.env.SMTP_HOST,
+      port:             parseInt(process.env.SMTP_PORT || '587'),
+      secure:           process.env.SMTP_SECURE === 'true',
+      connectionTimeout: 5000,   // 5s — hängt nicht ewig
+      greetingTimeout:  3000,
+      socketTimeout:    10000,
+      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    });
+    // Verbindung vorab prüfen
+    await t.verify().catch(e => { throw new Error('SMTP-Verbindung fehlgeschlagen: ' + e.message); });
     let sent = 0;
     for (const u of users.rows) {
       try {
