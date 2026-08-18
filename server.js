@@ -196,7 +196,21 @@ try {
   app.use(compression({ threshold: 1024 })); // only compress >1KB
 } catch { console.warn('compression not installed: npm install compression'); }
 
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+    etag: true,
+    lastModified: true,
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.html')) {
+        // HTML nie cachen — immer aktuelle Version
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+      } else if (filePath.match(/\.(js|css|png|svg|ico)$/)) {
+        // Assets: 1 Stunde cachen
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+      }
+    }
+  }));
 
 // Health check endpoint
 app.get('/og-image.png', (req, res) => {
