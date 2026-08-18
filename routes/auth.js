@@ -81,50 +81,162 @@ function signToken(userId, tokenVersion) {
 
 /* ── REGISTER ──────────────────────────────────────────── */
 router.post('/register', async (req, res) => {
+  const pool = req.app.locals.pool;
   const { email, password, name } = req.body;
   if (!email || !password || !name)
     return res.status(400).json({ error: 'Alle Felder erforderlich' });
+
+  // Passwort-Stärke
   const pwErr = checkPasswordStrength(password);
   if (pwErr) return res.status(400).json({ error: pwErr });
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+
+  // E-Mail-Format
+  if (!/^[^@]+@[^@]+\.[^@]+$/.test(email))
     return res.status(400).json({ error: 'Ungültige E-Mail-Adresse' });
 
-  const pool = getPool(req);
   try {
-    await ensureColumns(pool);
+    // Bereits registriert?
+    const existing = await pool.query('SELECT id, email_confirmed FROM users WHERE email=$1', [email.toLowerCase()]);
+    if (existing.rows.length) {
+      if (!existing.rows[0].email_confirmed) {
+        return res.status(409).json({
+          error: 'E-Mail bereits registriert aber noch nicht bestätigt.',
+          code: 'UNCONFIRMED',
+          userId: existing.rows[0].id
+        });
+      }
+      return res.status(409).json({ error: 'E-Mail bereits registriert.' });
+    }
 
-    const exists = await pool.query('SELECT id FROM users WHERE email=$1', [email.toLowerCase()]);
-    if (exists.rows.length) return res.status(409).json({ error: 'E-Mail bereits registriert' });
+    const bcrypt     = require('bcrypt');
+    const crypto     = require('crypto');
+    const hash       = await bcrypt.hash(password, 12);
+    const token      = crypto.randomBytes(32).toString('hex');
+    const expires    = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
 
-    const hash   = await bcrypt.hash(password, 12);
-    const result = await pool.query(
-      `INSERT INTO users (email, password_hash, name)
-       VALUES ($1,$2,$3)
-       RETURNING id, email, name, lang, plan, onboarding_done,
-                 COALESCE(token_version, 1) AS token_version`,
-      [email.toLowerCase(), hash, name]
+    const r = await pool.query(
+      `INSERT INTO users (email, password_hash, name, plan, email_confirmed, confirm_token, confirm_expires)
+       VALUES ($1,$2,$3,'free',false,$4,$5) RETURNING id`,
+      [email.toLowerCase(), hash, name.trim(), token, expires]
     );
-    const user  = result.rows[0];
-    const token = signToken(user.id, user.token_version);
+    const userId = r.rows[0].id;
 
-    setImmediate(() => sendWelcomeEmail(user.email, user.name));
+    // Bestätigungs-E-Mail senden
+    const baseUrl = process.env.BASE_URL || ('https://'+req.get('host'));
+    const confirmUrl = `${baseUrl}/auth/confirm?token=${token}`;
+    const { sendMail } = require('../utils/mailer');
 
-    const { token_version, ...safeUser } = user;
-
-    // Activate 14-day Pro trial
     try {
-      const trialEnd = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
-      await pool.query('UPDATE users SET trial_ends_at=$1 WHERE id=$2', [trialEnd, user.id]);
-      safeUser.trial_ends_at = trialEnd;
-    } catch {}
-
-    setAuthCookie(res, token);
-    res.json({ token, user: safeUser });
-  } catch (e) {
-    console.error('REGISTER ERROR:', e.message);
-    res.status(500).json({ error: 'Registrierung fehlgeschlagen' });
+      await sendMail({
+        to:      email,
+        subject: 'AgentKontor — Bitte bestätige deine E-Mail-Adresse',
+        html: `
+          <div style="font-family:sans-serif;max-width:520px;margin:40px auto;padding:32px;background:#fff;border-radius:12px;border:1px solid #eee">
+            <h2 style="color:#7c3aed;margin-top:0">Willkommen bei AgentKontor! 🤖</h2>
+            <p>Hallo ${name},</p>
+            <p>klicke auf den Button um deine E-Mail-Adresse zu bestätigen und dein Konto zu aktivieren:</p>
+            <a href="${confirmUrl}" style="display:inline-block;margin:20px 0;padding:14px 28px;background:#7c3aed;color:#fff;text-decoration:none;border-radius:8px;font-weight:700">
+              ✅ E-Mail bestätigen
+            </a>
+            <p style="color:#888;font-size:.85rem">Dieser Link ist 24 Stunden gültig.<br>Falls du dich nicht registriert hast, ignoriere diese E-Mail.</p>
+            <hr style="border:none;border-top:1px solid #eee;margin:20px 0">
+            <p style="color:#aaa;font-size:.75rem">AgentKontor · superhecht.ai</p>
+          </div>`,
+        text: `Hallo ${name},\n\nbitte bestätige deine E-Mail-Adresse:\n${confirmUrl}\n\nDieser Link ist 24 Stunden gültig.`,
+      });
+      res.status(201).json({ success: true, message: 'Registrierung erfolgreich! Bitte prüfe deine E-Mails.' });
+    } catch(mailErr) {
+      console.error('REGISTER MAIL ERROR:', mailErr.message);
+      // Registrierung trotzdem erfolgreich — User manuell bestätigen lassen
+      res.status(201).json({
+        success: true,
+        warning: 'Konto erstellt aber Bestätigungs-E-Mail konnte nicht gesendet werden: ' + mailErr.message,
+        // Für Dev: Token direkt zurückgeben
+        ...(process.env.NODE_ENV !== 'production' ? { dev_confirm_url: confirmUrl } : {})
+      });
+    }
+  } catch(e) {
+    console.error('REGISTER:', e.message);
+    res.status(500).json({ error: 'Registrierung fehlgeschlagen: ' + e.message });
   }
 });
+
+// ── GET /auth/confirm  — E-Mail bestätigen ──────────────────────────────────
+router.get('/confirm', async (req, res) => {
+  const pool = req.app.locals.pool;
+  const { token } = req.query;
+  if (!token) return res.redirect('/app.html?confirmed=error&msg=Kein+Token');
+
+  try {
+    const r = await pool.query(
+      `UPDATE users SET email_confirmed=true, confirm_token=NULL, confirm_expires=NULL, is_active=true
+       WHERE confirm_token=$1 AND confirm_expires > NOW() AND email_confirmed=false
+       RETURNING id, email, name`,
+      [token]
+    );
+
+    if (!r.rows.length) {
+      // Token abgelaufen oder ungültig?
+      const expired = await pool.query(
+        'SELECT id FROM users WHERE confirm_token=$1', [token]
+      );
+      if (expired.rows.length) {
+        return res.redirect('/app.html?confirmed=expired');
+      }
+      return res.redirect('/app.html?confirmed=invalid');
+    }
+
+    console.log('✅ E-Mail bestätigt:', r.rows[0].email);
+    res.redirect('/app.html?confirmed=success&name=' + encodeURIComponent(r.rows[0].name));
+  } catch(e) {
+    console.error('CONFIRM:', e.message);
+    res.redirect('/app.html?confirmed=error&msg=' + encodeURIComponent(e.message));
+  }
+});
+
+// ── POST /auth/resend-confirm  — Bestätigungs-E-Mail erneut senden ──────────
+router.post('/resend-confirm', async (req, res) => {
+  const pool = req.app.locals.pool;
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'E-Mail erforderlich' });
+
+  try {
+    const crypto = require('crypto');
+    const token  = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    const r = await pool.query(
+      `UPDATE users SET confirm_token=$1, confirm_expires=$2
+       WHERE email=$3 AND email_confirmed=false RETURNING name`,
+      [token, expires, email.toLowerCase()]
+    );
+    if (!r.rows.length)
+      return res.status(404).json({ error: 'E-Mail nicht gefunden oder bereits bestätigt.' });
+
+    const baseUrl = process.env.BASE_URL || ('https://'+req.get('host'));
+    const confirmUrl = `${baseUrl}/auth/confirm?token=${token}`;
+    const { sendMail } = require('../utils/mailer');
+
+    await sendMail({
+      to:      email,
+      subject: 'AgentKontor — Neuer Bestätigungslink',
+      html: `<div style="font-family:sans-serif;max-width:520px;margin:40px auto;padding:32px;background:#fff;border-radius:12px">
+        <h2 style="color:#7c3aed">Neuer Bestätigungslink</h2>
+        <p>Hallo ${r.rows[0].name},</p>
+        <a href="${confirmUrl}" style="display:inline-block;margin:20px 0;padding:14px 28px;background:#7c3aed;color:#fff;text-decoration:none;border-radius:8px;font-weight:700">
+          ✅ E-Mail bestätigen
+        </a>
+        <p style="color:#888;font-size:.85rem">Dieser Link ist 24 Stunden gültig.</p>
+      </div>`,
+      text: `Neuer Bestätigungslink:\n${confirmUrl}`,
+    });
+
+    res.json({ success: true });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 
 /* ── LOGIN ─────────────────────────────────────────────── */
 router.post('/login', async (req, res) => {
@@ -166,6 +278,15 @@ router.post('/login', async (req, res) => {
     if (!valid) {
       // Increment failed attempts, lock after 5
       const pool2 = getPool(req);
+
+    // E-Mail bestätigt?
+    if (user.email_confirmed === false) {
+      return res.status(403).json({
+        error: 'Bitte bestätige zuerst deine E-Mail-Adresse.',
+        code: 'EMAIL_NOT_CONFIRMED',
+        email: user.email,
+      });
+    }
       const attempts = (user.login_attempts || 0) + 1;
       const lockUntil = attempts >= 5 ? new Date(Date.now() + 15 * 60 * 1000) : null;
       await pool2.query('UPDATE users SET login_attempts=$1, locked_until=$2 WHERE id=$3', [attempts, lockUntil, user.id]);

@@ -37,7 +37,7 @@ async function sendMail(to, subject, html) {
       auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
     });
     await transporter.sendMail({
-      from: `AgentKontor <${process.env.SMTP_FROM || 'noreply@agentkontor.de'}>`,
+      from: `AgentKontor <${process.env.SMTP_FROM || 'info@think-cloud.org'}>`,
       to, subject, html,
     });
     return true;
