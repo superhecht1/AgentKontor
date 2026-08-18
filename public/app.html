@@ -776,6 +776,31 @@ input:checked+.slider::before{transform:translateX(18px)}
   <template x-for="t in toasts" :key="t.id">
     <div class="toast" :class="'toast-'+t.type" x-text="t.msg" @click="toasts=toasts.filter(x=>x.id!==t.id)"></div>
   </template>
+
+          <!-- ── E-Mail-Bestätigung warten ── -->
+          <template x-if="authTab==='confirm-wait'">
+            <div style="text-align:center;padding:24px 0">
+              <div style="font-size:3rem;margin-bottom:16px">📧</div>
+              <h3 style="color:var(--white);margin-bottom:8px">Bitte bestätige deine E-Mail</h3>
+              <p style="color:var(--muted-l);font-size:.88rem;margin-bottom:6px">
+                Wir haben einen Bestätigungslink gesendet an:
+              </p>
+              <div style="font-weight:700;color:var(--v-l);margin-bottom:20px" x-text="confirmEmail"></div>
+              <p style="color:var(--muted);font-size:.8rem;margin-bottom:20px">
+                Klicke auf den Link in der E-Mail um dein Konto zu aktivieren.<br>
+                Der Link ist 24 Stunden gültig.
+              </p>
+              <div class="ok-box" x-show="authInfo" x-text="authInfo" style="margin-bottom:12px;text-align:left"></div>
+              <div class="err-box" x-show="authErr" x-text="authErr" style="margin-bottom:12px;text-align:left"></div>
+              <button class="btn btn-primary btn-full" @click="resendConfirm()" :disabled="loading">
+                <span x-text="loading?'Sende…':'↻ Neuen Link senden'"></span>
+              </button>
+              <div style="margin-top:16px">
+                <span class="link-muted" @click="authTab='login';authErr='';authInfo=''">← Zurück zum Login</span>
+              </div>
+            </div>
+          </template>
+
 </div>
 
 <!-- ── AUTH ── -->
@@ -792,6 +817,7 @@ input:checked+.slider::before{transform:translateX(18px)}
           </div>
           <template x-if="authTab==='login'">
             <div>
+              <div class="ok-box" x-show="authInfo" x-text="authInfo" style="margin-bottom:8px"></div>
               <div class="err-box" x-show="authErr" x-text="authErr"></div>
               <div class="field"><label>E-Mail</label><input class="inp" type="email" x-model="lf.email" @keydown.enter="login()" placeholder="deine@email.de"></div>
               <div class="field"><label x-text="T.password"></label><input class="inp" type="password" x-model="lf.password" @keydown.enter="login()" :placeholder="T.password"></div>
@@ -3767,7 +3793,7 @@ clone_success:'Agent cloned ✓'}};
 
 function app(){return{
 user:null,token:null,page:'dashboard',lang:'de',
-authTab:'login',authErr:'',loading:false,
+authTab:'login',authErr:'',authInfo:'',loading:false,confirmEmail:'',registerSuccess:false,
 lf:{email:'',password:''},rf:{name:'',email:'',password:''},
 get T(){return TRANSLATIONS[this.lang]||TRANSLATIONS.de;},
 toggleLang(){this.lang=this.lang==='de'?'en':'de';localStorage.setItem('ak_lang',this.lang);},
@@ -3931,6 +3957,20 @@ colors:['#6c5ce7','#e94560','#00b894','#00aaff','#f39c12','#a29bfe','#fd79a8','#
 tones:[{key:'professionell',de:'Professionell',en:'Professional',d:'Sachlich & klar',e:'Factual & clear'},{key:'freundlich',de:'Freundlich',en:'Friendly',d:'Warm & motivierend',e:'Warm & motivating'},{key:'direkt',de:'Direkt',en:'Direct',d:'Präzise & effizient',e:'Precise & efficient'},{key:'locker',de:'Locker',en:'Casual',d:'Entspannt & sympathisch',e:'Relaxed & likeable'}],
 
 async init(){
+  // URL-Params verarbeiten (E-Mail-Bestätigung)
+  const params=new URLSearchParams(window.location.search);
+  if(params.get('confirmed')==='success'){
+    this.authTab='login';
+    this.authInfo='✅ E-Mail erfolgreich bestätigt! Du kannst dich jetzt anmelden.';
+    history.replaceState({},'',window.location.pathname);
+  } else if(params.get('confirmed')==='expired'){
+    this.authTab='login'; this.authErr='Link abgelaufen. Bitte neu anfordern.';
+    history.replaceState({},'',window.location.pathname);
+  } else if(params.get('confirmed')==='invalid'){
+    this.authTab='login'; this.authErr='Ungültiger Bestätigungslink.';
+    history.replaceState({},'',window.location.pathname);
+  }
+
       // Restore UI state
       this.sidebarCollapsed=localStorage.getItem('ak_sb')==='1';
       this.onboardDone=localStorage.getItem('ak_onboard')==='1';
@@ -3975,17 +4015,48 @@ async api(path,method='GET',body=null){
 
 async login(){
   if(!this.lf.email||!this.lf.password){this.authErr='E-Mail und Passwort erforderlich';return;}
-  this.loading=true;this.authErr='';
-  try{const d=await this.api('/auth/login','POST',this.lf);this.loading=false;if(d.error){this.authErr=d.error;return;}this.setUser(d.token,d.user);}
-  catch{this.loading=false;this.authErr='Verbindungsfehler';}
+  this.loading=true;this.authErr='';this.authInfo='';
+  try{
+    const d=await this.api('/auth/login','POST',this.lf);
+    this.loading=false;
+    if(d.error){
+      this.authErr=d.error;
+      if(d.code==='EMAIL_NOT_CONFIRMED'){
+        this.confirmEmail=d.email||this.lf.email;
+        this.authTab='confirm-wait';
+      }
+      return;
+    }
+    this.setUser(d.token,d.user);
+  }catch{this.loading=false;this.authErr='Verbindungsfehler';}
 },
 
 async register(){
   if(!this.rf.name||!this.rf.email||this.rf.password.length<8){this.authErr='Alle Felder ausfüllen (Passwort min. 8 Zeichen)';return;}
   if(this.rf.password!==this.rf.passwordRepeat&&this.rf.passwordRepeat){this.authErr='Passwörter stimmen nicht überein';return;}
-  this.loading=true;this.authErr='';
-  try{const d=await this.api('/auth/register','POST',this.rf);this.loading=false;if(d.error){this.authErr=d.error;return;}this.setUser(d.token,d.user);if(!d.user?.onboarding_done)setTimeout(()=>this.showOnboarding=true,600);}
-  catch{this.loading=false;this.authErr='Verbindungsfehler';}
+  this.loading=true;this.authErr='';this.authInfo='';
+  try{
+    const d=await this.api('/auth/register','POST',this.rf);
+    this.loading=false;
+    if(d.error){
+      this.authErr=d.error;
+      if(d.code==='UNCONFIRMED'){this.confirmEmail=this.rf.email;this.authTab='confirm-wait';}
+      return;
+    }
+    this.confirmEmail=this.rf.email;
+    this.authTab='confirm-wait';
+    if(d.warning)this.authErr=d.warning;
+    if(d.dev_confirm_url){this.authInfo='DEV URL: '+d.dev_confirm_url;console.log(d.dev_confirm_url);}
+    this.rf={name:'',email:'',password:'',passwordRepeat:''};
+  }catch{this.loading=false;this.authErr='Verbindungsfehler';}
+},
+async resendConfirm(){
+  if(!this.confirmEmail){this.authErr='E-Mail fehlt';return;}
+  this.loading=true;this.authErr='';this.authInfo='';
+  const d=await this.api('/auth/resend-confirm','POST',{email:this.confirmEmail});
+  this.loading=false;
+  if(d.error){this.authErr=d.error;return;}
+  this.authInfo='✅ Neuer Link gesendet an '+this.confirmEmail;
 },
 
 setUser(token,user){this.token=token;this.user=user;localStorage.setItem('ak_token',token);localStorage.setItem('ak_user',JSON.stringify(user));this.loadAgents();},
