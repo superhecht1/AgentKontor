@@ -1289,7 +1289,19 @@ function admin(){
     async doExtendTrial(){try{await this.api('/admin/users/'+this.extendModal.user.id+'/extend-trial','POST',{days:this.extendModal.days});this.toast('Trial verlängert');this.extendModal.open=false;this.loadUsers();}catch(e){this.toast(e.message,'err');}},
 
     // Broadcast
-    async sendBroadcast(){if(!confirm('Wirklich senden?'))return;this.broadcastSending=true;this.broadcastResult='';try{const d=await this.api('/admin/broadcast','POST',this.broadcast);this.broadcastResult='✓ '+d.sent+'/'+d.total+' gesendet';}catch(e){this.toast(e.message,'err');}this.broadcastSending=false;},
+    async sendBroadcast(){
+  if(!confirm('Wirklich senden?'))return;
+  this.broadcastSending=true;this.broadcastResult='';
+  try{
+    const d=await this.api('/admin/broadcast','POST',this.broadcast);
+    if(d.error){this.toast(d.error,'err');}
+    else{this.broadcastResult='✓ '+d.sent+'/'+d.total+' gesendet';}
+  }catch(e){
+    this.toast(e.message||'Fehler beim Senden','err');
+  }finally{
+    this.broadcastSending=false;
+  }
+},
 
     // Promo
     async createPromo(){try{const d=await this.api('/admin/promo','POST',this.promo);this.promoCreated=d.code;this.toast('Code erstellt: '+d.code);}catch(e){this.toast(e.message,'err');}},
