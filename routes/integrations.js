@@ -57,6 +57,7 @@ router.post('/', auth, async (req, res) => {
   if (!integration || !provider || !credentials) return res.status(400).json({ error: 'Pflichtfelder fehlen' });
 
   try {
+    if (!await tableExists(pool, 'integration_credentials')) return res.json({ integrations: [] });
     const r = await pool.query(
       `INSERT INTO integration_credentials (user_id,integration,provider,label,credentials)
        VALUES ($1,$2,$3,$4,$5)
@@ -83,6 +84,7 @@ router.delete('/:id', auth, async (req, res) => {
 router.post('/:id/test', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'integration_credentials')) return res.json({ integrations: [] });
     const r = await pool.query(
       'SELECT * FROM integration_credentials WHERE id=$1 AND user_id=$2',
       [req.params.id, req.userId]
@@ -119,6 +121,7 @@ router.get('/calendar/events', auth, async (req, res) => {
   const pool = getPool(req);
   const { from, to, credId } = req.query;
   try {
+    if (!await tableExists(pool, 'integration_credentials')) return res.json({ integrations: [] });
     const cred = await getCred(pool, req.userId, 'calendar', credId);
     const cal = require('../utils/integrations/calendar');
     const events = await cal.getEvents(cred, pool, { from, to, maxResults: 50 });
@@ -133,6 +136,7 @@ router.get('/calendar/slots', auth, async (req, res) => {
   const pool = getPool(req);
   const { from, to, duration = 60, credId } = req.query;
   try {
+    if (!await tableExists(pool, 'integration_credentials')) return res.json({ integrations: [] });
     const cred = await getCred(pool, req.userId, 'calendar', credId);
     const cal = require('../utils/integrations/calendar');
     const slots = await cal.findFreeSlots(cred, pool, { from, to, durationMinutes: parseInt(duration) });
@@ -147,6 +151,7 @@ router.post('/calendar/events', auth, async (req, res) => {
   const pool = getPool(req);
   const { credId, ...eventData } = req.body;
   try {
+    if (!await tableExists(pool, 'integration_credentials')) return res.json({ integrations: [] });
     const cred = await getCred(pool, req.userId, 'calendar', credId);
     const cal = require('../utils/integrations/calendar');
     const event = await cal.createEvent(cred, pool, eventData);
@@ -161,6 +166,7 @@ router.get('/email/messages', auth, async (req, res) => {
   const pool = getPool(req);
   const { query, maxResults = 20, includeBody, credId } = req.query;
   try {
+    if (!await tableExists(pool, 'integration_credentials')) return res.json({ integrations: [] });
     const cred = await getCred(pool, req.userId, 'email', credId);
     const emailTool = require('../utils/integrations/email-tool');
     const emails = await emailTool.getEmails(cred, pool, {
@@ -177,6 +183,7 @@ router.post('/email/prioritize', auth, async (req, res) => {
   const pool = getPool(req);
   const { credId, maxResults = 20 } = req.body;
   try {
+    if (!await tableExists(pool, 'integration_credentials')) return res.json({ integrations: [] });
     const cred = await getCred(pool, req.userId, 'email', credId);
     const emailTool = require('../utils/integrations/email-tool');
     const emails = await emailTool.getEmails(cred, pool, { maxResults, includeBody: false });
@@ -192,6 +199,7 @@ router.post('/email/send', auth, async (req, res) => {
   const pool = getPool(req);
   const { credId, ...mailData } = req.body;
   try {
+    if (!await tableExists(pool, 'integration_credentials')) return res.json({ integrations: [] });
     const cred = await getCred(pool, req.userId, 'email', credId);
     const emailTool = require('../utils/integrations/email-tool');
     const result = await emailTool.sendEmail(cred, pool, mailData);
@@ -206,6 +214,7 @@ router.post('/email/generate-reply', auth, async (req, res) => {
   const pool = getPool(req);
   const { email, instructions, credId } = req.body;
   try {
+    if (!await tableExists(pool, 'integration_credentials')) return res.json({ integrations: [] });
     const emailTool = require('../utils/integrations/email-tool');
     const reply = await emailTool.generateReply(email, instructions, callLLM);
     res.json({ reply });
@@ -219,6 +228,7 @@ router.post('/crm/qualify', auth, async (req, res) => {
   const pool = getPool(req);
   const { agentId, crmWebhook, crmApiKey } = req.body;
   try {
+    if (!await tableExists(pool, 'integration_credentials')) return res.json({ integrations: [] });
     const crm = require('../utils/integrations/crm-tool');
     const results = await crm.batchQualify(pool, req.userId, { agentId, callLLM, crmWebhook, crmApiKey });
     res.json({ results, qualified: results.length });
@@ -232,6 +242,7 @@ router.post('/crm/outreach', auth, async (req, res) => {
   const pool = getPool(req);
   const { leadId, agentId, tone, language } = req.body;
   try {
+    if (!await tableExists(pool, 'integration_credentials')) return res.json({ integrations: [] });
     const crm = require('../utils/integrations/crm-tool');
     const leads = await crm.getLeads(pool, req.userId, { agentId, limit: 1 });
     const lead = leads.find(l => l.id === parseInt(leadId)) || leads[0];
@@ -248,6 +259,7 @@ router.post('/document/analyze', auth, async (req, res) => {
   const pool = getPool(req);
   const { docId, agentId, analysisType = 'summary' } = req.body;
   try {
+    if (!await tableExists(pool, 'integration_credentials')) return res.json({ integrations: [] });
     const docTool = require('../utils/integrations/document-tool');
     const doc = await docTool.getDocumentFromDB(pool, { docId, agentId });
     const result = await docTool.analyzeDocument(doc.text, { analysisType }, callLLM);
@@ -263,6 +275,7 @@ router.post('/document/compare', auth, async (req, res) => {
   const { docIds, agentId, aspects } = req.body;
   if (!docIds?.length || docIds.length < 2) return res.status(400).json({ error: 'Mindestens 2 Dokumente erforderlich' });
   try {
+    if (!await tableExists(pool, 'integration_credentials')) return res.json({ integrations: [] });
     const docTool = require('../utils/integrations/document-tool');
     const docs = await Promise.all(docIds.map(id => docTool.getDocumentFromDB(pool, { docId: id, agentId })));
     const result = await docTool.compareDocuments(docs, { comparisonAspects: aspects || [] }, callLLM);

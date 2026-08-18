@@ -1,7 +1,25 @@
 'use strict';
 const express = require('express');
 const router  = express.Router();
+
+// Sicheres Error-Logging: Stack intern, generische Meldung zum Client
+function safeErr(res, e, status = 500, context = '') {
+  const isProd = process.env.NODE_ENV === 'production';
+  if (context) console.error(`[${context}]`, e.message);
+  else console.error(e.message);
+  const msg = isProd
+    ? (status < 500 ? e.message : 'Interner Serverfehler')  // 4xx ok, 5xx generisch
+    : e.message;
+  return res.status(status).json({ error: msg });
+}
+
 const auth = require('../middleware/auth');
+
+async function tableExists(pool, table) {
+  try { await pool.query(`SELECT 1 FROM ${table} LIMIT 1`); return true; }
+  catch { return false; }
+}
+
 const { getPool } = require('../utils/db');
 const { callLLM } = require('../utils/llm');
 const webAgent = require('../utils/web-agent');
@@ -12,6 +30,7 @@ router.post('/search', auth, async (req, res) => {
   const { query, maxResults = 10, provider } = req.body;
   if (!query) return res.status(400).json({ error: 'query erforderlich' });
   try {
+    if (!await tableExists(pool, 'research_sessions')) return res.json({ results: [], sessions: [] });
     const results = await webAgent.search(pool, { query, maxResults, provider });
     res.json({ results, count: results.length });
   } catch (e) {
@@ -25,6 +44,7 @@ router.post('/scrape', auth, async (req, res) => {
   const { url } = req.body;
   if (!url) return res.status(400).json({ error: 'url erforderlich' });
   try {
+    if (!await tableExists(pool, 'research_sessions')) return res.json({ results: [], sessions: [] });
     const result = await webAgent.scrape(pool, url);
     res.json(result);
   } catch (e) {
@@ -39,6 +59,7 @@ router.post('/compare', auth, async (req, res) => {
   if (!urls?.length || !goal) return res.status(400).json({ error: 'urls und goal erforderlich' });
 
   try {
+    if (!await tableExists(pool, 'research_sessions')) return res.json({ results: [], sessions: [] });
     // Seiten scrapen
     const contents = [];
     for (const url of urls.slice(0, 8)) {
@@ -59,6 +80,7 @@ router.post('/compare', auth, async (req, res) => {
 // ── POST /api/web/research  — Mehrstufige Recherche starten ──────────────────
 router.post('/research', auth, async (req, res) => {
   const pool = getPool(req);
+  if (!await tableExists(pool, 'research_sessions')) return res.status(503).json({ error: 'Service noch nicht bereit' });
   const { goal, depth = 3, agentId, model } = req.body;
   if (!goal) return res.status(400).json({ error: 'goal erforderlich' });
 
@@ -91,6 +113,7 @@ router.post('/research', auth, async (req, res) => {
 router.get('/research/:id', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'research_sessions')) return res.json({ results: [], sessions: [] });
     const r = await pool.query(
       'SELECT * FROM research_sessions WHERE id=$1 AND user_id=$2',
       [req.params.id, req.userId]
@@ -117,6 +140,7 @@ router.get('/research', auth, async (req, res) => {
   const pool = getPool(req);
   const { limit = 20 } = req.query;
   try {
+    if (!await tableExists(pool, 'research_sessions')) return res.json({ results: [], sessions: [] });
     const r = await pool.query(
       `SELECT id, goal, status, created_at, updated_at,
          length(result::text) as result_length,

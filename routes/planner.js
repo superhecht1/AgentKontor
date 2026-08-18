@@ -30,6 +30,7 @@ router.post('/', auth, async (req, res) => {
   if (!goal?.trim()) return res.status(400).json({ error: 'goal erforderlich' });
 
   try {
+    if (!await tableExists(pool, 'agent_plans')) return res.json({ plans: [] });
     // Agent-Ownership prüfen
     if (agentId) {
       const check = await pool.query(
@@ -95,6 +96,7 @@ router.get('/', auth, async (req, res) => {
 router.get('/:id', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'agent_plans')) return res.json({ plans: [] });
     const r = await pool.query(
       `SELECT p.*, a.name as agent_name, a.emoji as agent_emoji
        FROM agent_plans p
@@ -125,6 +127,7 @@ router.get('/:id', auth, async (req, res) => {
 router.get('/:id/poll', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'agent_plans')) return res.json({ plans: [] });
     const r = await pool.query(
       `SELECT p.status, p.steps_done, p.step_count, p.result, p.error_msg, p.updated_at,
          json_agg(json_build_object(
@@ -149,6 +152,7 @@ router.get('/:id/poll', auth, async (req, res) => {
 router.post('/:id/cancel', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'agent_plans')) return res.json({ plans: [] });
     const r = await pool.query(
       `UPDATE agent_plans SET status='cancelled', updated_at=now()
        WHERE id=$1 AND user_id=$2 AND status IN ('planning','running','paused')
@@ -171,6 +175,7 @@ router.post('/:id/cancel', auth, async (req, res) => {
 router.post('/:id/retry', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'agent_plans')) return res.json({ plans: [] });
     const r = await pool.query(
       `UPDATE agent_plans SET status='running', error_msg=NULL, updated_at=now()
        WHERE id=$1 AND user_id=$2 AND status IN ('failed','paused')
@@ -217,6 +222,7 @@ router.post('/decompose-preview', auth, async (req, res) => {
   const { agentId, goal, context, model } = req.body;
   if (!goal?.trim()) return res.status(400).json({ error: 'goal erforderlich' });
   try {
+    if (!await tableExists(pool, 'agent_plans')) return res.json({ plans: [] });
     const decomposed = await planner.decompose(pool, {
       goal, context,
       agentId: agentId || null,

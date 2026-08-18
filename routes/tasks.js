@@ -66,6 +66,7 @@ router.post('/', auth, async (req, res) => {
   if (!title) return res.status(400).json({ error: 'title erforderlich' });
 
   try {
+    if (!await tableExists(pool, 'agent_tasks')) return res.status(503).json({ error: 'Migrations noch nicht abgeschlossen. Bitte warte kurz und versuche es erneut.' });
     // Agenten-Ownership prüfen falls agentId angegeben
     if (agentId) {
       const check = await pool.query(
@@ -95,6 +96,7 @@ router.post('/', auth, async (req, res) => {
 router.get('/:id', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'agent_tasks')) return res.json({ tasks: [], total: 0 });
     const r = await pool.query(
       `SELECT t.*, a.name as agent_name, a.emoji as agent_emoji
        FROM agent_tasks t
@@ -115,6 +117,7 @@ router.get('/:id', auth, async (req, res) => {
 router.post('/:id/run', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'agent_tasks')) return res.json({ tasks: [], total: 0 });
     const r = await pool.query(
       'SELECT * FROM agent_tasks WHERE id=$1 AND user_id=$2',
       [req.params.id, req.userId]
@@ -142,6 +145,7 @@ router.post('/:id/run', auth, async (req, res) => {
 router.post('/:id/cancel', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'agent_tasks')) return res.json({ tasks: [], total: 0 });
     await taskRunner.cancel(pool, { taskId: parseInt(req.params.id), userId: req.userId });
     res.json({ success: true });
   } catch (e) {
@@ -153,6 +157,7 @@ router.post('/:id/cancel', auth, async (req, res) => {
 router.post('/:id/retry', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'agent_tasks')) return res.json({ tasks: [], total: 0 });
     const r = await pool.query(
       `UPDATE agent_tasks SET status='pending', retry_count=0, error_msg=NULL, scheduled_at=now()
        WHERE id=$1 AND user_id=$2 AND status IN ('failed','cancelled')

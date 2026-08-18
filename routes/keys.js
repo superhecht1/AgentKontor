@@ -27,6 +27,7 @@ async function ensureHashColumn(pool) {
 router.get('/', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'api_keys')) return res.json({ keys: [] });
     const r = await pool.query(
       `SELECT k.id, k.label, k.key_prefix, k.is_active, k.last_used, k.created_at,
               a.name AS agent_name
@@ -50,6 +51,7 @@ router.post('/', auth, async (req, res) => {
   if (!label) return res.status(400).json({ error: 'Bezeichnung erforderlich' });
 
   try {
+    if (!await tableExists(pool, 'api_keys')) return res.status(503).json({ error: 'Tabelle noch nicht bereit' });
     await ensureHashColumn(pool);
 
     // Check plan

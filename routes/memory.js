@@ -62,6 +62,7 @@ router.post('/', auth, async (req, res) => {
   }
 
   try {
+    if (!await tableExists(pool, 'agent_memory')) return res.json({ memories: [] });
     const check = await pool.query(
       'SELECT id FROM agents WHERE id=$1 AND user_id=$2', [agentId, req.userId]
     );
@@ -130,6 +131,7 @@ router.get('/contacts', auth, async (req, res) => {
   const pool = getPool(req);
   const { agentId, limit = 50, search } = req.query;
   try {
+    if (!await tableExists(pool, 'agent_memory')) return res.json({ memories: [] });
     const conditions = ['c.user_id=$1'];
     const params = [req.userId];
     if (agentId) { conditions.push(`c.id IN (SELECT DISTINCT contact_id::integer FROM agent_memory WHERE agent_id=$${params.length+1})`); params.push(agentId); }
@@ -156,6 +158,7 @@ router.get('/contacts', auth, async (req, res) => {
 router.get('/contacts/:id', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'contacts')) return res.status(404).json({ error: 'Nicht gefunden' });
     const contact = await pool.query(
       'SELECT * FROM contacts WHERE id=$1 AND user_id=$2',
       [req.params.id, req.userId]
@@ -181,6 +184,7 @@ router.get('/contacts/:id', auth, async (req, res) => {
 router.post('/cleanup', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'agent_memory')) return res.json({ memories: [] });
     const deleted = await memoryManager.cleanup(pool);
     res.json({ success: true, deleted });
   } catch (e) {
@@ -193,6 +197,7 @@ router.get('/stats', auth, async (req, res) => {
   const pool = getPool(req);
   const { agentId } = req.query;
   try {
+    if (!await tableExists(pool, 'agent_memory')) return res.json({ memories: [] });
     const cond = agentId ? 'AND m.agent_id=$2' : '';
     const params = agentId ? [req.userId, agentId] : [req.userId];
     const r = await pool.query(

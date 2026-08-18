@@ -28,6 +28,7 @@ router.post('/', auth, async (req, res) => {
   const safeModel = ALLOWED_MODELS.includes(model) ? model : 'claude-sonnet-4-6';
 
   try {
+    if (!await tableExists(pool, 'goals')) return res.status(503).json({ error: 'Service noch nicht bereit — Migration läuft noch' });
     const { goalId, campaignId, analysis } = await goalEngine.startGoal(pool, {
       userId: req.userId,
       rawGoal: goal.trim().slice(0, 2000),
@@ -57,7 +58,8 @@ router.get('/', auth, async (req, res) => {
   const pool = getPool(req);
   const { status, limit = 20 } = req.query;
   try {
-    const conditions = ['g.user_id=$1'];
+        if (!await tableExists(pool, 'goals')) return res.json({ goals: [] });
+const conditions = ['g.user_id=$1'];
     const params = [req.userId];
     if (status) { conditions.push('g.status=$2'); params.push(status); }
     params.push(parseInt(limit));
@@ -83,6 +85,7 @@ router.get('/', auth, async (req, res) => {
 router.get('/:id/poll', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'goals')) return res.json({ goals: [] });
     const [goal, campaign, steps, metrics, activity] = await Promise.all([
       pool.query('SELECT * FROM goals WHERE id=$1 AND user_id=$2', [req.params.id, req.userId]),
       pool.query('SELECT * FROM goal_campaigns WHERE goal_id=$1 ORDER BY created_at DESC LIMIT 1', [req.params.id]),
@@ -118,6 +121,7 @@ router.post('/:id/approve', auth, async (req, res) => {
   const { stepId, approvalId } = req.body;
 
   try {
+    if (!await tableExists(pool, 'goals')) return res.json({ goals: [] });
     // Approval-Status setzen
     if (approvalId) {
       await pool.query(
@@ -157,6 +161,7 @@ router.post('/:id/reject', auth, async (req, res) => {
   const pool = getPool(req);
   const { reason, approvalId } = req.body;
   try {
+    if (!await tableExists(pool, 'goals')) return res.json({ goals: [] });
     if (approvalId) {
       await pool.query(
         "UPDATE approvals SET status='rejected',response_note=$1,decided_at=now() WHERE id=$2 AND user_id=$3",
@@ -180,6 +185,7 @@ router.post('/:id/reject', auth, async (req, res) => {
 // ── POST /api/goals/:id/cancel  — Ziel abbrechen ─────────────────────────────
 router.post('/:id/cancel', auth, async (req, res) => {
   const pool = getPool(req);
+  if (!await tableExists(pool, 'goals')) return res.json({ success: true });
   await pool.query(
     "UPDATE goals SET status='cancelled',updated_at=now() WHERE id=$1 AND user_id=$2",
     [req.params.id, req.userId]
@@ -198,6 +204,7 @@ router.delete('/:id', auth, async (req, res) => {
 router.get('/stats/overview', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'goals')) return res.json({ goals: [] });
     const r = await pool.query(
       `SELECT
          COUNT(*) AS total,

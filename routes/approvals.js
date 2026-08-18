@@ -64,6 +64,7 @@ router.post('/:id/approve', auth, async (req, res) => {
   const pool = getPool(req);
   const { note = '' } = req.body;
   try {
+    if (!await tableExists(pool, 'approvals')) return res.json({ approvals: [], byStatus: {} });
     const r = await pool.query(
       `UPDATE approvals
          SET status='approved', response_note=$1, decided_at=now()
@@ -101,6 +102,7 @@ router.post('/:id/reject', auth, async (req, res) => {
   const pool = getPool(req);
   const { note = '' } = req.body;
   try {
+    if (!await tableExists(pool, 'approvals')) return res.json({ approvals: [], byStatus: {} });
     const r = await pool.query(
       `UPDATE approvals
          SET status='rejected', response_note=$1, decided_at=now()
@@ -138,6 +140,7 @@ router.post('/:id/reject', auth, async (req, res) => {
 router.get('/rules', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'approvals')) return res.json({ approvals: [], byStatus: {} });
     const r = await pool.query(
       `SELECT ar.*, a.name as agent_name, a.emoji as agent_emoji
        FROM approval_rules ar
@@ -160,6 +163,8 @@ router.post('/rules', auth, async (req, res) => {
   if (!['auto','notify','approve'].includes(level)) return res.status(400).json({ error: 'Ungültiger level' });
 
   try {
+    if (!await tableExists(pool, 'approvals')) return res.status(503).json({ rule: {} });
+    if (!await tableExists(pool, 'approvals')) return res.json({ approvals: [], byStatus: {} });
     if (agentId) {
       const check = await pool.query(
         'SELECT id FROM agents WHERE id=$1 AND user_id=$2', [agentId, req.userId]
@@ -215,6 +220,7 @@ router.delete('/rules/:id', auth, async (req, res) => {
 // ── POST /api/approvals/rules/seed  — Standard-Regeln anlegen ────────────────
 router.post('/rules/seed', auth, async (req, res) => {
   const pool = getPool(req);
+  if (!await tableExists(pool, 'approval_rules')) return res.json({ created: 0 });
   const defaults = [
     { pattern: 'get_current_time', level: 'auto',    desc: 'Uhrzeit abfragen — immer automatisch', priority: 10 },
     { pattern: 'calculate',        level: 'auto',    desc: 'Berechnungen — immer automatisch',      priority: 10 },

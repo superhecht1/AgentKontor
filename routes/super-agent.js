@@ -1,7 +1,25 @@
 'use strict';
 const express = require('express');
 const router  = express.Router();
+
+// Sicheres Error-Logging: Stack intern, generische Meldung zum Client
+function safeErr(res, e, status = 500, context = '') {
+  const isProd = process.env.NODE_ENV === 'production';
+  if (context) console.error(`[${context}]`, e.message);
+  else console.error(e.message);
+  const msg = isProd
+    ? (status < 500 ? e.message : 'Interner Serverfehler')  // 4xx ok, 5xx generisch
+    : e.message;
+  return res.status(status).json({ error: msg });
+}
+
 const auth = require('../middleware/auth');
+
+async function tableExists(pool, table) {
+  try { await pool.query(`SELECT 1 FROM ${table} LIMIT 1`); return true; }
+  catch { return false; }
+}
+
 const { getPool } = require('../utils/db');
 const { superAgent } = require('../utils/super-agent');
 
@@ -12,6 +30,7 @@ router.post('/', auth, async (req, res) => {
   if (!goal?.trim()) return res.status(400).json({ error: 'goal erforderlich' });
 
   try {
+    if (!await tableExists(pool, 'super_agent_sessions')) return res.json({ sessions: [] });
     // Session anlegen
     const r = await pool.query(
       `INSERT INTO super_agent_sessions (user_id,team_id,goal,context,model,status)
@@ -40,7 +59,7 @@ router.post('/', auth, async (req, res) => {
     });
   } catch (e) {
     console.error('CREATE SUPER SESSION:', e.message);
-    res.status(500).json({ error: e.message });
+    safeErr(res, e, 500);
   }
 });
 
@@ -49,7 +68,8 @@ router.get('/', auth, async (req, res) => {
   const pool = getPool(req);
   const { limit = 20, status } = req.query;
   try {
-    const conditions = ['user_id=$1'];
+        if (!await tableExists(pool, 'super_agent_sessions')) return res.json({ sessions: [] });
+const conditions = ['user_id=$1'];
     const params = [req.userId];
     if (status) { conditions.push('status=$2'); params.push(status); }
     params.push(parseInt(limit));
@@ -83,6 +103,7 @@ router.get('/', auth, async (req, res) => {
 router.get('/:id/poll', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'super_agent_sessions')) return res.json({ sessions: [] });
     const r = await pool.query(
       `SELECT s.id, s.status, s.routing_result, s.plan, s.agent_results,
               s.final_result, s.error_msg, s.total_duration_ms, s.updated_at,
@@ -102,6 +123,7 @@ router.get('/:id/poll', auth, async (req, res) => {
 router.get('/:id', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'super_agent_sessions')) return res.json({ sessions: [] });
     const r = await pool.query(
       'SELECT * FROM super_agent_sessions WHERE id=$1 AND user_id=$2',
       [req.params.id, req.userId]
@@ -131,6 +153,7 @@ router.delete('/:id', auth, async (req, res) => {
 router.get('/profiles/all', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'super_agent_sessions')) return res.json({ sessions: [] });
     const profiles = await superAgent.loadProfiles(pool);
 
     // Kollaborations-Stats hinzufügen
@@ -148,6 +171,7 @@ router.get('/profiles/all', auth, async (req, res) => {
 router.get('/stats/overview', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'super_agent_sessions')) return res.json({ sessions: [] });
     const r = await pool.query(
       `SELECT
          COUNT(*) as total,
@@ -168,6 +192,7 @@ router.get('/stats/overview', auth, async (req, res) => {
 router.get('/teams/all', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'super_agent_sessions')) return res.json({ sessions: [] });
     const r = await pool.query(
       'SELECT * FROM agent_teams WHERE user_id=$1 ORDER BY is_default DESC, created_at',
       [req.userId]
@@ -184,6 +209,7 @@ router.post('/teams', auth, async (req, res) => {
   const { name, description, members } = req.body;
   if (!name) return res.status(400).json({ error: 'name erforderlich' });
   try {
+    if (!await tableExists(pool, 'super_agent_sessions')) return res.json({ sessions: [] });
     const r = await pool.query(
       'INSERT INTO agent_teams (user_id,name,description,members) VALUES ($1,$2,$3,$4) RETURNING *',
       [req.userId, name, description||'', JSON.stringify(members||[])]

@@ -1,6 +1,18 @@
 'use strict';
 const express = require('express');
 const router  = express.Router();
+
+// Sicheres Error-Logging: Stack intern, generische Meldung zum Client
+function safeErr(res, e, status = 500, context = '') {
+  const isProd = process.env.NODE_ENV === 'production';
+  if (context) console.error(`[${context}]`, e.message);
+  else console.error(e.message);
+  const msg = isProd
+    ? (status < 500 ? e.message : 'Interner Serverfehler')  // 4xx ok, 5xx generisch
+    : e.message;
+  return res.status(status).json({ error: msg });
+}
+
 const auth    = require('../middleware/auth');
 const { getPool } = require('../utils/db');
 
@@ -9,7 +21,8 @@ router.get('/', auth, async (req, res) => {
   const pool = getPool(req);
   const { category, search, featured, limit = 50 } = req.query;
   try {
-    const conditions = ['ma.is_active=true'];
+        if (!await tableExists(pool, 'marketplace_agents')) return res.json({ agents: [] });
+const conditions = ['ma.is_active=true'];
     const params     = [req.userId];
     let   i          = 2;
 
@@ -51,6 +64,7 @@ router.get('/', auth, async (req, res) => {
 router.get('/categories', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'marketplace_agents')) return res.json({ agents: [], categories: [] });
     const r = await pool.query(
       `SELECT mc.*,
          COUNT(ma.id) AS agent_count
@@ -70,6 +84,7 @@ router.get('/categories', auth, async (req, res) => {
 router.get('/:id', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'marketplace_agents')) return res.json({ agents: [], categories: [] });
     const r = await pool.query(
       `SELECT ma.*, mc.name AS category_name, mc.emoji AS category_emoji,
          (mi.id IS NOT NULL) AS is_installed, mi.agent_id AS installed_agent_id
@@ -99,6 +114,7 @@ router.post('/:id/install', auth, async (req, res) => {
   const { agentName } = req.body; // optionaler Custom-Name
 
   try {
+    if (!await tableExists(pool, 'marketplace_agents')) return res.json({ agents: [], categories: [] });
     // Marketplace-Agent laden
     const mr = await pool.query(
       'SELECT * FROM marketplace_agents WHERE id=$1 OR slug=$1',
@@ -180,7 +196,7 @@ router.post('/:id/install', auth, async (req, res) => {
     res.status(201).json({ success: true, agentId, agentName: agentName || template.name });
   } catch (e) {
     console.error('INSTALL AGENT:', e.message);
-    res.status(500).json({ error: e.message });
+    safeErr(res, e, 500);
   }
 });
 
@@ -191,6 +207,7 @@ router.post('/:id/rate', auth, async (req, res) => {
   if (!rating || rating < 1 || rating > 5) return res.status(400).json({ error: 'Rating 1-5 erforderlich' });
 
   try {
+    if (!await tableExists(pool, 'marketplace_agents')) return res.json({ agents: [], categories: [] });
     await pool.query(
       `INSERT INTO marketplace_ratings (user_id, marketplace_id, rating, review)
        VALUES ($1,$2,$3,$4)
@@ -216,6 +233,7 @@ router.post('/:id/rate', auth, async (req, res) => {
 router.get('/my/installs', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'marketplace_agents')) return res.json({ agents: [], categories: [] });
     const r = await pool.query(
       `SELECT mi.*, ma.name AS template_name, ma.emoji, ma.tagline, ma.category_slug,
          a.name AS agent_name, a.is_active

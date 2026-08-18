@@ -64,6 +64,7 @@ router.post('/', auth, async (req, res) => {
   if (!['http','builtin','mcp'].includes(type)) return res.status(400).json({ error: 'Ungültiger type' });
 
   try {
+    if (!await tableExists(pool, 'tools')) return res.json({ tools: [] });
     const r = await pool.query(
       `INSERT INTO tools (user_id,name,description,type,parameters,config,permissions,rate_limit,timeout_s)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
@@ -125,6 +126,7 @@ router.post('/assign', auth, async (req, res) => {
   if (!agentId || !toolId) return res.status(400).json({ error: 'agentId und toolId erforderlich' });
 
   try {
+    if (!await tableExists(pool, 'tools')) return res.json({ tools: [] });
     // Sicherstellen dass Agent dem User gehört
     const check = await pool.query(
       'SELECT id FROM agents WHERE id=$1 AND user_id=$2', [agentId, req.userId]
@@ -162,6 +164,7 @@ router.delete('/assign', auth, async (req, res) => {
 router.post('/:id/test', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'tools')) return res.json({ tools: [] });
     const r = await pool.query(
       'SELECT * FROM tools WHERE id=$1 AND (user_id=$2 OR user_id IS NULL)',
       [req.params.id, req.userId]
@@ -184,6 +187,7 @@ router.get('/calls', auth, async (req, res) => {
   const pool = getPool(req);
   const { agentId, limit = 50 } = req.query;
   try {
+    if (!await tableExists(pool, 'tools')) return res.json({ tools: [] });
     const conditions = ['(t.user_id=$1 OR t.user_id IS NULL)'];
     const params = [req.userId];
     if (agentId) { conditions.push(`tc.agent_id=$${params.length+1}`); params.push(agentId); }
@@ -208,6 +212,7 @@ router.get('/calls', auth, async (req, res) => {
 router.post('/seed-builtins', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'tools')) return res.json({ tools: [] });
     let created = 0;
     for (const def of BUILTIN_DEFINITIONS) {
       const exists = await pool.query(
