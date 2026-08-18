@@ -262,12 +262,7 @@ router.post('/users/:id/email', auth, adminOnly, async (req, res) => {
     if (!r.rows.length) return res.status(404).json({ error: 'Nutzer nicht gefunden' });
     if (!process.env.SMTP_HOST) return res.status(503).json({ error: 'SMTP nicht konfiguriert. Bitte SMTP_HOST in den Umgebungsvariablen setzen.' });
 
-    const nodemailer = require('nodemailer');
-    const t = nodemailer.createTransport({
-      host: process.env.SMTP_HOST, port: parseInt(process.env.SMTP_PORT||'587'),
-      secure: false, auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-    });
-    await t.sendMail({
+    await sendMail({
       from: `AgentKontor <${process.env.SMTP_FROM||'noreply@agentkontor.de'}>`,
       to: r.rows[0].email,
       subject,
@@ -361,22 +356,11 @@ router.post('/broadcast', auth, adminOnly, async (req, res) => {
       `SELECT email, name FROM users WHERE deleted_at IS NULL ${where} ORDER BY id`,
       args
     );
-    const nodemailer = require('nodemailer');
-    const t = nodemailer.createTransport({
-      host:             process.env.SMTP_HOST,
-      port:             parseInt(process.env.SMTP_PORT || '587'),
-      secure:           process.env.SMTP_SECURE === 'true',
-      connectionTimeout: 5000,   // 5s — hängt nicht ewig
-      greetingTimeout:  3000,
-      socketTimeout:    10000,
-      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-    });
-    // Verbindung vorab prüfen
-    await t.verify().catch(e => { throw new Error('SMTP-Verbindung fehlgeschlagen: ' + e.message); });
+    // E-Mail via mailer.js (Resend/SendGrid/SMTP/Dev)
     let sent = 0;
     for (const u of users.rows) {
       try {
-        await t.sendMail({
+        await sendMail({
           from: `AgentKontor <${process.env.SMTP_FROM||'noreply@agentkontor.de'}>`,
           to: u.email,
           subject,

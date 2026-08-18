@@ -220,26 +220,20 @@ async function executeTool(toolName, toolInput, toolConfig, agent) {
       }
 
       case 'send_email': {
-        if (!process.env.SMTP_HOST && !agent.smtp_host)
-          return { output: 'SMTP nicht konfiguriert', success: false };
+        if (!process.env.RESEND_API_KEY && !process.env.SENDGRID_API_KEY && !process.env.SMTP_HOST && !agent.smtp_host)
+          return { output: 'Kein E-Mail-Provider konfiguriert (RESEND_API_KEY empfohlen)', success: false };
 
-        const nodemailer = require('nodemailer');
-        const t = nodemailer.createTransport({
-          host: agent.smtp_host || process.env.SMTP_HOST,
-          port: parseInt(agent.smtp_port || process.env.SMTP_PORT || '587'),
-          secure: false,
-          auth: {
-            user: agent.smtp_user || process.env.SMTP_USER,
-            pass: agent.smtp_pass || process.env.SMTP_PASS,
-          },
+        // Sende E-Mail via mailer.js (Resend/SendGrid/SMTP/Dev)
+        const { sendMail: sm } = require('../utils/mailer');
+        const smtpFrom = agent.smtp_from || process.env.MAIL_FROM || process.env.SMTP_FROM || `${agent.name} <noreply@agentkontor.de>`;
+        await sm({
+          from:    smtpFrom,
+          to:      toolInput.to || args.to,
+          subject: toolInput.subject || args.subject || `Nachricht von ${agent.name}`,
+          text:    toolInput.body || args.body || args.message || '',
+          html:    toolInput.html || args.html || '',
         });
-        await t.sendMail({
-          from: agent.smtp_from || process.env.SMTP_FROM || `${agent.name} <noreply@agentkontor.de>`,
-          to:   toolInput.to,
-          subject: toolInput.subject,
-          text: toolInput.body,
-        });
-        output = `E-Mail erfolgreich gesendet an ${toolInput.to}`;
+        output = `E-Mail erfolgreich gesendet an ${toolInput.to || args.to}`;
         break;
       }
 

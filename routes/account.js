@@ -92,10 +92,8 @@ router.patch('/email', auth, async (req, res) => {
 
     // Send verification to NEW email
     if (process.env.SMTP_HOST) {
-      const nodemailer = require('nodemailer');
-      const t = nodemailer.createTransport({ host:process.env.SMTP_HOST, port:parseInt(process.env.SMTP_PORT||'587'), secure:false, auth:{user:process.env.SMTP_USER,pass:process.env.SMTP_PASS} });
       const link = `${process.env.APP_URL||'https://agentkontor.de'}/api/auth/confirm-email/${verifyToken}`;
-      await t.sendMail({
+      await sendMail({
         from: `AgentKontor <${process.env.SMTP_FROM||'noreply@agentkontor.de'}>`,
         to: email.toLowerCase(),
         subject: 'E-Mail-Adresse bestätigen — AgentKontor',
