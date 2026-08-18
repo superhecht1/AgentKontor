@@ -10,6 +10,18 @@
 
 const crypto = require('crypto');
 
+// ── SSRF-Schutz ─────────────────────────────────────────────────────────────
+const BLOCKED_HOSTS = /^(localhost|127\.\d+\.\d+\.\d+|0\.0\.0\.0|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|192\.168\.\d+\.\d+|169\.254\.\d+\.\d+|169\.254\.169\.254|::1|fc00:|fd[0-9a-f]{2}:|metadata\.google\.internal|instance-data)/i;
+
+function assertSafeUrl(url) {
+  let parsed;
+  try { parsed = new URL(url); } catch { throw new Error('Ungültige URL'); }
+  if (!['http:','https:'].includes(parsed.protocol)) throw new Error('Nur HTTP/HTTPS erlaubt');
+  if (BLOCKED_HOSTS.test(parsed.hostname)) throw new Error('Diese URL ist nicht erlaubt (interne Adresse)');
+  return parsed;
+}
+
+
 // ── Web-Suche ───────────────────────────────────────────────────────────────
 async function search(pool, { query, maxResults = 10, provider = 'brave', freshness = 'month' }) {
   // Cache prüfen (1h)
@@ -77,6 +89,8 @@ async function search(pool, { query, maxResults = 10, provider = 'brave', freshn
 
 // ── Webseite lesen ──────────────────────────────────────────────────────────
 async function scrape(pool, url, { maxLength = 8000 } = {}) {
+  // SSRF-Schutz: nur öffentliche URLs erlaubt
+  assertSafeUrl(url);
   // Cache prüfen (6h)
   const urlHash = crypto.createHash('sha256').update(url).digest('hex');
   if (pool) {
