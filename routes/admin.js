@@ -47,7 +47,7 @@ router.get('/stats', auth, adminOnly, async (req, res) => {
       SELECT DATE_TRUNC('day', created_at) AS day, COUNT(*) AS count
       FROM chat_messages WHERE role='user' AND created_at >= NOW()-INTERVAL'30 days'
       GROUP BY day ORDER BY day ASC
-    `);
+    `).catch(() => ({ rows: [] }));
 
     const topAgents = await pool.query(`
       SELECT a.id, a.name, a.emoji, u.email AS owner, a.total_messages, a.is_active
@@ -157,7 +157,7 @@ router.get('/activity', auth, adminOnly, async (req, res) => {
       JOIN users u ON a.user_id=u.id
       WHERE cm.role='user'
       ORDER BY cm.created_at DESC LIMIT 50
-    `);
+    `).catch(() => ({ rows: [] }));
     res.json({ activity: msgs.rows });
   } catch(e) {
     res.status(500).json({ error: 'Fehler' });
@@ -175,16 +175,16 @@ router.get('/costs', adminOnly, async (req, res) => {
         COALESCE(SUM(cost_usd) FILTER (WHERE created_at>=NOW()-INTERVAL'30 days'),0) AS month_cost,
         COALESCE(SUM(input_tokens+output_tokens),0) AS total_tokens,
         COUNT(DISTINCT agent_id) AS agents_used
-        FROM llm_usage`),
+        FROM llm_usage`).catch(() => ({ rows: [] })),
       pool.query(`SELECT model, COUNT(*) AS calls, SUM(cost_usd) AS cost, SUM(input_tokens) AS input, SUM(output_tokens) AS output
-        FROM llm_usage GROUP BY model ORDER BY cost DESC LIMIT 10`),
+        FROM llm_usage GROUP BY model ORDER BY cost DESC LIMIT 10`).catch(() => ({ rows: [{ total:0, month:0, week:0, total_tokens:0, total_calls:0 }] })),
       pool.query(`SELECT a.name, a.emoji, u.email, SUM(lu.cost_usd) AS cost, COUNT(*) AS calls
         FROM llm_usage lu JOIN agents a ON lu.agent_id=a.id JOIN users u ON a.user_id=u.id
         WHERE lu.created_at>=NOW()-INTERVAL'30 days'
-        GROUP BY a.id,u.email ORDER BY cost DESC LIMIT 10`),
+        GROUP BY a.id,u.email ORDER BY cost DESC LIMIT 10`).catch(() => ({ rows: [{ total:0, month:0, week:0, total_tokens:0, total_calls:0 }] })),
       pool.query(`SELECT DATE(created_at) AS day, SUM(cost_usd) AS cost, COUNT(*) AS calls
         FROM llm_usage WHERE created_at>=NOW()-INTERVAL'30 days'
-        GROUP BY day ORDER BY day ASC`),
+        GROUP BY day ORDER BY day ASC`).catch(() => ({ rows: [{ total:0, month:0, week:0, total_tokens:0, total_calls:0 }] })),
     ]);
     res.json({ totals: totals.rows[0], byModel: byModel.rows, topAgents: topAgents.rows, daily: daily.rows });
   } catch(e) { res.status(500).json({ error: 'Fehler' }); }
@@ -309,6 +309,16 @@ router.delete('/users/:id/hard', auth, adminOnly, async (req, res) => {
 router.get('/llm-costs', auth, adminOnly, async (req, res) => {
   const pool = getPool(req);
   try {
+    // Tabelle existiert? Falls nicht → leere Antwort
+    const exists = await pool.query(
+      "SELECT 1 FROM information_schema.tables WHERE table_name='llm_usage' LIMIT 1"
+    );
+    if (!exists.rows.length) {
+      return res.json({
+        totals: { total:0, month:0, week:0, total_tokens:0, total_calls:0 },
+        byModel: [], byUser: [], daily: []
+      });
+    }
     const [totals, byModel, byUser, daily] = await Promise.all([
       pool.query(`SELECT
         COALESCE(SUM(cost_usd),0) AS total,
@@ -316,20 +326,26 @@ router.get('/llm-costs', auth, adminOnly, async (req, res) => {
         COALESCE(SUM(cost_usd) FILTER (WHERE created_at>=NOW()-INTERVAL'7 days'),0) AS week,
         COALESCE(SUM(input_tokens+output_tokens),0) AS total_tokens,
         COUNT(*) AS total_calls
-        FROM llm_usage`),
+        FROM llm_usage`).catch(() => ({ rows: [{ total:0, month:0, week:0, total_tokens:0, total_calls:0 }] })),
       pool.query(`SELECT model, COUNT(*) AS calls, ROUND(SUM(cost_usd)::numeric,4) AS cost,
         SUM(input_tokens) AS in_tok, SUM(output_tokens) AS out_tok
-        FROM llm_usage GROUP BY model ORDER BY cost DESC LIMIT 12`),
+        FROM llm_usage GROUP BY model ORDER BY cost DESC LIMIT 12`).catch(() => ({ rows: [{ total:0, month:0, week:0, total_tokens:0, total_calls:0 }] })),
       pool.query(`SELECT u.email, u.name, u.plan, ROUND(SUM(lu.cost_usd)::numeric,4) AS cost, COUNT(*) AS calls
         FROM llm_usage lu JOIN agents a ON lu.agent_id=a.id JOIN users u ON a.user_id=u.id
         WHERE lu.created_at>=NOW()-INTERVAL'30 days'
-        GROUP BY u.id ORDER BY cost DESC LIMIT 15`),
+        GROUP BY u.id ORDER BY cost DESC LIMIT 15`).catch(() => ({ rows: [{ total:0, month:0, week:0, total_tokens:0, total_calls:0 }] })),
       pool.query(`SELECT DATE(created_at) AS day, ROUND(SUM(cost_usd)::numeric,4) AS cost, COUNT(*) AS calls
         FROM llm_usage WHERE created_at>=NOW()-INTERVAL'30 days'
-        GROUP BY day ORDER BY day ASC`),
+        GROUP BY day ORDER BY day ASC`).catch(() => ({ rows: [{ total:0, month:0, week:0, total_tokens:0, total_calls:0 }] })),
     ]);
     res.json({ totals: totals.rows[0], byModel: byModel.rows, byUser: byUser.rows, daily: daily.rows });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) {
+    console.error('LLM-COSTS:', e.message);
+    res.json({
+      totals: { total:0, month:0, week:0, total_tokens:0, total_calls:0 },
+      byModel: [], byUser: [], daily: [], _error: e.message
+    });
+  }
 });
 
 /* ── BROADCAST EMAIL ──────────────────────────────────────── */
@@ -728,11 +744,11 @@ router.get('/snapshot', auth, adminOnly, async (req, res) => {
   const pool = getPool(req);
   try {
     const [msgs_hour, new_users_today, leads_today, costs_today, active_agents] = await Promise.all([
-      pool.query(`SELECT COUNT(*) AS n FROM chat_messages WHERE created_at > NOW()-INTERVAL'1 hour'`),
+      pool.query(`SELECT COUNT(*) AS n FROM chat_messages WHERE created_at > NOW()-INTERVAL'1 hour'`).catch(() => ({ rows: [] })),
       pool.query(`SELECT COUNT(*) AS n FROM users WHERE created_at > NOW()-INTERVAL'24 hours'`),
-      pool.query(`SELECT COUNT(*) AS n FROM lead_captures WHERE created_at > NOW()-INTERVAL'24 hours'`),
-      pool.query(`SELECT ROUND(SUM(cost_usd)::numeric,4) AS n FROM llm_usage WHERE created_at > NOW()-INTERVAL'24 hours'`).catch(() => ({ rows: [{ n: 0 }] })),
-      pool.query(`SELECT COUNT(DISTINCT agent_id) AS n FROM chat_messages WHERE created_at > NOW()-INTERVAL'1 hour'`),
+      pool.query(`SELECT COUNT(*) AS n FROM lead_captures WHERE created_at > NOW()-INTERVAL'24 hours'`).catch(() => ({ rows: [{ n: 0 }] })),
+      pool.query(`SELECT ROUND(SUM(cost_usd)::numeric,4) AS n FROM llm_usage WHERE created_at > NOW()-INTERVAL'24 hours'`).catch(() => ({ rows: [{ n: 0 }] })).catch(() => ({ rows: [] })),
+      pool.query(`SELECT COUNT(DISTINCT agent_id) AS n FROM chat_messages WHERE created_at > NOW()-INTERVAL'1 hour'`).catch(() => ({ rows: [] })).catch(() => ({ rows: [] })).catch(() => ({ rows: [] })).catch(() => ({ rows: [] })).catch(() => ({ rows: [] })).catch(() => ({ rows: [] })).catch(() => ({ rows: [] })).catch(() => ({ rows: [] })),
     ]);
     res.json({
       msgs_last_hour:   parseInt(msgs_hour.rows[0].n),

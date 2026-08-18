@@ -253,7 +253,7 @@ router.get('/:agentId', auth, async (req, res) => {
 
     // Avg response length
     const avgResp = await pool.query(`
-      SELECT ROUND(AVG(LENGTH(content))) AS avg_chars
+      SELECT ROUND(AVG(LENGTH(content))).catch(() => ({ rows: [] })).catch(() => ({ rows: [] })).catch(() => ({ rows: [] })).catch(() => ({ rows: [] })).catch(() => ({ rows: [] })) AS avg_chars
       FROM chat_messages WHERE agent_id=$1 AND role='assistant'
     `, [agentId]);
 

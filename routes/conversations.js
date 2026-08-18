@@ -204,7 +204,7 @@ router.get('/:agentId/search', auth, async (req, res) => {
     if (to)     { query += ` AND created_at <= $${params.length+1}`; params.push(to); }
 
     query += ` ORDER BY session_id, created_at DESC LIMIT $${params.length+1}`;
-    params.push(parseInt(limit));
+    params.push(parseInt(limit)).catch(() => ({ rows: [] })).catch(() => ({ rows: [] }));
 
     const r = await pool.query(query, params);
     res.json({ results: r.rows, query: q });

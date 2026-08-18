@@ -546,7 +546,7 @@ router.post('/web/:agentId', async (req, res) => {
 
     // Human handoff detection
     const handoffWords = ['mensch','mitarbeiter','human','real person','speak to someone'];
-    const wantsHandoff = typeof userMsg.content === 'string' && handoffWords.some(w => userMsg.content.toLowerCase().includes(w));
+    const wantsHandoff = typeof userMsg.content === 'string' && handoffWords.some(w => userMsg.content.toLowerCase().includes(w)).catch(() => ({ rows: [] })).catch(() => ({ rows: [] }));
 
     res.json({ reply, sessionId, wantsHandoff, feedback: { endpoint: `/api/feedback/${agent.id}/${sessionId}` } });
   } catch(e) {
