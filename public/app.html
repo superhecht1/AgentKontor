@@ -4744,7 +4744,9 @@ async loadContact(id){const d=await this.api('/memory/contacts/'+id);if(d.contac
 
 // ── TASKS ─────────────────────────────────────────────────────────────────
 async loadTasks(){
-  const d=await this.api('/tasks?status='+(this.tasksTab==='all'?'':this.tasksTab)+'&limit=50');
+  if(this.tasksTab==='create')return; // create-Tab hat keine Liste
+  const status=(['all','create'].includes(this.tasksTab))?'':this.tasksTab;
+  const d=await this.api('/tasks?status='+status+'&limit=50');
   if(d.tasks)this.tasksList=d.tasks;
   if(d.byStatus)this.taskStats=d.byStatus;
   const s=await this.api('/tasks/stats/summary');
