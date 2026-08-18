@@ -263,7 +263,7 @@ router.post('/users/:id/email', auth, adminOnly, async (req, res) => {
     if (!process.env.SMTP_HOST) return res.status(503).json({ error: 'SMTP nicht konfiguriert. Bitte SMTP_HOST in den Umgebungsvariablen setzen.' });
 
     await sendMail({
-      from: `AgentKontor <${process.env.SMTP_FROM||'noreply@agentkontor.de'}>`,
+      from: `AgentKontor <${process.env.SMTP_FROM||'info@think-cloud.org'}>`,
       to: r.rows[0].email,
       subject,
       html: '<div style="font-family:sans-serif;max-width:560px;margin:32px auto;padding:28px;background:#fff;border-radius:12px"><p>Hallo ' + r.rows[0].name + ',</p>' + body.replace(/\n/g,'<br>') + '<p style="color:#888;font-size:.8rem;margin-top:24px">\u2014 Das AgentKontor Team</p></div>',
@@ -343,6 +343,36 @@ router.get('/llm-costs', auth, adminOnly, async (req, res) => {
   }
 });
 
+
+// ── DEBUG: E-Mail-Test ──────────────────────────────────────────────────────
+router.post('/test-email', auth, adminOnly, async (req, res) => {
+  const { to } = req.body;
+  const debug = {
+    BREVO_API_KEY:    !!process.env.BREVO_API_KEY,
+    RESEND_API_KEY:   !!process.env.RESEND_API_KEY,
+    SENDGRID_API_KEY: !!process.env.SENDGRID_API_KEY,
+    SMTP_HOST:        process.env.SMTP_HOST   || null,
+    MAIL_FROM:        process.env.MAIL_FROM   || null,
+    BREVO_SENDER:     process.env.BREVO_SENDER || null,
+    NODE_ENV:         process.env.NODE_ENV,
+    from_used:        process.env.MAIL_FROM || process.env.BREVO_SENDER || 'info@think-cloud.org',
+  };
+  console.log('[EMAIL-DEBUG]', JSON.stringify(debug));
+  try {
+    const { sendMail } = require('../utils/mailer');
+    await sendMail({
+      to: to || req.user?.email || 'test@example.com',
+      subject: 'AgentKontor Test-E-Mail',
+      html: '<p>Wenn du das siehst, funktioniert der E-Mail-Versand ✅</p>',
+      text: 'Test-E-Mail von AgentKontor',
+    });
+    res.json({ success: true, debug, message: 'E-Mail gesendet!' });
+  } catch(e) {
+    console.error('[EMAIL-TEST ERROR]', e.message);
+    res.json({ success: false, error: e.message, debug });
+  }
+});
+
 /* ── BROADCAST EMAIL ──────────────────────────────────────── */
 router.post('/broadcast', auth, adminOnly, async (req, res) => {
   const pool = getPool(req);
@@ -381,7 +411,7 @@ router.post('/broadcast', auth, adminOnly, async (req, res) => {
       subject,
       htmlFn: (u) => htmlTemplate(u.name),
       textFn: (u) => 'Hallo ' + (u.name||'Kunde') + ',\n\n' + body + '\n\n— Das AgentKontor Team',
-      from: process.env.MAIL_FROM || 'AgentKontor <noreply@agentkontor.de>',
+      from: process.env.MAIL_FROM || 'AgentKontor <info@think-cloud.org>',
     });
 
     res.json({ success: true, sent: result.sent, total: users.rows.length, failed: result.failed });
