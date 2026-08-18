@@ -108,7 +108,7 @@ router.post('/register', async (req, res) => {
       return res.status(409).json({ error: 'E-Mail bereits registriert.' });
     }
 
-    const bcrypt     = require('bcrypt');
+    
     const crypto     = require('crypto');
     const hash       = await bcrypt.hash(password, 12);
     const token      = crypto.randomBytes(32).toString('hex');
