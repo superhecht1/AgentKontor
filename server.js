@@ -101,7 +101,9 @@ try {
         styleSrc:    ["'self'", "'unsafe-inline'", "fonts.googleapis.com"],
         fontSrc:     ["'self'", "fonts.gstatic.com", "data:"],
         imgSrc:      ["'self'", "data:", "https:"],
-        connectSrc:  ["'self'"],
+        connectSrc:  ["'self'", "https://api.anthropic.com", "https://generativelanguage.googleapis.com"],
+        // Note: unsafe-eval ist für Alpine.js x-* Direktiven notwendig
+        // Mitigation: Alpine CDN ist pinned via SRI (empfohlen für Produktion)
         frameSrc:    ["'none'"],
         objectSrc:   ["'none'"],
       },
@@ -201,27 +203,39 @@ app.use('/api/invoices',      require('./routes/invoices'));
 app.use('/webhook',           require('./routes/social-webhooks'));
 app.use('/webhook',           require('./routes/slack-webhook')); // feedback, cron, changelog, handoff, versions
 
+
+// ── Rate Limiter für AI-Endpunkte ─────────────────────────────────────────
+const aiLimiter = async (req, res, next) => {
+  try {
+    const { rateLimit } = require('./middleware/plan-gate');
+    const key = `ai:${req.ip}`;
+    const r   = await rateLimit(pool, key, 60); // 60 Req/Min pro IP
+    if (!r.allowed) return res.status(429).json({ error: 'Zu viele Anfragen. Bitte 1 Minute warten.' });
+    next();
+  } catch { next(); } // fail OPEN für AI (nie blockieren wenn Limiter kaputt)
+};
+
 // ── Phase 1: Tool-System, Memory, Task-Engine ──────────────────────────────
 app.use('/api/tools',     require('./routes/tools'));
 app.use('/api/memory',    require('./routes/memory'));
 app.use('/api/tasks',     require('./routes/tasks'));
 
 // ── Phase 2: Planner, Approval-System ──────────────────────────────────────
-app.use('/api/planner',        require('./routes/planner'));
+app.use('/api/planner',        aiLimiter, require('./routes/planner'));
 app.use('/api/approvals',      require('./routes/approvals'));
 
 // ── Phase 3+4: Integrations, Web-Agent ─────────────────────────────────────
 app.use('/api/integrations',   require('./routes/integrations'));
-app.use('/api/web',            require('./routes/web-agent'));
+app.use('/api/web',            aiLimiter, require('./routes/web-agent'));
 
 // ── Phase 5: Super Agent / Multi-Agent ─────────────────────────────────────
-app.use('/api/super',          require('./routes/super-agent'));
+app.use('/api/super',          aiLimiter, require('./routes/super-agent'));
 
 // ── Agent Marketplace ───────────────────────────────────────────────────────
 app.use('/api/marketplace',    require('./routes/marketplace'));
 
 // ── Super Agent Mode: Goal Engine ──────────────────────────────────────────
-app.use('/api/goals',          require('./routes/goals'));
+app.use('/api/goals',          aiLimiter, require('./routes/goals'));
 
 try {
   app.use('/api/rag', require('./routes/rag'));
