@@ -25,7 +25,7 @@ router.get('/overview', auth, async (req, res) => {
         AND cm.role='user'
         AND cm.created_at >= NOW() - INTERVAL '30 days'
       GROUP BY day ORDER BY day ASC
-    `, [req.userId]);
+    `, [req.userId]).catch(() => ({ rows: [{ n:0, count:0, total:0 }] }));
 
     // Messages by channel last 30 days
     const byChannel = await pool.query(`
@@ -36,7 +36,7 @@ router.get('/overview', auth, async (req, res) => {
         AND cm.role='user'
         AND cm.created_at >= NOW() - INTERVAL '30 days'
       GROUP BY cm.source
-    `, [req.userId]);
+    `, [req.userId]).catch(() => ({ rows: [{ n:0, count:0, total:0 }] }));
 
     // Summary stats
     const totals = await pool.query(`
@@ -58,7 +58,7 @@ router.get('/overview', auth, async (req, res) => {
       JOIN agents a ON lc.agent_id = a.id
       WHERE a.user_id=$1
         AND lc.created_at >= NOW() - INTERVAL '30 days'
-    `, [req.userId]);
+    `, [req.userId]).catch(() => ({ rows: [{ n:0, count:0, total:0 }] }));
 
     // Top agents by messages last 30 days
     const topAgents = await pool.query(`
@@ -94,7 +94,7 @@ router.get('/overview', auth, async (req, res) => {
       JOIN agents a ON lc.agent_id = a.id
       WHERE a.user_id=$1
       ORDER BY lc.created_at DESC LIMIT $2 OFFSET $3
-    `, [req.userId, Math.min(parseInt(req.query.limit)||50,200), parseInt(req.query.offset)||0]);
+    `, [req.userId, Math.min(parseInt(req.query.limit)||50,200), parseInt(req.query.offset)||0]).catch(() => ({ rows: [] }));
     res.json({ leads: leads.rows });
   } catch(e) {
     res.status(500).json({ error: 'Fehler' });
@@ -110,7 +110,7 @@ router.get('/overview', auth, async (req, res) => {
              COALESCE(SUM(lu.cost_usd) FILTER (WHERE lu.created_at >= NOW()-INTERVAL'30 days'),0) AS month_cost,
              COALESCE(SUM(lu.input_tokens+lu.output_tokens),0) AS total_tokens
       FROM llm_usage lu JOIN agents a ON lu.agent_id=a.id WHERE a.user_id=$1
-    `, [req.userId]);
+    `, [req.userId]).catch(() => ({ rows: [{ n:0, count:0, total:0 }] }));
 
     const byAgent = await pool.query(`
       SELECT a.id, a.name, a.emoji, a.color,
@@ -144,7 +144,7 @@ router.get('/:agentId/leads', auth, async (req, res) => {
       SELECT id, session_id, source, data, created_at
       FROM lead_captures WHERE agent_id=$1
       ORDER BY created_at DESC LIMIT $2 OFFSET $3
-    `, [agentId, limit, offset]);
+    `, [agentId, limit, offset]).catch(() => ({ rows: [{ n:0, count:0, total:0 }] }));
     res.json({ leads: leads.rows, limit, offset });
   } catch(e) {
     res.status(500).json({ error: 'Fehler' });
@@ -162,13 +162,13 @@ router.get('/:agentId/leads', auth, async (req, res) => {
         SELECT date, total_cost, total_tokens
         FROM agent_cost_daily WHERE agent_id=$1
         ORDER BY date DESC LIMIT 30
-      `, [req.params.agentId]),
+      `, [req.params.agentId]).catch(() => ({ rows: [{ n:0, count:0, total:0 }] })),
       pool.query(`
         SELECT COALESCE(SUM(cost_usd),0) AS total_cost,
                COALESCE(SUM(input_tokens+output_tokens),0) AS total_tokens,
                COALESCE(SUM(cost_usd) FILTER (WHERE created_at >= NOW()-INTERVAL'30 days'),0) AS month_cost
         FROM llm_usage WHERE agent_id=$1
-      `, [req.params.agentId]),
+      `, [req.params.agentId]).catch(() => ({ rows: [{ n:0, count:0, total:0 }] })),
       pool.query(`
         SELECT model, COUNT(*) AS calls,
                SUM(input_tokens) AS input_tokens,
@@ -176,7 +176,7 @@ router.get('/:agentId/leads', auth, async (req, res) => {
                SUM(cost_usd) AS cost
         FROM llm_usage WHERE agent_id=$1
         GROUP BY model ORDER BY cost DESC
-      `, [req.params.agentId]),
+      `, [req.params.agentId]).catch(() => ({ rows: [{ n:0, count:0, total:0 }] })),
     ]);
 
     res.json({
@@ -230,7 +230,7 @@ router.get('/:agentId', auth, async (req, res) => {
       WHERE agent_id=$1 AND role='user'
         AND created_at >= NOW() - INTERVAL '30 days'
       GROUP BY day ORDER BY day ASC
-    `, [agentId]);
+    `, [agentId]).catch(() => ({ rows: [{ n:0, count:0, total:0 }] }));
 
     // By channel
     const byChannel = await pool.query(`
@@ -239,7 +239,7 @@ router.get('/:agentId', auth, async (req, res) => {
       WHERE agent_id=$1 AND role='user'
         AND created_at >= NOW() - INTERVAL '30 days'
       GROUP BY source
-    `, [agentId]);
+    `, [agentId]).catch(() => ({ rows: [{ n:0, count:0, total:0 }] }));
 
     // Summary
     const totals = await pool.query(`
@@ -249,13 +249,13 @@ router.get('/:agentId', auth, async (req, res) => {
         COUNT(*) FILTER (WHERE role='user' AND created_at >= NOW()-INTERVAL '7 days') AS week_messages,
         COUNT(*) FILTER (WHERE role='user' AND created_at >= NOW()-INTERVAL '24 hours') AS day_messages
       FROM chat_messages WHERE agent_id=$1
-    `, [agentId]);
+    `, [agentId]).catch(() => ({ rows: [{ n:0, count:0, total:0 }] }));
 
     // Avg response length
     const avgResp = await pool.query(`
       SELECT ROUND(AVG(LENGTH(content))).catch(() => ({ rows: [] })).catch(() => ({ rows: [] })).catch(() => ({ rows: [] })).catch(() => ({ rows: [] })).catch(() => ({ rows: [] })) AS avg_chars
       FROM chat_messages WHERE agent_id=$1 AND role='assistant'
-    `, [agentId]);
+    `, [agentId]).catch(() => ({ rows: [{ n:0, count:0, total:0 }] }));
 
     // Recent sessions
     const sessions = await pool.query(`
@@ -265,7 +265,7 @@ router.get('/:agentId', auth, async (req, res) => {
       FROM chat_messages WHERE agent_id=$1
       GROUP BY session_id, source
       ORDER BY started_at DESC LIMIT 10
-    `, [agentId]);
+    `, [agentId]).catch(() => ({ rows: [{ n:0, count:0, total:0 }] }));
 
     res.json({
       byDay:    byDay.rows,

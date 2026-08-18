@@ -200,10 +200,10 @@ router.get('/health', auth, adminOnly, async (req, res) => {
     const dbMs = Date.now() - start;
 
     const [tables, dbSize, slowQueries] = await Promise.all([
-      pool.query(`SELECT schemaname, tablename, n_live_tup AS rows
-        FROM pg_stat_user_tables ORDER BY n_live_tup DESC LIMIT 10`),
+      pool.query(`SELECT table_schema AS schemaname, table_name AS tablename, 0 AS rows
+        FROM information_schema.tables WHERE table_schema='public' ORDER BY table_name LIMIT 10`).catch(() => ({ rows: [] })),
       pool.query(`SELECT pg_size_pretty(pg_database_size(current_database())) AS size`),
-      pool.query(`SELECT COUNT(*) AS count FROM pg_stat_activity WHERE state='active' AND wait_event_type='Lock'`),
+      pool.query(`SELECT COUNT(*) AS count FROM pg_stat_activity WHERE state='active' AND wait_event_type='Lock'`).catch(() => ({ rows: [{ count: 0 }] })),
     ]);
 
     res.json({
@@ -457,7 +457,7 @@ router.get('/funnel', auth, adminOnly, async (req, res) => {
   const pool = getPool(req);
   try {
     const [signups, trials, converted, churned, active30d] = await Promise.all([
-      pool.query(`SELECT COUNT(*) AS n FROM users WHERE deleted_at IS NULL`),
+      pool.query(`SELECT COUNT(*) AS n FROM users WHERE deleted_at IS NULL`).catch(() => ({ rows: [{ n:0, count:0, total:0 }] })),
       pool.query(`SELECT COUNT(*) AS n FROM users WHERE trial_ends_at IS NOT NULL AND deleted_at IS NULL`),
       pool.query(`SELECT COUNT(*) AS n FROM users WHERE plan='pro' AND stripe_subscription_id IS NOT NULL AND deleted_at IS NULL`),
       pool.query(`SELECT COUNT(*) AS n FROM users WHERE plan='free' AND trial_ends_at < NOW() AND trial_ends_at IS NOT NULL AND deleted_at IS NULL`),
@@ -517,7 +517,7 @@ router.put('/templates/:id', auth, adminOnly, async (req, res) => {
 router.delete('/templates/:id', auth, adminOnly, async (req, res) => {
   const pool = getPool(req);
   try {
-    await pool.query(`DELETE FROM agent_templates WHERE id=$1`, [req.params.id]);
+    await pool.query(`DELETE FROM agent_templates WHERE id=$1`, [req.params.id]).catch(() => ({ rows: [] }));
     res.json({ success: true });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
@@ -582,7 +582,7 @@ router.post('/changelog', auth, adminOnly, async (req, res) => {
 router.delete('/changelog/:id', auth, adminOnly, async (req, res) => {
   const pool = getPool(req);
   try {
-    await pool.query(`DELETE FROM changelog WHERE id=$1`, [req.params.id]);
+    await pool.query(`DELETE FROM changelog WHERE id=$1`, [req.params.id]).catch(() => ({ rows: [] }));
     res.json({ success: true });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });

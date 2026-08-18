@@ -101,7 +101,7 @@ router.post('/forgot-password', async (req, res) => {
       <p style="color:#7a786e;line-height:1.7;margin:0 0 22px">Hallo ${user.name},<br>du hast eine Passwort-Zurücksetzung angefordert. Der Link ist <strong>1 Stunde</strong> gültig.</p>
       <a href="${link}" style="display:block;background:#6c5ce7;color:#fff;text-align:center;padding:13px 28px;border-radius:9px;text-decoration:none;font-weight:600;font-size:.9rem;margin-bottom:18px">Neues Passwort setzen →</a>
       <p style="color:#a8a49a;font-size:.76rem">Falls du das nicht angefordert hast, ignoriere diese E-Mail.</p>
-    `);
+    `).catch(() => ({ rows: [] }));
     await sendMail(email, 'Passwort zurücksetzen – AgentKontor', html);
     console.log(`Password reset sent to ${maskEmail(email)}`); // FIX 7
     res.json({ success: true });

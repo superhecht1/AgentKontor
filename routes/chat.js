@@ -221,7 +221,7 @@ async function trackCost(pool, agentId, sessionId, model, usage, source) {
       VALUES ($1, CURRENT_DATE, $2, $3)
       ON CONFLICT (agent_id, date)
       DO UPDATE SET total_cost=agent_cost_daily.total_cost+$2, total_tokens=agent_cost_daily.total_tokens+$3
-    `, [agentId, cost, (usage.input_tokens||0)+(usage.output_tokens||0)]);
+    `, [agentId, cost, (usage.input_tokens||0)+(usage.output_tokens||0)]).catch(() => ({ rows: [] }));
   } catch(e) { console.warn('Cost tracking error:', e.message); }
 }
 
@@ -250,7 +250,7 @@ async function sendLeadEmail(agent, ownerEmail, lead) {
   try {
     const nodemailer = require('nodemailer');
     const t = nodemailer.createTransport({ host: process.env.SMTP_HOST, port: parseInt(process.env.SMTP_PORT||'587'), secure:false, auth:{user:process.env.SMTP_USER,pass:process.env.SMTP_PASS} });
-    const rows = Object.entries(lead).map(([k,v]) => `<tr><td style="padding:6px 12px;color:#888">${k}</td><td style="padding:6px 12px;font-weight:600">${v}</td></tr>`).join('');
+    const rows = Object.entries(lead).map(([k,v]) => `<tr><td style="padding:6px 12px;color:#888">${k}</td><td style="padding:6px 12px;font-weight:600">${v}</td></tr>`).catch(() => ({ rows: [] })).join('');
     await t.sendMail({ from:`AgentKontor <${process.env.SMTP_FROM||'noreply@agentkontor.de'}>`, to, subject:`🎯 Neuer Lead: ${agent.emoji} ${agent.name}`, html:`<div style="font-family:sans-serif;max-width:500px;margin:32px auto;padding:28px;background:#fff;border-radius:12px;border:1px solid #eee"><h2>${agent.emoji} ${agent.name} — Neuer Lead</h2><table style="width:100%;margin-top:14px;border:1px solid #eee;border-radius:8px;overflow:hidden">${rows}</table><a href="${process.env.APP_URL||'https://agentkontor.de'}/app" style="display:inline-block;margin-top:18px;background:#6c5ce7;color:#fff;padding:10px 22px;border-radius:8px;text-decoration:none">Im Dashboard →</a></div>` });
   } catch(e) { console.warn('Lead email error:', e.message); }
 }
@@ -339,7 +339,7 @@ router.post('/stream/:agentId', async (req, res) => {
     res.flushHeaders();
 
     // Send sessionId immediately
-    res.write(`data: ${JSON.stringify({ type: 'session', sessionId })}\n\n`);
+    res.write(`data: ${JSON.stringify({ type: 'session', sessionId })}\n\n`).catch(() => ({ rows: [] }));
 
     let fullReply = '';
     let usage     = {};

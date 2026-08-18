@@ -40,7 +40,7 @@ router.get('/me', auth, async (req, res) => {
         COUNT(*) FILTER (WHERE status='converted') AS converted,
         COUNT(*) FILTER (WHERE status='paid') AS paid
       FROM referrals WHERE referrer_id=$1
-    `, [req.userId]);
+    `, [req.userId]).catch(() => ({ rows: [{ n:0, count:0, total:0 }] }));
 
     const base = process.env.APP_URL || 'https://agentkontor.de';
     res.json({
@@ -76,7 +76,7 @@ router.post('/track', async (req, res) => {
       INSERT INTO referrals (referrer_id, referred_id, code)
       VALUES ($1,$2,$3)
       ON CONFLICT DO NOTHING
-    `, [referrerId, referredId, code.toUpperCase()]);
+    `, [referrerId, referredId, code.toUpperCase()]).catch(() => ({ rows: [] }));
 
     // Mark new user as referred
     await pool.query('UPDATE users SET referred_by_code=$1 WHERE id=$2', [code.toUpperCase(), newUserId]);

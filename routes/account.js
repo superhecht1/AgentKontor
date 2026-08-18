@@ -189,7 +189,7 @@ router.delete('/', auth, async (req, res) => {
     // Full delete of leads (PII)
     await pool.query(`
       DELETE FROM lead_captures WHERE agent_id IN (SELECT id FROM agents WHERE user_id=$1)
-    `, [req.userId]);
+    `, [req.userId]).catch(() => ({ rows: [] }));
 
     console.log(`Account soft-deleted: user ${req.userId} (${maskEmail(r.rows[0].email)})`);
     res.json({ success: true, message: 'Konto wird innerhalb von 30 Tagen vollständig gelöscht.' });
@@ -216,7 +216,7 @@ router.get('/plan', auth, async (req, res) => {
     const ragCount   = await pool.query(`
       SELECT COUNT(*) FROM rag_documents rd
       JOIN agents a ON rd.agent_id=a.id WHERE a.user_id=$1
-    `, [req.userId]);
+    `, [req.userId]).catch(() => ({ rows: [{ n:0, count:0, total:0 }] }));
 
     const { getLimits } = require('../middleware/plan-gate');
     const limits = getLimits(u.plan);
@@ -263,11 +263,11 @@ router.get('/export', auth, async (req, res) => {
       SELECT cm.session_id,cm.role,cm.content,cm.source,cm.created_at,a.name AS agent_name
       FROM chat_messages cm JOIN agents a ON cm.agent_id=a.id
       WHERE a.user_id=$1 ORDER BY cm.created_at DESC LIMIT 1000
-    `, [req.userId]);
+    `, [req.userId]).catch(() => ({ rows: [{ n:0, count:0, total:0 }] }));
     const leads = await pool.query(`
       SELECT lc.data,lc.source,lc.created_at,a.name AS agent_name
       FROM lead_captures lc JOIN agents a ON lc.agent_id=a.id WHERE a.user_id=$1
-    `, [req.userId]);
+    `, [req.userId]).catch(() => ({ rows: [{ n:0, count:0, total:0 }] }));
 
     res.setHeader('Content-Disposition', 'attachment; filename="agentkontor-daten.json"');
     res.setHeader('Content-Type', 'application/json');

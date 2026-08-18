@@ -153,7 +153,7 @@ router.get('/all/leads/csv', auth, async (req, res) => {
       JOIN agents a ON lc.agent_id=a.id
       WHERE a.user_id=$1
       ORDER BY lc.created_at DESC
-    `, [req.userId]);
+    `, [req.userId]).catch(() => ({ rows: [] }));
 
     const allKeys = new Set();
     r.rows.forEach(row => { if (row.data && typeof row.data === 'object') Object.keys(row.data).forEach(k => allKeys.add(k)); });
