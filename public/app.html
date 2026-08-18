@@ -1121,11 +1121,11 @@ input:checked+.slider::before{transform:translateX(18px)}
                     <span class="badge b-rag" x-show="a.rag_enabled">RAG</span>
                     <span class="badge b-voice" x-show="a.voice_enabled">Voice</span>
                   </div>
-                  <div class="agent-spark" x-show="agentStats[a.id]?.sparkline?.length">
-                    <div class="spark-label"><span>7 Tage</span><span style="color:var(--amber);font-weight:700;font-family:'JetBrains Mono',monospace" x-text="(agentStats[a.id]?.msgs_today||0)+' heute'"></span></div>
+                  <div class="agent-spark" x-show="getStat(a.id).sparkline.length">
+                    <div class="spark-label"><span>7 Tage</span><span style="color:var(--amber);font-weight:700;font-family:'JetBrains Mono',monospace" x-text="(getStat(a.id).msgs_today)+' heute'"></span></div>
                     <div class="spark-bars">
-                      <template x-for="(v,i) in (agentStats[a.id]?.sparkline||[])" :key="i">
-                        <div class="spark-bar" :style="'height:'+((v/Math.max(1,...(agentStats[a.id]?.sparkline||[1])))*100)+'%;background:'+(i===(agentStats[a.id]?.sparkline||[]).length-1?'var(--amber)':a.color+'88')"></div>
+                      <template x-for="(v,i) in (getStat(a.id).sparkline)" :key="i">
+                        <div class="spark-bar" :style="'height:'+((v/Math.max(1,...(getStat(a.id).sparkline)))*100)+'%;background:'+(i===(getStat(a.id).sparkline).length-1?'var(--amber)':a.color+'88')"></div>
                       </template>
                     </div>
                   </div>
@@ -1257,11 +1257,11 @@ input:checked+.slider::before{transform:translateX(18px)}
                 <span class="badge b-rag" x-show="a.rag_enabled">RAG</span>
                 <span class="badge b-voice" x-show="a.voice_enabled">Voice</span>
               </div>
-              <div class="agent-spark" x-show="agentStats[a.id]?.sparkline?.length">
-                <div class="spark-label"><span>7 Tage</span><span style="color:var(--amber);font-weight:700;font-family:'JetBrains Mono',monospace" x-text="(agentStats[a.id]?.msgs_today||0)+' heute'"></span></div>
+              <div class="agent-spark" x-show="getStat(a.id).sparkline.length">
+                <div class="spark-label"><span>7 Tage</span><span style="color:var(--amber);font-weight:700;font-family:'JetBrains Mono',monospace" x-text="(getStat(a.id).msgs_today)+' heute'"></span></div>
                 <div class="spark-bars">
-                  <template x-for="(v,i) in (agentStats[a.id]?.sparkline||[])" :key="i">
-                    <div class="spark-bar" :style="'height:'+((v/Math.max(1,...(agentStats[a.id]?.sparkline||[1])))*100)+'%;background:'+(i===(agentStats[a.id]?.sparkline||[]).length-1?'var(--amber)':a.color+'88')"></div>
+                  <template x-for="(v,i) in (getStat(a.id).sparkline)" :key="i">
+                    <div class="spark-bar" :style="'height:'+((v/Math.max(1,...(getStat(a.id).sparkline)))*100)+'%;background:'+(i===(getStat(a.id).sparkline).length-1?'var(--amber)':a.color+'88')"></div>
                   </template>
                 </div>
               </div>
@@ -3725,7 +3725,7 @@ https://anbieter3.de"></textarea></div>
     </div>
 
     <div class="modal-footer">
-      <button class="btn btn-danger btn-sm" x-show="editing" @click="deleteAgent(editing.id)">🗑 Löschen</button>
+      <button class="btn btn-danger btn-sm" x-show="editing" @click="editing&&deleteAgent(editing.id)">🗑 Löschen</button>
       <button class="btn btn-ghost" @click="showModal=false" x-text="T.cancel"></button>
       <button class="btn btn-primary" @click="saveAgent()" :disabled="saving" x-text="saving?T.saving:T.save_agent"></button>
     </div>
@@ -3884,7 +3884,7 @@ agentTemplates:[
 {id:'rechtsberatung',emoji:'⚖️',name:'Rechtsberatung',desc_de:'Erstberatung, Qualifikation, Terminbuchung',desc_en:'Initial consultation, qualification',color:'#636e72',system_prompt:'Du bist ein Erstkontakt-Assistent für eine Kanzlei. Qualifiziere Mandanten und buche Erstberatungsgespräche. Gib keine konkreten Rechtsratschläge.',greeting:'Guten Tag! Womit kann ich Ihnen behilflich sein?',tone:'professionell',quick_chips:['Erstberatung buchen','Rechtsgebiete','Kontakt','Notfall'],cap_leads:true,lead_fields:['Name','E-Mail','Telefon','Rechtsbereich'],cap_calendar:true},
 ],
 apiKeys:[],showNewKey:false,newKeyRev:null,nkf:{label:'',agentId:''},
-analytics:{},allLeads:[],analyticsLoading:false,_charts:{},agentStats:null,
+analytics:{},allLeads:[],analyticsLoading:false,_charts:{},agentStats:{},
 planData:null,settingsSaving:false,
 pwForm:{current:'',newPw:'',confirm:''},pwErr:'',pwOk:false,
 emailForm:{email:'',password:''},emailErr:'',emailOk:false,
@@ -3991,6 +3991,27 @@ async register(){
 setUser(token,user){this.token=token;this.user=user;localStorage.setItem('ak_token',token);localStorage.setItem('ak_user',JSON.stringify(user));this.loadAgents();},
 logout(){this.token=null;this.user=null;localStorage.removeItem('ak_token');localStorage.removeItem('ak_user');},
 
+
+// ── AGENT HELPERS ─────────────────────────────────────────────────────────
+// Null-safe agentStats Accessor — verhindert Alpine bracket-notation Crashes
+getStat(id){ return this.agentStats[id] || {sparkline:[],msgs_today:0}; },
+
+async cloneAgent(id){
+  const d=await this.api('/agents/'+id+'/clone','POST',{});
+  if(d.error){this.toast(d.error,'err');return;}
+  this.toast('Agent geklont ✓');
+  await this.loadAgents();
+},
+
+async deleteAgent(id){
+  if(!confirm('Agent wirklich löschen? Alle Gespräche und Leads gehen verloren.'))return;
+  const d=await this.api('/agents/'+id,'DELETE');
+  if(d.error){this.toast(d.error,'err');return;}
+  this.toast('Agent gelöscht');
+  if(this.editing?.id===id)this.editing=null;
+  await this.loadAgents();
+},
+
 async loadAgents(){const d=await this.api('/agents');if(d.agents)this.agents=d.agents;},
 
 openNew(){this.showTemplates=true;},
@@ -4068,8 +4089,8 @@ channelColor(s){return{web:'#6c5ce7',widget:'#a29bfe',api:'#f0c040',whatsapp:'#2
 
 dlLeads(){window.open('/api/conversations/all/leads/csv','_blank');},
 
-async loadAgentStats(id){
-  this.agentStats=null;
+async loadAgentDetail(id){
+  // Lädt Detail-Analytics für einen Agenten (für den Analytics-Tab)
   const d=await this.api('/analytics/'+id);
   if(d.totals){this.agentStats=d;this.$nextTick(()=>{const ctx=document.getElementById('chartAgentLine');if(!ctx)return;if(this._ac)try{this._ac.destroy()}catch{}const days=d.byDay||[];this._ac=new Chart(ctx,{type:'bar',data:{labels:days.map(d=>new Date(d.day).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})),datasets:[{data:days.map(d=>parseInt(d.count)||0),backgroundColor:'rgba(108,92,231,.5)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5a5a80',font:{size:9},maxTicksLimit:6}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5a5a80',font:{size:9}}}}}});});}
 },
@@ -4829,7 +4850,7 @@ async loadNotifs(){
 async loadAgentStats(){
   for(const a of this.agents.slice(0,8)){
     try{
-      const d=await this.api('/analytics/agent/'+a.id).catch(()=>({}));
+      const d=await this.api('/analytics/'+a.id).catch(()=>({}));
       const days=(d.msgsByDay||[]).slice(-7).map(x=>parseInt(x.count)||0);
       this.agentStats[a.id]={sparkline:days,msgs_today:days[days.length-1]||0};
     }catch{}
