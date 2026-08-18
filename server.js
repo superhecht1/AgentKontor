@@ -34,6 +34,60 @@ async function initDb() {
     )
   `).catch(() => {});
 
+
+  // ── Kritische Spalten inline anlegen (vor SQL-Migrations) ──────────────────
+  // Verhindert 500er wenn DB noch altes Schema hat
+  const criticalAlters = [
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS model TEXT DEFAULT 'claude-sonnet-4-6'",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS api_enabled BOOLEAN DEFAULT false",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS whatsapp_enabled BOOLEAN DEFAULT false",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS whatsapp_number TEXT DEFAULT ''",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS telegram_enabled BOOLEAN DEFAULT false",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS telegram_token TEXT DEFAULT ''",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS rag_enabled BOOLEAN DEFAULT false",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS rag_prompt TEXT DEFAULT ''",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS cap_calendar BOOLEAN DEFAULT false",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS cal_link TEXT DEFAULT ''",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS cap_leads BOOLEAN DEFAULT false",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS lead_fields JSONB DEFAULT '[]'",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS lead_email TEXT DEFAULT ''",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS cap_products BOOLEAN DEFAULT false",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS products_data JSONB DEFAULT '[]'",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS cap_multilang BOOLEAN DEFAULT false",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS cap_email BOOLEAN DEFAULT false",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS smtp_host TEXT DEFAULT ''",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS smtp_port INTEGER DEFAULT 587",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS smtp_user TEXT DEFAULT ''",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS smtp_from TEXT DEFAULT ''",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS widget_position TEXT DEFAULT 'right'",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS widget_delay INTEGER DEFAULT 0",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS widget_theme TEXT DEFAULT 'dark'",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS widget_size INTEGER DEFAULT 56",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS instagram_enabled BOOLEAN DEFAULT false",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS instagram_business_id TEXT DEFAULT ''",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS facebook_enabled BOOLEAN DEFAULT false",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS facebook_page_id TEXT DEFAULT ''",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS slack_enabled BOOLEAN DEFAULT false",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS slack_channel_id TEXT DEFAULT ''",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS voice_enabled BOOLEAN DEFAULT false",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS voice_provider TEXT DEFAULT 'elevenlabs'",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS voice_id TEXT DEFAULT ''",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS voice_stability NUMERIC DEFAULT 0.5",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS stt_provider TEXT DEFAULT 'whisper'",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS data_retention_days INTEGER DEFAULT 90",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS lead_retention_days INTEGER DEFAULT 180",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS total_messages INTEGER DEFAULT 0",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS proactive_enabled BOOLEAN DEFAULT false",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS proactive_trigger TEXT DEFAULT 'time'",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS proactive_delay INTEGER DEFAULT 30",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS proactive_message TEXT DEFAULT ''",
+    "ALTER TABLE agents ADD COLUMN IF NOT EXISTS proactive_scroll INTEGER DEFAULT 50",
+  ];
+  for (const sql of criticalAlters) {
+    await pool.query(sql).catch(() => {});
+  }
+  console.log('✅ Kritische Spalten geprüft');
+
   const sqls = [
     'migrations/init.sql',
     'migrations/add_rag.sql',
