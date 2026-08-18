@@ -9,7 +9,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="//unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" defer></script>
 <style>
 :root{
   --bg:#0e0d0b;--bg2:#161512;--bg3:#1c1a16;--card:#181614;--card-h:#1e1c18;
@@ -4075,18 +4074,89 @@ async loadAnalytics(){
     this.analytics=ov;this.allLeads=leads.leads||[];
     this.analyticsLoading=false;
     await this.$nextTick();
-    if(typeof Chart==='undefined'){
-      await new Promise(r=>setTimeout(r,500)); // Chart.js noch nicht geladen
-    }
-    if(typeof Chart!=='undefined')this._renderCharts();
+    {this._renderCharts();
   }catch{this.analyticsLoading=false;}
 },
 
-_makeChart(id,config){try{const el=document.getElementById(id);if(!el||!el.getContext)return null;const ex=typeof Chart!=='undefined'&&Chart.getChart?Chart.getChart(el):null;if(ex)ex.destroy();return new Chart(el,config);}catch(e){console.warn('Chart err:',id,e.message);return null;}},
+
+// ── SVG CHARTS (kein Chart.js, keine externe Abhängigkeit) ────────────────
+drawLineChart(elId, data, color){
+  color = color || '#7c3aed';
+  const el = document.getElementById(elId);
+  if(!el || !data || !data.length) return;
+  const W=el.clientWidth||300, H=el.clientHeight||100;
+  const max=Math.max(...data,1), min=0;
+  const pts=data.map((v,i)=>{
+    const x=i*(W/(data.length-1||1));
+    const y=H-((v-min)/(max-min||1))*(H-10)-5;
+    return `${x},${y}`;
+  });
+  const area=`M${pts.join('L')}L${W},${H}L0,${H}Z`;
+  el.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="overflow:visible">
+    <defs><linearGradient id="lg_${elId}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${color}" stop-opacity=".25"/>
+      <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+    </linearGradient></defs>
+    <path d="${area}" fill="url(#lg_${elId})"/>
+    <polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    ${data.map((v,i)=>{
+      const x=i*(W/(data.length-1||1));
+      const y=H-((v-min)/(max-min||1))*(H-10)-5;
+      return `<circle cx="${x}" cy="${y}" r="3" fill="${color}"/>`;
+    }).join('')}
+  </svg>`;
+},
+drawBarChart(elId, data, color){
+  color = color || '#7c3aed';
+  const el = document.getElementById(elId);
+  if(!el || !data || !data.length) return;
+  const W=el.clientWidth||300, H=el.clientHeight||80;
+  const max=Math.max(...data,1);
+  const bw=Math.max(2, (W/data.length)-2);
+  const bars=data.map((v,i)=>{
+    const bh=((v/max)*(H-4));
+    const x=i*(W/data.length)+1;
+    const y=H-bh;
+    return `<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="2" fill="${color}" opacity=".7"/>`;
+  }).join('');
+  el.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${bars}</svg>`;
+},
+drawDoughnut(elId, data, colors){
+  const el = document.getElementById(elId);
+  if(!el || !data || !data.length) return;
+  const S=Math.min(el.clientWidth||120, el.clientHeight||120);
+  const R=S/2, r=R*0.62, cx=R, cy=R;
+  const total=data.reduce((a,b)=>a+(b.value||0),0)||1;
+  let angle=-Math.PI/2;
+  const slices=data.map((d,i)=>{
+    const sweep=(d.value/total)*2*Math.PI;
+    const x1=cx+R*Math.cos(angle), y1=cy+R*Math.sin(angle);
+    angle+=sweep;
+    const x2=cx+R*Math.cos(angle), y2=cy+R*Math.sin(angle);
+    const x3=cx+r*Math.cos(angle), y3=cy+r*Math.sin(angle);
+    const x4=cx+r*Math.cos(angle-sweep), y4=cy+r*Math.sin(angle-sweep);
+    const lg=sweep>Math.PI?1:0;
+    return `<path d="M${x1},${y1} A${R},${R} 0 ${lg},1 ${x2},${y2} L${x3},${y3} A${r},${r} 0 ${lg},0 ${x4},${y4}Z" fill="${(colors||[])[i]||'#7c3aed'}" opacity=".85"/>`;
+  });
+  el.innerHTML=`<svg width="${S}" height="${S}" viewBox="0 0 ${S} ${S}">${slices.join('')}</svg>`;
+},
 _renderCharts(){
-  const days=this.analytics?.byDay||[];const chs=this.analytics?.byChannel||[];
-  const lc=document.getElementById('chartLine');
-  if(lc)this._charts.line=this._makeChart('chartLine',{type:'line',data:{labels:days.map(d=>new Date(d.day).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})),datasets:[{data:days.map(d=>parseInt(d.count)||0),borderColor:'#6c5ce7',backgroundColor:'rgba(108,92,231,.1)',fill:true,tension:.4,pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5a5a80',font:{size:10},maxTicksLimit:8}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5a5a80',font:{size:10}}}}}});
+  const a=this.analytics||{};
+  const days=(a.byDay||[]).map(d=>parseInt(d.count)||0);
+  const chs=a.byChannel||a.bySource||[];
+  this.$nextTick(()=>{
+    this.drawLineChart('chartLine', days, '#7c3aed');
+    if(chs.length){
+      const cm={web:'#7c3aed',widget:'#a29bfe',api:'#f0c040',whatsapp:'#25d366',telegram:'#0088cc'};
+      this.drawDoughnut('chartDoughnut', chs.map(c=>({value:parseInt(c.count)||0})), chs.map(c=>cm[c.source]||'#888'));
+    }
+  });
+},
+_makeChart(id,config){
+  // Dummy für Kompatibilität — Charts sind jetzt SVG
+  return {destroy:()=>{}};
+},
+options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5a5a80',font:{size:10},maxTicksLimit:8}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5a5a80',font:{size:10}}}}}});
   const dc=document.getElementById('chartDoughnut');
   if(dc&&chs.length){const cm={web:'#6c5ce7',widget:'#a29bfe',api:'#f0c040',whatsapp:'#25d366',telegram:'#0088cc'};this._charts.d=this._makeChart('chartDoughnut',{type:'doughnut',data:{labels:chs.map(c=>c.source),datasets:[{data:chs.map(c=>parseInt(c.count)||0),backgroundColor:chs.map(c=>cm[c.source]||'#5a5a80'),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'65%'}});}
 },
