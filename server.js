@@ -88,6 +88,234 @@ async function initDb() {
   }
   console.log('✅ Kritische Spalten geprüft');
 
+  // ── Phase 1-5 Tabellen direkt anlegen (nicht warten auf Migration-Tracking) ──
+  const criticalTables = [
+    // Phase 1: Tool-System
+    `CREATE TABLE IF NOT EXISTS tools (
+      id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      name TEXT NOT NULL, description TEXT, type TEXT DEFAULT 'http',
+      parameters JSONB DEFAULT '{}', config JSONB DEFAULT '{}',
+      is_active BOOLEAN DEFAULT true, user_id_null BOOLEAN DEFAULT false,
+      created_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS agent_tools (
+      agent_id INTEGER REFERENCES agents(id) ON DELETE CASCADE,
+      tool_id  INTEGER REFERENCES tools(id)  ON DELETE CASCADE,
+      PRIMARY KEY (agent_id, tool_id)
+    )`,
+    `CREATE TABLE IF NOT EXISTS tool_calls (
+      id SERIAL PRIMARY KEY, tool_id INTEGER REFERENCES tools(id) ON DELETE SET NULL,
+      agent_id INTEGER REFERENCES agents(id) ON DELETE SET NULL,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      input JSONB, output JSONB, status TEXT DEFAULT 'ok',
+      duration_ms INTEGER, created_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS agent_memory (
+      id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      agent_id INTEGER REFERENCES agents(id) ON DELETE CASCADE,
+      scope TEXT DEFAULT 'session', key TEXT NOT NULL, value TEXT NOT NULL,
+      source TEXT DEFAULT 'system', created_at TIMESTAMPTZ DEFAULT now(),
+      updated_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS agent_tasks (
+      id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      agent_id INTEGER REFERENCES agents(id) ON DELETE SET NULL,
+      title TEXT NOT NULL, description TEXT, type TEXT DEFAULT 'llm',
+      payload JSONB DEFAULT '{}', status TEXT DEFAULT 'pending',
+      priority INTEGER DEFAULT 5, retry_count INTEGER DEFAULT 0,
+      max_retries INTEGER DEFAULT 3, error_msg TEXT, result JSONB,
+      scheduled_at TIMESTAMPTZ DEFAULT now(),
+      started_at TIMESTAMPTZ, completed_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT now(), updated_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS task_logs (
+      id SERIAL PRIMARY KEY, task_id INTEGER REFERENCES agent_tasks(id) ON DELETE CASCADE,
+      level TEXT DEFAULT 'info', message TEXT NOT NULL,
+      data JSONB, created_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS contacts (
+      id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      agent_id INTEGER REFERENCES agents(id) ON DELETE SET NULL,
+      email TEXT, name TEXT, phone TEXT, company TEXT,
+      data JSONB DEFAULT '{}', tags TEXT[] DEFAULT '{}',
+      created_at TIMESTAMPTZ DEFAULT now(), updated_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    // Phase 2: Planner + Approvals
+    `CREATE TABLE IF NOT EXISTS agent_plans (
+      id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      agent_id INTEGER REFERENCES agents(id) ON DELETE SET NULL,
+      goal TEXT NOT NULL, status TEXT DEFAULT 'planning',
+      result TEXT, error_msg TEXT, model TEXT DEFAULT 'claude-sonnet-4-6',
+      step_count INTEGER DEFAULT 0, steps_done INTEGER DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT now(), updated_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS plan_steps (
+      id SERIAL PRIMARY KEY, plan_id INTEGER REFERENCES agent_plans(id) ON DELETE CASCADE,
+      step_number INTEGER NOT NULL, title TEXT, description TEXT,
+      tool_name TEXT, tool_input JSONB, approval_level TEXT DEFAULT 'auto',
+      status TEXT DEFAULT 'pending', result_summary TEXT, error TEXT,
+      created_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS approvals (
+      id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      agent_id INTEGER REFERENCES agents(id) ON DELETE SET NULL,
+      plan_id INTEGER REFERENCES agent_plans(id) ON DELETE SET NULL,
+      step_id INTEGER REFERENCES plan_steps(id) ON DELETE SET NULL,
+      goal_id INTEGER,
+      type TEXT DEFAULT 'plan_step', title TEXT, description TEXT,
+      proposed_action JSONB, level TEXT DEFAULT 'approve',
+      status TEXT DEFAULT 'pending', response_note TEXT,
+      decided_at TIMESTAMPTZ, created_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS approval_rules (
+      id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      agent_id INTEGER REFERENCES agents(id) ON DELETE SET NULL,
+      action_pattern TEXT NOT NULL, level TEXT DEFAULT 'approve',
+      description TEXT, priority INTEGER DEFAULT 50,
+      enabled BOOLEAN DEFAULT true, created_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    // Phase 3+4: Integrations
+    `CREATE TABLE IF NOT EXISTS integration_credentials (
+      id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      integration TEXT NOT NULL, provider TEXT NOT NULL,
+      label TEXT DEFAULT 'Standard', credentials JSONB DEFAULT '{}',
+      is_active BOOLEAN DEFAULT true, last_used TIMESTAMPTZ, last_error TEXT,
+      created_at TIMESTAMPTZ DEFAULT now(), updated_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS research_sessions (
+      id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      agent_id INTEGER REFERENCES agents(id) ON DELETE SET NULL,
+      goal TEXT NOT NULL, status TEXT DEFAULT 'running',
+      steps JSONB DEFAULT '[]', result TEXT, result_table JSONB,
+      sources JSONB DEFAULT '[]', model TEXT DEFAULT 'claude-sonnet-4-6',
+      created_at TIMESTAMPTZ DEFAULT now(), updated_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS web_search_cache (
+      id SERIAL PRIMARY KEY, query_hash TEXT NOT NULL UNIQUE,
+      query TEXT NOT NULL, results JSONB DEFAULT '[]',
+      provider TEXT DEFAULT 'brave', created_at TIMESTAMPTZ DEFAULT now(),
+      expires_at TIMESTAMPTZ DEFAULT (now() + INTERVAL '1 hour')
+    )`,
+    `CREATE TABLE IF NOT EXISTS page_content_cache (
+      id SERIAL PRIMARY KEY, url_hash TEXT NOT NULL UNIQUE,
+      url TEXT NOT NULL, title TEXT, content TEXT, word_count INTEGER,
+      fetched_at TIMESTAMPTZ DEFAULT now(),
+      expires_at TIMESTAMPTZ DEFAULT (now() + INTERVAL '6 hours')
+    )`,
+    // Phase 5: Multi-Agent
+    `CREATE TABLE IF NOT EXISTS specialist_profiles (
+      id SERIAL PRIMARY KEY, slug TEXT NOT NULL UNIQUE, name TEXT NOT NULL,
+      emoji TEXT NOT NULL, description TEXT, system_prompt TEXT NOT NULL,
+      tools TEXT[] DEFAULT '{}', capabilities TEXT[] DEFAULT '{}',
+      color TEXT DEFAULT '#7c3aed', enabled BOOLEAN DEFAULT true,
+      created_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS super_agent_sessions (
+      id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      goal TEXT NOT NULL, context TEXT, status TEXT DEFAULT 'routing',
+      routing_result JSONB, plan JSONB, agent_results JSONB DEFAULT '{}',
+      final_result TEXT, model TEXT DEFAULT 'claude-sonnet-4-6',
+      total_duration_ms INTEGER, error_msg TEXT,
+      created_at TIMESTAMPTZ DEFAULT now(), updated_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS agent_messages (
+      id SERIAL PRIMARY KEY, session_id INTEGER REFERENCES super_agent_sessions(id) ON DELETE CASCADE,
+      from_agent TEXT NOT NULL, to_agent TEXT NOT NULL,
+      message_type TEXT DEFAULT 'task', content TEXT NOT NULL,
+      data JSONB, created_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    // Goal Engine
+    `CREATE TABLE IF NOT EXISTS goals (
+      id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      raw_goal TEXT NOT NULL, goal_type TEXT, goal_title TEXT,
+      goal_metric TEXT, goal_timeframe TEXT,
+      target_value NUMERIC DEFAULT 0, target_unit TEXT,
+      industry TEXT, context TEXT, status TEXT DEFAULT 'analyzing',
+      progress INTEGER DEFAULT 0, achieved_value NUMERIC DEFAULT 0,
+      result_summary TEXT, started_at TIMESTAMPTZ,
+      completed_at TIMESTAMPTZ, created_at TIMESTAMPTZ DEFAULT now(),
+      updated_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS goal_campaigns (
+      id SERIAL PRIMARY KEY, goal_id INTEGER REFERENCES goals(id) ON DELETE CASCADE,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      name TEXT NOT NULL, description TEXT, strategy TEXT,
+      status TEXT DEFAULT 'draft', step_count INTEGER DEFAULT 0,
+      steps_done INTEGER DEFAULT 0, current_step INTEGER DEFAULT 1,
+      created_at TIMESTAMPTZ DEFAULT now(), updated_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS goal_steps (
+      id SERIAL PRIMARY KEY,
+      campaign_id INTEGER REFERENCES goal_campaigns(id) ON DELETE CASCADE,
+      goal_id INTEGER REFERENCES goals(id) ON DELETE CASCADE,
+      step_number INTEGER NOT NULL, title TEXT NOT NULL,
+      description TEXT, step_type TEXT DEFAULT 'action',
+      icon TEXT DEFAULT '⚡', color TEXT DEFAULT '#7c3aed',
+      status TEXT DEFAULT 'waiting', approval_required BOOLEAN DEFAULT false,
+      approval_level TEXT DEFAULT 'notify', result JSONB,
+      result_summary TEXT, error_msg TEXT, depends_on INTEGER[],
+      metric_key TEXT, metric_value NUMERIC,
+      started_at TIMESTAMPTZ, completed_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS goal_metrics (
+      id SERIAL PRIMARY KEY, goal_id INTEGER REFERENCES goals(id) ON DELETE CASCADE,
+      metric_name TEXT NOT NULL, metric_key TEXT NOT NULL,
+      target NUMERIC, current_value NUMERIC DEFAULT 0,
+      unit TEXT DEFAULT 'Stück', color TEXT DEFAULT '#10b981',
+      updated_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS goal_activity (
+      id SERIAL PRIMARY KEY, goal_id INTEGER REFERENCES goals(id) ON DELETE CASCADE,
+      step_id INTEGER, type TEXT NOT NULL, title TEXT NOT NULL,
+      detail TEXT, data JSONB, created_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    // Marketplace
+    `CREATE TABLE IF NOT EXISTS marketplace_categories (
+      id SERIAL PRIMARY KEY, slug TEXT NOT NULL UNIQUE, name TEXT NOT NULL,
+      emoji TEXT NOT NULL, description TEXT, color TEXT DEFAULT '#7c3aed',
+      sort_order INTEGER DEFAULT 10, is_active BOOLEAN DEFAULT true
+    )`,
+    `CREATE TABLE IF NOT EXISTS marketplace_agents (
+      id SERIAL PRIMARY KEY, category_slug TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE, name TEXT NOT NULL, emoji TEXT NOT NULL,
+      tagline TEXT NOT NULL, description TEXT NOT NULL,
+      color TEXT DEFAULT '#7c3aed', system_prompt TEXT NOT NULL,
+      greeting TEXT NOT NULL, tone TEXT DEFAULT 'freundlich',
+      language TEXT DEFAULT 'de', quick_chips JSONB DEFAULT '[]',
+      suggested_tools TEXT[] DEFAULT '{}', capabilities JSONB DEFAULT '{}',
+      preview_messages JSONB DEFAULT '[]', tags TEXT[] DEFAULT '{}',
+      install_count INTEGER DEFAULT 0, rating_avg NUMERIC DEFAULT 0,
+      rating_count INTEGER DEFAULT 0, is_featured BOOLEAN DEFAULT false,
+      is_active BOOLEAN DEFAULT true, created_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS marketplace_installations (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      marketplace_id INTEGER REFERENCES marketplace_agents(id) ON DELETE CASCADE,
+      agent_id INTEGER REFERENCES agents(id) ON DELETE SET NULL,
+      installed_at TIMESTAMPTZ DEFAULT now(),
+      UNIQUE (user_id, marketplace_id)
+    )`,
+    // API Keys
+    `CREATE TABLE IF NOT EXISTS api_keys (
+      id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      agent_id INTEGER REFERENCES agents(id) ON DELETE SET NULL,
+      label TEXT DEFAULT 'Standard', key_prefix TEXT, key_hash TEXT,
+      is_active BOOLEAN DEFAULT true, last_used TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT now()
+    )`,
+  ];
+  for (const sql of criticalTables) {
+    await pool.query(sql).catch(e => {
+      if (!e.message.includes('already exists')) {
+        console.warn('Table create warning:', e.message.slice(0, 80));
+      }
+    });
+  }
+  console.log('✅ Kritische Tabellen geprüft');
+
+
   const sqls = [
     'migrations/init.sql',
     'migrations/add_rag.sql',
