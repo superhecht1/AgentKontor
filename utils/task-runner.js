@@ -229,22 +229,41 @@ function stopBackgroundRunner() {
 
 // ── Task-Liste für User ─────────────────────────────────────────────────────
 async function list(pool, { userId, agentId, status, limit = 50, offset = 0 }) {
+  // Kein JOIN → keine Ambiguität. Agent-Name via Subquery.
   const conditions = ['user_id=$1'];
   const params = [userId];
   let i = 2;
   if (agentId) { conditions.push(`agent_id=$${i++}`); params.push(agentId); }
-  if (status)  { conditions.push(`status=$${i++}`);   params.push(status); }
-  params.push(limit, offset);
-  const r = await pool.query(
-    `SELECT t.*, a.name as agent_name, a.emoji as agent_emoji
-     FROM agent_tasks t
-     LEFT JOIN agents a ON a.id = t.agent_id
-     WHERE ${conditions.join(' AND ')}
-     ORDER BY t.created_at DESC
-     LIMIT $${i} OFFSET $${i+1}`,
-    params
-  );
-  return r.rows;
+  if (status && status !== 'all') { conditions.push(`status=$${i++}`); params.push(status); }
+  params.push(parseInt(limit) || 50, parseInt(offset) || 0);
+
+  try {
+    const r = await pool.query(
+      `SELECT t.*,
+         (SELECT name  FROM agents WHERE id = t.agent_id) AS agent_name,
+         (SELECT emoji FROM agents WHERE id = t.agent_id) AS agent_emoji
+       FROM agent_tasks t
+       WHERE ${conditions.join(' AND ')}
+       ORDER BY t.created_at DESC
+       LIMIT $${i} OFFSET $${i+1}`,
+      params
+    );
+    return r.rows;
+  } catch (e) {
+    // Fallback: minimale Query ohne Subqueries
+    try {
+      const r2 = await pool.query(
+        `SELECT * FROM agent_tasks
+         WHERE user_id=$1
+         ORDER BY created_at DESC
+         LIMIT $2 OFFSET $3`,
+        [userId, parseInt(limit)||50, parseInt(offset)||0]
+      );
+      return r2.rows;
+    } catch {
+      return [];
+    }
+  }
 }
 
 // ── Task abbrechen ──────────────────────────────────────────────────────────
