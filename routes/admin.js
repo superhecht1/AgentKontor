@@ -346,31 +346,49 @@ router.get('/llm-costs', auth, adminOnly, async (req, res) => {
 /* ── BROADCAST EMAIL ──────────────────────────────────────── */
 router.post('/broadcast', auth, adminOnly, async (req, res) => {
   const pool = getPool(req);
-  const { subject, body, plan_filter } = req.body;
+  const { subject, body, plan } = req.body;  // plan statt plan_filter
   if (!subject || !body) return res.status(400).json({ error: 'Subject und Body erforderlich' });
-  if (!process.env.SMTP_HOST) return res.status(503).json({ error: 'SMTP nicht konfiguriert. Bitte SMTP_HOST in den Umgebungsvariablen setzen.' });
+
+  // Kein SMTP_HOST Check — mailer.js unterstützt auch Brevo/Resend
+  const hasProvider = process.env.BREVO_API_KEY || process.env.RESEND_API_KEY ||
+                      process.env.SENDGRID_API_KEY || process.env.SMTP_HOST;
+  if (!hasProvider && process.env.NODE_ENV === 'production') {
+    return res.status(503).json({ error: 'Kein E-Mail-Provider konfiguriert (BREVO_API_KEY, RESEND_API_KEY oder SMTP_HOST)' });
+  }
+
   try {
-    const where = plan_filter && plan_filter !== 'all' ? `AND plan=$1` : '';
-    const args  = plan_filter && plan_filter !== 'all' ? [plan_filter] : [];
+    // deleted_at optional (könnte nicht existieren)
+    const where = (plan && plan !== 'all') ? 'AND plan=$1' : '';
+    const args  = (plan && plan !== 'all') ? [plan] : [];
     const users = await pool.query(
-      `SELECT email, name FROM users WHERE deleted_at IS NULL ${where} ORDER BY id`,
+      `SELECT email, name FROM users WHERE is_active IS NOT FALSE ${where} ORDER BY id LIMIT 500`,
       args
-    );
-    // E-Mail via mailer.js (Resend/SendGrid/SMTP/Dev)
-    let sent = 0;
-    for (const u of users.rows) {
-      try {
-        await sendMail({
-          from: `AgentKontor <${process.env.SMTP_FROM||'noreply@agentkontor.de'}>`,
-          to: u.email,
-          subject,
-          html: '<div style="font-family:sans-serif;max-width:560px;margin:32px auto;padding:24px;background:#fff;border-radius:12px"><p>Hallo ' + u.name + ',</p>' + body.replace(/\n/g,'<br>') + '<p style="color:#888;font-size:.8rem;margin-top:24px">\u2014 Das AgentKontor Team</p></div>',
-        });
-        sent++;
-      } catch {}
-    }
-    res.json({ success: true, sent, total: users.rows.length });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+    ).catch(() => pool.query(
+      `SELECT email, name FROM users ${plan && plan !== 'all' ? 'WHERE plan=$1' : ''} ORDER BY id LIMIT 500`,
+      args
+    ));
+
+    if (!users.rows.length) return res.json({ success: true, sent: 0, total: 0, message: 'Keine Empfänger gefunden' });
+
+    const htmlTemplate = (name) =>
+      '<div style="font-family:sans-serif;max-width:560px;margin:32px auto;padding:24px;background:#fff;border-radius:12px">' +
+      '<p>Hallo ' + (name||'Kunde') + ',</p>' +
+      body.replace(/\n/g,'<br>') +
+      '<p style="color:#888;font-size:.8rem;margin-top:24px">— Das AgentKontor Team</p></div>';
+
+    const { sendMailBatch } = require('../utils/mailer');
+    const result = await sendMailBatch(users.rows, {
+      subject,
+      htmlFn: (u) => htmlTemplate(u.name),
+      textFn: (u) => 'Hallo ' + (u.name||'Kunde') + ',\n\n' + body + '\n\n— Das AgentKontor Team',
+      from: process.env.MAIL_FROM || 'AgentKontor <noreply@agentkontor.de>',
+    });
+
+    res.json({ success: true, sent: result.sent, total: users.rows.length, failed: result.failed });
+  } catch(e) {
+    console.error('BROADCAST:', e.message);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 /* ── PROMO CODE ────────────────────────────────────────────── */
