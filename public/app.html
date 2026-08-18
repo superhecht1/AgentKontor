@@ -2991,7 +2991,7 @@ https://anbieter3.de"></textarea></div>
             <div class="field"><label>Parameter (JSON Schema — properties)</label>
               <textarea class="inp" style="min-height:100px;font-family:'JetBrains Mono',monospace;font-size:.75rem"
                 :value="JSON.stringify(newTool.parameters?.properties||{},null,2)"
-                @change="try{newTool.parameters={type:'object',properties:JSON.parse($event.target.value),required:newTool.parameters?.required||[]}}catch{}"
+                @change="parseToolParams($event)"
                 placeholder='{"name":{"type":"string","description":"Name des Kunden"}}'></textarea>
             </div>
             <div class="inp-2col">
@@ -4357,6 +4357,12 @@ toggleDay(day){
 
 
 // ── THEME ─────────────────────────────────────────────────────────────────
+parseToolParams(e){
+  try{
+    const parsed=JSON.parse(e.target.value);
+    this.newTool.parameters={type:'object',properties:parsed,required:this.newTool.parameters?.required||[]};
+  }catch{}
+},
 toggleTheme(){
   this.theme = this.theme==='dark' ? 'light' : 'dark';
   localStorage.setItem('ak-theme', this.theme);
