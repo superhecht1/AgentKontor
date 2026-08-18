@@ -32,28 +32,38 @@ router.get('/', auth, async (req, res) => {
   const { agentId, status, limit = 50, offset = 0 } = req.query;
   try {
     if (!await tableExists(pool, 'agent_tasks')) return res.json({ tasks: [], total: 0 });
-    const tasks = await taskRunner.list(pool, {
-      userId: req.userId,
-      agentId: agentId ? parseInt(agentId) : undefined,
-      status,
-      limit:  Math.min(parseInt(limit)||50, 200),
-      offset: parseInt(offset)||0,
-    });
+    let tasks = [];
+    try {
+      tasks = await taskRunner.list(pool, {
+        userId: req.userId,
+        agentId: agentId ? parseInt(agentId) : undefined,
+        status: status || undefined,
+        limit:  Math.min(parseInt(limit)||50, 200),
+        offset: parseInt(offset)||0,
+      });
+    } catch(listErr) {
+      console.error('TASKS list():', listErr.message);
+      // Spalte fehlt noch → leere Liste zurückgeben
+      return res.json({ tasks: [], byStatus: {}, error_detail: listErr.message });
+    }
 
     // Anzahl je Status
-    const counts = await pool.query(
-      `SELECT status, COUNT(*) as count
-       FROM agent_tasks WHERE user_id=$1
-       GROUP BY status`,
-      [req.userId]
-    );
-    const byStatus = {};
-    counts.rows.forEach(r => { byStatus[r.status] = parseInt(r.count); });
+    let byStatus = {};
+    try {
+      const counts = await pool.query(
+        'SELECT status, COUNT(*) as count FROM agent_tasks WHERE user_id=$1 GROUP BY status',
+        [req.userId]
+      );
+      counts.rows.forEach(r => { byStatus[r.status] = parseInt(r.count); });
+    } catch {}
 
     res.json({ tasks, byStatus });
   } catch (e) {
     console.error('LIST TASKS:', e.message);
-    res.status(500).json({ error: 'Fehler beim Laden' });
+    // Gib leere Liste zurück statt 500 — verhindert Frontend-Crash
+    if (!res.headersSent) {
+      res.json({ tasks: [], byStatus: {}, _error: e.message });
+    }
   }
 });
 
