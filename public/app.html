@@ -320,6 +320,113 @@ input:checked+.slider::before{transform:translateX(18px)}
 
 
 
+
+/* ══════════════════════════════════════════
+   SUPER AGENT MODE / GOAL ENGINE
+══════════════════════════════════════════ */
+.goal-hero{
+  background:linear-gradient(135deg,rgba(124,58,237,.18),rgba(245,158,11,.1),rgba(16,185,129,.06));
+  border:1px solid rgba(124,58,237,.25);border-radius:22px;
+  padding:48px 36px;text-align:center;margin-bottom:32px;
+  position:relative;overflow:hidden;
+}
+.goal-hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 70% 60% at 50% -5%,rgba(124,58,237,.2),transparent 65%);
+  pointer-events:none;
+}
+.goal-input-wrap{
+  max-width:620px;margin:0 auto;
+  background:rgba(14,13,11,.8);
+  border:2px solid rgba(124,58,237,.35);
+  border-radius:16px;padding:4px 4px 4px 18px;
+  display:flex;align-items:center;gap:8px;
+  box-shadow:0 8px 40px rgba(124,58,237,.2);
+  backdrop-filter:blur(12px);
+  transition:border-color .2s;
+}
+.goal-input-wrap:focus-within{border-color:var(--amber)}
+.goal-input{
+  flex:1;background:transparent;border:none;outline:none;
+  font-size:1rem;color:var(--white);font-family:inherit;
+  padding:10px 0;
+}
+.goal-input::placeholder{color:var(--muted)}
+.goal-run-btn{
+  flex-shrink:0;padding:10px 20px;border-radius:12px;
+  background:linear-gradient(135deg,var(--v),var(--amber));
+  color:#fff;font-weight:800;border:none;cursor:pointer;
+  font-size:.88rem;font-family:inherit;
+  box-shadow:0 4px 20px rgba(124,58,237,.4);
+  transition:all .2s;white-space:nowrap;
+}
+.goal-run-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 28px rgba(124,58,237,.5)}
+.goal-run-btn:disabled{opacity:.5;cursor:not-allowed}
+/* Goal type pills */
+.goal-type-pills{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:20px}
+.goal-pill{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:rgba(255,255,255,.04);
+  cursor:pointer;font-size:.78rem;color:var(--muted-l);transition:all .15s}
+.goal-pill:hover{border-color:var(--border-h);color:var(--white)}
+/* Goal card in list */
+.goal-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  padding:16px;margin-bottom:8px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden}
+.goal-card:hover{border-color:var(--border-h);transform:translateY(-1px)}
+.goal-card.active{border-color:rgba(124,58,237,.4);background:rgba(124,58,237,.04)}
+.goal-card-progress{position:absolute;bottom:0;left:0;height:3px;border-radius:0 0 var(--r) var(--r);
+  background:linear-gradient(90deg,var(--v),var(--amber));transition:width .5s ease}
+/* Pipeline timeline */
+.pipeline{display:flex;flex-direction:column;gap:0;position:relative}
+.pipeline::before{
+  content:'';position:absolute;left:18px;top:0;bottom:0;width:2px;
+  background:linear-gradient(180deg,rgba(124,58,237,.3),rgba(245,158,11,.2),rgba(16,185,129,.2));
+}
+.pipeline-step{display:flex;gap:14px;position:relative;padding-bottom:6px}
+.pipeline-icon{
+  width:38px;height:38px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:.95rem;flex-shrink:0;
+  border:3px solid;z-index:1;transition:all .3s;
+  background:var(--bg3);
+}
+.pipeline-step.step-completed .pipeline-icon{box-shadow:0 0 12px currentColor}
+.pipeline-step.step-running .pipeline-icon{
+  animation:step-pulse 1.3s ease-in-out infinite;
+}
+@keyframes step-pulse{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.1);opacity:1}}
+.pipeline-body{flex:1;padding-top:7px;padding-bottom:18px}
+.pipeline-title{font-size:.87rem;font-weight:700;color:var(--white);margin-bottom:2px}
+.pipeline-desc{font-size:.75rem;color:var(--muted-l);margin-bottom:4px}
+.pipeline-result{font-size:.76rem;color:var(--text);background:rgba(255,255,255,.04);
+  border-radius:7px;padding:7px 10px;margin-top:6px;line-height:1.5;
+  border-left:3px solid var(--emerald);word-break:break-word}
+.pipeline-approval-box{
+  background:linear-gradient(135deg,rgba(244,63,94,.08),rgba(245,158,11,.06));
+  border:1px solid rgba(244,63,94,.25);border-radius:10px;
+  padding:14px;margin-top:8px;
+}
+/* Metric bars */
+.metric-bar-wrap{margin-bottom:14px}
+.metric-bar-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.metric-bar-name{font-size:.8rem;font-weight:600;color:var(--text)}
+.metric-bar-vals{font-size:.78rem;font-family:'JetBrains Mono',monospace}
+.metric-bar-track{height:10px;background:rgba(255,255,255,.06);border-radius:5px;overflow:hidden}
+.metric-bar-fill{height:100%;border-radius:5px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+/* Activity feed */
+.activity-feed{display:flex;flex-direction:column;gap:0}
+.activity-entry{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);position:relative}
+.activity-entry:last-child{border-bottom:none}
+.activity-dot-g{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.activity-title-g{font-size:.82rem;font-weight:600;color:var(--white)}
+.activity-detail{font-size:.74rem;color:var(--muted-l);margin-top:2px;line-height:1.4}
+.activity-time{font-size:.66rem;color:var(--muted);margin-top:2px}
+/* Goal status bar */
+.goal-status-bar{display:flex;align-items:center;gap:12px;padding:12px 16px;
+  background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;margin-bottom:14px}
+/* Completion */
+.goal-complete-banner{
+  background:linear-gradient(135deg,rgba(16,185,129,.12),rgba(245,158,11,.08));
+  border:2px solid rgba(16,185,129,.3);border-radius:var(--r);
+  padding:24px;text-align:center;margin-bottom:16px;
+}
 /* ── AGENT STORE ── */
 .store-hero{background:linear-gradient(135deg,rgba(124,58,237,.12),rgba(245,158,11,.07),rgba(56,189,248,.06));border:1px solid rgba(124,58,237,.18);border-radius:var(--r-lg);padding:36px;text-align:center;margin-bottom:28px;position:relative;overflow:hidden}
 .store-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 50% -10%,rgba(124,58,237,.15),transparent);pointer-events:none}
@@ -724,6 +831,11 @@ input:checked+.slider::before{transform:translateX(18px)}
       <div class="nav-item" :class="{on:page==='agents'}" @click="page='agents'"><span class="nav-ico">🤖</span><span class="nav-lbl">Agenten</span><span class="nav-badge" x-show="agents.length" x-text="agents.length"></span></div>
       <div class="nav-item" :class="{on:page==='analytics'}" @click="page='analytics';loadAnalytics()"><span class="nav-ico">📊</span><span class="nav-lbl">Analytics</span><span class="nav-badge" x-show="dashLeads>0" x-text="dashLeads+' Leads'"></span></div>
       <div class="nav-item" :class="{on:page==='conversations'}" @click="page='conversations';loadConvAgents()"><span class="nav-ico">💬</span><span class="nav-lbl">Gespräche</span></div>
+      <div class="nav-item" :class="{on:page==='goalmode'}" @click="page='goalmode';loadGoals()"
+        style="margin:6px 8px 2px;border-radius:10px;padding:11px 12px;background:linear-gradient(90deg,rgba(124,58,237,.15),rgba(245,158,11,.08));border:1px solid rgba(124,58,237,.25)">
+        <span class="nav-ico">🎯</span>
+        <span class="nav-lbl" style="font-weight:800;color:var(--white)">Super Agent Mode</span>
+      </div>
       <div class="nav-group-label">🛒 Store</div>
       <div class="nav-item" :class="{on:page==='marketplace'}" @click="page='marketplace';loadMarketplace()">
         <span class="nav-ico">🛒</span><span class="nav-lbl">Agent Store</span>
@@ -1364,6 +1476,260 @@ X-AgentKontor-Signature: sha256=…
 
 
 
+
+
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <!-- ── SUPER AGENT MODE (GOAL ENGINE) ──                          -->
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <div class="page" x-show="page==='goalmode'" style="max-width:1200px">
+
+        <!-- ── HERO INPUT ── -->
+        <div class="goal-hero" x-show="goalTab==='new'||!selectedGoal">
+          <div style="position:relative;z-index:1">
+            <div style="font-size:.72rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);margin-bottom:10px">✨ SUPER AGENT MODE</div>
+            <h1 style="font-size:2.2rem;font-weight:900;color:var(--white);letter-spacing:-.05em;margin-bottom:6px;line-height:1.1">Was möchtest du erreichen?</h1>
+            <p style="font-size:.95rem;color:var(--muted-l);margin-bottom:28px;max-width:500px;margin-left:auto;margin-right:auto;line-height:1.5">Sage mir dein Ziel — ich plane und erledige alles automatisch.</p>
+
+            <div class="goal-input-wrap">
+              <span style="font-size:1.3rem;flex-shrink:0">🎯</span>
+              <input class="goal-input" x-model="goalInput"
+                placeholder="Ich möchte 50 neue Kunden für meine Agentur gewinnen…"
+                @keydown.meta.enter="startGoal()"
+                @keydown.enter.prevent="if(!$event.shiftKey)startGoal()">
+              <button class="goal-run-btn" @click="startGoal()" :disabled="goalRunning||!goalInput.trim()">
+                <span x-show="!goalRunning">🚀 Starten</span>
+                <span x-show="goalRunning" class="spinning">◌</span>
+              </button>
+            </div>
+
+            <!-- Beispiele -->
+            <div class="goal-type-pills">
+              <template x-for="ex in [
+                {icon:'💼',text:'50 neue Kunden gewinnen'},
+                {icon:'🔬',text:'Markt analysieren'},
+                {icon:'📢',text:'Bekanntheit aufbauen'},
+                {icon:'💰',text:'Umsatz um 30% steigern'},
+                {icon:'🤝',text:'Leads qualifizieren'},
+                {icon:'📊',text:'Wettbewerber vergleichen'}
+              ]" :key="ex.text">
+                <div class="goal-pill" @click="goalInput=ex.icon+' '+ex.text">
+                  <span x-text="ex.icon+' '+ex.text"></span>
+                </div>
+              </template>
+            </div>
+
+            <!-- Optionen -->
+            <div style="display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap">
+              <div style="display:flex;align-items:center;gap:6px">
+                <label style="font-size:.75rem;color:var(--muted-l)">Kontext:</label>
+                <input class="inp" style="width:200px;font-size:.78rem;padding:5px 10px" x-model="goalContext" placeholder="Branche, Produkt…">
+              </div>
+              <div style="display:flex;align-items:center;gap:6px">
+                <label style="font-size:.75rem;color:var(--muted-l)">Modell:</label>
+                <select class="inp" style="width:160px;font-size:.78rem;padding:5px 8px" x-model="goalModel">
+                  <option value="claude-sonnet-4-6">Claude Sonnet</option>
+                  <option value="claude-opus-4-6">Claude Opus 🧠</option>
+                  <option value="gpt-4o">GPT-4o</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── STATS PILLS ── -->
+        <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap" x-show="goalsList.length">
+          <template x-for="[key,label,color] in [['running','Aktiv','var(--sky)'],['completed','Abgeschlossen','var(--emerald)'],['paused','Wartet','var(--amber)'],['failed','Fehler','var(--rose)']]" :key="key">
+            <div style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;border:1px solid;font-size:.78rem;font-weight:600"
+              :style="'border-color:'+color+'30;background:'+color+'10;color:'+color"
+              x-show="goalStats[key]>0">
+              <span x-text="goalStats[key]||0"></span>
+              <span x-text="label"></span>
+            </div>
+          </template>
+          <button class="btn btn-ghost btn-xs" style="margin-left:auto" @click="goalTab='new';selectedGoal=null;if(goalPollInterval)clearInterval(goalPollInterval)">+ Neues Ziel</button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start" x-show="goalsList.length">
+
+          <!-- ── ZIELE-LISTE ── -->
+          <div>
+            <div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Deine Ziele</div>
+            <template x-for="g in goalsList" :key="g.id">
+              <div class="goal-card" :class="{active:selectedGoal?.id===g.id}" @click="openGoal(g.id);goalTab='active'">
+                <div style="position:absolute;top:0;left:0;bottom:0;width:3px;border-radius:3px 0 0 3px"
+                  :style="'background:'+goalStatusColor(g.status)"></div>
+                <div style="padding-left:6px">
+                  <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+                    <span style="font-size:.85rem" x-text="goalStatusIcon(g.status)"></span>
+                    <span style="font-size:.84rem;font-weight:700;color:var(--white);flex:1;line-height:1.2" x-text="g.goal_title||g.raw_goal.slice(0,45)"></span>
+                  </div>
+                  <div style="font-size:.73rem;color:var(--muted-l);margin-bottom:6px" x-text="g.goal_metric||''"></div>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <span style="font-size:.68rem;font-weight:700;padding:2px 7px;border-radius:10px;border:1px solid"
+                      :style="'color:'+goalStatusColor(g.status)+';border-color:'+goalStatusColor(g.status)+'30;background:'+goalStatusColor(g.status)+'10'"
+                      x-text="g.status"></span>
+                    <span style="font-size:.68rem;color:var(--muted);margin-left:auto" x-text="new Date(g.created_at).toLocaleDateString('de-DE')"></span>
+                  </div>
+                  <!-- Progress bar -->
+                  <div class="usage-bar" style="margin-top:8px">
+                    <div class="usage-fill" :style="'width:'+g.progress+'%;background:linear-gradient(90deg,var(--v),var(--amber))'"></div>
+                  </div>
+                  <div style="font-size:.65rem;color:var(--muted);margin-top:2px;text-align:right" x-text="g.progress+'% · '+(g.steps_done||0)+'/'+(g.step_count||0)+' Schritte'"></div>
+                </div>
+                <div class="goal-card-progress" :style="'width:'+g.progress+'%'"></div>
+              </div>
+            </template>
+          </div>
+
+          <!-- ── DETAIL-ANSICHT ── -->
+          <div x-show="selectedGoal">
+
+            <!-- Abgeschlossen Banner -->
+            <div class="goal-complete-banner" x-show="selectedGoal?.status==='completed'">
+              <div style="font-size:2.5rem;margin-bottom:8px">🎉</div>
+              <div style="font-size:1.2rem;font-weight:800;color:var(--white);margin-bottom:4px">Ziel erreicht!</div>
+              <div style="font-size:.88rem;color:var(--emerald)" x-text="selectedGoal?.goal_title"></div>
+            </div>
+
+            <!-- Status Bar -->
+            <div class="goal-status-bar">
+              <div style="width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0"
+                :style="'background:'+goalStatusColor(selectedGoal?.status)+'15'"
+                x-text="goalStatusIcon(selectedGoal?.status)"></div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:.9rem;font-weight:800;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" x-text="selectedGoal?.goal_title||selectedGoal?.raw_goal"></div>
+                <div style="font-size:.75rem;color:var(--muted-l)" x-text="(selectedGoal?.goal_timeframe||'')+' · '+(selectedGoal?.goal_metric||'')"></div>
+              </div>
+              <div style="text-align:right;flex-shrink:0">
+                <div style="font-size:1.4rem;font-weight:900;color:var(--white);font-family:'JetBrains Mono',monospace" x-text="selectedGoal?.progress+'%'"></div>
+                <div style="font-size:.65rem;color:var(--muted)">Fortschritt</div>
+              </div>
+              <div style="display:flex;gap:6px;flex-shrink:0">
+                <button class="btn btn-danger btn-xs" @click="cancelGoal(selectedGoal?.id)" x-show="['running','paused'].includes(selectedGoal?.status)">⏹</button>
+                <button class="btn btn-danger btn-xs" @click="deleteGoal(selectedGoal?.id)">🗑</button>
+              </div>
+            </div>
+
+            <!-- !! FREIGABE-BANNER !! -->
+            <div x-show="goalPendingApprovals.length" style="background:linear-gradient(135deg,rgba(244,63,94,.12),rgba(245,158,11,.08));border:2px solid rgba(244,63,94,.35);border-radius:var(--r);padding:18px;margin-bottom:16px">
+              <div style="font-size:.88rem;font-weight:800;color:var(--rose);margin-bottom:10px">🔐 Deine Freigabe ist erforderlich</div>
+              <template x-for="ap in goalPendingApprovals" :key="ap.id">
+                <div style="background:rgba(0,0,0,.2);border-radius:8px;padding:12px;margin-bottom:8px">
+                  <div style="font-size:.84rem;font-weight:700;color:var(--white);margin-bottom:4px" x-text="ap.title"></div>
+                  <div style="font-size:.76rem;color:var(--muted-l);margin-bottom:10px" x-text="ap.description"></div>
+                  <!-- Was will der Agent tun? -->
+                  <div x-show="ap.proposed_action" style="font-size:.72rem;background:rgba(255,255,255,.05);border-radius:6px;padding:7px 10px;margin-bottom:10px;font-family:'JetBrains Mono',monospace;color:var(--muted-l)" x-text="JSON.stringify(ap.proposed_action).slice(0,150)"></div>
+                  <div style="display:flex;gap:8px">
+                    <button class="btn btn-primary btn-sm" style="background:var(--emerald);flex:1" @click="approveGoalStep(ap.id)">✅ Freigeben & Weiter</button>
+                    <button class="btn btn-danger btn-sm" @click="rejectGoalStep(ap.id)">❌ Ablehnen</button>
+                  </div>
+                </div>
+              </template>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 260px;gap:14px;align-items:start">
+
+              <!-- Pipeline -->
+              <div class="card">
+                <div class="card-hdr">
+                  <span>⚡ Ausführungs-Pipeline</span>
+                  <span style="font-size:.72rem;font-family:'JetBrains Mono',monospace;color:var(--muted)" x-text="goalSteps.filter(s=>s.status==='completed').length+'/'+goalSteps.length+' Schritte'"></span>
+                </div>
+                <div class="pipeline">
+                  <template x-for="s in goalSteps" :key="s.id">
+                    <div class="pipeline-step"
+                      :class="{'step-completed':s.status==='completed','step-running':s.status==='running','step-waiting':s.status==='waiting'}">
+                      <div class="pipeline-icon"
+                        :style="'color:'+stepStatusColor(s.status)+';border-color:'+stepStatusColor(s.status)+(s.status==='waiting'?'40':'90')+';background:'+(s.status==='waiting'?'var(--bg3)':'var(--bg3)')"
+                        x-text="s.status==='running'?'▶':s.status==='completed'?'✅':s.status==='waiting_approval'?'🔐':s.status==='failed'?'❌':s.icon||'○'">
+                      </div>
+                      <div class="pipeline-body">
+                        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+                          <div class="pipeline-title" :style="s.status==='waiting'?'color:var(--muted-l)':''" x-text="s.title"></div>
+                          <!-- Running Indicator -->
+                          <span x-show="s.status==='running'" style="font-size:.7rem;color:var(--sky);animation:pulse-ring 1.2s ease infinite;display:inline-block">● läuft</span>
+                        </div>
+                        <div class="pipeline-desc" x-text="s.description"></div>
+                        <!-- Ergebnis -->
+                        <div class="pipeline-result" x-show="s.result_summary" x-text="s.result_summary"></div>
+                        <!-- Fehler -->
+                        <div class="step-error" x-show="s.error_msg" x-text="s.error_msg" style="margin-top:6px"></div>
+                        <!-- Approval Box -->
+                        <div class="pipeline-approval-box" x-show="s.status==='waiting_approval'">
+                          <div style="font-size:.78rem;font-weight:700;color:var(--rose);margin-bottom:6px">🔐 Deine Freigabe erforderlich</div>
+                          <div style="font-size:.74rem;color:var(--muted-l);margin-bottom:10px" x-text="s.description"></div>
+                          <div style="display:flex;gap:7px">
+                            <button class="btn btn-xs btn-primary" style="background:var(--emerald)" @click="approveGoalStep(goalPendingApprovals[0]?.id)">✅ Jetzt freigeben</button>
+                            <button class="btn btn-xs btn-danger" @click="rejectGoalStep(goalPendingApprovals[0]?.id)">❌ Ablehnen</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+
+              <!-- Rechte Spalte: Metriken + Aktivität -->
+              <div>
+                <!-- KPI-Metriken -->
+                <div class="card" x-show="goalMetrics.length" style="margin-bottom:12px">
+                  <div class="card-hdr">📊 Metriken</div>
+                  <template x-for="m in goalMetrics" :key="m.metric_key">
+                    <div class="metric-bar-wrap">
+                      <div class="metric-bar-header">
+                        <span class="metric-bar-name" x-text="m.metric_name"></span>
+                        <span class="metric-bar-vals" :style="'color:'+m.color">
+                          <span x-text="m.current_value"></span>
+                          <span style="color:var(--muted)" x-show="m.target">/<span x-text="m.target"></span></span>
+                          <span style="font-size:.65rem;color:var(--muted);margin-left:2px" x-text="m.unit"></span>
+                        </span>
+                      </div>
+                      <div class="metric-bar-track">
+                        <div class="metric-bar-fill"
+                          :style="'width:'+Math.min(100,(m.target>0?(m.current_value/m.target)*100:0))+'%;background:'+m.color">
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+
+                <!-- Aktivitäts-Feed -->
+                <div class="card" x-show="goalActivity.length">
+                  <div class="card-hdr">📋 Aktivitäts-Log</div>
+                  <div class="activity-feed" style="max-height:280px;overflow-y:auto">
+                    <template x-for="a in goalActivity" :key="a.id">
+                      <div class="activity-entry">
+                        <div class="activity-dot-g"
+                          :style="'background:'+{step_started:'var(--sky)',step_done:'var(--emerald)',approval_needed:'var(--amber)',metric_updated:'var(--v-l)',message:'var(--muted)'}[a.type]||'var(--muted)'">
+                        </div>
+                        <div style="flex:1;min-width:0">
+                          <div class="activity-title-g" x-text="a.title"></div>
+                          <div class="activity-detail" x-show="a.detail" x-text="a.detail?.slice(0,100)"></div>
+                          <div class="activity-time" x-text="new Date(a.created_at).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})"></div>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Kein Ziel ausgewählt -->
+          <div x-show="!selectedGoal" style="display:flex;align-items:center;justify-content:center;height:300px;color:var(--muted);font-size:.85rem;text-align:center">
+            <div>
+              <div style="font-size:2.5rem;margin-bottom:12px">🎯</div>
+              <div>← Ziel auswählen oder oben ein neues eingeben</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Kein Ziel bisher -->
+        <div x-show="!goalsList.length&&!goalRunning" style="text-align:center;padding:40px 20px">
+          <div style="font-size:2rem;margin-bottom:10px">⬆️</div>
+          <div style="font-size:.88rem;color:var(--muted-l)">Gib dein erstes Ziel ein und drücke <strong style="color:var(--white)">Starten</strong>.</div>
+        </div>
+      </div>
 
       <!-- ══════════════════════════════════════════════════════════════ -->
       <!-- ── AGENT STORE (MARKETPLACE) ──                               -->
@@ -3361,6 +3727,11 @@ insightFunnel:{sessions:0,engaged:0,leads:0,rate:0},
 insightTopQ:[],insightHeatmap:[],insightScore:{},
 // A/B results
 abResults:{},
+// Goal Mode
+goalsList:[],selectedGoal:null,goalSteps:[],goalMetrics:[],goalActivity:[],
+goalPendingApprovals:[],goalPollInterval:null,goalStats:{},
+goalInput:'',goalContext:'',goalModel:'claude-sonnet-4-6',
+goalRunning:false,goalTab:'new',
 // Marketplace
 marketplaceAgents:[],marketplaceCategories:[],marketplaceMyInstalls:[],
 marketplaceTab:'featured',marketplaceSearch:'',marketplaceCategory:'',
@@ -3928,6 +4299,62 @@ toggleDay(day){
 
 
 
+
+// ── GOAL MODE ───────────────────────────────────────────────────────────────
+async loadGoals(){
+  const [g,s]=await Promise.all([
+    this.api('/goals?limit=20'),
+    this.api('/goals/stats/overview').catch(()=>({}))
+  ]);
+  if(g.goals)this.goalsList=g.goals;
+  if(s.stats)this.goalStats=s.stats;
+},
+async startGoal(){
+  if(!this.goalInput.trim()){this.toast('Ziel eingeben','err');return;}
+  this.goalRunning=true;
+  const d=await this.api('/goals','POST',{goal:this.goalInput,context:this.goalContext,model:this.goalModel});
+  this.goalRunning=false;
+  if(d.error){this.toast(d.error,'err');return;}
+  this.toast('✅ Super Agent Mode gestartet!');
+  this.goalInput='';this.goalContext='';
+  await this.loadGoals();
+  this.openGoal(d.goalId);
+  this.goalTab='active';
+},
+openGoal(id){
+  this.selectedGoal=null;this.goalSteps=[];this.goalMetrics=[];this.goalActivity=[];this.goalPendingApprovals=[];
+  if(this.goalPollInterval)clearInterval(this.goalPollInterval);
+  const poll=async()=>{
+    const d=await this.api('/goals/'+id+'/poll').catch(()=>null);
+    if(!d)return;
+    this.selectedGoal=d.goal;
+    this.goalSteps=d.steps||[];
+    this.goalMetrics=d.metrics||[];
+    this.goalActivity=d.activity||[];
+    this.goalPendingApprovals=d.pendingApprovals||[];
+    if(['completed','failed','cancelled'].includes(d.goal?.status))clearInterval(this.goalPollInterval);
+  };
+  poll();
+  this.goalPollInterval=setInterval(poll,2500);
+},
+async approveGoalStep(approvalId){
+  const d=await this.api('/goals/'+this.selectedGoal?.id+'/approve','POST',{approvalId});
+  if(d.success)this.toast('✅ Freigegeben — Agent läuft weiter');
+  else this.toast(d.error,'err');
+},
+async rejectGoalStep(approvalId){
+  const reason=prompt('Ablehnungsgrund (optional):','');
+  if(reason===null)return;
+  await this.api('/goals/'+this.selectedGoal?.id+'/reject','POST',{approvalId,reason});
+  this.toast('Abgelehnt — Kampagne pausiert');
+},
+async cancelGoal(id){if(!confirm('Ziel abbrechen?'))return;await this.api('/goals/'+id+'/cancel','POST');await this.loadGoals();this.toast('Abgebrochen');},
+async deleteGoal(id){if(!confirm('Ziel löschen?'))return;await this.api('/goals/'+id,'DELETE');this.goalsList=this.goalsList.filter(g=>g.id!==id);if(this.selectedGoal?.id===id)this.selectedGoal=null;},
+goalStatusIcon(s){return{analyzing:'🔍',planning:'📋',running:'▶',paused:'⏸',completed:'✅',failed:'❌',cancelled:'🚫'}[s]||'○'},
+goalStatusColor(s){return{analyzing:'var(--v-l)',planning:'var(--v-l)',running:'var(--sky)',paused:'var(--amber)',completed:'var(--emerald)',failed:'var(--rose)',cancelled:'var(--muted)'}[s]||'var(--muted)'},
+stepStatusIcon(s){return{waiting:'○',ready:'◎',running:'▶',waiting_approval:'🔐',approved:'✓',completed:'✅',failed:'❌',skipped:'–'}[s]||'○'},
+stepStatusColor(s){return{waiting:'var(--muted)',ready:'var(--v-l)',running:'var(--sky)',waiting_approval:'var(--amber)',approved:'var(--v-l)',completed:'var(--emerald)',failed:'var(--rose)',skipped:'var(--muted)'}[s]||'var(--muted)'},
+
 // ── MARKETPLACE ────────────────────────────────────────────────────────────
 async loadMarketplace(){
   const [ag,cat,my]=await Promise.all([
@@ -4252,7 +4679,7 @@ get cmdResults(){
     {label:'Einstellungen',icon:'⚙️',action:()=>{this.page='settings';this.closeCmd();}},
     {label:'API Keys',icon:'🔑',action:()=>{this.page='keys';this.loadKeys();this.closeCmd();}},
     {label:'Gespräche',icon:'💬',action:()=>{this.page='conversations';this.loadConvAgents();this.closeCmd();}},
-    {label:'Abrechnung',icon:'💳',action:()=>{this.page='billing';this.closeCmd();}},{label:'Agent Store',icon:'🛒',action:()=>{this.page='marketplace';this.loadMarketplace();this.closeCmd();}},{label:'Super Agent',icon:'🦾',action:()=>{this.page='super';this.loadSuperSessions();this.closeCmd();}},{label:'Planner',icon:'🧭',action:()=>{this.page='planner';this.loadPlans();this.closeCmd();}},{label:'Freigaben',icon:'✅',action:()=>{this.page='approvals';this.loadApprovals();this.closeCmd();}},{label:'Tools',icon:'⚙️',action:()=>{this.page='tools';this.loadTools();this.closeCmd();}},{label:'Memory',icon:'🧠',action:()=>{this.page='memory';this.loadMemory();this.closeCmd();}},{label:'Tasks',icon:'⚡',action:()=>{this.page='tasks';this.loadTasks();this.closeCmd();}},
+    {label:'Abrechnung',icon:'💳',action:()=>{this.page='billing';this.closeCmd();}},{label:'🎯 Super Agent Mode',icon:'🎯',action:()=>{this.page='goalmode';this.loadGoals();this.closeCmd();}},{label:'Agent Store',icon:'🛒',action:()=>{this.page='marketplace';this.loadMarketplace();this.closeCmd();}},{label:'Super Agent',icon:'🦾',action:()=>{this.page='super';this.loadSuperSessions();this.closeCmd();}},{label:'Planner',icon:'🧭',action:()=>{this.page='planner';this.loadPlans();this.closeCmd();}},{label:'Freigaben',icon:'✅',action:()=>{this.page='approvals';this.loadApprovals();this.closeCmd();}},{label:'Tools',icon:'⚙️',action:()=>{this.page='tools';this.loadTools();this.closeCmd();}},{label:'Memory',icon:'🧠',action:()=>{this.page='memory';this.loadMemory();this.closeCmd();}},{label:'Tasks',icon:'⚡',action:()=>{this.page='tasks';this.loadTasks();this.closeCmd();}},
     ...this.agents.map(a=>({label:a.name,icon:a.emoji,action:()=>{this.editAgent(a);this.closeCmd();}})),
   ];
   if(!q)return cmds.slice(0,8);
