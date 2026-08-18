@@ -184,8 +184,10 @@ async function startBackgroundRunner(intervalMs = 5000) {
   try {
     await pool.query('SELECT 1 FROM agent_tasks LIMIT 1');
   } catch {
-    console.warn('[task-runner] Tabelle agent_tasks fehlt noch — warte auf Migration');
-    setTimeout(() => startBackgroundRunner(intervalMs), 15000);
+    console.warn('[task-runner] Tabelle agent_tasks fehlt noch — warte auf Migration (retry in 30s)');
+    // Exponentielles Backoff: erst 30s, dann 60s, dann 120s
+    const delay = Math.min(120000, intervalMs * 6);
+    setTimeout(() => startBackgroundRunner(intervalMs), delay);
     return;
   }
 
