@@ -86,6 +86,26 @@ async function initDb() {
   for (const sql of criticalAlters) {
     await pool.query(sql).catch(() => {});
   }
+
+  // ── E-Mail-Bestätigung Spalten ─────────────────────────────────────────
+  const emailConfirmAlters = [
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_confirmed BOOLEAN DEFAULT false",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS confirm_token TEXT",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS confirm_expires TIMESTAMPTZ",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token TEXT",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_expires TIMESTAMPTZ",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login TIMESTAMPTZ",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS company TEXT DEFAULT ''",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS website TEXT DEFAULT ''",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT DEFAULT ''",
+  ];
+  for (const sql of emailConfirmAlters) {
+    await pool.query(sql).catch(() => {});
+  }
+
   console.log('✅ Kritische Spalten geprüft');
 
   // ── Phase 1-5 Tabellen direkt anlegen (nicht warten auf Migration-Tracking) ──
