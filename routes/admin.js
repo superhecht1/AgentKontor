@@ -260,7 +260,7 @@ router.post('/users/:id/email', auth, adminOnly, async (req, res) => {
   try {
     const r = await pool.query('SELECT email, name FROM users WHERE id=$1', [req.params.id]);
     if (!r.rows.length) return res.status(404).json({ error: 'Nutzer nicht gefunden' });
-    if (!process.env.SMTP_HOST) return res.status(500).json({ error: 'SMTP nicht konfiguriert' });
+    if (!process.env.SMTP_HOST) return res.status(503).json({ error: 'SMTP nicht konfiguriert. Bitte SMTP_HOST in den Umgebungsvariablen setzen.' });
 
     const nodemailer = require('nodemailer');
     const t = nodemailer.createTransport({
@@ -337,7 +337,7 @@ router.post('/broadcast', auth, adminOnly, async (req, res) => {
   const pool = getPool(req);
   const { subject, body, plan_filter } = req.body;
   if (!subject || !body) return res.status(400).json({ error: 'Subject und Body erforderlich' });
-  if (!process.env.SMTP_HOST) return res.status(500).json({ error: 'SMTP nicht konfiguriert' });
+  if (!process.env.SMTP_HOST) return res.status(503).json({ error: 'SMTP nicht konfiguriert. Bitte SMTP_HOST in den Umgebungsvariablen setzen.' });
   try {
     const where = plan_filter && plan_filter !== 'all' ? `AND plan=$1` : '';
     const args  = plan_filter && plan_filter !== 'all' ? [plan_filter] : [];
@@ -346,7 +346,17 @@ router.post('/broadcast', auth, adminOnly, async (req, res) => {
       args
     );
     const nodemailer = require('nodemailer');
-    const t = nodemailer.createTransport({ host: process.env.SMTP_HOST, port: parseInt(process.env.SMTP_PORT||'587'), secure: false, auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } });
+    const t = nodemailer.createTransport({
+      host:             process.env.SMTP_HOST,
+      port:             parseInt(process.env.SMTP_PORT || '587'),
+      secure:           process.env.SMTP_SECURE === 'true',
+      connectionTimeout: 5000,   // 5s — hängt nicht ewig
+      greetingTimeout:  3000,
+      socketTimeout:    10000,
+      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    });
+    // Verbindung vorab prüfen
+    await t.verify().catch(e => { throw new Error('SMTP-Verbindung fehlgeschlagen: ' + e.message); });
     let sent = 0;
     for (const u of users.rows) {
       try {
@@ -400,3 +410,337 @@ router.get('/users/search', auth, adminOnly, async (req, res) => {
 
 module.exports = router;
 
+
+/* ── CRON: LOGS + MANUELL AUSLÖSEN ──────────────────────── */
+router.get('/cron/logs', auth, adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  try {
+    const r = await pool.query(
+      `SELECT job, result, created_at FROM cron_log ORDER BY created_at DESC LIMIT 50`
+    ).catch(() => ({ rows: [] }));
+    res.json({ logs: r.rows });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+router.post('/cron/run', auth, adminOnly, async (req, res) => {
+  try {
+    const base = process.env.APP_URL || 'http://localhost:3000';
+    const secret = process.env.CRON_SECRET || '';
+    const r = await fetch(`${base}/api/extras/cron/cleanup`, {
+      method: 'POST',
+      headers: { 'x-cron-secret': secret, 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(30000),
+    });
+    const d = await r.json();
+    res.json(d);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+/* ── CONVERSION FUNNEL ──────────────────────────────────── */
+router.get('/funnel', auth, adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  try {
+    const [signups, trials, converted, churned, active30d] = await Promise.all([
+      pool.query(`SELECT COUNT(*) AS n FROM users WHERE deleted_at IS NULL`),
+      pool.query(`SELECT COUNT(*) AS n FROM users WHERE trial_ends_at IS NOT NULL AND deleted_at IS NULL`),
+      pool.query(`SELECT COUNT(*) AS n FROM users WHERE plan='pro' AND stripe_subscription_id IS NOT NULL AND deleted_at IS NULL`),
+      pool.query(`SELECT COUNT(*) AS n FROM users WHERE plan='free' AND trial_ends_at < NOW() AND trial_ends_at IS NOT NULL AND deleted_at IS NULL`),
+      pool.query(`SELECT COUNT(DISTINCT a.user_id) AS n FROM agents a JOIN chat_messages cm ON cm.agent_id=a.id WHERE cm.created_at > NOW()-INTERVAL'30 days'`),
+    ]);
+    const daily = await pool.query(`
+      SELECT DATE(created_at) AS day, COUNT(*) AS signups,
+             COUNT(*) FILTER (WHERE plan='pro') AS pro_same_day
+      FROM users WHERE created_at > NOW()-INTERVAL'30 days' AND deleted_at IS NULL
+      GROUP BY day ORDER BY day ASC
+    `);
+    res.json({
+      total:      parseInt(signups.rows[0].n),
+      trialed:    parseInt(trials.rows[0].n),
+      converted:  parseInt(converted.rows[0].n),
+      churned:    parseInt(churned.rows[0].n),
+      active30d:  parseInt(active30d.rows[0].n),
+      daily:      daily.rows,
+    });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+/* ── TEMPLATES VERWALTEN ────────────────────────────────── */
+router.get('/templates', auth, adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  try {
+    const r = await pool.query(`SELECT * FROM agent_templates ORDER BY use_count DESC`).catch(() => ({ rows: [] }));
+    res.json({ templates: r.rows });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+router.post('/templates', auth, adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  const { name, emoji, description, category, system_prompt, greeting, tone, tags } = req.body;
+  if (!name || !system_prompt) return res.status(400).json({ error: 'name und system_prompt erforderlich' });
+  try {
+    const r = await pool.query(
+      `INSERT INTO agent_templates (name,emoji,description,category,system_prompt,greeting,tone,tags,is_public,author) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,true,$9) RETURNING id`,
+      [name, emoji||'🤖', description||'', category||'Allgemein', system_prompt, greeting||'Hallo! Wie kann ich helfen?', tone||'professionell', tags||[], 'AgentKontor']
+    );
+    res.json({ success: true, id: r.rows[0].id });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+router.put('/templates/:id', auth, adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  const { name, emoji, description, category, system_prompt, greeting, tone, is_public } = req.body;
+  try {
+    await pool.query(
+      `UPDATE agent_templates SET name=$1,emoji=$2,description=$3,category=$4,system_prompt=$5,greeting=$6,tone=$7,is_public=$8 WHERE id=$9`,
+      [name, emoji||'🤖', description||'', category||'Allgemein', system_prompt, greeting, tone||'professionell', is_public!==false, req.params.id]
+    );
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+router.delete('/templates/:id', auth, adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  try {
+    await pool.query(`DELETE FROM agent_templates WHERE id=$1`, [req.params.id]);
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+/* ── FEEDBACK / BEWERTUNGEN ─────────────────────────────── */
+router.get('/feedback', auth, adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  try {
+    const [summary, recent] = await Promise.all([
+      pool.query(`SELECT
+        COUNT(*) FILTER (WHERE rating=1) AS thumbs_up,
+        COUNT(*) FILTER (WHERE rating=-1) AS thumbs_down,
+        COUNT(*) AS total,
+        ROUND(AVG(rating::numeric),2) AS avg_rating
+        FROM message_feedback`).catch(() => ({ rows: [{}] })),
+      pool.query(`SELECT mf.rating, mf.comment, mf.source, mf.created_at,
+        a.name AS agent_name, a.emoji AS agent_emoji, u.email AS owner_email
+        FROM message_feedback mf
+        JOIN agents a ON mf.agent_id=a.id
+        JOIN users u ON a.user_id=u.id
+        WHERE mf.comment IS NOT NULL
+        ORDER BY mf.created_at DESC LIMIT 50`).catch(() => ({ rows: [] })),
+    ]);
+    res.json({ summary: summary.rows[0], recent: recent.rows });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+/* ── ANNOUNCEMENT BANNER ────────────────────────────────── */
+// In-memory for simplicity (survives until restart)
+let _announcement = null;
+router.get('/announcement', (req, res) => res.json({ announcement: _announcement }));
+router.post('/announcement', auth, adminOnly, (req, res) => {
+  const { text, type, url } = req.body;
+  _announcement = text ? { text, type: type||'info', url: url||null, set_at: new Date().toISOString() } : null;
+  res.json({ success: true, announcement: _announcement });
+});
+
+/* ── CHANGELOG VERWALTEN ────────────────────────────────── */
+router.get('/changelog', auth, adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  try {
+    const r = await pool.query(`SELECT * FROM changelog ORDER BY created_at DESC LIMIT 30`)
+      .catch(() => ({ rows: [] }));
+    res.json({ entries: r.rows });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+router.post('/changelog', auth, adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  const { version, title, body } = req.body;
+  if (!title || !body) return res.status(400).json({ error: 'title und body erforderlich' });
+  try {
+    await pool.query(`CREATE TABLE IF NOT EXISTS changelog (id SERIAL PRIMARY KEY, version VARCHAR(32), title TEXT, body TEXT, published BOOLEAN DEFAULT true, created_at TIMESTAMPTZ DEFAULT NOW())`);
+    const r = await pool.query(
+      `INSERT INTO changelog (version, title, body, published) VALUES ($1,$2,$3,true) RETURNING id`,
+      [version||'', title, body]
+    );
+    res.json({ success: true, id: r.rows[0].id });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+router.delete('/changelog/:id', auth, adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  try {
+    await pool.query(`DELETE FROM changelog WHERE id=$1`, [req.params.id]);
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+/* ── CSV EXPORTS ────────────────────────────────────────── */
+router.get('/users/export', auth, adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  try {
+    const r = await pool.query(`
+      SELECT u.id, u.email, u.name, u.plan, u.created_at,
+             u.msg_count_month, u.stripe_customer_id, u.trial_ends_at,
+             u.deleted_at, COUNT(a.id) AS agent_count
+      FROM users u LEFT JOIN agents a ON a.user_id=u.id
+      GROUP BY u.id ORDER BY u.created_at DESC
+    `);
+    const header = 'ID,E-Mail,Name,Plan,Agenten,Nachrichten/Mo,Erstellt,Trial bis,Gelöscht\n';
+    const rows = r.rows.map(u =>
+      [u.id, u.email, (u.name||'').replace(/,/g,''), u.plan,
+       u.agent_count, u.msg_count_month,
+       new Date(u.created_at).toLocaleDateString('de-DE'),
+       u.trial_ends_at ? new Date(u.trial_ends_at).toLocaleDateString('de-DE') : '',
+       u.deleted_at ? 'ja' : ''].join(',')
+    ).join('\n');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="users-${new Date().toISOString().split('T')[0]}.csv"`);
+    res.send('\ufeff' + header + rows);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+router.get('/agents/export', auth, adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  try {
+    const r = await pool.query(`
+      SELECT a.id, a.name, a.emoji, a.is_active, a.total_messages,
+             a.model, a.rag_enabled, a.whatsapp_enabled, a.telegram_enabled, a.voice_enabled,
+             u.email AS owner_email, u.plan AS owner_plan, a.created_at
+      FROM agents a JOIN users u ON a.user_id=u.id ORDER BY a.total_messages DESC
+    `);
+    const header = 'ID,Name,Aktiv,Nachrichten,Modell,RAG,WA,TG,Voice,Besitzer,Plan,Erstellt\n';
+    const rows = r.rows.map(a =>
+      [a.id, (a.name||'').replace(/,/g,''), a.is_active?'ja':'nein',
+       a.total_messages, a.model, a.rag_enabled?'ja':'nein',
+       a.whatsapp_enabled?'ja':'nein', a.telegram_enabled?'ja':'nein',
+       a.voice_enabled?'ja':'nein', a.owner_email, a.owner_plan,
+       new Date(a.created_at).toLocaleDateString('de-DE')].join(',')
+    ).join('\n');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="agents-${new Date().toISOString().split('T')[0]}.csv"`);
+    res.send('\ufeff' + header + rows);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+/* ── TRIAL VERLÄNGERN ───────────────────────────────────── */
+router.post('/users/:id/extend-trial', auth, adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  const days = Math.min(90, Math.max(1, parseInt(req.body.days)||14));
+  try {
+    const r = await pool.query(`SELECT trial_ends_at, plan FROM users WHERE id=$1`, [req.params.id]);
+    if (!r.rows.length) return res.status(404).json({ error: 'Nutzer nicht gefunden' });
+    const base = new Date(Math.max(Date.now(), new Date(r.rows[0].trial_ends_at||Date.now()).getTime()));
+    const newEnd = new Date(base.getTime() + days * 86400000);
+    await pool.query(`UPDATE users SET trial_ends_at=$1, plan='pro' WHERE id=$2`, [newEnd, req.params.id]);
+    res.json({ success: true, trial_ends_at: newEnd.toISOString() });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+/* ── AGENT HEALTH CHECK ─────────────────────────────────── */
+router.get('/agent-health', auth, adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  try {
+    const [inactive, noMessages, errorAgents, topActive] = await Promise.all([
+      pool.query(`SELECT a.id, a.name, a.emoji, u.email, a.created_at
+        FROM agents a JOIN users u ON a.user_id=u.id
+        WHERE a.is_active=false ORDER BY a.created_at DESC LIMIT 20`),
+      pool.query(`SELECT a.id, a.name, a.emoji, u.email, a.created_at
+        FROM agents a JOIN users u ON a.user_id=u.id
+        WHERE a.is_active=true AND a.total_messages=0 ORDER BY a.created_at DESC LIMIT 20`),
+      pool.query(`SELECT a.id, a.name, a.emoji, u.email, COUNT(*) AS errors
+        FROM agents a JOIN users u ON a.user_id=u.id
+        JOIN audit_log al ON al.entity='agent' AND al.entity_id=a.id::text
+        WHERE al.action LIKE '%error%' AND al.created_at > NOW()-INTERVAL'7 days'
+        GROUP BY a.id,u.email ORDER BY errors DESC LIMIT 10`).catch(() => ({ rows: [] })),
+      pool.query(`SELECT a.id, a.name, a.emoji, u.email, u.plan, a.total_messages,
+        COUNT(cm.id) FILTER (WHERE cm.created_at > NOW()-INTERVAL'24 hours') AS msgs_today
+        FROM agents a JOIN users u ON a.user_id=u.id
+        LEFT JOIN chat_messages cm ON cm.agent_id=a.id
+        WHERE a.is_active=true GROUP BY a.id,u.email,u.plan
+        ORDER BY msgs_today DESC NULLS LAST LIMIT 10`),
+    ]);
+    res.json({
+      inactive: inactive.rows,
+      no_messages: noMessages.rows,
+      errors: errorAgents.rows,
+      top_active: topActive.rows,
+    });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+/* ── PLATFORM SEARCH (users + agents) ──────────────────── */
+router.get('/search', auth, adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  const q = (req.query.q||'').trim();
+  if (q.length < 2) return res.json({ users: [], agents: [] });
+  try {
+    const [users, agents] = await Promise.all([
+      pool.query(`SELECT id, email, name, plan, created_at FROM users WHERE (email ILIKE $1 OR name ILIKE $1) AND deleted_at IS NULL LIMIT 8`, [`%${q}%`]),
+      pool.query(`SELECT a.id, a.name, a.emoji, a.total_messages, u.email AS owner FROM agents a JOIN users u ON a.user_id=u.id WHERE a.name ILIKE $1 LIMIT 8`, [`%${q}%`]),
+    ]);
+    res.json({ users: users.rows, agents: agents.rows });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+/* ── LLM COST ALERTS ────────────────────────────────────── */
+router.get('/cost-alerts', auth, adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  try {
+    // Users spending more than $1 today
+    const r = await pool.query(`
+      SELECT u.email, u.name, u.plan, ROUND(SUM(lu.cost_usd)::numeric,4) AS cost_today,
+             COUNT(*) AS calls
+      FROM llm_usage lu JOIN agents a ON lu.agent_id=a.id JOIN users u ON a.user_id=u.id
+      WHERE lu.created_at > NOW()-INTERVAL'24 hours'
+      GROUP BY u.id HAVING SUM(lu.cost_usd) > 1
+      ORDER BY cost_today DESC
+    `).catch(() => ({ rows: [] }));
+    res.json({ alerts: r.rows });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+/* ── FEATURE FLAGS ──────────────────────────────────────── */
+router.post('/users/:id/feature', auth, adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  const { feature, enabled } = req.body;
+  try {
+    // Store in users.metadata JSON column if exists, otherwise use plan workaround
+    await pool.query(
+      `UPDATE users SET plan=CASE WHEN $2 AND plan='free' THEN 'pro' ELSE plan END WHERE id=$1`,
+      [req.params.id, enabled]
+    );
+    res.json({ success: true, note: 'Feature-Flags via plan-Upgrade simuliert. Für echte Flags metadata-Spalte ergänzen.' });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+/* ── RATE LIMIT STATUS ──────────────────────────────────── */
+router.get('/rate-limits', auth, adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  try {
+    const r = await pool.query(`
+      SELECT key, count, window_end FROM rate_limits
+      WHERE count >= 5 AND window_end > NOW()
+      ORDER BY count DESC LIMIT 30
+    `).catch(() => ({ rows: [] }));
+    res.json({ limits: r.rows });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+/* ── PLATFORM STATS SNAPSHOT ────────────────────────────── */
+router.get('/snapshot', auth, adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  try {
+    const [msgs_hour, new_users_today, leads_today, costs_today, active_agents] = await Promise.all([
+      pool.query(`SELECT COUNT(*) AS n FROM chat_messages WHERE created_at > NOW()-INTERVAL'1 hour'`),
+      pool.query(`SELECT COUNT(*) AS n FROM users WHERE created_at > NOW()-INTERVAL'24 hours'`),
+      pool.query(`SELECT COUNT(*) AS n FROM lead_captures WHERE created_at > NOW()-INTERVAL'24 hours'`),
+      pool.query(`SELECT ROUND(SUM(cost_usd)::numeric,4) AS n FROM llm_usage WHERE created_at > NOW()-INTERVAL'24 hours'`).catch(() => ({ rows: [{ n: 0 }] })),
+      pool.query(`SELECT COUNT(DISTINCT agent_id) AS n FROM chat_messages WHERE created_at > NOW()-INTERVAL'1 hour'`),
+    ]);
+    res.json({
+      msgs_last_hour:   parseInt(msgs_hour.rows[0].n),
+      new_users_today:  parseInt(new_users_today.rows[0].n),
+      leads_today:      parseInt(leads_today.rows[0].n),
+      costs_today_usd:  parseFloat(costs_today.rows[0].n||0),
+      active_agents_now: parseInt(active_agents.rows[0].n),
+      timestamp:         new Date().toISOString(),
+    });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
