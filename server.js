@@ -59,6 +59,7 @@ async function initDb() {
     'migrations/007_integrations_webagent.sql',
     'migrations/008_multi_agent.sql',
     'migrations/009_marketplace.sql',
+    'migrations/010_goal_engine.sql',
   ];
   for (const file of sqls) {
     const fp = path.join(__dirname, file);
@@ -218,6 +219,9 @@ app.use('/api/super',          require('./routes/super-agent'));
 
 // ── Agent Marketplace ───────────────────────────────────────────────────────
 app.use('/api/marketplace',    require('./routes/marketplace'));
+
+// ── Super Agent Mode: Goal Engine ──────────────────────────────────────────
+app.use('/api/goals',          require('./routes/goals'));
 
 try {
   app.use('/api/rag', require('./routes/rag'));
