@@ -1,6 +1,18 @@
 'use strict';
 const express = require('express');
 const router  = express.Router();
+
+// Sicheres Error-Logging: Stack intern, generische Meldung zum Client
+function safeErr(res, e, status = 500, context = '') {
+  const isProd = process.env.NODE_ENV === 'production';
+  if (context) console.error(`[${context}]`, e.message);
+  else console.error(e.message);
+  const msg = isProd
+    ? (status < 500 ? e.message : 'Interner Serverfehler')  // 4xx ok, 5xx generisch
+    : e.message;
+  return res.status(status).json({ error: msg });
+}
+
 const auth    = require('../middleware/auth');
 const { getPool } = require('../utils/db');
 const { goalEngine } = require('../utils/goal-engine');
@@ -10,13 +22,17 @@ router.post('/', auth, async (req, res) => {
   const pool = getPool(req);
   const { goal, context, model = 'claude-sonnet-4-6' } = req.body;
   if (!goal?.trim()) return res.status(400).json({ error: 'goal erforderlich' });
+  if (goal.length > 2000) return res.status(400).json({ error: 'Ziel zu lang (max. 2000 Zeichen)' });
+  if (context && context.length > 1000) return res.status(400).json({ error: 'Kontext zu lang (max. 1000 Zeichen)' });
+  const ALLOWED_MODELS = ['claude-sonnet-4-6','claude-opus-4-6','claude-haiku-4-5','gpt-4o','gpt-4o-mini'];
+  const safeModel = ALLOWED_MODELS.includes(model) ? model : 'claude-sonnet-4-6';
 
   try {
     const { goalId, campaignId, analysis } = await goalEngine.startGoal(pool, {
       userId: req.userId,
-      rawGoal: goal.trim(),
-      context: context || '',
-      model,
+      rawGoal: goal.trim().slice(0, 2000),
+      context: (context || '').slice(0, 1000),
+      model: safeModel,
     });
 
     // Asynchron ausführen
@@ -32,7 +48,7 @@ router.post('/', auth, async (req, res) => {
     res.status(201).json({ goalId, campaignId, analysis, status: 'running' });
   } catch (e) {
     console.error('START GOAL:', e.message);
-    res.status(500).json({ error: e.message });
+    safeErr(res, e, 500);
   }
 });
 
@@ -70,7 +86,7 @@ router.get('/:id/poll', auth, async (req, res) => {
     const [goal, campaign, steps, metrics, activity] = await Promise.all([
       pool.query('SELECT * FROM goals WHERE id=$1 AND user_id=$2', [req.params.id, req.userId]),
       pool.query('SELECT * FROM goal_campaigns WHERE goal_id=$1 ORDER BY created_at DESC LIMIT 1', [req.params.id]),
-      pool.query('SELECT * FROM goal_steps WHERE goal_id=$1 ORDER BY step_number', [req.params.id]),
+      pool.query('SELECT gs.* FROM goal_steps gs JOIN goals g ON g.id=gs.goal_id WHERE gs.goal_id=$1 AND g.user_id=$2 ORDER BY gs.step_number', [req.params.id, req.userId]),
       pool.query('SELECT * FROM goal_metrics WHERE goal_id=$1 ORDER BY metric_key', [req.params.id]),
       pool.query('SELECT * FROM goal_activity WHERE goal_id=$1 ORDER BY created_at DESC LIMIT 20', [req.params.id]),
     ]);
@@ -132,7 +148,7 @@ router.post('/:id/approve', auth, async (req, res) => {
 
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    safeErr(res, e, 500);
   }
 });
 

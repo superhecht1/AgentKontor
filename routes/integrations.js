@@ -1,9 +1,22 @@
 'use strict';
 const express = require('express');
 const router  = express.Router();
+
+// Sicheres Error-Logging: Stack intern, generische Meldung zum Client
+function safeErr(res, e, status = 500, context = '') {
+  const isProd = process.env.NODE_ENV === 'production';
+  if (context) console.error(`[${context}]`, e.message);
+  else console.error(e.message);
+  const msg = isProd
+    ? (status < 500 ? e.message : 'Interner Serverfehler')  // 4xx ok, 5xx generisch
+    : e.message;
+  return res.status(status).json({ error: msg });
+}
+
 const auth = require('../middleware/auth');
 const { getPool } = require('../utils/db');
 const { callLLM } = require('../utils/llm');
+const { encrypt, decrypt } = require('../utils/crypto-utils');
 
 // ── GET /api/integrations  — alle Credentials des Users ──────────────────────
 router.get('/', auth, async (req, res) => {
@@ -42,7 +55,7 @@ router.post('/', auth, async (req, res) => {
        ON CONFLICT (user_id,integration,provider,label)
        DO UPDATE SET credentials=$5, is_active=true, updated_at=now()
        RETURNING id, integration, provider, label, is_active`,
-      [req.userId, integration, provider, label, JSON.stringify(credentials)]
+      [req.userId, integration, provider, label, encrypt(credentials)]
     );
     res.status(201).json({ integration: r.rows[0] });
   } catch (e) {
@@ -261,7 +274,10 @@ async function getCred(pool, userId, integration, credId) {
     params
   );
   if (!r.rows.length) throw new Error(`Keine ${integration}-Integration gefunden. Bitte zuerst verbinden.`);
-  return r.rows[0];
+  const row = r.rows[0];
+  // Credentials entschlüsseln
+  try { row.credentials = decrypt(row.credentials); } catch {}
+  return row;
 }
 
 module.exports = router;
