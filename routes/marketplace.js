@@ -64,6 +64,7 @@ const conditions = ['ma.is_active=true'];
 router.get('/categories', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'marketplace_categories')) return res.json({ categories: [] });
     if (!await tableExists(pool, 'marketplace_agents')) return res.json({ agents: [], categories: [] });
     const r = await pool.query(
       `SELECT mc.*,
@@ -233,6 +234,7 @@ router.post('/:id/rate', auth, async (req, res) => {
 router.get('/my/installs', auth, async (req, res) => {
   const pool = getPool(req);
   try {
+    if (!await tableExists(pool, 'marketplace_installations')) return res.json({ installs: [] });
     if (!await tableExists(pool, 'marketplace_agents')) return res.json({ agents: [], categories: [] });
     const r = await pool.query(
       `SELECT mi.*, ma.name AS template_name, ma.emoji, ma.tagline, ma.category_slug,
