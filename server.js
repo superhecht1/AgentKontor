@@ -799,6 +799,75 @@ app.get('/chat/:publicId',          (req, res) => res.sendFile(path.join(__dirna
 
 
 
+
+// ── DEMO CHAT ENDPOINT (Landing Page, kein Auth nötig) ───────────────────────
+const demoLimiter = require('express-rate-limit').rateLimit({
+  windowMs: 60 * 1000, max: 10,
+  message: { error: 'Zu viele Anfragen. Bitte warte kurz.' }
+});
+
+app.post('/api/demo/chat', demoLimiter, async (req, res) => {
+  const { messages } = req.body;
+  if (!messages?.length) return res.status(400).json({ error: 'Keine Nachrichten' });
+  if (messages.length > 10) return res.status(400).json({ error: 'Zu viele Nachrichten' });
+
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return res.status(503).json({ error: 'Demo nicht verfügbar' });
+
+  const systemPrompt = `Du bist der Demo-Agent von AgentKontor — einer KI-Agentur-Plattform für deutsche Unternehmen.
+
+Deine Aufgabe: Besucher von AgentKontor begeistern und ihre Fragen beantworten.
+
+WICHTIGE FAKTEN über AgentKontor:
+- Kostenloser Plan: 3 Agenten, 500 Nachrichten/Monat
+- Pro Plan: €19/Monat, unbegrenzte Agenten, 10.000 Nachrichten
+- 14 KI-Modelle: Claude, GPT-4o, Gemini, Mistral (🇪🇺 EU), Groq, DeepSeek
+- Super Agent Mode: Gibt ein Ziel an, AgentKontor erstellt automatisch Kampagnen
+- Multi-Agent System: 6 Spezialisten (Research, Sales, Support, Data, Marketing, Finance)
+- Agent Marketplace: 12 vorgefertigte Branchen-Agenten
+- Web-Agent: Recherchiert selbstständig im Internet
+- Planner & Approvals: Mehrstufige Pläne mit Freigabe-System
+- WhatsApp Business API, Telegram, Website-Widget
+- Integrationen: Google Calendar, Gmail, CRM
+- DSGVO-konform, Server in Deutschland
+- Vergleich: Mehr Features als Chatbase oder Tidio zum gleichen Preis
+
+Antworte auf Deutsch, sei freundlich und enthusiastisch. Halte Antworten kurz (2-4 Sätze).
+Wenn jemand Interesse zeigt, lade ihn ein sich kostenlos zu registrieren unter agentkontor.de/app`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 300,
+        system: systemPrompt,
+        messages: messages.slice(-6).map(m => ({
+          role: m.role === 'user' ? 'user' : 'assistant',
+          content: m.content.slice(0, 500),
+        })),
+      }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      return res.status(500).json({ error: 'KI-Fehler: ' + (err.error?.message || response.status) });
+    }
+
+    const data = await response.json();
+    const text = data.content?.[0]?.text || 'Entschuldigung, ich konnte keine Antwort generieren.';
+    res.json({ message: text });
+  } catch(e) {
+    console.error('DEMO CHAT:', e.message);
+    res.status(500).json({ error: 'Demo vorübergehend nicht verfügbar.' });
+  }
+});
+
 // Vergleichsseiten
 app.get('/vergleich/:competitor', (req, res) => {
   const map = { chatbase:'vergleich-chatbase.html', tidio:'vergleich-tidio.html', userlike:'vergleich-userlike.html' };
