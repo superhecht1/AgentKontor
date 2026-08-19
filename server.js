@@ -646,17 +646,30 @@ try {
   app.use(compression({ threshold: 1024 })); // only compress >1KB
 } catch { console.warn('compression not installed: npm install compression'); }
 
+// index.html wird durch explizite Route mit Clear-Site-Data geliefert
+app.get('/', (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('Surrogate-Control', 'no-store');
+  res.setHeader('Clear-Site-Data', '"cache", "storage"');
+  const html = require('fs').readFileSync(
+    require('path').join(__dirname, 'public', 'index.html'), 'utf8'
+  );
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(html);
+});
+
 app.use(express.static(path.join(__dirname, 'public'), {
+    index: false,   // WICHTIG: verhindert auto-serve von index.html für /
     etag: true,
     lastModified: true,
     setHeaders: (res, filePath) => {
       if (filePath.endsWith('.html')) {
-        // HTML nie cachen — immer aktuelle Version
         res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
         res.setHeader('Pragma', 'no-cache');
         res.setHeader('Expires', '0');
       } else if (filePath.match(/\.(js|css|png|svg|ico)$/)) {
-        // Assets: 1 Stunde cachen
         res.setHeader('Cache-Control', 'public, max-age=3600');
       }
     }
@@ -796,18 +809,7 @@ app.get('/cookie-richtlinie.html',  (req, res) => res.sendFile(path.join(__dirna
 app.get('/impressum.html',          (req, res) => res.sendFile(path.join(__dirname, 'public', 'impressum.html')));
 app.get('/datenschutz.html',        (req, res) => res.sendFile(path.join(__dirname, 'public', 'datenschutz.html')));
 app.get('/agb.html',                (req, res) => res.sendFile(path.join(__dirname, 'public', 'agb.html')));
-app.get('/', (req, res) => {
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
-  res.setHeader('Surrogate-Control', 'no-store');
-  res.setHeader('CDN-Cache-Control', 'no-store');
-  // Löscht Browser-Cache + Service Worker Cache auf einen Schlag
-  res.setHeader('Clear-Site-Data', '"cache", "storage"');
-  const html = require('fs').readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8');
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.send(html);
-});
+// (index.html Route ist oben bei express.static)
 // FIX 10: API 404 handler — return JSON not HTML
 app.use('/api/*', (req, res) => {
   res.status(404).json({ error: `Endpoint nicht gefunden: ${req.method} ${req.originalUrl}` });
