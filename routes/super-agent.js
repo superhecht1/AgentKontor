@@ -55,6 +55,11 @@ router.post('/', auth, async (req, res) => {
         await superAgent.orchestrate(pool, sessionId);
       } catch (e) {
         console.error(`[super-agent] Session ${sessionId} Fehler:`, e.message);
+        // Session als fehlgeschlagen markieren
+        pool.query(
+          "UPDATE super_agent_sessions SET status='failed', error_msg=$1, updated_at=now() WHERE id=$2",
+          [e.message, sessionId]
+        ).catch(() => {});
       }
     });
   } catch (e) {
