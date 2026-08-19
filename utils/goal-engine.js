@@ -551,6 +551,13 @@ async function startGoal(pool, { userId, rawGoal, context, model = 'claude-sonne
   await pool.query("UPDATE goals SET status='running',updated_at=now() WHERE id=$1", [goalId]);
   await log(pool, { goalId, type:'message', title:'📋 Kampagne erstellt', detail:`${GOAL_TEMPLATES[analysis.goal_type]?.steps?.length || 0} Schritte geplant` });
 
+  // Kampagne asynchron starten — Client bekommt sofort goalId zurück
+  setImmediate(async () => {
+    await runCampaign(pool, { goalId, campaignId, userId, model }).catch(e =>
+      console.error('[goal-engine] runCampaign Fehler:', e.message)
+    );
+  });
+
   return { goalId, campaignId, analysis };
 }
 
