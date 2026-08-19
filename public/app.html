@@ -1048,8 +1048,7 @@ input:checked+.slider::before{transform:translateX(18px)}
 
 
 <!-- EXPERTENMODUS -->
-<div x-show="appMode==='expert'" style="display:contents">
-<div class="sidebar" :class="{collapsed:sidebarCollapsed}">
+<div class="sidebar" x-show="appMode==='expert'" :class="{collapsed:sidebarCollapsed}">
     <div class="sb-top">
       <div class="sb-logo">
         <div class="sb-logo-icon">🤖</div>
@@ -1136,7 +1135,7 @@ input:checked+.slider::before{transform:translateX(18px)}
   </div>
 
   <!-- MAIN -->
-  <div class="main">
+  <div class="main" x-show="appMode==='expert'">
     <!-- TOP BAR -->
     <div class="topbar">
       <div class="topbar-left">
@@ -4299,7 +4298,7 @@ https://anbieter3.de"></textarea></div>
     </div>
   </div>
 </div>
-</div><!-- /expert -->
+
 
 
 <script>
