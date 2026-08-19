@@ -4357,7 +4357,7 @@ convSessions:[],convMessages:[],convLoading:false,selectedSession:null,convTotal
 webhooksOut:[],showNewWebhook:false,
 newWebhook:{url:'',events:['message.received','lead.captured']},
 webhookEvents:['message.received','message.sent','lead.captured','session.started'],
-showUpgrade:false,showOnboarding:false,onboardStep:1,checkoutLoading:false,
+showUpgrade:false,onboardStep:1,checkoutLoading:false,
 showWaWizard:false,waStep:1,
 // Fine-Tuning
 ftAgentId:'',ftData:null,ftLoading:false,ftJobs:[],ftBaseModel:'gpt-4o-mini-2024-07-18',ftSuffix:'',
@@ -4537,9 +4537,10 @@ setUser(token,user){
   localStorage.setItem('ak_token',token);
   localStorage.setItem('ak_user',JSON.stringify(user));
   this.loadAgents();
-  // Neue Nutzer → Onboarding nach 1s anzeigen
+  // Neuer Nutzer → Onboarding einmalig anzeigen
   const key='ak_ob_'+((user&&user.id)||'x');
-  if(!localStorage.getItem(key)){
+  const seen = localStorage.getItem(key) || localStorage.getItem('ak_onboard');
+  if(!seen){
     localStorage.setItem(key,'1');
     setTimeout(()=>{this.showOnboarding=true;},1000);
   }
@@ -4976,7 +4977,11 @@ async copyWidgetCode(){
   try{await navigator.clipboard.writeText(code.replace('\/',''));this.toast('Code kopiert ✓');}
   catch{prompt('Code kopieren:',code.replace('\/',''));}
 },
-finishOnboard(){this.showOnboarding=false;this.onboardDone=true;localStorage.setItem('ak_onboard','1');},
+finishOnboard(){
+  this.showOnboarding=false;this.onboardDone=true;
+  localStorage.setItem('ak_onboard','1');
+  localStorage.setItem('ak_ob_'+((this.user&&this.user.id)||'x'),'done');
+},
 startTour(){this.tourActive=true;this.tourStep=0;},
 nextTour(){if(this.tourStep<4)this.tourStep++;else{this.tourActive=false;this.tourStep=0;}},
 closeTour(){this.tourActive=false;},
