@@ -139,19 +139,31 @@ footer{padding:40px 0;border-top:1px solid var(--border)}
 }
 </style>
 <script>
-// SW-Cache-Buster: alten Service Worker deregistrieren damit neue index.html sichtbar wird
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(regs => {
-    regs.forEach(reg => {
-      // Wenn SW aktiv aber nicht v4 → deregistrieren
-      reg.active && fetch('/sw.js').then(r => r.text()).then(text => {
-        if (!text.includes('agentkontor-v4')) {
-          reg.unregister().then(() => location.reload());
-        }
-      }).catch(() => {});
+// Landing Page: alle Service Worker + Caches löschen
+(function() {
+  if (!('serviceWorker' in navigator)) return;
+  var reloaded = sessionStorage.getItem('ak_sw_cleared');
+  navigator.serviceWorker.getRegistrations().then(function(regs) {
+    if (!regs.length) return;
+    var unregPromises = regs.map(function(r) { return r.unregister(); });
+    Promise.all(unregPromises).then(function() {
+      // Alle Caches löschen
+      if ('caches' in window) {
+        caches.keys().then(function(keys) {
+          return Promise.all(keys.map(function(k) { return caches.delete(k); }));
+        }).then(function() {
+          if (!reloaded) {
+            sessionStorage.setItem('ak_sw_cleared', '1');
+            location.reload(true);
+          }
+        });
+      } else if (!reloaded) {
+        sessionStorage.setItem('ak_sw_cleared', '1');
+        location.reload(true);
+      }
     });
   });
-}
+})();
 </script>
 </head>
 <body>
