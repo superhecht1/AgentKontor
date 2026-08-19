@@ -587,7 +587,16 @@ app.get('/cookie-richtlinie.html',  (req, res) => res.sendFile(path.join(__dirna
 app.get('/impressum.html',          (req, res) => res.sendFile(path.join(__dirname, 'public', 'impressum.html')));
 app.get('/datenschutz.html',        (req, res) => res.sendFile(path.join(__dirname, 'public', 'datenschutz.html')));
 app.get('/agb.html',                (req, res) => res.sendFile(path.join(__dirname, 'public', 'agb.html')));
-app.get('/',                        (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get('/', (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('Surrogate-Control', 'no-store');
+  res.setHeader('CDN-Cache-Control', 'no-store');
+  const html = require('fs').readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8');
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(html);
+});
 // FIX 10: API 404 handler — return JSON not HTML
 app.use('/api/*', (req, res) => {
   res.status(404).json({ error: `Endpoint nicht gefunden: ${req.method} ${req.originalUrl}` });
