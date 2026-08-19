@@ -596,6 +596,7 @@ try {
         scriptSrc:   ["'self'", "'unsafe-eval'", "'unsafe-inline'",
                        "unpkg.com", "https://unpkg.com",
                        "cdnjs.cloudflare.com", "https://cdnjs.cloudflare.com"],
+        scriptSrcAttr: ["'unsafe-inline'"],
         styleSrc:    ["'self'", "'unsafe-inline'",
                        "fonts.googleapis.com", "https://fonts.googleapis.com"],
         fontSrc:     ["'self'", "fonts.gstatic.com", "https://fonts.gstatic.com", "data:"],
@@ -663,6 +664,7 @@ app.get('/', (req, res) => {
   res.setHeader('Content-Security-Policy', [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdnjs.cloudflare.com",
+    "script-src-attr 'unsafe-inline'",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: https: blob:",
