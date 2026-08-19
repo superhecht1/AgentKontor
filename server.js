@@ -653,6 +653,17 @@ app.get('/', (req, res) => {
   res.setHeader('Expires', '0');
   res.setHeader('Surrogate-Control', 'no-store');
   res.setHeader('Clear-Site-Data', '"cache", "storage"');
+  // Explizite CSP fuer Landing Page (Alpine.js benoetigt unsafe-eval)
+  res.setHeader('Content-Security-Policy', [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdnjs.cloudflare.com",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com data:",
+    "img-src 'self' data: https: blob:",
+    "connect-src 'self' https://api.anthropic.com https://fonts.googleapis.com",
+    "frame-src 'none'",
+    "object-src 'none'",
+  ].join('; '));
   const html = require('fs').readFileSync(
     require('path').join(__dirname, 'public', 'index.html'), 'utf8'
   );
