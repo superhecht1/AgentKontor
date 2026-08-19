@@ -1014,9 +1014,7 @@ input:checked+.slider::before{transform:translateX(18px)}
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px">
         <template x-for="a in agents.slice(0,6)" :key="a.id">
           <div @click="setMode('expert');page='agents';editAgent(a)"
-            style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;transition:border-color .15s"
-            onmouseover="this.style.borderColor='rgba(124,58,237,.4)'"
-            onmouseout="this.style.borderColor=''">
+            style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;transition:border-color .15s" @mouseover="$el.style.borderColor='rgba(124,58,237,.4)'" @mouseout="$el.style.borderColor=''">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
               <span style="font-size:1.3rem" x-text="a.emoji||'🤖'"></span>
               <div style="width:7px;height:7px;border-radius:50%" :style="a.is_active?'background:#10b981':'background:#4b5563'"></div>
@@ -1027,9 +1025,7 @@ input:checked+.slider::before{transform:translateX(18px)}
         </template>
         <!-- Agent erstellen -->
         <div @click="setMode('expert');page='agents';openNew()"
-          style="background:rgba(124,58,237,.05);border:1px dashed rgba(124,58,237,.3);border-radius:12px;padding:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;transition:all .15s"
-          onmouseover="this.style.background='rgba(124,58,237,.1)'"
-          onmouseout="this.style.background='rgba(124,58,237,.05)'">
+          style="background:rgba(124,58,237,.05);border:1px dashed rgba(124,58,237,.3);border-radius:12px;padding:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;transition:all .15s" @mouseover="$el.style.background='rgba(124,58,237,.1)'" @mouseout="$el.style.background='rgba(124,58,237,.05)'">
           <span style="font-size:1.3rem">＋</span>
           <div style="font-size:.72rem;color:var(--pu-l);font-weight:600">Neuer Agent</div>
         </div>
