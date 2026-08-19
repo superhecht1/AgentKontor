@@ -456,6 +456,237 @@ router.get('/users/search', auth, adminOnly, async (req, res) => {
   } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
 
+
+
+/* ── NUTZER DETAIL ──────────────────────────────────────────────────────── */
+router.get('/users/:id', auth, adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  try {
+    const [user, agents, activity, stats] = await Promise.all([
+      pool.query(`
+        SELECT u.*, COUNT(a.id) AS agent_count
+        FROM users u LEFT JOIN agents a ON a.user_id=u.id
+        WHERE u.id=$1 GROUP BY u.id`, [req.params.id]),
+      pool.query(`
+        SELECT id, name, emoji, is_active, total_messages, created_at, model
+        FROM agents WHERE user_id=$1 ORDER BY created_at DESC LIMIT 20`, [req.params.id]),
+      pool.query(`
+        SELECT type, detail, created_at FROM user_activity
+        WHERE user_id=$1 ORDER BY created_at DESC LIMIT 50
+      `, [req.params.id]).catch(() => ({ rows: [] })),
+      pool.query(`
+        SELECT
+          COALESCE(SUM(CASE WHEN DATE_TRUNC('month',created_at)=DATE_TRUNC('month',NOW()) THEN 1 ELSE 0 END),0) AS msgs_this_month,
+          COALESCE(SUM(1),0) AS msgs_total,
+          MAX(created_at) AS last_message
+        FROM conversations WHERE user_id=$1
+      `, [req.params.id]).catch(() => ({ rows: [{}] })),
+    ]);
+    if (!user.rows.length) return res.status(404).json({ error: 'Nutzer nicht gefunden' });
+    res.json({
+      user:     user.rows[0],
+      agents:   agents.rows,
+      activity: activity.rows,
+      stats:    stats.rows[0] || {},
+    });
+  } catch(e) {
+    console.error('USER DETAIL:', e.message);
+    res.status(500).json({ error: 'Fehler' });
+  }
+});
+
+/* ── NUTZER NOTIZEN ─────────────────────────────────────────────────────── */
+router.get('/users/:id/notes', auth, adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  const notes = await pool.query(
+    `SELECT id, note, admin_id, created_at FROM user_notes
+     WHERE user_id=$1 ORDER BY created_at DESC`, [req.params.id]
+  ).catch(() => ({ rows: [] }));
+  res.json({ notes: notes.rows });
+});
+
+router.post('/users/:id/notes', auth, adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  const { note } = req.body;
+  if (!note?.trim()) return res.status(400).json({ error: 'Notiz erforderlich' });
+  try {
+    await pool.query(
+      `CREATE TABLE IF NOT EXISTS user_notes (
+        id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        admin_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        note TEXT NOT NULL, created_at TIMESTAMPTZ DEFAULT now()
+      )`
+    );
+    const r = await pool.query(
+      'INSERT INTO user_notes (user_id, admin_id, note) VALUES ($1,$2,$3) RETURNING *',
+      [req.params.id, req.userId, note.trim().slice(0, 1000)]
+    );
+    res.json({ note: r.rows[0] });
+  } catch(e) { res.status(500).json({ error: 'Fehler' }); }
+});
+
+router.delete('/users/:id/notes/:noteId', auth, adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  await pool.query('DELETE FROM user_notes WHERE id=$1', [req.params.noteId]).catch(() => {});
+  res.json({ success: true });
+});
+
+/* ── NUTZER REAKTIVIEREN ────────────────────────────────────────────────── */
+router.post('/users/:id/restore', auth, adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  await pool.query(
+    'UPDATE users SET deleted_at=NULL, is_active=true WHERE id=$1', [req.params.id]
+  );
+  res.json({ success: true });
+});
+
+/* ── ADMIN PASSWORT-RESET ───────────────────────────────────────────────── */
+router.post('/users/:id/reset-password', auth, adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  const { newPassword } = req.body;
+  if (!newPassword || newPassword.length < 8)
+    return res.status(400).json({ error: 'Passwort mind. 8 Zeichen' });
+  try {
+    const bcrypt = require('bcryptjs');
+    const hash = await bcrypt.hash(newPassword, 12);
+    await pool.query(
+      'UPDATE users SET password_hash=$1, token_version=COALESCE(token_version,1)+1 WHERE id=$2',
+      [hash, req.params.id]
+    );
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: 'Fehler' }); }
+});
+
+/* ── NUTZER SEGMENTE/TAGS ───────────────────────────────────────────────── */
+router.post('/users/:id/tags', auth, adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  const { tags } = req.body; // Array von Strings
+  try {
+    await pool.query(
+      'UPDATE users SET tags=$1 WHERE id=$2',
+      [JSON.stringify(tags || []), req.params.id]
+    ).catch(() => {});
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: 'Fehler' }); }
+});
+
+/* ── BULK AKTIONEN ──────────────────────────────────────────────────────── */
+router.post('/users/bulk', auth, adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  const { ids, action, value } = req.body;
+  if (!ids?.length || !action) return res.status(400).json({ error: 'IDs und Aktion erforderlich' });
+  if (ids.length > 200) return res.status(400).json({ error: 'Max. 200 Nutzer auf einmal' });
+
+  try {
+    let affected = 0;
+    if (action === 'change_plan') {
+      const r = await pool.query(
+        `UPDATE users SET plan=$1 WHERE id=ANY($2::int[]) RETURNING id`,
+        [value, ids]
+      );
+      affected = r.rowCount;
+    } else if (action === 'delete') {
+      const r = await pool.query(
+        `UPDATE users SET deleted_at=now(), is_active=false WHERE id=ANY($1::int[]) AND is_admin=false RETURNING id`,
+        [ids]
+      );
+      affected = r.rowCount;
+    } else if (action === 'restore') {
+      const r = await pool.query(
+        `UPDATE users SET deleted_at=NULL, is_active=true WHERE id=ANY($1::int[]) RETURNING id`, [ids]
+      );
+      affected = r.rowCount;
+    } else if (action === 'email') {
+      const users = await pool.query('SELECT email, name FROM users WHERE id=ANY($1::int[])', [ids]);
+      const { sendMailBatch } = require('../utils/mailer');
+      const result = await sendMailBatch(users.rows, {
+        subject: value.subject,
+        htmlFn: (u) => '<p>Hallo ' + (u.name||'Kunde') + ',</p>' + (value.body||'').replace(/\n/g,'<br>'),
+        textFn: (u) => 'Hallo ' + (u.name||'Kunde') + ',\n\n' + (value.body||''),
+        from: process.env.MAIL_FROM || 'AgentKontor <noreply@agentkontor.de>',
+      });
+      return res.json({ success: true, sent: result.sent, failed: result.failed });
+    } else {
+      return res.status(400).json({ error: 'Unbekannte Aktion' });
+    }
+    res.json({ success: true, affected });
+  } catch(e) {
+    console.error('BULK:', e.message);
+    res.status(500).json({ error: 'Fehler' });
+  }
+});
+
+/* ── NUTZER ANLEGEN (Admin) ─────────────────────────────────────────────── */
+router.post('/users/create', auth, adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  const { name, email, password, plan = 'free' } = req.body;
+  if (!name || !email || !password)
+    return res.status(400).json({ error: 'Name, E-Mail und Passwort erforderlich' });
+  try {
+    const bcrypt = require('bcryptjs');
+    const hash = await bcrypt.hash(password, 12);
+    const r = await pool.query(
+      `INSERT INTO users (name, email, password_hash, plan, email_confirmed, is_active)
+       VALUES ($1,$2,$3,$4,true,true) RETURNING id, email, name, plan, created_at`,
+      [name.trim(), email.toLowerCase().trim(), hash, plan]
+    );
+    res.status(201).json({ user: r.rows[0] });
+  } catch(e) {
+    if (e.message?.includes('unique')) return res.status(409).json({ error: 'E-Mail bereits registriert' });
+    res.status(500).json({ error: 'Fehler' });
+  }
+});
+
+/* ── GEFILTERTE NUTZER-LISTE ────────────────────────────────────────────── */
+router.get('/users/filter', auth, adminOnly, async (req, res) => {
+  const pool = getPool(req);
+  const { plan, status, sort = 'created_at', order = 'desc', limit = 50, offset = 0, q } = req.query;
+
+  const conditions = [];
+  const params = [];
+  let i = 1;
+
+  if (plan && plan !== 'all') { conditions.push(`u.plan=$${i++}`); params.push(plan); }
+  if (status === 'active')  { conditions.push('u.deleted_at IS NULL AND u.is_active=true'); }
+  if (status === 'deleted') { conditions.push('u.deleted_at IS NOT NULL'); }
+  if (status === 'unconfirmed') { conditions.push('u.email_confirmed=false'); }
+  if (q) {
+    conditions.push(`(u.email ILIKE $${i} OR u.name ILIKE $${i})`);
+    params.push(`%${q}%`);
+    i++;
+  }
+
+  const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
+  const safeSort = ['created_at','last_login','msg_count_month','agent_count'].includes(sort) ? sort : 'created_at';
+  const safeOrder = order === 'asc' ? 'ASC' : 'DESC';
+
+  params.push(Math.min(parseInt(limit)||50, 200), parseInt(offset)||0);
+
+  try {
+    const [rows, total] = await Promise.all([
+      pool.query(`
+        SELECT u.id, u.email, u.name, u.plan, u.is_admin, u.created_at,
+               u.email_confirmed, u.is_active, u.deleted_at, u.last_login,
+               u.trial_ends_at, u.msg_count_month, u.stripe_customer_id,
+               COALESCE(u.company,'') AS company,
+               COUNT(a.id) AS agent_count
+        FROM users u
+        LEFT JOIN agents a ON a.user_id=u.id
+        ${where}
+        GROUP BY u.id
+        ORDER BY ${safeSort} ${safeOrder}
+        LIMIT $${i} OFFSET $${i+1}
+      `, params),
+      pool.query(`SELECT COUNT(*) FROM users u ${where}`, params.slice(0,-2))
+    ]);
+    res.json({ users: rows.rows, total: parseInt(total.rows[0].count), limit: parseInt(limit), offset: parseInt(offset) });
+  } catch(e) {
+    console.error('FILTER:', e.message);
+    res.status(500).json({ error: 'Fehler' });
+  }
+});
+
+
 module.exports = router;
 
 
