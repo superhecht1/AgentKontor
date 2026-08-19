@@ -3525,75 +3525,187 @@ https://anbieter3.de"></textarea></div>
 
 <!-- ── ONBOARDING WIZARD ── -->
 <div class="onboard-bg" x-show="showOnboarding" x-cloak>
-  <div class="onboard-card">
+  <div class="onboard-card" style="max-width:560px">
+
+    <!-- Progress Bar -->
     <div class="onboard-progress">
-      <div class="onboard-prog-fill" :style="'width:'+(onboardStep/3*100)+'%'"></div>
+      <div class="onboard-prog-fill" :style="'width:'+((onboardStep/4)*100)+'%'"></div>
     </div>
+
     <div class="onboard-body">
-      <div class="onboard-steps-dots">
-        <template x-for="i in [0,1,2,3]" :key="i"><div class="onboard-dot" :class="{on:onboardStep===i}"></div></template>
+
+      <!-- Schritt-Dots -->
+      <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:28px">
+        <template x-for="i in [0,1,2,3,4]" :key="i">
+          <div style="display:flex;align-items:center;gap:6px">
+            <div :style="'width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;transition:all .3s;'+(onboardStep>i?'background:var(--green);color:#fff':onboardStep===i?'background:var(--purple);color:#fff':'background:rgba(255,255,255,.08);color:var(--muted)')"
+                 x-text="onboardStep>i?'✓':(i+1)"></div>
+            <div x-show="i<4" style="width:20px;height:2px;border-radius:1px;transition:all .3s"
+                 :style="onboardStep>i?'background:var(--green)':'background:rgba(255,255,255,.08)'"></div>
+          </div>
+        </template>
       </div>
 
-      <!-- Step 0: Welcome -->
+      <!-- SCHRITT 0: Willkommen -->
       <div x-show="onboardStep===0">
-        <span class="onboard-step-ico">👋</span>
+        <span class="onboard-step-ico">🚀</span>
         <div class="onboard-title">Willkommen bei AgentKontor!</div>
-        <div class="onboard-sub">In wenigen Minuten ist dein erster KI-Agent live. Kein Code, kein Aufwand — versprochen.</div>
-        <div class="onboard-feats">
-          <div class="onboard-feat"><span class="onboard-feat-ico">🤖</span><div class="onboard-feat-txt"><strong>KI-Agenten</strong>Erstelle unbegrenzte Bots mit GPT-4o, Claude & mehr</div></div>
-          <div class="onboard-feat"><span class="onboard-feat-ico">🎯</span><div class="onboard-feat-txt"><strong>Lead-Erfassung</strong>Sammle automatisch Name, E-Mail & Telefon</div></div>
-          <div class="onboard-feat"><span class="onboard-feat-ico">📱</span><div class="onboard-feat-txt"><strong>Alle Kanäle</strong>Widget, WhatsApp, Telegram, REST-API</div></div>
-          <div class="onboard-feat"><span class="onboard-feat-ico">📊</span><div class="onboard-feat-txt"><strong>Analytics</strong>Gespräche, Leads, Conversion-Rate</div></div>
+        <div class="onboard-sub">In <strong style="color:var(--pu-l)">5 Minuten</strong> ist dein erster KI-Agent live. Wir führen dich durch jeden Schritt.</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px">
+          <div style="display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,.04);border-radius:10px">
+            <div style="font-size:1.4rem">🎨</div>
+            <div><div style="font-weight:700;font-size:.84rem;color:var(--white)">Vorlage wählen</div><div style="font-size:.75rem;color:var(--muted)">Branche und Einsatzzweck festlegen</div></div>
+            <div style="margin-left:auto;font-size:.72rem;color:var(--muted)">~1 Min</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,.04);border-radius:10px">
+            <div style="font-size:1.4rem">✏️</div>
+            <div><div style="font-weight:700;font-size:.84rem;color:var(--white)">Agent konfigurieren</div><div style="font-size:.75rem;color:var(--muted)">Name, Persönlichkeit und Begrüßung</div></div>
+            <div style="margin-left:auto;font-size:.72rem;color:var(--muted)">~2 Min</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,.04);border-radius:10px">
+            <div style="font-size:1.4rem">🤖</div>
+            <div><div style="font-weight:700;font-size:.84rem;color:var(--white)">KI-Prompt generieren</div><div style="font-size:.75rem;color:var(--muted)">Claude schreibt den System-Prompt für dich</div></div>
+            <div style="margin-left:auto;font-size:.72rem;color:var(--muted)">~1 Min</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,.04);border-radius:10px">
+            <div style="font-size:1.4rem">📋</div>
+            <div><div style="font-weight:700;font-size:.84rem;color:var(--white)">Widget einbetten</div><div style="font-size:.75rem;color:var(--muted)">1 Zeile Code auf deine Website</div></div>
+            <div style="margin-left:auto;font-size:.72rem;color:var(--muted)">~1 Min</div>
+          </div>
         </div>
-        <button class="btn btn-primary btn-full" @click="onboardStep=1">Los geht's →</button>
+        <button class="btn btn-primary btn-full" style="padding:14px" @click="onboardStep=1">Jetzt starten →</button>
+        <div style="text-align:center;margin-top:10px"><span class="link-muted" @click="finishOnboard()">Überspringen</span></div>
       </div>
 
-      <!-- Step 1: Choose template -->
+      <!-- SCHRITT 1: Vorlage wählen -->
       <div x-show="onboardStep===1">
         <span class="onboard-step-ico">🎨</span>
         <div class="onboard-title">Was soll dein Agent können?</div>
-        <div class="onboard-sub">Wähle eine Vorlage — du kannst später alles anpassen.</div>
+        <div class="onboard-sub">Wähle eine Vorlage als Ausgangspunkt. Alles ist danach anpassbar.</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px">
-          <template x-for="t in agentTemplates.slice(0,4)" :key="t.id">
-            <div class="wizard-step" :class="{done:selectedTemplate?.id===t.id}" @click="selectedTemplate=t">
-              <div class="wizard-num" x-text="t.emoji" style="font-size:1rem;width:32px;height:32px;border:none;background:rgba(255,255,255,.06)"></div>
-              <div class="wizard-txt"><strong x-text="t.name"></strong><span x-text="t.desc_de"></span></div>
+          <template x-for="t in [
+            {id:'vertrieb',  emoji:'💼', name:'Vertrieb & Lead-Gen',  desc:'Qualifiziert Interessenten und vereinbart Termine'},
+            {id:'support',   emoji:'🎧', name:'Kundenservice',         desc:'Beantwortet Fragen und löst Probleme'},
+            {id:'gastro',    emoji:'🍽️', name:'Gastronomie',           desc:'Reservierungen, Bestellungen, Speisekarte'},
+            {id:'praxis',    emoji:'🏥', name:'Arzt- / Praxis',        desc:'Terminbuchung, Erstfragen, DSGVO-konform'},
+            {id:'immo',      emoji:'🏡', name:'Immobilien',            desc:'Exposés erklären, Leads qualifizieren'},
+            {id:'ecommerce', emoji:'🛒', name:'E-Commerce',            desc:'Produktberatung, Versandinfo, Retouren'},
+          ]" :key="t.id">
+            <div @click="onboardTemplate=t"
+                 :style="'cursor:pointer;padding:12px;border-radius:12px;border:2px solid;transition:all .2s;'+
+                         (onboardTemplate?.id===t.id?'border-color:var(--purple);background:rgba(124,58,237,.12)':'border-color:rgba(255,255,255,.08);background:rgba(255,255,255,.03)')">
+              <div style="font-size:1.4rem;margin-bottom:5px" x-text="t.emoji"></div>
+              <div style="font-weight:700;font-size:.8rem;color:var(--white);margin-bottom:2px" x-text="t.name"></div>
+              <div style="font-size:.7rem;color:var(--muted);line-height:1.4" x-text="t.desc"></div>
             </div>
           </template>
         </div>
         <div style="display:flex;gap:8px">
           <button class="btn btn-ghost" @click="onboardStep=0">← Zurück</button>
-          <button class="btn btn-primary" style="flex:1" @click="onboardStep=2">Weiter →</button>
+          <button class="btn btn-primary" style="flex:1" :disabled="!onboardTemplate" @click="onboardStep=2">
+            Weiter →
+          </button>
         </div>
       </div>
 
-      <!-- Step 2: Name agent -->
+      <!-- SCHRITT 2: Konfigurieren -->
       <div x-show="onboardStep===2">
-        <span class="onboard-step-ico">✏️</span>
-        <div class="onboard-title">Wie heißt dein Agent?</div>
-        <div class="onboard-sub">Ein guter Name macht den Agenten persönlicher.</div>
-        <div class="field"><label>Name deines Agenten</label><input class="inp" x-model="af.name" placeholder="z.B. Mia, Max, Support-Bot" @keydown.enter="onboardStep=3"></div>
-        <div class="field"><label>Wofür ist er?</label><input class="inp" x-model="af.description" placeholder="z.B. Kundenservice für meine Website"></div>
-        <div style="display:flex;gap:8px;margin-top:4px">
+        <span class="onboard-step-ico" x-text="onboardTemplate?.emoji||'✏️'"></span>
+        <div class="onboard-title">Wie soll dein Agent heißen?</div>
+        <div class="onboard-sub">Ein persönlicher Name macht den Agenten sympathischer.</div>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px">
+          <div class="field">
+            <label>Name des Agenten</label>
+            <input class="inp" x-model="af.name" placeholder="z.B. Mia, Max, Lisa, Tom…" @keydown.enter="$el.blur()">
+          </div>
+          <div class="field">
+            <label>Dein Unternehmen / Website</label>
+            <input class="inp" x-model="onboardCompany" placeholder="z.B. Muster GmbH, muster.de">
+          </div>
+          <div class="field">
+            <label>Tone of Voice</label>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <template x-for="t in ['freundlich','professionell','herzlich','locker','seriös']" :key="t">
+                <div @click="af.tone=t"
+                     :style="'cursor:pointer;padding:5px 12px;border-radius:20px;font-size:.76rem;border:1px solid;transition:all .15s;'+(af.tone===t?'background:var(--purple);border-color:var(--purple);color:#fff':'border-color:rgba(255,255,255,.12);color:var(--muted)')"
+                     x-text="t"></div>
+              </template>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px">
           <button class="btn btn-ghost" @click="onboardStep=1">← Zurück</button>
-          <button class="btn btn-primary" style="flex:1" :disabled="!af.name" @click="onboardStep=3">Weiter →</button>
+          <button class="btn btn-primary" style="flex:1" :disabled="!af.name" @click="onboardStep=3;generateOnboardPrompt()">
+            KI-Prompt generieren →
+          </button>
         </div>
       </div>
 
-      <!-- Step 3: Create -->
+      <!-- SCHRITT 3: KI-Prompt -->
       <div x-show="onboardStep===3">
-        <span class="onboard-step-ico">🚀</span>
-        <div class="onboard-title">Alles bereit!</div>
-        <div class="onboard-sub">Dein Agent <strong x-text="af.name||'Mein Agent'"></strong> wird jetzt erstellt. Du kannst ihn danach direkt auf deiner Website einbetten.</div>
-        <div class="wizard-step done"><div class="wizard-num">✓</div><div class="wizard-txt"><strong>Agent erstellt</strong><span>Grundkonfiguration fertig</span></div></div>
-        <div class="wizard-step" style="opacity:.5"><div class="wizard-num">2</div><div class="wizard-txt"><strong>Widget einbetten</strong><span>Code auf deine Website kopieren</span></div></div>
-        <div class="wizard-step" style="opacity:.5"><div class="wizard-num">3</div><div class="wizard-txt"><strong>Live gehen</strong><span>Ersten Besucher begrüßen</span></div></div>
-        <div style="display:flex;gap:8px;margin-top:20px">
-          <button class="btn btn-ghost" @click="onboardStep=2">← Zurück</button>
-          <button class="btn btn-primary" style="flex:1" @click="applyTemplate();saveAgent();finishOnboard()">🚀 Agent erstellen</button>
+        <span class="onboard-step-ico">🤖</span>
+        <div class="onboard-title">System-Prompt wird generiert…</div>
+        <div class="onboard-sub">Claude schreibt einen professionellen Prompt basierend auf deinen Angaben.</div>
+        <!-- Loading -->
+        <div x-show="onboardGenerating" style="text-align:center;padding:24px 0">
+          <div style="display:flex;gap:5px;justify-content:center;margin-bottom:12px">
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--purple);animation:ak-bounce .9s infinite"></div>
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--purple);animation:ak-bounce .9s .15s infinite"></div>
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--purple);animation:ak-bounce .9s .3s infinite"></div>
+          </div>
+          <div style="font-size:.82rem;color:var(--muted)">Claude denkt nach…</div>
         </div>
-        <div style="text-align:center;margin-top:12px"><span class="link-muted" @click="finishOnboard()">Überspringen</span></div>
+        <!-- Result -->
+        <div x-show="!onboardGenerating&&af.system_prompt">
+          <textarea class="inp" x-model="af.system_prompt" rows="7"
+            style="font-size:.76rem;line-height:1.6;font-family:monospace;resize:vertical;margin-bottom:8px"></textarea>
+          <div style="font-size:.72rem;color:var(--muted);margin-bottom:16px">✏️ Du kannst den Prompt direkt bearbeiten.</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost" @click="onboardStep=2">← Zurück</button>
+          <button class="btn btn-ghost btn-sm" @click="generateOnboardPrompt()" x-show="!onboardGenerating">↺ Neu</button>
+          <button class="btn btn-primary" style="flex:1" :disabled="onboardGenerating||!af.system_prompt"
+                  @click="onboardStep=4;applyTemplate();saveAgent()">
+            Agent erstellen →
+          </button>
+        </div>
       </div>
+
+      <!-- SCHRITT 4: Fertig + Widget-Code -->
+      <div x-show="onboardStep===4">
+        <span class="onboard-step-ico">🎉</span>
+        <div class="onboard-title">Dein Agent ist live!</div>
+        <div class="onboard-sub"><strong style="color:var(--pu-l)" x-text="af.name||'Dein Agent'"></strong> ist fertig. Bette ihn jetzt auf deiner Website ein:</div>
+        <!-- Widget Code -->
+        <div style="background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:12px;margin-bottom:14px;font-family:monospace;font-size:.74rem;color:#a29bfe;word-break:break-all;cursor:pointer;position:relative"
+             @click="copyWidgetCode()">
+          <div style="position:absolute;top:6px;right:8px;font-size:.65rem;color:var(--muted)">Klicken zum Kopieren</div>
+          <span x-text="'<script src=\'https://'+window.location.hostname+'/widget.js\' data-agent=\'' + (agents[agents.length-1]?.id||'') + '\'><\/script>'"></span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+          <div style="display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--muted-l)">
+            <span style="color:var(--green)">✓</span> Agent erstellt und aktiv
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--muted-l)">
+            <span style="color:var(--green)">✓</span> Widget-Code bereit zum Einbetten
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--muted)">
+            <span>○</span> Widget auf Website eingebettet
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--muted)">
+            <span>○</span> Ersten Besucher begrüßen
+          </div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost" @click="finishOnboard();page='agents'" style="flex:1">
+            Agent bearbeiten
+          </button>
+          <button class="btn btn-primary" style="flex:1" @click="copyWidgetCode();finishOnboard()">
+            📋 Code kopieren & fertig
+          </button>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -4030,7 +4142,7 @@ get T(){return TRANSLATIONS[this.lang]||TRANSLATIONS.de;},
 toggleLang(){this.lang=this.lang==='de'?'en':'de';localStorage.setItem('ak_lang',this.lang);},
 agents:[],docs:[],toasts:[],saving:false,
 // Onboarding
-showOnboarding:false,onboardStep:0,onboardDone:false,
+showOnboarding:false,onboardStep:0,onboardTemplate:null,onboardCompany:'',onboardGenerating:false,onboardDone:false,
 tourActive:false,tourStep:0,
 // Insights (dashboard)
 insightFunnel:{sessions:0,engaged:0,leads:0,rate:0},
@@ -4290,7 +4402,18 @@ async resendConfirm(){
   this.authInfo='✅ Neuer Link gesendet an '+this.confirmEmail;
 },
 
-setUser(token,user){this.token=token;this.user=user;localStorage.setItem('ak_token',token);localStorage.setItem('ak_user',JSON.stringify(user));this.loadAgents();},
+setUser(token,user){
+  this.token=token;this.user=user;
+  localStorage.setItem('ak_token',token);
+  localStorage.setItem('ak_user',JSON.stringify(user));
+  this.loadAgents();
+  // Neue Nutzer → Onboarding nach 1s anzeigen
+  const key='ak_ob_'+((user&&user.id)||'x');
+  if(!localStorage.getItem(key)){
+    localStorage.setItem(key,'1');
+    setTimeout(()=>{this.showOnboarding=true;},1000);
+  }
+},
 logout(){this.token=null;this.user=null;localStorage.removeItem('ak_token');localStorage.removeItem('ak_user');},
 
 
