@@ -801,10 +801,19 @@ app.get('/chat/:publicId',          (req, res) => res.sendFile(path.join(__dirna
 
 
 // ── DEMO CHAT ENDPOINT (Landing Page, kein Auth nötig) ───────────────────────
-const demoLimiter = require('express-rate-limit').rateLimit({
-  windowMs: 60 * 1000, max: 10,
-  message: { error: 'Zu viele Anfragen. Bitte warte kurz.' }
-});
+// Einfacher In-Memory Rate-Limiter für Demo (kein externes Paket nötig)
+const _demoRequests = new Map();
+const demoLimiter = (req, res, next) => {
+  const ip  = req.ip || req.connection.remoteAddress || 'unknown';
+  const now = Date.now();
+  const key = `demo:${ip}`;
+  const rec = _demoRequests.get(key) || { count: 0, reset: now + 60000 };
+  if (now > rec.reset) { rec.count = 0; rec.reset = now + 60000; }
+  rec.count++;
+  _demoRequests.set(key, rec);
+  if (rec.count > 15) return res.status(429).json({ error: 'Zu viele Anfragen. Bitte warte kurz.' });
+  next();
+};
 
 app.post('/api/demo/chat', demoLimiter, async (req, res) => {
   const { messages } = req.body;
