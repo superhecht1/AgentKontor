@@ -106,6 +106,12 @@ async function initDb() {
     await pool.query(sql).catch(() => {});
   }
 
+
+  // Bestehende User ohne Bestätigungs-Token → automatisch als bestätigt markieren
+  await pool.query(
+    "UPDATE users SET email_confirmed=true WHERE email_confirmed IS NULL AND confirm_token IS NULL"
+  ).catch(() => {});
+
   console.log('✅ Kritische Spalten geprüft');
 
   // ── Phase 1-5 Tabellen direkt anlegen (nicht warten auf Migration-Tracking) ──
