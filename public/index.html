@@ -331,6 +331,53 @@ if ('serviceWorker' in navigator) {
     </div>
   </section>
 
+
+  <!-- LIVE DEMO -->
+  <section style="padding:0 0 60px">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-size:.74rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#5b4fcf;margin-bottom:8px">Live Demo</div>
+      <h2 style="font-size:1.6rem;font-weight:800;letter-spacing:-.02em;margin-bottom:8px">Probiere es jetzt aus &mdash; ohne Anmeldung</h2>
+      <p style="color:#7a786e;font-size:.9rem">Unser Demo-Agent beantwortet Fragen zu AgentKontor.</p>
+    </div>
+    <div style="max-width:460px;margin:0 auto;background:#fff;border-radius:16px;border:1px solid #e8e6e0;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.08)">
+      <div style="padding:14px 16px;border-bottom:1px solid #f0ede8;display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:50%;background:#5b4fcf;display:flex;align-items:center;justify-content:center;font-size:1.1rem">&#x1F916;</div>
+        <div>
+          <div style="font-weight:700;font-size:.88rem">AgentKontor Demo</div>
+          <div style="font-size:.72rem;color:#00a878">&#x25CF; Online</div>
+        </div>
+      </div>
+      <div id="demo-msgs" style="padding:16px;min-height:180px;max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:10px">
+        <div style="background:#f4f3ef;border-radius:4px 12px 12px 12px;padding:10px 14px;font-size:.84rem;max-width:85%;line-height:1.5">
+          &#x1F44B; Hallo! Ich bin der Demo-Agent. Was m&ouml;chtest du wissen?
+        </div>
+      </div>
+      <div id="demo-chips" style="padding:0 12px 10px;display:flex;gap:6px;flex-wrap:wrap">
+        <button onclick="demoAsk('Preise?')" style="font-size:.72rem;padding:5px 10px;border-radius:20px;border:1px solid #e8e6e0;background:#fff;cursor:pointer">&#x1F4B0; Preise?</button>
+        <button onclick="demoAsk('Super Agent?')" style="font-size:.72rem;padding:5px 10px;border-radius:20px;border:1px solid #e8e6e0;background:#fff;cursor:pointer">&#x1F3AF; Super Agent?</button>
+        <button onclick="demoAsk('KI-Modelle?')" style="font-size:.72rem;padding:5px 10px;border-radius:20px;border:1px solid #e8e6e0;background:#fff;cursor:pointer">&#x1F916; KI-Modelle?</button>
+        <button onclick="demoAsk('DSGVO?')" style="font-size:.72rem;padding:5px 10px;border-radius:20px;border:1px solid #e8e6e0;background:#fff;cursor:pointer">&#x1F512; DSGVO?</button>
+      </div>
+      <div style="padding:10px 12px;border-top:1px solid #f0ede8;display:flex;gap:8px">
+        <input id="demo-input" type="text" placeholder="Frage stellen..."
+               style="flex:1;padding:9px 12px;border:1px solid #e8e6e0;border-radius:8px;font-size:.84rem;outline:none"
+               onkeydown="if(event.key==='Enter')demoSend()">
+        <button onclick="demoSend()"
+                style="padding:9px 16px;background:#5b4fcf;color:#fff;border:none;border-radius:8px;font-size:.84rem;font-weight:600;cursor:pointer">&#x2192;</button>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:16px">
+      <a href="/app" style="font-size:.82rem;color:#5b4fcf;text-decoration:none;font-weight:600">Eigenen Agenten erstellen &rarr; kostenlos</a>
+    </div>
+  </section>
+  <script>
+  var DEMO_A={preise:'AgentKontor kostet kostenlos (3 Agenten) oder 19 Euro/Monat im Pro-Plan mit unbegrenzten Agenten, 10.000 Nachrichten und allen Features inkl. Super Agent Mode.',super:'Der Super Agent Mode ist einzigartig: Gib ein Ziel an und AgentKontor erstellt automatisch eine Kampagne mit konkreten Schritten. Du genehmigst kritische Aktionen.',modell:'14 KI-Modelle: Claude, GPT-4o, Gemini, Mistral (EU), Groq und DeepSeek. Pro Agent frei waehlbar.',dsgvo:'Ja, DSGVO-konform. AES-256-Verschluesselung, EU-Hosting, AVV auf Anfrage. Datenschutzerklaerung integriert.',whatsapp:'Ja! Offizielle WhatsApp Business API und Telegram nativ integriert.',marketplace:'Im Marketplace findest du 12 Branchen-Agenten fuer Vertrieb, Gastro, Arztpraxis und Immobilien.',def:'Gute Frage! Teste AgentKontor kostenlos und erkunde alle Features selbst: agentkontor.de/app'};
+  function demoMatch(q){q=q.toLowerCase();if(q.includes('preis')||q.includes('kostet')||q.includes('euro'))return DEMO_A.preise;if(q.includes('super'))return DEMO_A.super;if(q.includes('modell')||q.includes('claude')||q.includes('gpt'))return DEMO_A.modell;if(q.includes('dsgvo')||q.includes('datenschutz'))return DEMO_A.dsgvo;if(q.includes('whatsapp')||q.includes('telegram'))return DEMO_A.whatsapp;if(q.includes('market'))return DEMO_A.marketplace;return DEMO_A.def;}
+  function demoAdd(t,u){var m=document.getElementById('demo-msgs'),d=document.createElement('div');d.style.cssText=u?'background:#5b4fcf;color:#fff;border-radius:12px 4px 12px 12px;padding:10px 14px;font-size:.84rem;max-width:85%;align-self:flex-end;line-height:1.5':'background:#f4f3ef;border-radius:4px 12px 12px 12px;padding:10px 14px;font-size:.84rem;max-width:85%;line-height:1.5';d.textContent=t;m.appendChild(d);m.scrollTop=m.scrollHeight;}
+  function demoAsk(q){demoAdd(q,true);setTimeout(function(){demoAdd(demoMatch(q),false);document.getElementById('demo-chips').style.display='none';},700);}
+  function demoSend(){var i=document.getElementById('demo-input'),q=i.value.trim();if(!q)return;i.value='';demoAsk(q);}
+  </script>
+
   <!-- HOW IT WORKS -->
   <section class="section" style="padding-top:0">
     <div class="section-label">So funktioniert's</div>

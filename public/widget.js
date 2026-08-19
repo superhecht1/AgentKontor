@@ -31,6 +31,8 @@
   async function init() {
     const cfg = await loadConfig();
     if (!cfg || !cfg.widget_enabled) return;
+    setupProactive(cfg);
+    initProactive(cfg);
 
     const position  = cfg.widget_position || 'right';   // 'right' | 'left'
     const delay     = parseInt(cfg.widget_delay)  || 0; // seconds before auto-open
@@ -77,6 +79,7 @@
         opacity:0; transform:translateY(12px) scale(.97);
       }
       #ak-widget-frame.open { opacity:1; transform:translateY(0) scale(1); }
+      @keyframes ak-pop { from { opacity:0; transform:translateY(8px) scale(.95); } to { opacity:1; transform:none; } }
       .ak-hdr {
         padding:12px 14px; display:flex; align-items:center; gap:10px;
         border-bottom:1px solid ${borderClr};
@@ -450,9 +453,54 @@
     });
   }
 
+
+  // ── DSGVO CONSENT ────────────────────────────────────
+  function checkConsent(cb) {
+    if (window.AK_REQUIRE_CONSENT && localStorage.getItem('ak_consent') !== '1') {
+      var bar = document.createElement('div');
+      bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#1a1a2e;color:#fff;padding:12px 20px;font-family:sans-serif;font-size:.82rem;display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:2147483647;flex-wrap:wrap';
+      bar.innerHTML = '<span>Dieser Chat nutzt KI. Mit Nutzung stimmst du der <a href="/datenschutz.html" style="color:#a29bfe">Datenschutzerklaerung</a> zu.</span><div style="display:flex;gap:8px"><button id="ak-yes" style="padding:6px 14px;background:#5b4fcf;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.8rem">OK</button><button id="ak-no" style="padding:6px 14px;background:transparent;border:1px solid #555;color:#aaa;border-radius:6px;cursor:pointer;font-size:.8rem">Ablehnen</button></div>';
+      document.body.appendChild(bar);
+      document.getElementById('ak-yes').onclick = function() { localStorage.setItem('ak_consent','1'); bar.remove(); cb(); };
+      document.getElementById('ak-no').onclick  = function() { bar.remove(); };
+    } else { cb(); }
+  }
+
+  // ── PROAKTIVE NACHRICHT ───────────────────────────────
+  function setupProactive(cfg) {
+    if (!cfg.proactive_enabled || !cfg.proactive_message) return;
+    var delay   = parseInt(cfg.proactive_delay) || 30;
+    var trigger = cfg.proactive_trigger || 'time';
+    var shown   = false;
+
+    function showBubble() {
+      if (shown) return; shown = true;
+      var badge = document.querySelector('#ak-widget-btn .ak-badge');
+      if (badge) badge.style.display = 'block';
+      var bSize = parseInt(cfg.widget_size) || 56;
+      var hSide = (cfg.widget_position || 'right') === 'left' ? 'left:80px' : 'right:80px';
+      var b = document.createElement('div');
+      b.style.cssText = 'position:fixed;bottom:'+(bSize+30)+'px;'+hSide+';background:#fff;border:1px solid #e0e0e0;border-radius:12px 12px 4px 12px;padding:10px 14px;font-size:.84rem;max-width:220px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:2147483646;cursor:pointer;color:#1a1a2e;line-height:1.4;animation:ak-pop .2s';
+      b.textContent = cfg.proactive_message;
+      b.onclick = function() { b.remove(); var btn=document.getElementById('ak-widget-btn'); if(btn)btn.click(); };
+      document.body.appendChild(b);
+      setTimeout(function() { if(b.parentNode) b.remove(); }, 8000);
+    }
+
+    if (trigger === 'scroll') {
+      var handler = function() {
+        var pct = (window.scrollY/(document.body.scrollHeight-window.innerHeight))*100;
+        if (pct >= (parseInt(cfg.proactive_scroll)||50)) { window.removeEventListener('scroll',handler); showBubble(); }
+      };
+      window.addEventListener('scroll', handler, {passive:true});
+    } else {
+      setTimeout(showBubble, delay * 1000);
+    }
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', function() { checkConsent(init); });
   } else {
-    init();
+    checkConsent(init);
   }
 })();
