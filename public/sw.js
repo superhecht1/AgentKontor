@@ -5,7 +5,7 @@
    - Nur same-origin Assets cachen
 ═══════════════════════════════════════════════════════ */
 
-const CACHE_NAME = 'agentkontor-v3';
+const CACHE_NAME = 'agentkontor-v4';
 
 // Nur eigene Dateien cachen
 const SHELL_ASSETS = ['/app.html', '/manifest.json'];
@@ -23,13 +23,18 @@ self.addEventListener('install', e => {
 
 // ── Activate ─────────────────────────────────────────────────────────────────
 self.addEventListener('activate', e => {
-  // Alle alten Caches löschen
   e.waitUntil(
     caches.keys()
       .then(keys => Promise.all(
         keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
       ))
       .then(() => self.clients.claim())
+      .then(() => {
+        // Alle offenen Tabs nach Update neu laden
+        return self.clients.matchAll({ type: 'window' }).then(clients => {
+          clients.forEach(c => c.navigate(c.url));
+        });
+      })
   );
 });
 

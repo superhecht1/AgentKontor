@@ -137,6 +137,21 @@ footer{padding:40px 0;border-top:1px solid var(--border)}
   .uc-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
 }
 </style>
+<script>
+// SW-Cache-Buster: alten Service Worker deregistrieren damit neue index.html sichtbar wird
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(reg => {
+      // Wenn SW aktiv aber nicht v4 → deregistrieren
+      reg.active && fetch('/sw.js').then(r => r.text()).then(text => {
+        if (!text.includes('agentkontor-v4')) {
+          reg.unregister().then(() => location.reload());
+        }
+      }).catch(() => {});
+    });
+  });
+}
+</script>
 </head>
 <body>
 
