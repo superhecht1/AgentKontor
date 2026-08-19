@@ -883,7 +883,76 @@ input:checked+.slider::before{transform:translateX(18px)}
 <div class="layout">
 
   <!-- SIDEBAR -->
-  <div class="sidebar" :class="{collapsed:sidebarCollapsed}">
+  
+<!-- EINFACHER MODUS -->
+<div x-show="appMode==='simple'" style="min-height:calc(100vh - 56px);display:flex;flex-direction:column;align-items:center;padding:40px 20px 80px">
+  <div style="text-align:center;max-width:600px;margin-bottom:40px">
+    <div style="font-size:3rem;margin-bottom:12px">&#x1F9BE;</div>
+    <h1 style="font-size:clamp(1.6rem,4vw,2.4rem);font-weight:800;letter-spacing:-.03em;color:var(--white);margin-bottom:10px;line-height:1.2">Was moechtest du<br>erreichen?</h1>
+    <p style="color:var(--muted-l);font-size:.95rem;line-height:1.6">Beschreibe dein Ziel. Der Super Agent plant und handelt &mdash; du lehnst dich zurueck.</p>
+  </div>
+  <div style="width:100%;max-width:580px;margin-bottom:32px">
+    <div style="background:var(--surface-2);border:2px solid var(--border);border-radius:16px;padding:20px">
+      <textarea x-model="simpleGoal" placeholder="z.B. Ich moechte 20 neue Kunden im Quartal gewinnen." rows="4"
+        style="width:100%;background:transparent;border:none;outline:none;color:var(--white);font-size:.95rem;line-height:1.6;resize:none;font-family:inherit"
+        @keydown.ctrl.enter="startSimpleGoal()" :disabled="simpleRunning"></textarea>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;flex-wrap:wrap;gap:8px">
+        <div style="font-size:.72rem;color:var(--muted)">Strg+Enter zum Starten</div>
+        <button @click="startSimpleGoal()" :disabled="simpleRunning||!simpleGoal.trim()" class="btn btn-primary" style="padding:10px 24px;font-size:.9rem">
+          <span x-show="!simpleRunning">&#x26A1; Auftrag starten</span>
+          <span x-show="simpleRunning">&#x23F3; Laeuft&#x2026;</span>
+        </button>
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">
+      <span style="font-size:.72rem;color:var(--muted)">Beispiele:</span>
+      <template x-for="ex in ['20 neue Leads generieren','Wettbewerber analysieren','E-Mail-Kampagne planen','Content-Kalender erstellen']" :key="ex">
+        <button @click="simpleGoal='Ich moechte: '+ex" style="font-size:.72rem;padding:3px 10px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted-l);cursor:pointer" x-text="ex"></button>
+      </template>
+    </div>
+  </div>
+  <!-- Auftraege -->
+  <div style="width:100%;max-width:580px" x-show="simpleGoals.length>0">
+    <div style="font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">Meine Auftraege</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <template x-for="g in simpleGoals" :key="g.id">
+        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px" :style="g.status==='running'?'border-color:rgba(245,166,0,.3);':''">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+            <div style="flex:1;min-width:0">
+              <div style="display:inline-flex;align-items:center;gap:4px;font-size:.7rem;font-weight:700;margin-bottom:6px;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.05)"
+                   :style="'color:'+simpleStatusColor(g.status)" x-text="simpleStatusLabel(g.status)"></div>
+              <div style="font-size:.88rem;font-weight:600;color:var(--white);margin-bottom:4px;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
+                   x-text="g.raw_goal||g.goal_title||'Auftrag #'+g.id"></div>
+              <div x-show="g.status==='running'" style="margin-top:8px">
+                <div style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--muted);margin-bottom:4px"><span>Fortschritt</span><span x-text="(g.progress||0)+'%'"></span></div>
+                <div style="height:4px;background:var(--surface-3);border-radius:2px;overflow:hidden">
+                  <div style="height:100%;background:linear-gradient(90deg,var(--purple),var(--amber));border-radius:2px;transition:width .5s" :style="'width:'+(g.progress||0)+'%'"></div>
+                </div>
+              </div>
+              <div x-show="g.status==='completed'&&g.result_summary" style="font-size:.78rem;color:var(--muted-l);margin-top:6px;line-height:1.5" x-text="g.result_summary"></div>
+              <div style="font-size:.7rem;color:var(--muted);margin-top:6px" x-text="new Date(g.created_at).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+              <button x-show="g.status==='running'" @click="cancelSimpleGoal(g.id)" class="btn btn-xs btn-ghost">&#x23F9;</button>
+              <button x-show="g.status==='completed'" @click="setMode('expert');page='goals'" class="btn btn-xs btn-ghost">&#x1F50D;</button>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+    <div style="text-align:center;margin-top:14px">
+      <span @click="setMode('expert');page='goals'" style="font-size:.78rem;color:var(--muted);cursor:pointer;text-decoration:underline">Alle Auftraege im Expertenbereich &#x2192;</span>
+    </div>
+  </div>
+  <div style="margin-top:48px;text-align:center;padding:16px 20px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;max-width:400px">
+    <div style="font-size:.78rem;color:var(--muted);margin-bottom:6px">Du willst mehr Kontrolle?</div>
+    <button @click="setMode('expert')" style="font-size:.8rem;color:var(--pu-l);background:transparent;border:none;cursor:pointer;font-weight:600">&#x1F527; Expertenmodus oeffnen &#x2192;</button>
+    <div style="font-size:.7rem;color:var(--muted);margin-top:4px">Tools &middot; Memory &middot; Planner &middot; APIs &middot; Webhooks &middot; Modelle</div>
+  </div>
+</div>
+<!-- EXPERTENMODUS -->
+<div x-show="appMode==='expert'" style="display:contents">
+<div class="sidebar" :class="{collapsed:sidebarCollapsed}">
     <div class="sb-top">
       <div class="sb-logo">
         <div class="sb-logo-icon">🤖</div>
@@ -1251,6 +1320,19 @@ input:checked+.slider::before{transform:translateX(18px)}
           </div>
           <div style="display:flex;gap:8px;justify-content:center">
             <button class="btn btn-ghost btn-sm" @click="showOnboarding=true;onboardStep=0">👋 Setup-Wizard</button>
+          <!-- Mode Toggle -->
+          <div style="display:flex;align-items:center;background:var(--surface-2);border:1px solid var(--border);border-radius:20px;padding:3px;gap:2px">
+            <button @click="setMode('simple')"
+              :style="appMode==='simple'?'background:var(--purple);color:#fff;':'color:var(--muted);'"
+              style="padding:4px 10px;border-radius:16px;font-size:.72rem;font-weight:600;border:none;cursor:pointer;transition:all .2s">
+              ⚡ Einfach
+            </button>
+            <button @click="setMode('expert')"
+              :style="appMode==='expert'?'background:var(--purple);color:#fff;':'color:var(--muted);'"
+              style="padding:4px 10px;border-radius:16px;font-size:.72rem;font-weight:600;border:none;cursor:pointer;transition:all .2s">
+              🔧 Experte
+            </button>
+          </div>
             <button class="btn btn-primary" @click="openNew()">+ Leerer Agent</button>
           </div>
         </div>
@@ -4120,6 +4202,8 @@ https://anbieter3.de"></textarea></div>
     </div>
   </div>
 </div>
+</div><!-- /expert -->
+
 
 <script>
 const TRANSLATIONS={de:{signin:'Anmelden',register:'Registrieren',password:'Passwort',signing_in:'Anmelden...',sign_in_now:'Jetzt anmelden',full_name:'Vollständiger Name',password_min:'Passwort (min. 8 Zeichen)',creating:'Erstellen...',start_free:'Kostenlos starten',no_sub:'Kein Abo · Keine Kreditkarte',dashboard:'Dashboard',my_agents:'Meine Agenten',docs:'Dokumentation',settings:'Einstellungen',dev:'Entwickler',account_nav:'Konto',logout:'Abmelden',welcome_back:'Willkommen zurück',new_agent:'Neuer Agent',agents:'Agenten',active:'Aktiv',messages:'Nachrichten',your_agents:'Deine Agenten',no_agent_yet:'Noch kein Agent',create_first:'Erstelle deinen ersten KI-Agenten.',active_badge:'Aktiv',inactive_badge:'Inaktiv',last_30:'Letzte 30 Tage',export_leads_csv:'Leads CSV',loading:'Lade Daten…',msgs_per_day:'Nachrichten / Tag',by_channel:'Nach Kanal',no_leads:'Noch keine Leads.',agent:'Agent',contact:'Kontakt',date:'Datum',plan_usage:'Plan & Nutzung',plan_desc:'Dein aktueller Plan.',active_until:'aktiv bis',manage_sub:'Abo verwalten',profile:'Profil',profile_desc:'Name ändern.',name:'Name',save:'Speichern',change_password:'Passwort ändern',pw_desc:'Min. 8 Zeichen.',current_pw:'Aktuelles Passwort',new_pw:'Neues Passwort',repeat_pw:'Wiederholen',pw_success:'Passwort geändert ✓',change_email:'E-Mail ändern',current_email:'Aktuelle E-Mail',new_email:'Neue E-Mail',pw_confirm:'Passwort bestätigen',email_success:'E-Mail geändert ✓',data_export:'Daten exportieren',data_export_desc:'DSGVO Art. 20 — JSON-Export aller Daten.',download_data:'Meine Daten exportieren',delete_account:'Konto löschen',delete_desc:'Löscht alle Daten unwiderruflich.',type_delete:'Zur Bestätigung "LÖSCHEN" eingeben',choose_template:'Vorlage auswählen',blank_agent:'Leerer Agent',use_template:'Vorlage nutzen',cancel:'Abbrechen',edit_agent:'Agent bearbeiten',create_agent:'Neuen Agenten erstellen',basics:'Grundlagen',behavior:'Verhalten',knowledge:'Wissen',capabilities:'Fähigkeiten',integrations:'Integrationen',conversations:'Gespräche',preview:'Vorschau',embed:'Einbetten',total:'Gesamt',today:'Heute',identity:'Identität',eg_name:'z.B. Mia, Support-Bot',language:'Sprache',description:'Beschreibung',desc_placeholder:'Wofür ist dieser Agent?',color:'Farbe',system_prompt:'System-Prompt',system_prompt_hint:'Persönlichkeit, Aufgaben und Regeln des Agenten.',system_prompt_ph:'Du bist [Name], ein KI-Assistent für [Unternehmen]...',greeting:'Begrüßung',greeting_ph:'Hallo! Wie kann ich helfen?',tone:'Kommunikationsstil',quick_replies:'Schnellantworten (max. 5)',suggestion:'Vorschlag...',rag_enable:'RAG aktivieren',rag_desc:'Agent nutzt hochgeladene Dokumente als Wissensbasis.',rag_instruction:'RAG-Anweisung',rag_ph:'Nutze die bereitgestellten Dokumente...',upload_file:'Datei hochladen (Drag & Drop)',uploading:'Wird hochgeladen...',no_docs:'Noch keine Dokumente hochgeladen.',save_first_rag:'Speichere den Agenten zuerst, dann Dokumente hochladen.',book_appointments:'Termine buchen',book_appointments_desc:'Agent verlinkt zu Calendly oder ähnlichem.',capture_leads:'Leads erfassen',capture_leads_desc:'Agent sammelt Name, E-Mail und weitere Daten.',lead_fields_ph:'Name, E-Mail, Telefon',lead_email_ph:'Benachrichtigungs-E-Mail für Leads',recommend_products:'Produkte empfehlen',recommend_products_desc:'Agent kennt dein Produktsortiment.',add_product:'+ Produkt',multilang:'Mehrsprachig',multilang_desc:'Erkennt Sprache des Nutzers automatisch.',send_email:'E-Mails senden',send_email_desc:'Agent sendet E-Mails über SMTP (z.B. Brevo).',smtp_from_ph:'Absender-E-Mail',agent_active:'Agent aktiv',public_chat:'Öffentliche Chat-Seite',public_chat_desc:'Teile einen Link — jeder kann ohne Login chatten.',widget_desc:'Chat-Widget auf deiner Website einbetten.',widget_customizer:'Widget anpassen',position:'Position',right:'Rechts unten',left:'Links unten',auto_open_after:'Auto-öffnen nach',never:'Nie',button_size:'Schaltfläche',setup_guide:'Einrichten',conversations_total:'Gespräche',export_csv:'Gespräche CSV',no_conversations:'Noch keine Gespräche mit diesem Agenten.',user_msgs:'Nutzer-Nachrichten',back:'Zurück',load_more:'Mehr laden',delete:'Löschen',save_agent:'💾 Speichern',saving:'Speichern...',what_can_you_do:'Was kannst du?',happy_to_help:'Ich helfe gerne!',message_ph:'Nachricht eingeben...',upgrade_pro:'Auf Pro upgraden',upgrade_desc:'Alle Kanäle · Unbegrenzte Agenten · Webhooks',plan_free_1:'3 Agenten',plan_free_2:'500 Nachrichten/Mo',plan_free_3:'Chat-Seite & Widget',plan_free_4:'API / WA / TG',plan_free_5:'Outgoing Webhooks',plan_pro_1:'Unbegrenzte Agenten',plan_pro_2:'10.000 Nachrichten/Mo',plan_pro_3:'Alle Kanäle (API, WA, TG)',plan_pro_4:'Outgoing Webhooks',plan_pro_5:'Fine-Tuning (OpenAI)',upgrade_now:'⚡ Jetzt für €19/Mo upgraden',redirecting:'Weiterleitung zu Stripe...',stripe_note:'Sichere Zahlung via Stripe · Jederzeit kündbar',welcome_to:'Willkommen bei AgentKontor!',onboard_1:'In wenigen Minuten ist dein erster KI-Agent live.',onboard_2_title:'Agent bauen',onboard_2_text:'Gib deinem Agenten einen Namen, eine Persönlichkeit und einen Fokus — kein Code nötig.',onboard_3_title:'Kanal wählen',onboard_3_text:'Website, WhatsApp, Telegram oder REST API — alles per Klick aktivierbar.',create_first_agent:'Ersten Agenten erstellen →',later:'Später',lets_go:"Los geht's →",
@@ -4136,6 +4220,8 @@ clone_success:'Agent cloned ✓'}};
 
 function app(){return{
 user:null,token:null,page:'dashboard',lang:'de',
+    appMode: localStorage.getItem('ak_mode')||'simple', // 'simple' | 'expert'
+    simpleGoal:'',simpleGoals:[],simpleRunning:false,simpleResult:null,
 authTab:'login',authErr:'',authInfo:'',loading:false,confirmEmail:'',registerSuccess:false,
 lf:{email:'',password:''},rf:{name:'',email:'',password:''},
 get T(){return TRANSLATIONS[this.lang]||TRANSLATIONS.de;},
@@ -4402,6 +4488,41 @@ async resendConfirm(){
   this.authInfo='✅ Neuer Link gesendet an '+this.confirmEmail;
 },
 
+
+setMode(m){
+  this.appMode=m;
+  localStorage.setItem('ak_mode',m);
+  if(m==='simple') this.loadSimpleGoals();
+},
+async loadSimpleGoals(){
+  const d=await this.api('/goals?limit=10').catch(()=>({goals:[]}));
+  this.simpleGoals=(d.goals||[]).slice(0,5);
+},
+async startSimpleGoal(){
+  if(!this.simpleGoal.trim()){this.toast('Beschreibe dein Ziel','err');return;}
+  this.simpleRunning=true;this.simpleResult=null;
+  const d=await this.api('/goals','POST',{
+    goal:this.simpleGoal,
+    model:'claude-sonnet-4-6',
+    context:'Einfacher Modus — Super Agent soll selbstständig handeln und Ergebnisse liefern.'
+  }).catch(e=>({error:e.message}));
+  this.simpleRunning=false;
+  if(d.error){this.toast(d.error,'err');return;}
+  this.simpleGoal='';
+  this.toast('Super Agent gestartet! ✓');
+  await this.loadSimpleGoals();
+},
+async cancelSimpleGoal(id){
+  await this.api('/goals/'+id+'/cancel','POST',{}).catch(()=>{});
+  await this.loadSimpleGoals();
+},
+simpleStatusLabel(s){
+  return {analyzing:'🔍 Analysiert…',planning:'📋 Plant…',running:'⚡ Läuft…',
+          completed:'✅ Fertig',failed:'❌ Fehler',cancelled:'⏹ Abgebrochen'}[s]||s;
+},
+simpleStatusColor(s){
+  return {running:'var(--amber)',completed:'var(--green)',failed:'var(--rose)',cancelled:'var(--muted)'}[s]||'var(--muted-l)';
+},
 setUser(token,user){
   this.token=token;this.user=user;
   localStorage.setItem('ak_token',token);
