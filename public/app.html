@@ -885,71 +885,172 @@ input:checked+.slider::before{transform:translateX(18px)}
   <!-- SIDEBAR -->
   
 <!-- EINFACHER MODUS -->
-<div x-show="appMode==='simple'" style="min-height:calc(100vh - 56px);display:flex;flex-direction:column;align-items:center;padding:40px 20px 80px">
-  <div style="text-align:center;max-width:600px;margin-bottom:40px">
-    <div style="font-size:3rem;margin-bottom:12px">&#x1F9BE;</div>
-    <h1 style="font-size:clamp(1.6rem,4vw,2.4rem);font-weight:800;letter-spacing:-.03em;color:var(--white);margin-bottom:10px;line-height:1.2">Was moechtest du<br>erreichen?</h1>
-    <p style="color:var(--muted-l);font-size:.95rem;line-height:1.6">Beschreibe dein Ziel. Der Super Agent plant und handelt &mdash; du lehnst dich zurueck.</p>
+<div x-show="appMode==='simple'" x-init="if(token)loadSimpleGoals()" style="min-height:calc(100vh - 56px);background:var(--bg2)">
+
+  <!-- Personalisierter Header -->
+  <div style="background:linear-gradient(135deg,rgba(124,58,237,.15),rgba(91,79,207,.05));border-bottom:1px solid rgba(124,58,237,.15);padding:28px 28px 24px">
+    <div style="max-width:720px;margin:0 auto">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+        <div>
+          <div style="font-size:1.6rem;font-weight:800;color:var(--white);letter-spacing:-.03em" x-text="(new Date().getHours()<12?'☀️ Guten Morgen':'👋 Hallo')+', '+(user?.name?.split(' ')[0]||'')+'!'"></div>
+          <div style="font-size:.82rem;color:var(--muted-l);margin-top:3px">Was steht heute an?</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:8px 14px;text-align:center">
+            <div style="font-size:1.2rem;font-weight:800;color:var(--white)" x-text="agents.filter(a=>a.is_active).length"></div>
+            <div style="font-size:.65rem;color:var(--muted)">Aktive Agenten</div>
+          </div>
+          <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:8px 14px;text-align:center">
+            <div style="font-size:1.2rem;font-weight:800;color:var(--amber)" x-text="dashLeads||0"></div>
+            <div style="font-size:.65rem;color:var(--muted)">Leads / Monat</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ziel-Eingabe -->
+      <div style="background:rgba(0,0,0,.25);border:1.5px solid rgba(124,58,237,.3);border-radius:14px;padding:16px 18px;transition:border-color .2s"
+           @focusin="$el.style.borderColor='rgba(124,58,237,.7)'"
+           @focusout="$el.style.borderColor='rgba(124,58,237,.3)'">
+        <div style="font-size:.72rem;font-weight:700;color:var(--pu-l);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">🦾 Neuer Auftrag</div>
+        <textarea x-model="simpleGoal"
+          placeholder="Beschreibe dein Ziel… z.B. &quot;20 neue Kunden im Quartal gewinnen&quot; oder &quot;Wettbewerber analysieren&quot;"
+          rows="2"
+          style="width:100%;background:transparent;border:none;outline:none;color:var(--white);font-size:.92rem;line-height:1.5;resize:none;font-family:inherit"
+          @keydown.ctrl.enter="startSimpleGoal()"
+          :disabled="simpleRunning"></textarea>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:8px">
+          <div style="display:flex;gap:5px;flex-wrap:wrap">
+            <button @click="simpleGoal='20 neue Leads generieren'" style="font-size:.7rem;padding:3px 9px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:transparent;color:var(--muted-l);cursor:pointer">Leads generieren</button>
+            <button @click="simpleGoal='Wettbewerber analysieren'" style="font-size:.7rem;padding:3px 9px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:transparent;color:var(--muted-l);cursor:pointer">Wettbewerber analysieren</button>
+            <button @click="simpleGoal='Content-Kalender für den nächsten Monat erstellen'" style="font-size:.7rem;padding:3px 9px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:transparent;color:var(--muted-l);cursor:pointer">Content-Kalender</button>
+          </div>
+          <button @click="startSimpleGoal()" :disabled="simpleRunning||!simpleGoal.trim()"
+            style="padding:9px 20px;background:var(--purple);color:#fff;border:none;border-radius:9px;font-size:.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;transition:opacity .2s"
+            :style="(simpleRunning||!simpleGoal.trim())?'opacity:.5':''">
+            <span x-show="!simpleRunning">⚡ Starten</span>
+            <span x-show="simpleRunning">⏳ Läuft…</span>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
-  <div style="width:100%;max-width:580px;margin-bottom:32px">
-    <div style="background:var(--surface-2);border:2px solid var(--border);border-radius:16px;padding:20px">
-      <textarea x-model="simpleGoal" placeholder="z.B. Ich moechte 20 neue Kunden im Quartal gewinnen." rows="4"
-        style="width:100%;background:transparent;border:none;outline:none;color:var(--white);font-size:.95rem;line-height:1.6;resize:none;font-family:inherit"
-        @keydown.ctrl.enter="startSimpleGoal()" :disabled="simpleRunning"></textarea>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;flex-wrap:wrap;gap:8px">
-        <div style="font-size:.72rem;color:var(--muted)">Strg+Enter zum Starten</div>
-        <button @click="startSimpleGoal()" :disabled="simpleRunning||!simpleGoal.trim()" class="btn btn-primary" style="padding:10px 24px;font-size:.9rem">
-          <span x-show="!simpleRunning">&#x26A1; Auftrag starten</span>
-          <span x-show="simpleRunning">&#x23F3; Laeuft&#x2026;</span>
+
+  <!-- Content -->
+  <div style="max-width:720px;margin:0 auto;padding:24px 28px">
+
+    <!-- Aufträge -->
+    <div x-show="simpleGoals.length>0">
+      <div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px">Meine Aufträge</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:28px">
+        <template x-for="g in simpleGoals" :key="g.id">
+          <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px 18px;transition:border-color .2s"
+               :style="g.status==='running'?'border-color:rgba(245,158,11,.4)':g.status==='completed'?'border-color:rgba(16,185,129,.25)':''">
+            <div style="display:flex;align-items:flex-start;gap:12px">
+              <!-- Status Ikone -->
+              <div style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0"
+                   :style="{running:'background:rgba(245,158,11,.15)',completed:'background:rgba(16,185,129,.12)',failed:'background:rgba(239,68,68,.1)',analyzing:'background:rgba(124,58,237,.15)',planning:'background:rgba(124,58,237,.15)'}[g.status]||'background:rgba(255,255,255,.05)'"
+                   x-text="{running:'⚡',completed:'✅',failed:'❌',analyzing:'🔍',planning:'📋',cancelled:'⏹'}[g.status]||'🎯'"></div>
+              <div style="flex:1;min-width:0">
+                <!-- Status + Zeit -->
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap">
+                  <span style="font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:8px"
+                        :style="'color:'+simpleStatusColor(g.status)+';background:'+simpleStatusColor(g.status).replace(')',', .1)')"
+                        x-text="simpleStatusLabel(g.status)"></span>
+                  <span style="font-size:.7rem;color:var(--muted)"
+                        x-text="new Date(g.created_at).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})"></span>
+                </div>
+                <!-- Ziel -->
+                <div style="font-size:.9rem;font-weight:600;color:var(--white);line-height:1.4;margin-bottom:6px"
+                     x-text="g.raw_goal||g.goal_title||'Auftrag #'+g.id"></div>
+                <!-- Fortschrittsbalken -->
+                <div x-show="g.status==='running'||g.status==='planning'||g.status==='analyzing'">
+                  <div style="height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;margin-bottom:4px">
+                    <div style="height:100%;border-radius:2px;transition:width .6s ease"
+                         :style="'width:'+(g.status==='analyzing'?30:g.status==='planning'?60:(g.progress||10))+'%;background:linear-gradient(90deg,var(--purple),var(--amber))'"></div>
+                  </div>
+                  <div style="font-size:.7rem;color:var(--muted)" x-text="g.status==='analyzing'?'Ziel wird analysiert…':g.status==='planning'?'Kampagne wird erstellt…':'Läuft… '+( g.progress||0)+'%'"></div>
+                </div>
+                <!-- Ergebnis -->
+                <div x-show="g.result_summary" style="font-size:.78rem;color:var(--muted-l);line-height:1.6;margin-top:4px;padding:8px 10px;background:rgba(255,255,255,.03);border-radius:8px;border-left:2px solid var(--emerald)"
+                     x-text="g.result_summary"></div>
+              </div>
+              <!-- Aktions-Buttons -->
+              <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+                <button x-show="g.status==='running'||g.status==='planning'||g.status==='analyzing'"
+                  @click="cancelSimpleGoal(g.id)"
+                  style="padding:5px 10px;font-size:.72rem;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:7px;color:var(--muted);cursor:pointer">
+                  ⏹ Stop
+                </button>
+                <button x-show="g.status==='completed'"
+                  @click="setMode('expert');page='goals'"
+                  style="padding:5px 10px;font-size:.72rem;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);border-radius:7px;color:var(--emerald);cursor:pointer">
+                  Details →
+                </button>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+      <div style="text-align:center;margin-bottom:24px">
+        <button @click="setMode('expert');page='goals'" style="font-size:.78rem;color:var(--muted);background:transparent;border:none;cursor:pointer;text-decoration:underline">
+          Alle Aufträge im Expertenbereich →
         </button>
       </div>
     </div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">
-      <span style="font-size:.72rem;color:var(--muted)">Beispiele:</span>
-      <template x-for="ex in ['20 neue Leads generieren','Wettbewerber analysieren','E-Mail-Kampagne planen','Content-Kalender erstellen']" :key="ex">
-        <button @click="simpleGoal='Ich moechte: '+ex" style="font-size:.72rem;padding:3px 10px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted-l);cursor:pointer" x-text="ex"></button>
-      </template>
+
+    <!-- Leerer Zustand -->
+    <div x-show="simpleGoals.length===0" style="text-align:center;padding:40px 20px">
+      <div style="font-size:3rem;margin-bottom:12px">🎯</div>
+      <div style="font-weight:700;font-size:1rem;color:var(--white);margin-bottom:6px">Bereit für deinen ersten Auftrag</div>
+      <div style="font-size:.82rem;color:var(--muted);line-height:1.6">Beschreibe oben dein Ziel — der Super Agent übernimmt den Rest.</div>
     </div>
-  </div>
-  <!-- Auftraege -->
-  <div style="width:100%;max-width:580px" x-show="simpleGoals.length>0">
-    <div style="font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">Meine Auftraege</div>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      <template x-for="g in simpleGoals" :key="g.id">
-        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px" :style="g.status==='running'?'border-color:rgba(245,166,0,.3);':''">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
-            <div style="flex:1;min-width:0">
-              <div style="display:inline-flex;align-items:center;gap:4px;font-size:.7rem;font-weight:700;margin-bottom:6px;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.05)"
-                   :style="'color:'+simpleStatusColor(g.status)" x-text="simpleStatusLabel(g.status)"></div>
-              <div style="font-size:.88rem;font-weight:600;color:var(--white);margin-bottom:4px;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
-                   x-text="g.raw_goal||g.goal_title||'Auftrag #'+g.id"></div>
-              <div x-show="g.status==='running'" style="margin-top:8px">
-                <div style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--muted);margin-bottom:4px"><span>Fortschritt</span><span x-text="(g.progress||0)+'%'"></span></div>
-                <div style="height:4px;background:var(--surface-3);border-radius:2px;overflow:hidden">
-                  <div style="height:100%;background:linear-gradient(90deg,var(--purple),var(--amber));border-radius:2px;transition:width .5s" :style="'width:'+(g.progress||0)+'%'"></div>
-                </div>
-              </div>
-              <div x-show="g.status==='completed'&&g.result_summary" style="font-size:.78rem;color:var(--muted-l);margin-top:6px;line-height:1.5" x-text="g.result_summary"></div>
-              <div style="font-size:.7rem;color:var(--muted);margin-top:6px" x-text="new Date(g.created_at).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})"></div>
+
+    <!-- Agenten-Schnellübersicht -->
+    <div x-show="agents.length>0" style="margin-top:8px">
+      <div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+        <span>Deine Agenten</span>
+        <button @click="setMode('expert');page='agents'" style="font-size:.72rem;color:var(--pu-l);background:transparent;border:none;cursor:pointer">Alle verwalten →</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px">
+        <template x-for="a in agents.slice(0,6)" :key="a.id">
+          <div @click="setMode('expert');page='agents';editAgent(a)"
+            style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;transition:border-color .15s"
+            onmouseover="this.style.borderColor='rgba(124,58,237,.4)'"
+            onmouseout="this.style.borderColor=''">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+              <span style="font-size:1.3rem" x-text="a.emoji||'🤖'"></span>
+              <div style="width:7px;height:7px;border-radius:50%" :style="a.is_active?'background:#10b981':'background:#4b5563'"></div>
             </div>
-            <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
-              <button x-show="g.status==='running'" @click="cancelSimpleGoal(g.id)" class="btn btn-xs btn-ghost">&#x23F9;</button>
-              <button x-show="g.status==='completed'" @click="setMode('expert');page='goals'" class="btn btn-xs btn-ghost">&#x1F50D;</button>
-            </div>
+            <div style="font-size:.8rem;font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" x-text="a.name"></div>
+            <div style="font-size:.68rem;color:var(--muted);margin-top:2px" x-text="(a.total_messages||0)+' Msgs'"></div>
           </div>
+        </template>
+        <!-- Agent erstellen -->
+        <div @click="setMode('expert');page='agents';openNew()"
+          style="background:rgba(124,58,237,.05);border:1px dashed rgba(124,58,237,.3);border-radius:12px;padding:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;transition:all .15s"
+          onmouseover="this.style.background='rgba(124,58,237,.1)'"
+          onmouseout="this.style.background='rgba(124,58,237,.05)'">
+          <span style="font-size:1.3rem">＋</span>
+          <div style="font-size:.72rem;color:var(--pu-l);font-weight:600">Neuer Agent</div>
         </div>
-      </template>
+      </div>
     </div>
-    <div style="text-align:center;margin-top:14px">
-      <span @click="setMode('expert');page='goals'" style="font-size:.78rem;color:var(--muted);cursor:pointer;text-decoration:underline">Alle Auftraege im Expertenbereich &#x2192;</span>
+
+    <!-- Expertenmodus CTA -->
+    <div style="margin-top:32px;padding:16px 18px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-size:.82rem;font-weight:600;color:var(--muted-l);margin-bottom:2px">Mehr Kontrolle gewünscht?</div>
+        <div style="font-size:.72rem;color:var(--muted)">Tools · Memory · Planner · APIs · Webhooks · Modelle</div>
+      </div>
+      <button @click="setMode('expert')" style="padding:8px 16px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3);border-radius:9px;color:var(--pu-l);font-size:.8rem;font-weight:600;cursor:pointer">
+        🔧 Expertenmodus →
+      </button>
     </div>
-  </div>
-  <div style="margin-top:48px;text-align:center;padding:16px 20px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;max-width:400px">
-    <div style="font-size:.78rem;color:var(--muted);margin-bottom:6px">Du willst mehr Kontrolle?</div>
-    <button @click="setMode('expert')" style="font-size:.8rem;color:var(--pu-l);background:transparent;border:none;cursor:pointer;font-weight:600">&#x1F527; Expertenmodus oeffnen &#x2192;</button>
-    <div style="font-size:.7rem;color:var(--muted);margin-top:4px">Tools &middot; Memory &middot; Planner &middot; APIs &middot; Webhooks &middot; Modelle</div>
+
   </div>
 </div>
+
+
 <!-- EXPERTENMODUS -->
 <div x-show="appMode==='expert'" style="display:contents">
 <div class="sidebar" :class="{collapsed:sidebarCollapsed}">
@@ -1080,7 +1181,7 @@ input:checked+.slider::before{transform:translateX(18px)}
     <div class="content">
 
       <!-- ── DASHBOARD ── -->
-      <div class="page" x-show="page==='dashboard'">
+      <div class="page" x-show="page==='dashboard'" @vue:mounted="loadNotifs()" x-init="$watch('page', v => { if(v==='dashboard') { loadNotifs(); setTimeout(()=>loadInsights(),300); } })">
         <div x-show="user?.trial_ends_at&&user?.plan==='pro'" style="background:linear-gradient(90deg,rgba(245,158,11,.1),rgba(124,58,237,.08));border:1px solid rgba(245,158,11,.25);border-radius:var(--r);padding:12px 16px;margin-bottom:22px;display:flex;align-items:center;gap:12px">
           <span>⚡</span>
           <span style="font-size:.83rem;color:var(--amber-l)">Pro Trial aktiv bis <strong x-text="new Date(user.trial_ends_at).toLocaleDateString('de-DE')"></strong></span>
@@ -4426,7 +4527,12 @@ async init(){
 
   this.lang=localStorage.getItem('ak_lang')||'de';
   const t=localStorage.getItem('ak_token'),u=localStorage.getItem('ak_user');
-  if(t&&u){this.token=t;this.user=JSON.parse(u);this.loadAgents();}
+  if(t&&u){
+    this.token=t;this.user=JSON.parse(u);
+    this.loadAgents();
+    setTimeout(()=>{this.loadNotifs();},800);
+    setTimeout(()=>{this.loadInsights();},1200);
+  }
   const p=new URLSearchParams(location.search);
   if(p.get('upgrade')==='success'){this.toast('🎉 Pro aktiviert!');history.replaceState(null,'','/app');}
   if(p.get('upgrade')==='cancelled'){this.toast('Upgrade abgebrochen.','err');}
