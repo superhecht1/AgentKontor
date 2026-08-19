@@ -327,6 +327,49 @@ async function initDb() {
       is_active BOOLEAN DEFAULT true, last_used TIMESTAMPTZ,
       created_at TIMESTAMPTZ DEFAULT now()
     )`,
+  
+    // Migration 011: Agent Listings
+    `CREATE TABLE IF NOT EXISTS agent_listings (
+      id SERIAL PRIMARY KEY, agent_id INTEGER REFERENCES agents(id) ON DELETE CASCADE,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      title TEXT NOT NULL, tagline TEXT NOT NULL, description TEXT NOT NULL,
+      category TEXT NOT NULL DEFAULT 'sonstiges', tags TEXT[] DEFAULT '{}',
+      emoji TEXT NOT NULL DEFAULT '🤖', color TEXT DEFAULT '#7c3aed',
+      price_model TEXT NOT NULL DEFAULT 'monthly', price_cents INTEGER NOT NULL DEFAULT 0,
+      hide_prompt BOOLEAN NOT NULL DEFAULT true, preview_msgs JSONB DEFAULT '[]',
+      quick_chips JSONB DEFAULT '[]',
+      status TEXT NOT NULL DEFAULT 'draft', reject_reason TEXT,
+      install_count INTEGER DEFAULT 0, revenue_cents INTEGER DEFAULT 0,
+      rating_avg NUMERIC DEFAULT 0, rating_count INTEGER DEFAULT 0,
+      submitted_at TIMESTAMPTZ, approved_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT now(), updated_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS listing_purchases (
+      id SERIAL PRIMARY KEY, listing_id INTEGER REFERENCES agent_listings(id) ON DELETE CASCADE,
+      buyer_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      seller_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      agent_id INTEGER REFERENCES agents(id) ON DELETE SET NULL,
+      price_cents INTEGER NOT NULL DEFAULT 0, platform_fee_pct NUMERIC DEFAULT 20,
+      stripe_payment_id TEXT, stripe_sub_id TEXT,
+      status TEXT NOT NULL DEFAULT 'active',
+      purchased_at TIMESTAMPTZ DEFAULT now(), expires_at TIMESTAMPTZ, cancelled_at TIMESTAMPTZ,
+      UNIQUE (listing_id, buyer_id)
+    )`,
+    `CREATE TABLE IF NOT EXISTS listing_reviews (
+      id SERIAL PRIMARY KEY, listing_id INTEGER REFERENCES agent_listings(id) ON DELETE CASCADE,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5), review_text TEXT,
+      created_at TIMESTAMPTZ DEFAULT now(), UNIQUE (listing_id, user_id)
+    )`,
+    `CREATE TABLE IF NOT EXISTS seller_payouts (
+      id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      amount_cents INTEGER NOT NULL, status TEXT DEFAULT 'pending',
+      period_start DATE, period_end DATE, stripe_payout_id TEXT,
+      created_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `ALTER TABLE agents ADD COLUMN IF NOT EXISTS listing_id INTEGER REFERENCES agent_listings(id) ON DELETE SET NULL`,
+    `ALTER TABLE agents ADD COLUMN IF NOT EXISTS is_listed BOOLEAN DEFAULT false`,
+
   ];
   for (const sql of criticalTables) {
     await pool.query(sql).catch(e => {
@@ -713,6 +756,7 @@ app.use('/api/web',            aiLimiter, require('./routes/web-agent'));
 app.use('/api/super',          aiLimiter, require('./routes/super-agent'));
 
 // ── Agent Marketplace ───────────────────────────────────────────────────────
+app.use('/api/listings',         require('./routes/listings'));
 app.use('/api/marketplace',    require('./routes/marketplace'));
 
 // ── Super Agent Mode: Goal Engine ──────────────────────────────────────────
@@ -758,6 +802,8 @@ app.get('/', (req, res) => {
   res.setHeader('Expires', '0');
   res.setHeader('Surrogate-Control', 'no-store');
   res.setHeader('CDN-Cache-Control', 'no-store');
+  // Löscht Browser-Cache + Service Worker Cache auf einen Schlag
+  res.setHeader('Clear-Site-Data', '"cache", "storage"');
   const html = require('fs').readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8');
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.send(html);
