@@ -1844,7 +1844,9 @@ X-AgentKontor-Signature: sha256=…
         <div class="tabs" style="margin-bottom:16px">
           <div class="tab" :class="{on:marketplaceTab==='featured'}" @click="marketplaceTab='featured';marketplaceCategory=''">⭐ Featured</div>
           <div class="tab" :class="{on:marketplaceTab==='all'}"      @click="marketplaceTab='all'">🛒 Alle</div>
+          <div class="tab" :class="{on:marketplaceTab==='community'}" @click="marketplaceTab='community';loadCommunityListings()">🌐 Community</div>
           <div class="tab" :class="{on:marketplaceTab==='installed'}" @click="marketplaceTab='installed';marketplaceCategory=''">✅ Installiert (<span x-text="marketplaceMyInstalls.length"></span>)</div>
+          <div class="tab" :class="{on:marketplaceTab==='my-listings'}" @click="marketplaceTab='my-listings';loadMyListings();loadEarnings()">📦 Meine</div>
         </div>
 
         <!-- Kategorie-Filter -->
@@ -1867,6 +1869,235 @@ X-AgentKontor-Signature: sha256=…
           <h3>Keine Agenten gefunden</h3>
           <p x-show="marketplaceTab==='installed'">Du hast noch keine Agenten installiert.</p>
           <p x-show="marketplaceSearch&&marketplaceTab!=='installed'">Keine Ergebnisse für „<span x-text="marketplaceSearch"></span>"</p>
+
+        <!-- ── COMMUNITY LISTINGS TAB ──────────────────────────────────── -->
+        <div x-show="marketplaceTab==='community'" style="margin-top:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+            <div style="font-size:.84rem;color:var(--muted)" x-text="communityTotal+' Community-Agenten'"></div>
+            <button class="btn btn-purple btn-sm" @click="showCreateListing=true">+ Eigenen Agent veröffentlichen</button>
+          </div>
+          <!-- Grid -->
+          <div class="agent-grid">
+            <template x-for="l in communityListings" :key="l.id">
+              <div class="agent-card" @click="openListingDetail(l)" style="cursor:pointer;position:relative">
+                <div style="position:absolute;top:8px;right:8px;font-size:.68rem;font-weight:700;background:var(--surface-3);padding:2px 7px;border-radius:10px;color:var(--muted)" x-text="listingPrice(l)"></div>
+                <div style="font-size:2rem;margin-bottom:6px" x-text="l.emoji"></div>
+                <div style="font-weight:700;font-size:.88rem;margin-bottom:3px" x-text="l.title"></div>
+                <div style="font-size:.74rem;color:var(--muted);margin-bottom:8px;line-height:1.4" x-text="l.tagline"></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;font-size:.72rem;color:var(--muted)">
+                  <span x-text="listingStars(l.rating_avg)+' ('+l.rating_count+')'"></span>
+                  <span x-text="l.install_count+' Installs'"></span>
+                </div>
+                <div style="margin-top:6px;font-size:.7rem;color:var(--muted)">von <span x-text="l.seller_name"></span></div>
+              </div>
+            </template>
+          </div>
+          <div class="empty" x-show="communityListings.length===0">Noch keine Community-Agenten. Sei der Erste!</div>
+        </div>
+
+        <!-- ── MEINE LISTINGS TAB ───────────────────────────────────────── -->
+        <div x-show="marketplaceTab==='my-listings'" style="margin-top:12px">
+
+          <!-- Einnahmen-Box -->
+          <div class="card" style="margin-bottom:16px;padding:16px;background:linear-gradient(135deg,var(--surface-2),var(--surface-3))">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+              <div>
+                <div style="font-size:.76rem;color:var(--muted);margin-bottom:2px">Einnahmen gesamt (nach Provision)</div>
+                <div style="font-size:1.6rem;font-weight:800;color:var(--emerald)" x-text="'€'+((myEarnings.total_cents||0)/100).toFixed(2).replace('.',',')"></div>
+                <div style="font-size:.76rem;color:var(--muted);margin-top:2px" x-text="'Diesen Monat: €'+((myEarnings.this_month_cents||0)/100).toFixed(2).replace('.',',')+' · '+(myEarnings.commission_pct||20)+'% Provision'"></div>
+              </div>
+              <button class="btn btn-purple btn-sm" @click="showCreateListing=true">+ Agent veröffentlichen</button>
+            </div>
+          </div>
+
+          <!-- Meine Listings -->
+          <div x-show="myListings.length===0" class="empty">Du hast noch keine Listings. Veröffentliche deinen ersten Agenten!</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <template x-for="l in myListings" :key="l.id">
+              <div class="card" style="padding:14px">
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                  <div style="font-size:1.4rem" x-text="l.emoji"></div>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-weight:700;font-size:.88rem;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                      <span x-text="l.title"></span>
+                      <span style="font-size:.68rem;padding:2px 7px;border-radius:10px;font-weight:700"
+                            :style="{draft:'background:#333;color:#888',pending:'background:rgba(255,200,0,.15);color:var(--amber)',active:'background:rgba(0,200,100,.1);color:var(--emerald)',paused:'background:var(--surface-3);color:var(--muted)',rejected:'background:rgba(255,50,50,.1);color:var(--rose)'}[l.status]"
+                            x-text="{draft:'Entwurf',pending:'In Prüfung',active:'Aktiv',paused:'Pausiert',rejected:'Abgelehnt'}[l.status]"></span>
+                    </div>
+                    <div style="font-size:.74rem;color:var(--muted)" x-text="l.tagline"></div>
+                    <div style="font-size:.72rem;color:var(--muted);margin-top:3px" x-text="listingPrice(l)+' · '+(l.active_buyers||0)+' Abonnenten · '+(l.install_count||0)+' Installs total'"></div>
+                    <div x-show="l.reject_reason" style="font-size:.72rem;color:var(--rose);margin-top:3px" x-text="'Abgelehnt: '+l.reject_reason"></div>
+                  </div>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap">
+                    <button class="btn btn-xs btn-ghost" @click="submitListing(l.id)"
+                            x-show="l.status==='draft'||l.status==='rejected'">📤 Einreichen</button>
+                    <button class="btn btn-xs btn-ghost" @click="pauseListing(l.id,true)"  x-show="l.status==='active'">⏸ Pause</button>
+                    <button class="btn btn-xs btn-ghost" @click="pauseListing(l.id,false)" x-show="l.status==='paused'">▶ Fortsetzen</button>
+                    <button class="btn btn-xs btn-danger" @click="deleteListing(l.id)">✕</button>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <!-- Gekaufte Agenten -->
+          <div style="margin-top:24px">
+            <div style="font-weight:700;font-size:.88rem;margin-bottom:10px">✅ Gekaufte Agenten (<span x-text="myPurchases.length"></span>)</div>
+            <div x-show="myPurchases.length===0" style="font-size:.8rem;color:var(--muted)">Noch keine gekauften Agenten.</div>
+            <template x-for="p in myPurchases" :key="p.id">
+              <div class="card" style="padding:12px;display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                <div x-text="p.emoji" style="font-size:1.3rem"></div>
+                <div style="flex:1">
+                  <div style="font-weight:600;font-size:.84rem" x-text="p.title"></div>
+                  <div style="font-size:.72rem;color:var(--muted)" x-text="p.tagline"></div>
+                </div>
+                <div style="font-size:.72rem;color:var(--muted);text-align:right">
+                  <div x-text="listingPrice(p)"></div>
+                  <div x-text="new Date(p.purchased_at).toLocaleDateString('de-DE')"></div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- ── LISTING DETAIL MODAL ─────────────────────────────────────── -->
+        <div class="modal-overlay" x-show="showListingDetail" x-cloak @click.self="showListingDetail=false">
+          <div class="modal" style="max-width:520px;max-height:85vh;overflow-y:auto" @click.stop>
+            <div class="modal-hdr">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="font-size:1.8rem" x-text="selectedListing?.listing?.emoji||'🤖'"></div>
+                <div>
+                  <div style="font-weight:700" x-text="selectedListing?.listing?.title"></div>
+                  <div style="font-size:.76rem;color:var(--muted)" x-text="'von '+selectedListing?.listing?.seller_name"></div>
+                </div>
+              </div>
+              <button class="modal-close" @click="showListingDetail=false">✕</button>
+            </div>
+            <div style="padding:16px" x-show="selectedListing">
+              <!-- Stats -->
+              <div style="display:flex;gap:16px;margin-bottom:14px;font-size:.78rem;color:var(--muted)">
+                <span x-text="listingStars(selectedListing?.listing?.rating_avg)"></span>
+                <span x-text="(selectedListing?.listing?.rating_count||0)+' Bewertungen'"></span>
+                <span x-text="(selectedListing?.listing?.install_count||0)+' Installs'"></span>
+              </div>
+              <!-- Beschreibung -->
+              <p style="font-size:.84rem;color:var(--muted-l);line-height:1.7;margin-bottom:16px" x-text="selectedListing?.listing?.description"></p>
+              <!-- Preview -->
+              <div x-show="selectedListing?.listing?.preview_msgs?.length" style="background:var(--surface-2);border-radius:10px;padding:12px;margin-bottom:14px">
+                <div style="font-size:.74rem;font-weight:700;color:var(--muted);margin-bottom:8px">Vorschau-Gespräch</div>
+                <template x-for="(m,i) in (selectedListing?.listing?.preview_msgs||[])" :key="i">
+                  <div :style="m.role==='user'?'text-align:right;margin-bottom:6px':'margin-bottom:6px'">
+                    <div :style="m.role==='user'?'display:inline-block;background:var(--purple);color:#fff;border-radius:10px 2px 10px 10px;padding:7px 10px;font-size:.78rem':'display:inline-block;background:var(--surface-3);border-radius:2px 10px 10px 10px;padding:7px 10px;font-size:.78rem'"
+                         x-text="m.content"></div>
+                  </div>
+                </template>
+              </div>
+              <!-- Preis + CTA -->
+              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+                <div>
+                  <div style="font-size:1.4rem;font-weight:800;color:var(--white)" x-text="listingPrice(selectedListing?.listing)"></div>
+                  <div style="font-size:.72rem;color:var(--muted)" x-text="selectedListing?.listing?.price_model==='monthly'?'monatlich kündbar':selectedListing?.listing?.price_model==='onetime'?'Einmalzahlung':'Kostenlos'"></div>
+                </div>
+                <button class="btn btn-primary" style="padding:12px 24px"
+                        @click="purchaseListing(selectedListing?.listing)">
+                  <span x-text="selectedListing?.listing?.price_cents>0?'Jetzt kaufen':'Kostenlos installieren'"></span>
+                </button>
+              </div>
+              <!-- Bewertungen -->
+              <div x-show="selectedListing?.reviews?.length" style="margin-top:20px;border-top:1px solid var(--border);padding-top:14px">
+                <div style="font-weight:700;font-size:.84rem;margin-bottom:10px">Bewertungen</div>
+                <template x-for="r in (selectedListing?.reviews||[])" :key="r.created_at">
+                  <div style="margin-bottom:10px;font-size:.8rem">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+                      <span x-text="listingStars(r.rating)" style="color:var(--amber)"></span>
+                      <span style="color:var(--muted)" x-text="r.reviewer_name"></span>
+                    </div>
+                    <div style="color:var(--muted-l)" x-text="r.review_text"></div>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── LISTING ERSTELLEN MODAL ──────────────────────────────────── -->
+        <div class="modal-overlay" x-show="showCreateListing" x-cloak @click.self="showCreateListing=false">
+          <div class="modal" style="max-width:520px;max-height:90vh;overflow-y:auto" @click.stop>
+            <div class="modal-hdr">
+              <div class="modal-title">📦 Agent veröffentlichen</div>
+              <button class="modal-close" @click="showCreateListing=false">✕</button>
+            </div>
+            <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+
+              <div style="background:var(--surface-2);border-radius:8px;padding:10px;font-size:.78rem;color:var(--muted);line-height:1.6">
+                ℹ️ Dein Agent wird geprüft bevor er im Marketplace erscheint (1-2 Werktage). Du erhältst <strong>80% des Umsatzes</strong> — AgentKontor nimmt 20% Provision.
+              </div>
+
+              <div class="field">
+                <label>Agent auswählen</label>
+                <select class="inp" x-model="listingAgentId">
+                  <option value="">Agent wählen…</option>
+                  <template x-for="a in agents.filter(a=>!a.is_listed)" :key="a.id">
+                    <option :value="a.id" x-text="(a.emoji||'🤖')+' '+a.name"></option>
+                  </template>
+                </select>
+              </div>
+
+              <div class="field"><label>Titel</label>
+                <input class="inp" x-model="newListing.title" placeholder="z.B. Immobilien Lead-Qualifizierer Pro">
+              </div>
+              <div class="field"><label>Tagline (1 Zeile)</label>
+                <input class="inp" x-model="newListing.tagline" placeholder="z.B. Qualifiziert Kaufinteressenten automatisch">
+              </div>
+              <div class="field"><label>Beschreibung</label>
+                <textarea class="inp" rows="4" x-model="newListing.description"
+                  placeholder="Was macht dein Agent? Für wen ist er geeignet? Was sind die Vorteile?"></textarea>
+              </div>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div class="field"><label>Kategorie</label>
+                  <select class="inp" x-model="newListing.category">
+                    <option value="vertrieb">💼 Vertrieb</option>
+                    <option value="gastro">🍽️ Gastro</option>
+                    <option value="praxis">🏥 Arztpraxis</option>
+                    <option value="immobilien">🏡 Immobilien</option>
+                    <option value="sonstiges">🔧 Sonstiges</option>
+                  </select>
+                </div>
+                <div class="field"><label>Preismodell</label>
+                  <select class="inp" x-model="newListing.priceModel">
+                    <option value="free">Kostenlos</option>
+                    <option value="monthly">Monatlich</option>
+                    <option value="onetime">Einmalzahlung</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="field" x-show="newListing.priceModel!=='free'">
+                <label>Preis (in €)</label>
+                <input class="inp" type="number" min="1" max="999" step="0.5"
+                       :value="newListing.priceCents/100"
+                       @input="newListing.priceCents=Math.round($event.target.value*100)"
+                       placeholder="z.B. 9.99">
+              </div>
+
+              <label style="display:flex;align-items:center;gap:8px;font-size:.84rem;cursor:pointer">
+                <input type="checkbox" x-model="newListing.hidePrompt">
+                <div>
+                  <div style="font-weight:600">System-Prompt verbergen (empfohlen)</div>
+                  <div style="font-size:.74rem;color:var(--muted)">Schützt deine Konfiguration vor Kopieren</div>
+                </div>
+              </label>
+
+              <button class="btn btn-primary btn-full" @click="createListing()" :disabled="!listingAgentId||!newListing.title">
+                Listing erstellen (als Entwurf)
+              </button>
+              <div style="font-size:.74rem;color:var(--muted);text-align:center">
+                Nach der Erstellung kannst du es zur Prüfung einreichen.
+              </div>
+            </div>
+          </div>
+        </div>
         </div>
 
         <div class="mkt-grid">
@@ -4609,7 +4840,87 @@ stepStatusIcon(s){return{waiting:'○',ready:'◎',running:'▶',waiting_approva
 stepStatusColor(s){return{waiting:'var(--muted)',ready:'var(--v-l)',running:'var(--sky)',waiting_approval:'var(--amber)',approved:'var(--v-l)',completed:'var(--emerald)',failed:'var(--rose)',skipped:'var(--muted)'}[s]||'var(--muted)'},
 
 // ── MARKETPLACE ────────────────────────────────────────────────────────────
-async loadMarketplace(){
+
+    // ── COMMUNITY LISTINGS ─────────────────────────────────────────────────
+    async loadCommunityListings(reset=true){
+      if(reset) this.communityPage=1;
+      const cat = this.marketplaceCategory ? '&category='+this.marketplaceCategory : '';
+      const q   = this.marketplaceSearch   ? '&q='+encodeURIComponent(this.marketplaceSearch) : '';
+      const off = (this.communityPage-1)*24;
+      const d=await this.api(`/listings?limit=24&offset=${off}${cat}${q}`).catch(()=>({listings:[],total:0}));
+      this.communityListings = d.listings||[];
+      this.communityTotal    = d.total||0;
+    },
+    async loadMyListings(){
+      const d=await this.api('/listings/my').catch(()=>({listings:[]}));
+      this.myListings=d.listings||[];
+    },
+    async loadMyPurchases(){
+      const d=await this.api('/listings/purchased').catch(()=>({purchases:[]}));
+      this.myPurchases=d.purchases||[];
+    },
+    async loadEarnings(){
+      const d=await this.api('/listings/earnings').catch(()=>({earnings:{}}));
+      this.myEarnings=d.earnings||{};
+    },
+    async openListingDetail(l){
+      this.showListingDetail=true;this.selectedListing=null;
+      const d=await this.api('/listings/'+l.id).catch(()=>null);
+      if(d) this.selectedListing=d;
+    },
+    async purchaseListing(listing){
+      const d=await this.api('/listings/'+listing.id+'/purchase','POST',{});
+      if(d.error){this.toast(d.error,'err');return;}
+      if(d.checkoutUrl){window.location.href=d.checkoutUrl;return;}
+      if(d.agentId){
+        this.toast('Agent installiert ✓ — jetzt in deinen Agenten sichtbar');
+        this.showListingDetail=false;
+        await this.loadAgents();
+        await this.loadMyPurchases();
+      }
+    },
+    async rateListing(listingId,rating,text){
+      const d=await this.api('/listings/'+listingId+'/review','POST',{rating,reviewText:text});
+      if(d.error){this.toast(d.error,'err');return;}
+      this.toast('Bewertung gespeichert ✓');
+    },
+    async createListing(){
+      if(!this.listingAgentId||!this.newListing.title.trim()||!this.newListing.tagline.trim()){
+        this.toast('Agent, Titel und Tagline erforderlich','err');return;
+      }
+      const d=await this.api('/listings','POST',{
+        agentId:parseInt(this.listingAgentId),...this.newListing
+      });
+      if(d.error){this.toast(d.error,'err');return;}
+      this.toast('Listing erstellt! Jetzt zur Freigabe einreichen.');
+      this.showCreateListing=false;
+      await this.loadMyListings();
+    },
+    async submitListing(id){
+      const d=await this.api('/listings/'+id+'/submit','POST',{});
+      if(d.error){this.toast(d.error,'err');return;}
+      this.toast('Eingereicht ✓ — wird geprüft (1-2 Werktage)');
+      await this.loadMyListings();
+    },
+    async pauseListing(id,pause){
+      await this.api('/listings/'+id+'/pause','POST',{pause});
+      this.toast(pause?'Listing pausiert':'Listing reaktiviert');
+      await this.loadMyListings();
+    },
+    async deleteListing(id){
+      if(!confirm('Listing wirklich löschen?'))return;
+      const d=await this.api('/listings/'+id,'DELETE');
+      if(d.error){this.toast(d.error,'err');return;}
+      this.toast('Gelöscht');await this.loadMyListings();
+    },
+    listingPrice(l){
+      if(l.price_cents===0||l.price_model==='free')return'Kostenlos';
+      const e=(l.price_cents/100).toFixed(2).replace('.',',');
+      return '€'+e+(l.price_model==='monthly'?'/Mo':'');
+    },
+    listingStars(avg){return '★'.repeat(Math.round(avg||0))+'☆'.repeat(5-Math.round(avg||0));},
+
+    async loadMarketplace(){
   const [ag,cat,my]=await Promise.all([
     this.api('/marketplace?limit=50'),
     this.api('/marketplace/categories'),
