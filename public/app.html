@@ -4639,12 +4639,16 @@ setUser(token,user){
   localStorage.setItem('ak_token',token);
   localStorage.setItem('ak_user',JSON.stringify(user));
   this.loadAgents();
-  // Neuer Nutzer → Onboarding einmalig anzeigen
+  // Onboarding nur beim allerersten Login (nie mehr)
   const key='ak_ob_'+((user&&user.id)||'x');
   const seen = localStorage.getItem(key) || localStorage.getItem('ak_onboard');
   if(!seen){
-    localStorage.setItem(key,'1');
-    setTimeout(()=>{this.showOnboarding=true;},1000);
+    localStorage.setItem(key,'done');
+    localStorage.setItem('ak_onboard','1');
+    // Nur zeigen wenn noch keine Agenten vorhanden
+    setTimeout(()=>{
+      if(this.agents.length===0) this.showOnboarding=true;
+    },1500);
   }
 },
 logout(){this.token=null;this.user=null;localStorage.removeItem('ak_token');localStorage.removeItem('ak_user');},
@@ -5298,7 +5302,7 @@ stepStatusColor(s){return{waiting:'var(--muted)',ready:'var(--v-l)',running:'var
       if(d.error){this.toast(d.error,'err');return;}
       this.toast('Gelöscht');await this.loadMyListings();
     },
-    listingPrice(l){
+    listingPrice(l){if(!l||l.price_cents===undefined)return'';
       if(l.price_cents===0||l.price_model==='free')return'Kostenlos';
       const e=(l.price_cents/100).toFixed(2).replace('.',',');
       return '€'+e+(l.price_model==='monthly'?'/Mo':'');
@@ -5845,7 +5849,7 @@ copy(t){navigator.clipboard.writeText(t).then(()=>this.toast('Kopiert!')).catch(
 toast(msg,type='ok'){const id=Date.now();this.toasts.push({id,msg,type});setTimeout(()=>this.toasts=this.toasts.filter(t=>t.id!==id),3500);}
 };}
 </script>
-<script src="/cookie-banner.js"></script>
+<!-- cookie-banner: via index.html -->
 <script src="/cookie-banner.js"></script>
 
 <script>
