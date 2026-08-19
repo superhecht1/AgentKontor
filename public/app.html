@@ -4244,6 +4244,15 @@ goalInput:'',goalContext:'',goalModel:'claude-sonnet-4-6',
 goalRunning:false,goalTab:'new',
 // Marketplace
 marketplaceAgents:[],marketplaceCategories:[],marketplaceMyInstalls:[],
+    marketplaceTab:'featured',marketplaceSearch:'',marketplaceCategory:'',
+    communityListings:[],communityTotal:0,communityPage:1,
+    myListings:[],myPurchases:[],myEarnings:{},
+    selectedListing:null,showListingDetail:false,
+    showCreateListing:false,listingAgentId:'',
+    newListing:{title:'',tagline:'',description:'',category:'sonstiges',
+                priceModel:'monthly',priceCents:0,hidePrompt:true,
+                previewMsgs:[],quickChips:[],color:'#7c3aed'},
+    showEarnings:false,
 marketplaceTab:'featured',marketplaceSearch:'',marketplaceCategory:'',
 selectedMarketplaceAgent:null,installingId:null,
 // Super Agent
@@ -4939,6 +4948,34 @@ async ftApply(model){
 
 
 // ── ONBOARDING ───────────────────────────────────────────────────────────────
+
+async generateOnboardPrompt(){
+  this.onboardGenerating=true;
+  try{
+    const resp=await fetch('/api/demo/chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({messages:[{role:'user',content:
+        'Erstelle einen deutschen System-Prompt (max. 200 Wörter) für einen KI-Agenten:\n'+
+        'Name: '+(this.af.name||'Assistent')+'\n'+
+        'Branche: '+(this.onboardTemplate?.name||'Allgemein')+'\n'+
+        'Unternehmen: '+(this.onboardCompany||'')+'\n'+
+        'Ton: '+(this.af.tone||'freundlich')+'\n'+
+        'Antworte NUR mit dem fertigen Prompt, ohne Erklärung.'
+      }]})
+    });
+    const d=await resp.json();
+    if(d.message) this.af.system_prompt=d.message;
+    else this.toast('Generierung fehlgeschlagen','err');
+  }catch(e){this.toast('Fehler: '+e.message,'err');}
+  this.onboardGenerating=false;
+},
+async copyWidgetCode(){
+  const id=this.agents[this.agents.length-1]?.id||'';
+  const code='<script src="https://'+window.location.hostname+'/widget.js" data-agent="'+id+'"><\/script>';
+  try{await navigator.clipboard.writeText(code.replace('\/',''));this.toast('Code kopiert ✓');}
+  catch{prompt('Code kopieren:',code.replace('\/',''));}
+},
 finishOnboard(){this.showOnboarding=false;this.onboardDone=true;localStorage.setItem('ak_onboard','1');},
 startTour(){this.tourActive=true;this.tourStep=0;},
 nextTour(){if(this.tourStep<4)this.tourStep++;else{this.tourActive=false;this.tourStep=0;}},
