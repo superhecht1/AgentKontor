@@ -258,6 +258,7 @@ router.post('/login', async (req, res) => {
               COALESCE(token_version, 1)            AS token_version,
               COALESCE(totp_enabled, false)         AS totp_enabled,
               COALESCE(email_confirmed, false)      AS email_confirmed,
+              (confirm_token IS NOT NULL OR confirm_expires IS NOT NULL) AS had_confirm_token,
               totp_secret, totp_backup_codes,
               COALESCE(login_attempts, 0)           AS login_attempts,
               locked_until, deleted_at
@@ -276,8 +277,10 @@ router.post('/login', async (req, res) => {
     }
 
     const valid = await bcrypt.compare(password, user.password_hash);
-    // E-Mail bestätigt? (vor Passwort-Fehler-Handling prüfen)
-    if (!user.email_confirmed) {
+    // E-Mail bestätigt?
+    // Nur prüfen wenn confirm_token jemals gesetzt wurde (neue User)
+    // Alte User (vor Email-Confirmation-System) haben email_confirmed=NULL → durchlassen
+    if (user.email_confirmed === false && user.had_confirm_token) {
       return res.status(403).json({
         error: 'Bitte bestätige zuerst deine E-Mail-Adresse.',
         code:  'EMAIL_NOT_CONFIRMED',
