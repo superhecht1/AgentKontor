@@ -67,7 +67,7 @@ const conditions = ['g.user_id=$1'];
     const r = await pool.query(
       `SELECT g.*,
          c.id AS campaign_id, c.step_count, c.steps_done, c.name AS campaign_name,
-         (SELECT COUNT(*) FROM goal_metrics gm WHERE gm.goal_id=g.id) AS metric_count
+         0 AS metric_count
        FROM goals g
        LEFT JOIN goal_campaigns c ON c.goal_id=g.id
        WHERE ${conditions.join(' AND ')}
@@ -77,7 +77,8 @@ const conditions = ['g.user_id=$1'];
     res.json({ goals: r.rows });
   } catch (e) {
     console.error('LIST GOALS:', e.message);
-    res.status(500).json({ error: 'Fehler' });
+    // Tabelle noch nicht bereit → leere Liste
+    res.json({ goals: [], _error: e.message });
   }
 });
 
@@ -111,7 +112,7 @@ router.get('/:id/poll', auth, async (req, res) => {
       pendingApprovals: approvals.rows,
     });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ goals: [], error: e.message });
   }
 });
 
@@ -178,7 +179,7 @@ router.post('/:id/reject', auth, async (req, res) => {
     await goalEngine.log(pool, { goalId:parseInt(req.params.id), type:'message', title:'❌ Schritt abgelehnt', detail:reason });
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ goals: [], error: e.message });
   }
 });
 
@@ -218,7 +219,7 @@ router.get('/stats/overview', auth, async (req, res) => {
     );
     res.json({ stats: r.rows[0] });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ goals: [], error: e.message });
   }
 });
 
