@@ -632,63 +632,314 @@ textarea.inp{resize:vertical;min-height:90px;line-height:1.5}
 
     <!-- ── USERS ── -->
     <div class="page" x-show="page==='users'">
+
+      <!-- HEADER -->
       <div class="ph">
-        <div><div class="ph-title">👥 Nutzer</div><div class="ph-sub" x-text="users.length+' geladen'"></div></div>
-        <div class="ph-actions">
-          <input class="inp" style="width:240px" placeholder="🔍 E-Mail oder Name…" x-model="userSearch" @input.debounce.400ms="searchUsers()">
-          <button class="btn btn-ghost btn-sm" @click="loadUsers()">↺ Alle</button>
+        <div>
+          <div class="ph-title">👥 Kundenverwaltung</div>
+          <div class="ph-sub" x-text="userTotal+' Nutzer gesamt · Seite '+userPage+' / '+userPages()"></div>
+        </div>
+        <div class="ph-actions" style="flex-wrap:wrap;gap:6px">
+          <input class="inp" style="width:200px" placeholder="🔍 Name oder E-Mail…" x-model="userSearch"
+                 @input.debounce.500ms="userPage=1;loadUsersFiltered()">
+          <select class="inp" style="width:auto" x-model="userFilter.plan" @change="userPage=1;loadUsersFiltered()">
+            <option value="all">Alle Pläne</option>
+            <option value="free">Free</option>
+            <option value="pro">Pro</option>
+            <option value="enterprise">Enterprise</option>
+          </select>
+          <select class="inp" style="width:auto" x-model="userFilter.status" @change="userPage=1;loadUsersFiltered()">
+            <option value="all">Alle Status</option>
+            <option value="active">Aktiv</option>
+            <option value="deleted">Gelöscht</option>
+            <option value="unconfirmed">Unbestätigt</option>
+          </select>
+          <select class="inp" style="width:auto" x-model="userFilter.sort" @change="loadUsersFiltered()">
+            <option value="created_at">Registriert</option>
+            <option value="last_login">Letzter Login</option>
+            <option value="msg_count_month">Nachrichten</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" @click="userFilter.order=userFilter.order==='desc'?'asc':'desc';loadUsersFiltered()"
+                  x-text="userFilter.order==='desc'?'↓ Neueste':'↑ Älteste'"></button>
+          <button class="btn btn-ghost btn-sm" @click="loadUsersFiltered()">↺</button>
+          <button class="btn btn-purple btn-sm" @click="showNewUser=true">+ Anlegen</button>
           <a :href="'/api/admin/users/export'" class="btn btn-ghost btn-sm">📤 CSV</a>
         </div>
       </div>
+
+      <!-- BULK-AKTIONEN -->
+      <div class="card" style="padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap" x-show="selectedUsers.length>0">
+        <span style="font-size:.82rem;font-weight:600;color:var(--pu-l)" x-text="selectedUsers.length+' ausgewählt'"></span>
+        <select class="inp" style="width:auto;font-size:.78rem" x-model="bulkAction">
+          <option value="">Aktion wählen…</option>
+          <option value="change_plan">Plan ändern</option>
+          <option value="delete">Löschen</option>
+          <option value="restore">Reaktivieren</option>
+          <option value="email">E-Mail senden</option>
+        </select>
+        <template x-if="bulkAction==='change_plan'">
+          <select class="inp" style="width:auto;font-size:.78rem" x-model="bulkValue">
+            <option value="free">→ Free</option><option value="pro">→ Pro</option><option value="enterprise">→ Enterprise</option>
+          </select>
+        </template>
+        <template x-if="bulkAction==='email'">
+          <input class="inp" style="width:200px;font-size:.78rem" placeholder="Betreff" x-model="bulkValue">
+        </template>
+        <button class="btn btn-amber btn-sm" @click="runBulkAction()">Ausführen</button>
+        <button class="btn btn-ghost btn-sm" @click="selectedUsers=[];selectAll=false;bulkAction=''">✕</button>
+      </div>
+
+      <!-- TABELLE -->
       <div class="card" style="padding:0;overflow:hidden">
         <table>
-          <thead><tr><th>Nutzer</th><th>Plan</th><th>Agenten</th><th>Msgs/Mo</th><th>Trial bis</th><th>Registriert</th><th style="text-align:right">Aktionen</th></tr></thead>
+          <thead>
+            <tr>
+              <th style="width:32px">
+                <input type="checkbox" :checked="selectAll" @change="toggleSelectAll()" style="cursor:pointer">
+              </th>
+              <th>Kunde</th>
+              <th>Plan</th>
+              <th>Agenten</th>
+              <th>Msgs/Mo</th>
+              <th>Letzter Login</th>
+              <th>Registriert</th>
+              <th style="text-align:right">Aktionen</th>
+            </tr>
+          </thead>
           <tbody>
             <template x-for="u in users" :key="u.id">
-              <tr :style="u.deleted_at?'opacity:.4':''">
+              <tr :style="u.deleted_at?'opacity:.45;background:rgba(255,50,50,.03)':''">
                 <td>
-                  <div style="display:flex;align-items:center;gap:9px">
+                  <input type="checkbox" :checked="selectedUsers.includes(u.id)"
+                         @change="toggleSelectUser(u.id)" style="cursor:pointer">
+                </td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:9px;cursor:pointer" @click="openUserDetail(u)">
                     <div class="user-av" x-text="(u.name||u.email||'?')[0].toUpperCase()"></div>
                     <div>
                       <div style="font-size:.84rem;font-weight:600;color:var(--white);display:flex;align-items:center;gap:6px">
                         <span x-text="u.name||'—'"></span>
                         <span class="badge b-admin" x-show="u.is_admin">ADMIN</span>
+                        <span style="font-size:.65rem;color:var(--rose)" x-show="u.deleted_at">GELÖSCHT</span>
+                        <span style="font-size:.65rem;color:var(--amber)" x-show="!u.email_confirmed&&!u.deleted_at">UNBESTÄTIGT</span>
                       </div>
                       <div style="font-size:.71rem;color:var(--muted)" x-text="u.email"></div>
+                      <div style="font-size:.65rem;color:var(--muted)" x-show="u.company" x-text="u.company"></div>
                     </div>
                   </div>
                 </td>
                 <td>
                   <div style="display:flex;align-items:center;gap:5px">
-                    <select class="inp" style="padding:3px 8px;font-size:.73rem;width:auto" :value="u.plan" @change="changePlan(u.id,$event.target.value,u)">
-                      <option value="free">Free</option><option value="pro">Pro</option><option value="enterprise">Enterprise</option>
+                    <select class="inp" style="padding:3px 8px;font-size:.73rem;width:auto"
+                            :value="u.plan" @change="changePlan(u.id,$event.target.value,u)">
+                      <option value="free">Free</option>
+                      <option value="pro">Pro</option>
+                      <option value="enterprise">Enterprise</option>
                     </select>
                     <span class="badge b-trial" x-show="u.trial_ends_at&&u.plan==='pro'">Trial</span>
                   </div>
                 </td>
                 <td style="color:var(--pu-l);font-weight:700" x-text="u.agent_count||0"></td>
                 <td>
-                  <span x-text="(u.msg_count_month||0).toLocaleString('de-DE')"></span>
-                  <span style="color:var(--muted);font-size:.7rem"> / <span x-text="u.plan==='pro'?'10k':'500'"></span></span>
+                  <div style="display:flex;align-items:center;gap:4px">
+                    <span x-text="(u.msg_count_month||0).toLocaleString('de-DE')"></span>
+                    <div style="height:4px;width:40px;background:var(--surface-3);border-radius:2px;overflow:hidden">
+                      <div style="height:100%;background:var(--purple);border-radius:2px"
+                           :style="'width:'+Math.min(100,((u.msg_count_month||0)/(u.plan==='pro'?10000:500))*100)+'%'"></div>
+                    </div>
+                  </div>
                 </td>
-                <td style="font-size:.75rem;color:var(--gold)" x-show="u.trial_ends_at" x-text="new Date(u.trial_ends_at).toLocaleDateString('de-DE')"></td>
-                <td x-show="!u.trial_ends_at" style="color:var(--muted)">—</td>
-                <td style="color:var(--muted);font-size:.74rem;white-space:nowrap" x-text="new Date(u.created_at).toLocaleDateString('de-DE')"></td>
+                <td style="font-size:.73rem;color:var(--muted)"
+                    x-text="u.last_login?new Date(u.last_login).toLocaleDateString('de-DE'):'—'"></td>
+                <td style="font-size:.73rem;color:var(--muted);white-space:nowrap"
+                    x-text="new Date(u.created_at).toLocaleDateString('de-DE')"></td>
                 <td>
                   <div style="display:flex;gap:4px;justify-content:flex-end;flex-wrap:wrap">
+                    <button class="btn btn-xs btn-ghost" @click="openUserDetail(u)" title="Details">🔍</button>
                     <button class="btn btn-xs btn-ghost" @click="openEmail(u)" title="E-Mail senden">✉️</button>
                     <button class="btn btn-xs btn-ghost" @click="impersonate(u.id)" title="Als Nutzer einloggen">👁️</button>
                     <button class="btn btn-xs btn-ghost" @click="openExtendTrial(u)" title="Trial verlängern">⏳</button>
-                    <button class="btn btn-xs btn-ghost" @click="toggleAdmin(u)" :title="u.is_admin?'Admin entziehen':'Admin machen'">⚙️</button>
+                    <button class="btn btn-xs btn-ghost" @click="toggleAdmin(u)" title="Admin-Rechte">⚙️</button>
                     <button class="btn btn-xs btn-danger" @click="deleteUser(u.id)" x-show="!u.deleted_at">✕</button>
+                    <button class="btn btn-xs btn-ghost" @click="restoreUser(u.id)" x-show="!!u.deleted_at" title="Reaktivieren">↩</button>
                   </div>
                 </td>
               </tr>
             </template>
           </tbody>
         </table>
-        <template x-if="users.length===0"><div class="empty">Keine Nutzer. Suche verwenden oder alle laden.</div></template>
+        <template x-if="users.length===0">
+          <div class="empty">Keine Nutzer gefunden.</div>
+        </template>
+
+        <!-- PAGINATION -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--border)" x-show="userTotal>userPageSize">
+          <span style="font-size:.78rem;color:var(--muted)" x-text="((userPage-1)*userPageSize+1)+' – '+Math.min(userPage*userPageSize,userTotal)+' von '+userTotal"></span>
+          <div style="display:flex;gap:4px">
+            <button class="btn btn-xs btn-ghost" @click="setUserPage(userPage-1)" :disabled="userPage<=1">←</button>
+            <template x-for="p in Array.from({length:userPages()},(v,i)=>i+1).filter(p=>Math.abs(p-userPage)<=2)" :key="p">
+              <button class="btn btn-xs" :class="p===userPage?'btn-purple':'btn-ghost'" @click="setUserPage(p)" x-text="p"></button>
+            </template>
+            <button class="btn btn-xs btn-ghost" @click="setUserPage(userPage+1)" :disabled="userPage>=userPages()">→</button>
+          </div>
+        </div>
       </div>
+
+      <!-- DETAIL-MODAL -->
+      <div class="modal-overlay" x-show="showUserDetail" x-cloak @click.self="showUserDetail=false">
+        <div class="modal" style="max-width:680px;max-height:85vh;overflow-y:auto" @click.stop>
+          <div class="modal-hdr">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="user-av" x-text="(userDetail?.user?.name||userDetail?.user?.email||'?')[0]?.toUpperCase()"></div>
+              <div>
+                <div style="font-weight:700;font-size:1rem" x-text="userDetail?.user?.name||'—'"></div>
+                <div style="font-size:.78rem;color:var(--muted)" x-text="userDetail?.user?.email"></div>
+              </div>
+            </div>
+            <button class="modal-close" @click="showUserDetail=false">✕</button>
+          </div>
+
+          <!-- Tabs -->
+          <div style="display:flex;gap:2px;padding:0 16px;border-bottom:1px solid var(--border)">
+            <template x-for="tab in ['overview','agents','notes','security']" :key="tab">
+              <div class="tab" :class="{on:userDetailTab===tab}" @click="userDetailTab=tab"
+                   x-text="{overview:'Übersicht',agents:'Agenten',notes:'Notizen',security:'Sicherheit'}[tab]"></div>
+            </template>
+          </div>
+
+          <div style="padding:16px">
+            <!-- ÜBERSICHT -->
+            <template x-if="userDetailTab==='overview'">
+              <div>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+                  <div class="stat-card" style="padding:12px">
+                    <div class="stat-n" x-text="userDetail?.user?.agent_count||0"></div>
+                    <div class="stat-l">Agenten</div>
+                  </div>
+                  <div class="stat-card" style="padding:12px">
+                    <div class="stat-n" x-text="(userDetail?.stats?.msgs_this_month||0).toLocaleString('de-DE')"></div>
+                    <div class="stat-l">Msgs. diesen Monat</div>
+                  </div>
+                  <div class="stat-card" style="padding:12px">
+                    <div class="stat-n" x-text="(userDetail?.stats?.msgs_total||0).toLocaleString('de-DE')"></div>
+                    <div class="stat-l">Msgs. gesamt</div>
+                  </div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:8px;font-size:.84rem">
+                  <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Plan</span>
+                    <select class="inp" style="width:auto;padding:2px 8px;font-size:.78rem"
+                            :value="userDetail?.user?.plan" @change="changePlan(userDetail.user.id,$event.target.value,userDetail.user);userDetail.user.plan=$event.target.value">
+                      <option value="free">Free</option><option value="pro">Pro</option><option value="enterprise">Enterprise</option>
+                    </select>
+                  </div>
+                  <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Registriert</span><span x-text="userDetail&&new Date(userDetail.user.created_at).toLocaleDateString('de-DE')"></span></div>
+                  <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Letzter Login</span><span x-text="userDetail?.user?.last_login?new Date(userDetail.user.last_login).toLocaleDateString('de-DE'):'—'"></span></div>
+                  <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">E-Mail bestätigt</span>
+                    <span :style="userDetail?.user?.email_confirmed?'color:var(--green)':'color:var(--amber)'"
+                          x-text="userDetail?.user?.email_confirmed?'✓ Ja':'✗ Nein'"></span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Unternehmen</span><span x-text="userDetail?.user?.company||'—'"></span></div>
+                  <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Stripe ID</span><span x-text="userDetail?.user?.stripe_customer_id||'—'" style="font-size:.72rem;color:var(--muted)"></span></div>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
+                  <button class="btn btn-ghost btn-sm" @click="openEmail(userDetail?.user)" x-show="userDetail">✉️ E-Mail</button>
+                  <button class="btn btn-ghost btn-sm" @click="impersonate(userDetail?.user?.id)" x-show="userDetail">👁️ Einloggen</button>
+                  <button class="btn btn-ghost btn-sm" @click="openExtendTrial(userDetail?.user)" x-show="userDetail">⏳ Trial</button>
+                  <button class="btn btn-ghost btn-sm" @click="toggleAdmin(userDetail?.user)" x-show="userDetail"
+                          x-text="userDetail?.user?.is_admin?'⚙️ Admin entziehen':'⚙️ Admin machen'"></button>
+                  <button class="btn btn-danger btn-sm" @click="deleteUser(userDetail?.user?.id);showUserDetail=false" x-show="userDetail&&!userDetail.user.deleted_at">✕ Löschen</button>
+                  <button class="btn btn-ghost btn-sm" @click="restoreUser(userDetail?.user?.id)" x-show="userDetail&&userDetail.user.deleted_at">↩ Reaktivieren</button>
+                </div>
+              </div>
+            </template>
+
+            <!-- AGENTEN -->
+            <template x-if="userDetailTab==='agents'">
+              <div>
+                <template x-if="userDetail?.agents?.length===0"><div class="empty">Keine Agenten</div></template>
+                <template x-for="a in (userDetail?.agents||[])" :key="a.id">
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <span x-text="a.emoji||'🤖'" style="font-size:1.2rem"></span>
+                      <div>
+                        <div style="font-weight:600;font-size:.84rem" x-text="a.name"></div>
+                        <div style="font-size:.72rem;color:var(--muted)" x-text="a.model+' · '+(a.total_messages||0)+' Msgs'"></div>
+                      </div>
+                    </div>
+                    <span :style="a.is_active?'color:var(--green)':'color:var(--muted)'" x-text="a.is_active?'Aktiv':'Inaktiv'"></span>
+                  </div>
+                </template>
+              </div>
+            </template>
+
+            <!-- NOTIZEN -->
+            <template x-if="userDetailTab==='notes'">
+              <div>
+                <div style="display:flex;gap:8px;margin-bottom:14px">
+                  <input class="inp" style="flex:1" placeholder="Neue Notiz…" x-model="newNote" @keydown.enter="addNote()">
+                  <button class="btn btn-purple btn-sm" @click="addNote()">+ Speichern</button>
+                </div>
+                <template x-if="userNotes.length===0"><div class="empty">Noch keine Notizen</div></template>
+                <template x-for="n in userNotes" :key="n.id">
+                  <div style="padding:10px;background:var(--surface-2);border-radius:8px;margin-bottom:8px">
+                    <div style="font-size:.84rem;margin-bottom:4px" x-text="n.note"></div>
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                      <span style="font-size:.7rem;color:var(--muted)" x-text="new Date(n.created_at).toLocaleString('de-DE')"></span>
+                      <button class="btn btn-xs btn-ghost" @click="deleteNote(n.id)">✕</button>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </template>
+
+            <!-- SICHERHEIT -->
+            <template x-if="userDetailTab==='security'">
+              <div style="display:flex;flex-direction:column;gap:16px">
+                <div class="card" style="padding:14px">
+                  <div style="font-weight:600;margin-bottom:10px;font-size:.88rem">🔑 Passwort zurücksetzen</div>
+                  <div style="display:flex;gap:8px">
+                    <input class="inp" type="password" placeholder="Neues Passwort (mind. 8 Zeichen)"
+                           x-model="userResetPw" style="flex:1">
+                    <button class="btn btn-amber btn-sm" @click="adminResetPassword(userDetail?.user?.id)">Setzen</button>
+                  </div>
+                </div>
+                <div class="card" style="padding:14px">
+                  <div style="font-weight:600;margin-bottom:10px;font-size:.88rem">🔐 Sessions ungültig machen</div>
+                  <p style="font-size:.8rem;color:var(--muted);margin-bottom:10px">Macht alle aktiven JWT-Tokens ungültig. Der Nutzer muss sich neu einloggen.</p>
+                  <button class="btn btn-danger btn-sm" @click="changePlan(userDetail?.user?.id,userDetail?.user?.plan,userDetail?.user?.user)">
+                    Sessions invalidieren
+                  </button>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <!-- NUTZER ANLEGEN MODAL -->
+      <div class="modal-overlay" x-show="showNewUser" x-cloak @click.self="showNewUser=false">
+        <div class="modal" style="max-width:400px" @click.stop>
+          <div class="modal-hdr">
+            <div class="modal-title">👤 Nutzer anlegen</div>
+            <button class="modal-close" @click="showNewUser=false">✕</button>
+          </div>
+          <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+            <div class="field"><label>Name</label><input class="inp" x-model="newUser.name" placeholder="Max Mustermann"></div>
+            <div class="field"><label>E-Mail</label><input class="inp" type="email" x-model="newUser.email" placeholder="max@firma.de"></div>
+            <div class="field"><label>Passwort</label><input class="inp" type="password" x-model="newUser.password" placeholder="Mind. 8 Zeichen"></div>
+            <div class="field">
+              <label>Plan</label>
+              <select class="inp" x-model="newUser.plan">
+                <option value="free">Free</option>
+                <option value="pro">Pro</option>
+                <option value="enterprise">Enterprise</option>
+              </select>
+            </div>
+            <button class="btn btn-primary btn-full" @click="createUser()">Anlegen</button>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- ── AGENTS ── -->
@@ -972,9 +1223,14 @@ textarea.inp{resize:vertical;min-height:90px;line-height:1.5}
         <div class="field"><label>Betreff</label><input class="inp" x-model="broadcast.subject" placeholder="z.B. Neue Features im August"></div>
         <div class="field"><label>Text (Zeilenumbrüche → &lt;br&gt;)</label><textarea class="inp" x-model="broadcast.body" rows="8" placeholder="Hallo,&#10;&#10;wir haben neue Features für euch…"></textarea></div>
         <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
-          <button class="btn btn-purple" @click="sendBroadcast()" :disabled="broadcastSending||!broadcast.subject||!broadcast.body">
-            <span x-text="broadcastSending?'⏳ Wird gesendet…':'📧 Jetzt senden'"></span>
-          </button>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <button class="btn btn-purple" @click="sendBroadcast()" :disabled="broadcastSending||!broadcast.subject||!broadcast.body">
+              <span x-text="broadcastSending?'⏳ Wird gesendet…':'📧 Jetzt senden'"></span>
+            </button>
+            <button class="btn btn-ghost" @click="testEmail()" style="font-size:.8rem">
+              🧪 Test-E-Mail
+            </button>
+          </div>
           <div style="font-size:.8rem;color:var(--green);font-weight:600" x-show="broadcastResult" x-text="broadcastResult"></div>
         </div>
         <div style="font-size:.75rem;color:var(--muted);background:rgba(255,255,255,.02);padding:12px;border-radius:8px;border:1px solid var(--border)">
@@ -1201,6 +1457,16 @@ function admin(){
     // Forms
     broadcast:{plan:'all',subject:'',body:''}, broadcastSending:false, broadcastResult:'',
     promo:{code:'',plan:'pro',days:30}, promoCreated:'', directEmail:'', impersonateId:'',
+    // Kundenverwaltung erweitert
+    userFilter:{plan:'all',status:'all',sort:'created_at',order:'desc'},
+    userTotal:0, userPage:1, userPageSize:50,
+    userDetail:null, userDetailTab:'overview',
+    selectedUsers:[], selectAll:false,
+    bulkAction:'', bulkValue:'',
+    newNote:'', userNotes:[],
+    newUser:{name:'',email:'',password:'',plan:'free'},
+    showNewUser:false, showUserDetail:false,
+    userResetPw:'',
     extendEmail:'', extendDays:14,
     newAnn:{type:'info',text:'',url:''},
     cronRunning:false, cronResult:'',
@@ -1254,7 +1520,82 @@ function admin(){
     async loadHealth(){try{this.health=await this.api('/admin/health');}catch(e){this.toast(e.message,'err');}},
     async loadFunnel(){try{this.funnel=await this.api('/admin/funnel');this.$nextTick(()=>this.drawFunnelChart());}catch(e){this.toast(e.message,'err');}},
     async loadAgentHealth(){try{this.agentHealth=await this.api('/admin/agent-health');}catch(e){this.toast(e.message,'err');}},
-    async loadUsers(){try{const d=await this.api('/admin/users');this.users=d.users;}catch(e){this.toast(e.message,'err');}},
+
+    // ── KUNDENVERWALTUNG ERWEITERT ─────────────────────────────────────────
+    async loadUsersFiltered(){
+      const {plan,status,sort,order} = this.userFilter;
+      const offset = (this.userPage-1)*this.userPageSize;
+      const q = this.userSearch ? '&q='+encodeURIComponent(this.userSearch) : '';
+      const d = await this.api(`/admin/users/filter?plan=${plan}&status=${status}&sort=${sort}&order=${order}&limit=${this.userPageSize}&offset=${offset}${q}`).catch(()=>({users:[],total:0}));
+      this.users = d.users||[];
+      this.userTotal = d.total||0;
+      this.selectedUsers = [];
+      this.selectAll = false;
+    },
+    async openUserDetail(u){
+      this.userDetail = null; this.showUserDetail = true; this.userDetailTab = 'overview';
+      const d = await this.api('/admin/users/'+u.id).catch(()=>null);
+      if(d) this.userDetail = d;
+      const notes = await this.api('/admin/users/'+u.id+'/notes').catch(()=>({notes:[]}));
+      this.userNotes = notes.notes||[];
+    },
+    async addNote(){
+      if(!this.newNote.trim()||!this.userDetail) return;
+      const d = await this.api('/admin/users/'+this.userDetail.user.id+'/notes','POST',{note:this.newNote});
+      if(!d.error){ this.userNotes.unshift(d.note); this.newNote=''; this.toast('Notiz gespeichert'); }
+    },
+    async deleteNote(noteId){
+      if(!confirm('Notiz löschen?')) return;
+      await this.api('/admin/users/'+this.userDetail.user.id+'/notes/'+noteId,'DELETE');
+      this.userNotes = this.userNotes.filter(n=>n.id!==noteId);
+    },
+    async restoreUser(id){
+      if(!confirm('Nutzer reaktivieren?')) return;
+      await this.api('/admin/users/'+id+'/restore','POST',{});
+      this.toast('Nutzer reaktiviert'); this.loadUsersFiltered();
+      if(this.userDetail) this.userDetail.user.deleted_at = null;
+    },
+    async adminResetPassword(id){
+      if(!this.userResetPw||this.userResetPw.length<8){this.toast('Passwort mind. 8 Zeichen','err');return;}
+      if(!confirm('Passwort wirklich ändern?')) return;
+      const d = await this.api('/admin/users/'+id+'/reset-password','POST',{newPassword:this.userResetPw});
+      if(d.error){this.toast(d.error,'err');return;}
+      this.toast('Passwort geändert ✓'); this.userResetPw='';
+    },
+    async createUser(){
+      const {name,email,password,plan} = this.newUser;
+      if(!name||!email||!password){this.toast('Alle Felder ausfüllen','err');return;}
+      const d = await this.api('/admin/users/create','POST',this.newUser);
+      if(d.error){this.toast(d.error,'err');return;}
+      this.toast('Nutzer angelegt ✓'); this.showNewUser=false;
+      this.newUser={name:'',email:'',password:'',plan:'free'};
+      this.loadUsersFiltered();
+    },
+    toggleSelectUser(id){
+      const idx = this.selectedUsers.indexOf(id);
+      if(idx>-1) this.selectedUsers.splice(idx,1);
+      else this.selectedUsers.push(id);
+    },
+    toggleSelectAll(){
+      if(this.selectAll){ this.selectedUsers=[]; this.selectAll=false; }
+      else { this.selectedUsers=this.users.map(u=>u.id); this.selectAll=true; }
+    },
+    async runBulkAction(){
+      if(!this.selectedUsers.length){this.toast('Keine Nutzer ausgewählt','err');return;}
+      if(!this.bulkAction){this.toast('Aktion wählen','err');return;}
+      if(!confirm(`${this.selectedUsers.length} Nutzer: "${this.bulkAction}"?`)) return;
+      const payload = {ids:this.selectedUsers, action:this.bulkAction, value:this.bulkValue};
+      const d = await this.api('/admin/users/bulk','POST',payload);
+      if(d.error){this.toast(d.error,'err');return;}
+      this.toast(d.affected ? d.affected+' Nutzer geändert' : d.sent+' E-Mails gesendet');
+      this.selectedUsers=[]; this.bulkAction=''; this.bulkValue='';
+      this.loadUsersFiltered();
+    },
+    userPages(){ return Math.ceil(this.userTotal/this.userPageSize)||1; },
+    setUserPage(p){ if(p<1||p>this.userPages()) return; this.userPage=p; this.loadUsersFiltered(); },
+    userPlanBadge(plan){ return {free:'b-free',pro:'b-pro',enterprise:'b-admin'}[plan]||'b-free'; },
+
+    async loadUsers(){try{this.userPage=1;await this.loadUsersFiltered();}catch(e){this.toast(e.message,'err');}},
     async searchUsers(){if(!this.userSearch.trim()){this.loadUsers();return;}try{const d=await this.api('/admin/users/search?q='+encodeURIComponent(this.userSearch));this.users=d.users;}catch(e){this.toast(e.message,'err');}},
     async loadAllAgents(){try{const d=await this.api('/admin/agents');this.allAgents=d.agents;}catch(e){this.toast(e.message,'err');}},
     async loadActivity(){try{const d=await this.api('/admin/activity');this.activity=d.activity;}catch(e){this.toast(e.message,'err');}},
@@ -1290,17 +1631,37 @@ function admin(){
 
     // Broadcast
     async sendBroadcast(){
-  if(!confirm('Wirklich senden?'))return;
+  if(!this.broadcast.subject||!this.broadcast.body){this.toast('Betreff und Text erforderlich','err');return;}
+  if(!confirm('E-Mail an alle Nutzer senden?'))return;
   this.broadcastSending=true;this.broadcastResult='';
+  this.toast('⏳ Sende…','info');
   try{
     const d=await this.api('/admin/broadcast','POST',this.broadcast);
-    if(d.error){this.toast(d.error,'err');}
-    else{this.broadcastResult='✓ '+d.sent+'/'+d.total+' gesendet';}
+    console.log('BROADCAST RESPONSE:', d);
+    if(d.error){this.toast('❌ '+d.error,'err');this.broadcastResult='Fehler: '+d.error;}
+    else if(d.success){
+      this.broadcastResult='✅ '+d.sent+' von '+d.total+' gesendet'+(d.failed?' ('+d.failed+' fehlgeschlagen)':'');
+      this.toast(this.broadcastResult);
+    } else {
+      this.broadcastResult=JSON.stringify(d);
+      this.toast('Unbekannte Antwort','err');
+    }
   }catch(e){
-    this.toast(e.message||'Fehler beim Senden','err');
+    console.error('BROADCAST ERROR:',e);
+    this.toast('Netzwerkfehler: '+e.message,'err');
+    this.broadcastResult='Fehler: '+e.message;
   }finally{
     this.broadcastSending=false;
   }
+},
+    async testEmail(){
+  const to=prompt('Test-E-Mail senden an:',this.adminEmail||'deine@email.de');
+  if(!to)return;
+  this.toast('⏳ Sende Test…','info');
+  const d=await this.api('/admin/test-email','POST',{to}).catch(e=>({error:e.message}));
+  console.log('EMAIL TEST:', d);
+  if(d.success) this.toast('✅ Test-E-Mail gesendet an '+to);
+  else this.toast('❌ '+d.error+' | Provider: '+JSON.stringify(d.debug),'err');
 },
 
     // Promo
