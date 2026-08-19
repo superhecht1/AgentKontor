@@ -4708,10 +4708,7 @@ _makeChart(id,config){
   // Dummy für Kompatibilität — Charts sind jetzt SVG
   return {destroy:()=>{}};
 },
-options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5a5a80',font:{size:10},maxTicksLimit:8}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5a5a80',font:{size:10}}}}}});
-  const dc=document.getElementById('chartDoughnut');
-  if(dc&&chs.length){const cm={web:'#6c5ce7',widget:'#a29bfe',api:'#f0c040',whatsapp:'#25d366',telegram:'#0088cc'};this._charts.d=this._makeChart('chartDoughnut',{type:'doughnut',data:{labels:chs.map(c=>c.source),datasets:[{data:chs.map(c=>parseInt(c.count)||0),backgroundColor:chs.map(c=>cm[c.source]||'#5a5a80'),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'65%'}});}
-},
+
 
 channelColor(s){return{web:'#6c5ce7',widget:'#a29bfe',api:'#f0c040',whatsapp:'#25d366',telegram:'#0088cc'}[s]||'#5a5a80';},
 
