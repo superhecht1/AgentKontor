@@ -445,6 +445,20 @@ app.use('/api/voice/speak', cors({ origin: '*', credentials: false }));
 // All other endpoints: restricted CORS
 app.use(cors({ origin: allowedOrigin, credentials: true }));
 app.use(cookieParser());
+
+// Zusätzliche Security-Headers (ergänzend zu Helmet)
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  if (process.env.NODE_ENV === 'production') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  }
+  next();
+});
+
 app.use(express.json({ limit: '5mb' }));
 // FIX 5: Compression middleware (gzip/br)
 try {
