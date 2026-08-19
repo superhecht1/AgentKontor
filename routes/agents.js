@@ -117,6 +117,10 @@ router.post('/', auth, async (req, res) => {
     }
 
     const b = req.body;
+    const _s = s => (s||'').replace(/<[^>]*>/g,'').trim();
+    if(b.name) b.name=_s(b.name).slice(0,100);
+    if(b.description) b.description=_s(b.description).slice(0,1000);
+    if(b.greeting) b.greeting=_s(b.greeting).slice(0,500);
     const r = await pool.query(`
       INSERT INTO agents (
         user_id, name, emoji, description, color,

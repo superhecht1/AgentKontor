@@ -215,7 +215,7 @@ router.get('/health', auth, adminOnly, async (req, res) => {
       uptime_s: Math.floor(process.uptime()),
       memory_mb: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
     });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
 
 /* ── REVENUE / MRR ─────────────────────────────────────────── */
@@ -249,7 +249,7 @@ router.get('/revenue', auth, adminOnly, async (req, res) => {
       monthly_signups: churn.rows,
       weekly_signups: newSubs.rows,
     });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
 
 /* ── SEND EMAIL TO USER ─────────────────────────────────────── */
@@ -269,7 +269,7 @@ router.post('/users/:id/email', auth, adminOnly, async (req, res) => {
       html: '<div style="font-family:sans-serif;max-width:560px;margin:32px auto;padding:28px;background:#fff;border-radius:12px"><p>Hallo ' + r.rows[0].name + ',</p>' + body.replace(/\n/g,'<br>') + '<p style="color:#888;font-size:.8rem;margin-top:24px">\u2014 Das AgentKontor Team</p></div>',
     });
     res.json({ success: true });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
 
 /* ── IMPERSONATE USER (generate login token) ────────────────── */
@@ -286,7 +286,7 @@ router.post('/users/:id/impersonate', auth, adminOnly, async (req, res) => {
       { expiresIn: '1h' }
     );
     res.json({ token, message: 'Token gültig für 1 Stunde' });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
 
 /* ── HARD DELETE USER ──────────────────────────────────────── */
@@ -297,7 +297,7 @@ router.delete('/users/:id/hard', auth, adminOnly, async (req, res) => {
   try {
     await pool.query('DELETE FROM users WHERE id=$1', [req.params.id]);
     res.json({ success: true });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
 
 /* ── PLATFORM-WIDE LLM COSTS ───────────────────────────────── */
@@ -417,7 +417,7 @@ router.post('/broadcast', auth, adminOnly, async (req, res) => {
     res.json({ success: true, sent: result.sent, total: users.rows.length, failed: result.failed });
   } catch(e) {
     console.error('BROADCAST:', e.message);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message });
   }
 });
 
@@ -435,7 +435,7 @@ router.post('/promo', auth, adminOnly, async (req, res) => {
       await pool.query('INSERT INTO promo_codes (code, plan, days) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING', [code.toUpperCase(), plan, parseInt(days)]);
     });
     res.json({ success: true, code: code.toUpperCase() });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
 
 /* ── SEARCH USERS ──────────────────────────────────────────── */
@@ -453,7 +453,7 @@ router.get('/users/search', auth, adminOnly, async (req, res) => {
       ['%'+q+'%']
     );
     res.json({ users: r.rows });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
 
 module.exports = router;
@@ -467,7 +467,7 @@ router.get('/cron/logs', auth, adminOnly, async (req, res) => {
       `SELECT job, result, created_at FROM cron_log ORDER BY created_at DESC LIMIT 50`
     ).catch(() => ({ rows: [] }));
     res.json({ logs: r.rows });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
 
 router.post('/cron/run', auth, adminOnly, async (req, res) => {
@@ -481,7 +481,7 @@ router.post('/cron/run', auth, adminOnly, async (req, res) => {
     });
     const d = await r.json();
     res.json(d);
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
 
 /* ── CONVERSION FUNNEL ──────────────────────────────────── */
@@ -509,7 +509,7 @@ router.get('/funnel', auth, adminOnly, async (req, res) => {
       active30d:  parseInt(active30d.rows[0].n),
       daily:      daily.rows,
     });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
 
 /* ── TEMPLATES VERWALTEN ────────────────────────────────── */
@@ -518,7 +518,7 @@ router.get('/templates', auth, adminOnly, async (req, res) => {
   try {
     const r = await pool.query(`SELECT * FROM agent_templates ORDER BY use_count DESC`).catch(() => ({ rows: [] }));
     res.json({ templates: r.rows });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
 
 router.post('/templates', auth, adminOnly, async (req, res) => {
@@ -531,7 +531,7 @@ router.post('/templates', auth, adminOnly, async (req, res) => {
       [name, emoji||'🤖', description||'', category||'Allgemein', system_prompt, greeting||'Hallo! Wie kann ich helfen?', tone||'professionell', tags||[], 'AgentKontor']
     );
     res.json({ success: true, id: r.rows[0].id });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
 
 router.put('/templates/:id', auth, adminOnly, async (req, res) => {
@@ -543,7 +543,7 @@ router.put('/templates/:id', auth, adminOnly, async (req, res) => {
       [name, emoji||'🤖', description||'', category||'Allgemein', system_prompt, greeting, tone||'professionell', is_public!==false, req.params.id]
     );
     res.json({ success: true });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
 
 router.delete('/templates/:id', auth, adminOnly, async (req, res) => {
@@ -551,7 +551,7 @@ router.delete('/templates/:id', auth, adminOnly, async (req, res) => {
   try {
     await pool.query(`DELETE FROM agent_templates WHERE id=$1`, [req.params.id]).catch(() => ({ rows: [] }));
     res.json({ success: true });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
 
 /* ── FEEDBACK / BEWERTUNGEN ─────────────────────────────── */
@@ -574,7 +574,7 @@ router.get('/feedback', auth, adminOnly, async (req, res) => {
         ORDER BY mf.created_at DESC LIMIT 50`).catch(() => ({ rows: [] })),
     ]);
     res.json({ summary: summary.rows[0], recent: recent.rows });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
 
 /* ── ANNOUNCEMENT BANNER ────────────────────────────────── */
@@ -594,7 +594,7 @@ router.get('/changelog', auth, adminOnly, async (req, res) => {
     const r = await pool.query(`SELECT * FROM changelog ORDER BY created_at DESC LIMIT 30`)
       .catch(() => ({ rows: [] }));
     res.json({ entries: r.rows });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
 
 router.post('/changelog', auth, adminOnly, async (req, res) => {
@@ -608,7 +608,7 @@ router.post('/changelog', auth, adminOnly, async (req, res) => {
       [version||'', title, body]
     );
     res.json({ success: true, id: r.rows[0].id });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
 
 router.delete('/changelog/:id', auth, adminOnly, async (req, res) => {
@@ -616,7 +616,7 @@ router.delete('/changelog/:id', auth, adminOnly, async (req, res) => {
   try {
     await pool.query(`DELETE FROM changelog WHERE id=$1`, [req.params.id]).catch(() => ({ rows: [] }));
     res.json({ success: true });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
 
 /* ── CSV EXPORTS ────────────────────────────────────────── */
@@ -641,7 +641,7 @@ router.get('/users/export', auth, adminOnly, async (req, res) => {
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="users-${new Date().toISOString().split('T')[0]}.csv"`);
     res.send('\ufeff' + header + rows);
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
 
 router.get('/agents/export', auth, adminOnly, async (req, res) => {
@@ -664,7 +664,7 @@ router.get('/agents/export', auth, adminOnly, async (req, res) => {
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="agents-${new Date().toISOString().split('T')[0]}.csv"`);
     res.send('\ufeff' + header + rows);
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
 
 /* ── TRIAL VERLÄNGERN ───────────────────────────────────── */
@@ -678,7 +678,7 @@ router.post('/users/:id/extend-trial', auth, adminOnly, async (req, res) => {
     const newEnd = new Date(base.getTime() + days * 86400000);
     await pool.query(`UPDATE users SET trial_ends_at=$1, plan='pro' WHERE id=$2`, [newEnd, req.params.id]);
     res.json({ success: true, trial_ends_at: newEnd.toISOString() });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
 
 /* ── AGENT HEALTH CHECK ─────────────────────────────────── */
@@ -710,7 +710,7 @@ router.get('/agent-health', auth, adminOnly, async (req, res) => {
       errors: errorAgents.rows,
       top_active: topActive.rows,
     });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
 
 /* ── PLATFORM SEARCH (users + agents) ──────────────────── */
@@ -724,7 +724,7 @@ router.get('/search', auth, adminOnly, async (req, res) => {
       pool.query(`SELECT a.id, a.name, a.emoji, a.total_messages, u.email AS owner FROM agents a JOIN users u ON a.user_id=u.id WHERE a.name ILIKE $1 LIMIT 8`, [`%${q}%`]),
     ]);
     res.json({ users: users.rows, agents: agents.rows });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
 
 /* ── LLM COST ALERTS ────────────────────────────────────── */
@@ -741,7 +741,7 @@ router.get('/cost-alerts', auth, adminOnly, async (req, res) => {
       ORDER BY cost_today DESC
     `).catch(() => ({ rows: [] }));
     res.json({ alerts: r.rows });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
 
 /* ── FEATURE FLAGS ──────────────────────────────────────── */
@@ -755,7 +755,7 @@ router.post('/users/:id/feature', auth, adminOnly, async (req, res) => {
       [req.params.id, enabled]
     );
     res.json({ success: true, note: 'Feature-Flags via plan-Upgrade simuliert. Für echte Flags metadata-Spalte ergänzen.' });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
 
 /* ── RATE LIMIT STATUS ──────────────────────────────────── */
@@ -768,7 +768,7 @@ router.get('/rate-limits', auth, adminOnly, async (req, res) => {
       ORDER BY count DESC LIMIT 30
     `).catch(() => ({ rows: [] }));
     res.json({ limits: r.rows });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
 
 /* ── PLATFORM STATS SNAPSHOT ────────────────────────────── */
@@ -790,5 +790,5 @@ router.get('/snapshot', auth, adminOnly, async (req, res) => {
       active_agents_now: parseInt(active_agents.rows[0].n),
       timestamp:         new Date().toISOString(),
     });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });

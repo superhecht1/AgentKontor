@@ -233,7 +233,7 @@ router.post('/resend-confirm', async (req, res) => {
 
     res.json({ success: true });
   } catch(e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message });
   }
 });
 
