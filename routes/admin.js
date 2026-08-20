@@ -120,7 +120,7 @@ router.delete('/users/:id', auth, adminOnly, async (req, res) => {
   if (parseInt(req.params.id) === req.userId)
     return res.status(400).json({ error: 'Eigenes Konto nicht löschbar' });
   try {
-    await pool.query('DELETE FROM users WHERE id=$1', [req.params.id]);
+    await pool.query('DELETE FROM users WHERE id=$1', [parseInt(req.params.id)]);
     res.json({ success: true });
   } catch(e) {
     res.status(500).json({ error: 'Fehler' });
@@ -258,7 +258,7 @@ router.post('/users/:id/email', auth, adminOnly, async (req, res) => {
   const { subject, body } = req.body;
   if (!subject || !body) return res.status(400).json({ error: 'Subject und Body erforderlich' });
   try {
-    const r = await pool.query('SELECT email, name FROM users WHERE id=$1', [req.params.id]);
+    const r = await pool.query('SELECT email, name FROM users WHERE id=$1', [parseInt(req.params.id)]);
     if (!r.rows.length) return res.status(404).json({ error: 'Nutzer nicht gefunden' });
     if (!process.env.SMTP_HOST) return res.status(503).json({ error: 'SMTP nicht konfiguriert. Bitte SMTP_HOST in den Umgebungsvariablen setzen.' });
 
@@ -276,7 +276,7 @@ router.post('/users/:id/email', auth, adminOnly, async (req, res) => {
 router.post('/users/:id/impersonate', auth, adminOnly, async (req, res) => {
   const pool = getPool(req);
   try {
-    const r = await pool.query('SELECT id, token_version, plan FROM users WHERE id=$1 AND deleted_at IS NULL', [req.params.id]);
+    const r = await pool.query('SELECT id, token_version, plan FROM users WHERE id=$1 AND deleted_at IS NULL', [parseInt(req.params.id)]);
     if (!r.rows.length) return res.status(404).json({ error: 'Nutzer nicht gefunden' });
 
     const jwt = require('jsonwebtoken');
@@ -295,7 +295,7 @@ router.delete('/users/:id/hard', auth, adminOnly, async (req, res) => {
   if (parseInt(req.params.id) === req.userId)
     return res.status(400).json({ error: 'Eigenes Konto nicht löschbar' });
   try {
-    await pool.query('DELETE FROM users WHERE id=$1', [req.params.id]);
+    await pool.query('DELETE FROM users WHERE id=$1', [parseInt(req.params.id)]);
     res.json({ success: true });
   } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
@@ -466,21 +466,21 @@ router.get('/users/:id', auth, adminOnly, async (req, res) => {
       pool.query(`
         SELECT u.*, COUNT(a.id) AS agent_count
         FROM users u LEFT JOIN agents a ON a.user_id=u.id
-        WHERE u.id=$1 GROUP BY u.id`, [req.params.id]),
+        WHERE u.id=$1 GROUP BY u.id`, [parseInt(req.params.id)]),
       pool.query(`
         SELECT id, name, emoji, is_active, total_messages, created_at, model
-        FROM agents WHERE user_id=$1 ORDER BY created_at DESC LIMIT 20`, [req.params.id]),
+        FROM agents WHERE user_id=$1 ORDER BY created_at DESC LIMIT 20`, [parseInt(req.params.id)]),
       pool.query(`
         SELECT type, detail, created_at FROM user_activity
         WHERE user_id=$1 ORDER BY created_at DESC LIMIT 50
-      `, [req.params.id]).catch(() => ({ rows: [] })),
+      `, [parseInt(req.params.id)]).catch(() => ({ rows: [] })),
       pool.query(`
         SELECT
           COALESCE(SUM(CASE WHEN DATE_TRUNC('month',created_at)=DATE_TRUNC('month',NOW()) THEN 1 ELSE 0 END),0) AS msgs_this_month,
           COALESCE(SUM(1),0) AS msgs_total,
           MAX(created_at) AS last_message
         FROM conversations WHERE user_id=$1
-      `, [req.params.id]).catch(() => ({ rows: [{}] })),
+      `, [parseInt(req.params.id)]).catch(() => ({ rows: [{}] })),
     ]);
     if (!user.rows.length) return res.status(404).json({ error: 'Nutzer nicht gefunden' });
     res.json({
@@ -500,7 +500,7 @@ router.get('/users/:id/notes', auth, adminOnly, async (req, res) => {
   const pool = getPool(req);
   const notes = await pool.query(
     `SELECT id, note, admin_id, created_at FROM user_notes
-     WHERE user_id=$1 ORDER BY created_at DESC`, [req.params.id]
+     WHERE user_id=$1 ORDER BY created_at DESC`, [parseInt(req.params.id)]
   ).catch(() => ({ rows: [] }));
   res.json({ notes: notes.rows });
 });
@@ -535,7 +535,7 @@ router.delete('/users/:id/notes/:noteId', auth, adminOnly, async (req, res) => {
 router.post('/users/:id/restore', auth, adminOnly, async (req, res) => {
   const pool = getPool(req);
   await pool.query(
-    'UPDATE users SET deleted_at=NULL, is_active=true WHERE id=$1', [req.params.id]
+    'UPDATE users SET deleted_at=NULL, is_active=true WHERE id=$1', [parseInt(req.params.id)]
   );
   res.json({ success: true });
 });
@@ -780,7 +780,7 @@ router.put('/templates/:id', auth, adminOnly, async (req, res) => {
 router.delete('/templates/:id', auth, adminOnly, async (req, res) => {
   const pool = getPool(req);
   try {
-    await pool.query(`DELETE FROM agent_templates WHERE id=$1`, [req.params.id]).catch(() => ({ rows: [] }));
+    await pool.query(`DELETE FROM agent_templates WHERE id=$1`, [parseInt(req.params.id)]).catch(() => ({ rows: [] }));
     res.json({ success: true });
   } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
@@ -845,7 +845,7 @@ router.post('/changelog', auth, adminOnly, async (req, res) => {
 router.delete('/changelog/:id', auth, adminOnly, async (req, res) => {
   const pool = getPool(req);
   try {
-    await pool.query(`DELETE FROM changelog WHERE id=$1`, [req.params.id]).catch(() => ({ rows: [] }));
+    await pool.query(`DELETE FROM changelog WHERE id=$1`, [parseInt(req.params.id)]).catch(() => ({ rows: [] }));
     res.json({ success: true });
   } catch(e) { res.status(500).json({ error: process.env.NODE_ENV==='production'?'Interner Fehler':e.message }); }
 });
@@ -903,7 +903,7 @@ router.post('/users/:id/extend-trial', auth, adminOnly, async (req, res) => {
   const pool = getPool(req);
   const days = Math.min(90, Math.max(1, parseInt(req.body.days)||14));
   try {
-    const r = await pool.query(`SELECT trial_ends_at, plan FROM users WHERE id=$1`, [req.params.id]);
+    const r = await pool.query(`SELECT trial_ends_at, plan FROM users WHERE id=$1`, [parseInt(req.params.id)]);
     if (!r.rows.length) return res.status(404).json({ error: 'Nutzer nicht gefunden' });
     const base = new Date(Math.max(Date.now(), new Date(r.rows[0].trial_ends_at||Date.now()).getTime()));
     const newEnd = new Date(base.getTime() + days * 86400000);

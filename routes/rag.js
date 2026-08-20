@@ -120,8 +120,8 @@ router.post('/search', auth, async (req, res) => {
 router.delete('/documents/:id', auth, async (req, res) => {
   const pool = getPool(req);
   try {
-    await pool.query('DELETE FROM agent_document_chunks WHERE document_id=$1', [req.params.id]);
-    await pool.query('DELETE FROM agent_documents WHERE id=$1', [req.params.id]);
+    await pool.query('DELETE FROM agent_document_chunks WHERE document_id=$1', [parseInt(req.params.id)]);
+    await pool.query('DELETE FROM agent_documents WHERE id=$1', [parseInt(req.params.id)]);
     res.json({ success: true });
   } catch { res.status(500).json({ error: 'Fehler' }); }
 });

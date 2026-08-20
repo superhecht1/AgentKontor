@@ -353,7 +353,7 @@ router.post('/:id/test', auth, async (req, res) => {
   try {
     const r = await pool.query(
       'SELECT system_prompt, greeting, tone, language, model, emoji, name FROM agents WHERE id=$1',
-      [req.params.id]
+      [parseInt(req.params.id)]
     );
     if (!r.rows.length) return res.status(404).json({ error: 'Agent nicht gefunden' });
     const agent = r.rows[0];

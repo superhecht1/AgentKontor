@@ -112,7 +112,7 @@ router.get('/:id/members', auth, async (req, res) => {
        FROM users u LEFT JOIN agents a ON a.user_id=u.id
        WHERE u.workspace_id=$1
        GROUP BY u.id ORDER BY u.created_at ASC`,
-      [req.params.id]
+      [parseInt(req.params.id)]
     );
     res.json({ members: r.rows });
   } catch(e) { res.status(500).json({ error: 'Fehler' }); }
@@ -129,7 +129,7 @@ router.post('/:id/invite', auth, async (req, res) => {
     if (!ws.rows.length) return res.status(403).json({ error: 'Nicht berechtigt' });
 
     // Check max users limit
-    const memberCount = await pool.query('SELECT COUNT(*) FROM users WHERE workspace_id=$1', [req.params.id]);
+    const memberCount = await pool.query('SELECT COUNT(*) FROM users WHERE workspace_id=$1', [parseInt(req.params.id)]);
     if (ws.rows[0].max_sub_users > 0 && parseInt(memberCount.rows[0].count) >= ws.rows[0].max_sub_users)
       return res.status(403).json({ error: 'Maximale Nutzeranzahl erreicht' });
 
@@ -199,7 +199,7 @@ router.get('/:id/usage', auth, async (req, res) => {
       LEFT JOIN llm_usage lu ON lu.agent_id=a.id
       WHERE u.workspace_id=$1
       GROUP BY u.id ORDER BY cost_month DESC
-    `, [req.params.id]);
+    `, [parseInt(req.params.id)]);
 
     const totals = await pool.query(`
       SELECT COALESCE(SUM(lu.cost_usd) FILTER (WHERE lu.created_at >= NOW()-INTERVAL'30 days'), 0) AS total_cost_month,
@@ -208,7 +208,7 @@ router.get('/:id/usage', auth, async (req, res) => {
       LEFT JOIN agents a ON a.user_id=u.id
       LEFT JOIN llm_usage lu ON lu.agent_id=a.id
       WHERE u.workspace_id=$1
-    `, [req.params.id]);
+    `, [parseInt(req.params.id)]);
 
     res.json({ members: r.rows, totals: totals.rows[0] });
   } catch(e) { res.status(500).json({ error: 'Fehler' }); }
