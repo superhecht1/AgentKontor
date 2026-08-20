@@ -751,6 +751,26 @@ input:checked+.slider::before{transform:translateX(18px)}
 [data-theme="light"] .approval-card.pending{border-color:rgba(217,119,6,.3);background:rgba(217,119,6,.04)}
 [data-theme="light"] .final-result{background:linear-gradient(135deg,rgba(5,150,105,.06),rgba(109,40,217,.04))}
 
+
+/* ── Model Picker ─────────────────────────────────────── */
+.model-picker{position:relative}
+.model-picker-btn{width:100%;display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r);cursor:pointer;transition:border-color .2s;text-align:left}
+.model-picker-btn:hover{border-color:var(--border-h)}
+.model-provider-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.model-picker-label{flex:1;font-size:.82rem;font-weight:600;color:var(--text)}
+.model-picker-sub{font-size:.7rem;color:var(--muted);margin-left:auto}
+.model-picker-chevron{color:var(--muted);font-size:.7rem;transition:transform .2s}
+.model-picker-open .model-picker-chevron{transform:rotate(180deg)}
+.model-dropdown{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.35);z-index:200;overflow:hidden;max-height:400px;overflow-y:auto}
+.model-group-label{padding:8px 12px 4px;font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;background:var(--surface-2);border-bottom:1px solid var(--border)}
+.model-option{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;transition:background .15s}
+.model-option:hover{background:rgba(124,58,237,.1)}
+.model-option.selected{background:rgba(124,58,237,.15)}
+.model-opt-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.model-opt-name{flex:1;font-size:.81rem;font-weight:600;color:var(--text)}
+.model-opt-badge{font-size:.64rem;padding:1px 6px;border-radius:8px;font-weight:700;flex-shrink:0}
+.model-opt-desc{font-size:.69rem;color:var(--muted);margin-top:1px}
+
 </style>
 
   <!-- PWA -->
@@ -2312,32 +2332,31 @@ X-AgentKontor-Signature: sha256=…
               </div>
               <div class="field"><label>Kontext (optional)</label><input class="inp" x-model="superContext" placeholder="Branche, Produkt, Zielgruppe…"></div>
               <div class="field"><label>Modell</label>
-                <select class="inp" x-model="superModel">
-<optgroup label="Anthropic">
-                    <option value="claude-sonnet-4-6">Claude Sonnet 4.6 ★</option>
-                    <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 ⚡</option>
-                    <option value="claude-opus-4-6">Claude Opus 4.6 🧠</option>
-                  </optgroup>
-                  <optgroup label="OpenAI">
-                    <option value="gpt-4o">GPT-4o</option>
-                    <option value="gpt-4o-mini">GPT-4o mini ⚡</option>
-                  </optgroup>
-                  <optgroup label="Google">
-                    <option value="gemini-2.0-flash">Gemini 2.0 Flash ⚡</option>
-                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-                  </optgroup>
-                  <optgroup label="Mistral 🇪🇺">
-                    <option value="mistral-large-latest">Mistral Large</option>
-                    <option value="mistral-small-latest">Mistral Small ⚡</option>
-                  </optgroup>
-                  <optgroup label="Groq ⚡">
-                    <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
-                    <option value="llama-3.1-8b-instant">Llama 3.1 8B ⚡</option>
-                  </optgroup>
-                  <optgroup label="DeepSeek">
-                    <option value="deepseek-chat">DeepSeek Chat</option>
-                  </optgroup>
-                </select>
+                <div class="model-picker" @click.outside="superModelOpen=false">
+          <button type="button" class="model-picker-btn" :class="{'superModelOpen':!superModelOpen,'model-picker-open':superModelOpen}" @click="superModelOpen=!superModelOpen">
+            <div class="model-provider-dot" :style="'background:'+modelColor(superModel)"></div>
+            <span class="model-picker-label" x-text="modelLabel(superModel)"></span>
+            <span class="model-picker-sub" x-text="superModel"></span>
+            <span class="model-picker-chevron">▾</span>
+          </button>
+          <div class="model-dropdown" x-show="superModelOpen" x-cloak>
+            <template x-for="group in MODEL_GROUPS" :key="group.label">
+              <div>
+                <div class="model-group-label" x-text="group.label"></div>
+                <template x-for="m in group.models" :key="m.value">
+                  <div class="model-option" :class="{selected:superModel===m.value}" @click="superModel=m.value;superModelOpen=false">
+                    <div class="model-opt-dot" :style="'background:'+group.color"></div>
+                    <div style="flex:1;min-width:0">
+                      <div class="model-opt-name" x-text="m.name"></div>
+                      <div class="model-opt-desc" x-text="m.desc"></div>
+                    </div>
+                    <span class="model-opt-badge" :style="'background:'+m.badgeColor+';color:var(--text)'" x-text="m.badge"></span>
+                  </div>
+                </template>
+              </div>
+            </template>
+          </div>
+        </div>
               </div>
               <button class="btn btn-primary btn-full" style="font-size:.9rem;padding:12px" @click="startSuperAgent()" :disabled="!superGoal.trim()">
                 🦾 Super Agent starten
@@ -3828,14 +3847,31 @@ https://anbieter3.de"></textarea></div>
       <div class="inp-2col">
         <div class="field"><label x-text="T.name+' *'"></label><input class="inp" x-model="af.name" :placeholder="T.eg_name"></div>
         <div class="field"><label>Modell</label>
-          <select class="inp" x-model="af.model">
-            <optgroup label="Anthropic"><option value="claude-sonnet-4-6">Claude Sonnet 4.6 ★</option><option value="claude-haiku-4-5">Claude Haiku 4.5 ⚡</option><option value="claude-opus-4-6">Claude Opus 4.6 🧠</option></optgroup>
-            <optgroup label="OpenAI"><option value="gpt-4o">GPT-4o</option><option value="gpt-4o-mini">GPT-4o mini</option></optgroup>
-            <optgroup label="Google"><option value="gemini-2.0-flash">Gemini 2.0 Flash ⚡</option><option value="gemini-1.5-pro">Gemini 1.5 Pro</option></optgroup>
-            <optgroup label="Mistral 🇪🇺"><option value="mistral-large-latest">Mistral Large</option><option value="mistral-small-latest">Mistral Small</option></optgroup>
-            <optgroup label="Groq ⚡"><option value="llama-3.3-70b-versatile">Llama 3.3 70B</option><option value="llama-3.1-8b-instant">Llama 3.1 8B</option></optgroup>
-            <optgroup label="DeepSeek"><option value="deepseek-chat">DeepSeek Chat</option></optgroup>
-          </select>
+          <div class="model-picker" @click.outside="modelPickerOpen=false">
+          <button type="button" class="model-picker-btn" :class="{'modelPickerOpen':!modelPickerOpen,'model-picker-open':modelPickerOpen}" @click="modelPickerOpen=!modelPickerOpen">
+            <div class="model-provider-dot" :style="'background:'+modelColor(af.model)"></div>
+            <span class="model-picker-label" x-text="modelLabel(af.model)"></span>
+            <span class="model-picker-sub" x-text="af.model"></span>
+            <span class="model-picker-chevron">▾</span>
+          </button>
+          <div class="model-dropdown" x-show="modelPickerOpen" x-cloak>
+            <template x-for="group in MODEL_GROUPS" :key="group.label">
+              <div>
+                <div class="model-group-label" x-text="group.label"></div>
+                <template x-for="m in group.models" :key="m.value">
+                  <div class="model-option" :class="{selected:af.model===m.value}" @click="af.model=m.value;modelPickerOpen=false">
+                    <div class="model-opt-dot" :style="'background:'+group.color"></div>
+                    <div style="flex:1;min-width:0">
+                      <div class="model-opt-name" x-text="m.name"></div>
+                      <div class="model-opt-desc" x-text="m.desc"></div>
+                    </div>
+                    <span class="model-opt-badge" :style="'background:'+m.badgeColor+';color:var(--text)'" x-text="m.badge"></span>
+                  </div>
+                </template>
+              </div>
+            </template>
+          </div>
+        </div>
         </div>
       </div>
       <div class="field"><label>Emoji</label>
@@ -4197,6 +4233,43 @@ back_to_login:'← Back to login',reset_desc:'Choose a new password (min. 8 char
 set_new_password:'Set new password',reset_success:'Password changed! You can now sign in.',
 clone_success:'Agent cloned ✓'}};
 
+
+const MODEL_GROUPS = [
+  { label: 'Anthropic', color: '#cc785c', models: [
+    { value: 'claude-sonnet-4-6',          name: 'Claude Sonnet 4.6', badge: '★ Empfohlen', badgeColor: 'rgba(124,58,237,.3)', desc: 'Beste Balance: Qualität & Geschwindigkeit' },
+    { value: 'claude-haiku-4-5-20251001',  name: 'Claude Haiku 4.5',  badge: '⚡ Schnell',   badgeColor: 'rgba(16,185,129,.25)', desc: 'Ultraschnell & kosteneffizient' },
+    { value: 'claude-opus-4-6',            name: 'Claude Opus 4.6',   badge: '🧠 Stärkste',  badgeColor: 'rgba(245,158,11,.25)',  desc: 'Maximale Intelligenz für komplexe Aufgaben' },
+  ]},
+  { label: 'OpenAI', color: '#74aa9c', models: [
+    { value: 'gpt-4o',      name: 'GPT-4o',      badge: '★ Empfohlen', badgeColor: 'rgba(116,170,156,.3)', desc: 'Leistungsstark mit Vision-Unterstützung' },
+    { value: 'gpt-4o-mini', name: 'GPT-4o mini', badge: '⚡ Schnell',   badgeColor: 'rgba(16,185,129,.25)', desc: 'Schnell und kosteneffizient' },
+  ]},
+  { label: 'Google', color: '#4285f4', models: [
+    { value: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', badge: '⚡ Neu',       badgeColor: 'rgba(66,133,244,.3)',  desc: 'Neuestes Google-Modell, sehr schnell' },
+    { value: 'gemini-1.5-pro',   name: 'Gemini 1.5 Pro',   badge: '🧠 Stark',     badgeColor: 'rgba(245,158,11,.25)', desc: 'Langes Kontextfenster (1M Token)' },
+  ]},
+  { label: 'Mistral 🇪🇺', color: '#f97316', models: [
+    { value: 'mistral-large-latest', name: 'Mistral Large', badge: '🇪🇺 EU', badgeColor: 'rgba(249,115,22,.25)', desc: 'Europäisch, DSGVO-konform' },
+    { value: 'mistral-small-latest', name: 'Mistral Small', badge: '⚡ Mini', badgeColor: 'rgba(16,185,129,.25)', desc: 'Kompakt und sehr schnell' },
+  ]},
+  { label: 'Groq ⚡', color: '#f43f5e', models: [
+    { value: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B', badge: '⚡ Turbo', badgeColor: 'rgba(244,63,94,.25)', desc: 'Open-Source, extrem schnelle Inferenz' },
+    { value: 'llama-3.1-8b-instant',    name: 'Llama 3.1 8B',  badge: '🚀 Ultra', badgeColor: 'rgba(16,185,129,.25)', desc: 'Blitzschnell für einfache Aufgaben' },
+  ]},
+  { label: 'DeepSeek', color: '#6366f1', models: [
+    { value: 'deepseek-chat', name: 'DeepSeek Chat', badge: '🔬 KI', badgeColor: 'rgba(99,102,241,.3)', desc: 'Chinesisches Spitzenmodell, sehr fähig' },
+  ]},
+];
+
+function modelLabel(val) {
+  for (const g of MODEL_GROUPS) for (const m of g.models) if (m.value === val) return m.name;
+  return val;
+}
+function modelColor(val) {
+  for (const g of MODEL_GROUPS) for (const m of g.models) if (m.value === val) return g.color;
+  return '#888';
+}
+
 function app(){return{
 user:null,token:null,page:'dashboard',lang:'de',
 authTab:'login',authErr:'',authInfo:'',loading:false,confirmEmail:'',registerSuccess:false,
@@ -4204,6 +4277,7 @@ lf:{email:'',password:''},rf:{name:'',email:'',password:''},
 get T(){return TRANSLATIONS[this.lang]||TRANSLATIONS.de;},
 toggleLang(){this.lang=this.lang==='de'?'en':'de';localStorage.setItem('ak_lang',this.lang);},
 agents:[],docs:[],toasts:[],saving:false,
+modelPickerOpen:false,superModelOpen:false,goalModelOpen:false,
 // Onboarding
 showOnboarding:false,onboardStep:0,onboardTemplate:null,onboardCompany:'',onboardGenerating:false,onboardDone:false,
 tourActive:false,tourStep:0,
