@@ -1150,14 +1150,7 @@ input:checked+.slider::before{transform:translateX(18px)}
     </div>
 
     <div class="content">
-      <!-- DEBUG BAR - ENTFERNEN NACH TEST -->
-      <div style="position:sticky;top:0;z-index:100;background:rgba(91,79,207,.9);color:#fff;padding:4px 12px;font-size:.72rem;display:flex;gap:12px;align-items:center">
-        <span>Alpine: ✅</span>
-        <span>Mode: <strong x-text="appMode"></strong></span>
-        <span>Page: <strong x-text="page"></strong></span>
-        <span>Token: <strong x-text="token?'✅':'❌'"></strong></span>
-        <button onclick="location.reload()" style="padding:2px 8px;background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:4px;cursor:pointer;font-size:.7rem">Reload</button>
-      </div>
+
 
       <!-- ── DASHBOARD ── -->
       <div class="page" x-show="page==='dashboard'" x-init="$nextTick(()=>{loadNotifs();$watch('page', v=>{if(v==='dashboard'){loadNotifs();setTimeout(()=>loadInsights(),300);}});})">
