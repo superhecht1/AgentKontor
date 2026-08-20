@@ -406,6 +406,69 @@ async function initDb() {
       installed_at TIMESTAMPTZ DEFAULT now(),
       UNIQUE(user_id, marketplace_id)
     )`,
+
+    // Fehlende Tabellen nachrüsten
+    `CREATE TABLE IF NOT EXISTS plans (
+      id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      agent_id INTEGER REFERENCES agents(id) ON DELETE SET NULL,
+      title TEXT NOT NULL, description TEXT, goal TEXT, status TEXT DEFAULT 'draft',
+      model TEXT DEFAULT 'claude-sonnet-4-6', created_at TIMESTAMPTZ DEFAULT now(), updated_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS tasks (
+      id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      title TEXT NOT NULL, type TEXT DEFAULT 'generic', status TEXT DEFAULT 'pending',
+      priority INTEGER DEFAULT 5, payload JSONB DEFAULT '{}', result JSONB,
+      error_msg TEXT, retry_count INTEGER DEFAULT 0, max_retries INTEGER DEFAULT 3,
+      depends_on INTEGER[], run_after TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT now(), updated_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS research_results (
+      id SERIAL PRIMARY KEY, session_id INTEGER REFERENCES research_sessions(id) ON DELETE CASCADE,
+      url TEXT, title TEXT, content TEXT, summary TEXT, relevance_score NUMERIC,
+      created_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS conversations (
+      id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      agent_id INTEGER REFERENCES agents(id) ON DELETE CASCADE,
+      channel TEXT DEFAULT 'widget', platform_user_id TEXT,
+      created_at TIMESTAMPTZ DEFAULT now(), updated_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS leads (
+      id SERIAL PRIMARY KEY, agent_id INTEGER REFERENCES agents(id) ON DELETE CASCADE,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      name TEXT, email TEXT, phone TEXT, message TEXT, platform TEXT DEFAULT 'widget',
+      created_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS webhooks (
+      id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      agent_id INTEGER REFERENCES agents(id) ON DELETE CASCADE,
+      name TEXT, url TEXT NOT NULL, events TEXT[] DEFAULT '{}',
+      secret TEXT, is_active BOOLEAN DEFAULT true,
+      created_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS referral_codes (
+      id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      code TEXT UNIQUE NOT NULL, conversion_count INTEGER DEFAULT 0, click_count INTEGER DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS referral_conversions (
+      id SERIAL PRIMARY KEY, referral_code_id INTEGER REFERENCES referral_codes(id) ON DELETE CASCADE,
+      referrer_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      referred_user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      converted_at TIMESTAMPTZ DEFAULT now(),
+      UNIQUE(referred_user_id)
+    )`,
+    `CREATE TABLE IF NOT EXISTS workspaces (
+      id SERIAL PRIMARY KEY, owner_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      name TEXT NOT NULL, slug TEXT UNIQUE, plan TEXT DEFAULT 'free',
+      created_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS workspace_members (
+      id SERIAL PRIMARY KEY, workspace_id INTEGER REFERENCES workspaces(id) ON DELETE CASCADE,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      role TEXT DEFAULT 'member', joined_at TIMESTAMPTZ DEFAULT now(),
+      UNIQUE(workspace_id, user_id)
+    )`,
   ];
   for (const sql of criticalTables) {
     await pool.query(sql).catch(e => {
