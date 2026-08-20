@@ -437,7 +437,6 @@ async function initDb() {
       user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
       role TEXT DEFAULT 'member', joined_at TIMESTAMPTZ DEFAULT now(),
       UNIQUE(workspace_id, user_id))`,
-    // Memory Spalten nachrüsten
   ];
   for (const sql of criticalTables) {
     await pool.query(sql).catch(e => {
