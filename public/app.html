@@ -1606,9 +1606,30 @@ X-AgentKontor-Signature: sha256=…
               <div style="display:flex;align-items:center;gap:6px">
                 <label style="font-size:.75rem;color:var(--muted-l)">Modell:</label>
                 <select class="inp" style="width:160px;font-size:.78rem;padding:5px 8px" x-model="goalModel">
-                  <option value="claude-sonnet-4-6">Claude Sonnet</option>
-                  <option value="claude-opus-4-6">Claude Opus 🧠</option>
-                  <option value="gpt-4o">GPT-4o</option>
+<optgroup label="Anthropic">
+                    <option value="claude-sonnet-4-6">Claude Sonnet 4.6 ★</option>
+                    <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 ⚡</option>
+                    <option value="claude-opus-4-6">Claude Opus 4.6 🧠</option>
+                  </optgroup>
+                  <optgroup label="OpenAI">
+                    <option value="gpt-4o">GPT-4o</option>
+                    <option value="gpt-4o-mini">GPT-4o mini ⚡</option>
+                  </optgroup>
+                  <optgroup label="Google">
+                    <option value="gemini-2.0-flash">Gemini 2.0 Flash ⚡</option>
+                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                  </optgroup>
+                  <optgroup label="Mistral 🇪🇺">
+                    <option value="mistral-large-latest">Mistral Large</option>
+                    <option value="mistral-small-latest">Mistral Small ⚡</option>
+                  </optgroup>
+                  <optgroup label="Groq ⚡">
+                    <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
+                    <option value="llama-3.1-8b-instant">Llama 3.1 8B ⚡</option>
+                  </optgroup>
+                  <optgroup label="DeepSeek">
+                    <option value="deepseek-chat">DeepSeek Chat</option>
+                  </optgroup>
                 </select>
               </div>
             </div>
@@ -2292,9 +2313,30 @@ X-AgentKontor-Signature: sha256=…
               <div class="field"><label>Kontext (optional)</label><input class="inp" x-model="superContext" placeholder="Branche, Produkt, Zielgruppe…"></div>
               <div class="field"><label>Modell</label>
                 <select class="inp" x-model="superModel">
-                  <option value="claude-sonnet-4-6">Claude Sonnet 4.6 (empfohlen)</option>
-                  <option value="claude-opus-4-6">Claude Opus 4.6 (maximale Qualität)</option>
-                  <option value="gpt-4o">GPT-4o</option>
+<optgroup label="Anthropic">
+                    <option value="claude-sonnet-4-6">Claude Sonnet 4.6 ★</option>
+                    <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 ⚡</option>
+                    <option value="claude-opus-4-6">Claude Opus 4.6 🧠</option>
+                  </optgroup>
+                  <optgroup label="OpenAI">
+                    <option value="gpt-4o">GPT-4o</option>
+                    <option value="gpt-4o-mini">GPT-4o mini ⚡</option>
+                  </optgroup>
+                  <optgroup label="Google">
+                    <option value="gemini-2.0-flash">Gemini 2.0 Flash ⚡</option>
+                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                  </optgroup>
+                  <optgroup label="Mistral 🇪🇺">
+                    <option value="mistral-large-latest">Mistral Large</option>
+                    <option value="mistral-small-latest">Mistral Small ⚡</option>
+                  </optgroup>
+                  <optgroup label="Groq ⚡">
+                    <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
+                    <option value="llama-3.1-8b-instant">Llama 3.1 8B ⚡</option>
+                  </optgroup>
+                  <optgroup label="DeepSeek">
+                    <option value="deepseek-chat">DeepSeek Chat</option>
+                  </optgroup>
                 </select>
               </div>
               <button class="btn btn-primary btn-full" style="font-size:.9rem;padding:12px" @click="startSuperAgent()" :disabled="!superGoal.trim()">
@@ -2910,9 +2952,30 @@ https://anbieter3.de"></textarea></div>
                 </div>
                 <div class="field"><label>Modell</label>
                   <select class="inp" x-model="planModel">
-                    <option value="claude-sonnet-4-6">Claude Sonnet 4.6</option>
+<optgroup label="Anthropic">
+                    <option value="claude-sonnet-4-6">Claude Sonnet 4.6 ★</option>
+                    <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 ⚡</option>
                     <option value="claude-opus-4-6">Claude Opus 4.6 🧠</option>
+                  </optgroup>
+                  <optgroup label="OpenAI">
                     <option value="gpt-4o">GPT-4o</option>
+                    <option value="gpt-4o-mini">GPT-4o mini ⚡</option>
+                  </optgroup>
+                  <optgroup label="Google">
+                    <option value="gemini-2.0-flash">Gemini 2.0 Flash ⚡</option>
+                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                  </optgroup>
+                  <optgroup label="Mistral 🇪🇺">
+                    <option value="mistral-large-latest">Mistral Large</option>
+                    <option value="mistral-small-latest">Mistral Small ⚡</option>
+                  </optgroup>
+                  <optgroup label="Groq ⚡">
+                    <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
+                    <option value="llama-3.1-8b-instant">Llama 3.1 8B ⚡</option>
+                  </optgroup>
+                  <optgroup label="DeepSeek">
+                    <option value="deepseek-chat">DeepSeek Chat</option>
+                  </optgroup>
                   </select>
                 </div>
               </div>
