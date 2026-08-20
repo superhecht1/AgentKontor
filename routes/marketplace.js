@@ -62,7 +62,7 @@ const conditions = ['ma.is_active=true'];
     res.json({ agents: r.rows });
   } catch (e) {
     console.error('LIST MARKETPLACE:', e.message);
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ agents: [], categories: [] });
   }
 });
 
@@ -83,7 +83,7 @@ router.get('/categories', auth, async (req, res) => {
     );
     res.json({ categories: r.rows });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ agents: [], categories: [] });
   }
 });
 
@@ -111,7 +111,7 @@ router.get('/:id', auth, async (req, res) => {
     );
     res.json({ agent: r.rows[0], ratings: ratings.rows });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ agents: [], categories: [] });
   }
 });
 
@@ -232,7 +232,7 @@ router.post('/:id/rate', auth, async (req, res) => {
     );
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ agents: [], categories: [] });
   }
 });
 
@@ -254,7 +254,7 @@ router.get('/my/installs', auth, async (req, res) => {
     );
     res.json({ installations: r.rows });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ agents: [], categories: [] });
   }
 });
 

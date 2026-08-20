@@ -40,7 +40,7 @@ router.get('/', auth, async (req, res) => {
     // Never return key_hash or full key
     res.json({ keys: r.rows });
   } catch(e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ keys: [], error: 'Fehler' });
   }
 });
 
@@ -101,7 +101,7 @@ router.delete('/:id', auth, async (req, res) => {
     if (!r.rows.length) return res.status(404).json({ error: 'Key nicht gefunden' });
     res.json({ success: true });
   } catch(e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ keys: [], error: 'Fehler' });
   }
 });
 
