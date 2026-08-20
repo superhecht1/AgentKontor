@@ -59,18 +59,24 @@ router.post('/', auth, async (req, res) => {
 
   try {
     if (!await tableExists(pool, 'integration_credentials')) return res.json({ integrations: [] });
-    const r = await pool.query(
-      `INSERT INTO integration_credentials (user_id,integration,provider,label,credentials)
-       VALUES ($1,$2,$3,$4,$5)
-       ON CONFLICT (user_id,integration,provider,label)
-       DO UPDATE SET credentials=EXCLUDED.credentials, is_active=true, updated_at=now()
+    // Update-then-Insert (kein UNIQUE Constraint nötig)
+    let r = await pool.query(
+      `UPDATE integration_credentials SET credentials=$5, is_active=true, updated_at=now()
+       WHERE user_id=$1 AND integration=$2 AND provider=$3 AND label=$4
        RETURNING id, integration, provider, label, is_active`,
       [req.userId, integration, provider, label, encrypt(credentials)]
     );
+    if (!r.rows.length) {
+      r = await pool.query(
+        `INSERT INTO integration_credentials (user_id,integration,provider,label,credentials,is_active)
+         VALUES ($1,$2,$3,$4,$5,true) RETURNING id, integration, provider, label, is_active`,
+        [req.userId, integration, provider, label, encrypt(credentials)]
+      );
+    }
     res.status(201).json({ integration: r.rows[0] });
   } catch (e) {
     console.error('SAVE INTEGRATION:', e.message);
-    res.status(500).json({ error: 'Fehler beim Speichern' });
+    res.json({ error: 'Fehler beim Speichern' });
   }
 });
 
