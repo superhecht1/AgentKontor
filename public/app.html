@@ -1048,7 +1048,8 @@ input:checked+.slider::before{transform:translateX(18px)}
 
 
 <!-- EXPERTENMODUS -->
-<div class="sidebar" x-show="appMode==='expert'" :class="{collapsed:sidebarCollapsed}">
+<div class="app-shell" x-show="appMode==='expert'" style="display:flex;flex:1;overflow:hidden;height:calc(100vh - 56px)">
+<div class="sidebar" :class="{collapsed:sidebarCollapsed}">
     <div class="sb-top">
       <div class="sb-logo">
         <div class="sb-logo-icon">🤖</div>
@@ -2095,6 +2096,8 @@ X-AgentKontor-Signature: sha256=…
             </template>
           </div>
         </div>
+</div><!-- /app-shell -->
+
 
         <!-- ── LISTING DETAIL MODAL ─────────────────────────────────────── -->
         <div class="modal-overlay" x-show="showListingDetail" x-cloak @click.self="showListingDetail=false">
@@ -5330,10 +5333,7 @@ openSuperSession(id){
     if(d.routing_result)this.superRoutingResult=typeof d.routing_result==='string'?JSON.parse(d.routing_result):d.routing_result;
     if(['completed','failed'].includes(d.status)){clearInterval(this.superPollInterval);this.superRunning=Math.max(0,this.superRunning-1);this.loadSuperSessions();}
   };
-  poll();
-  this.superPollInterval=setInterval(poll,2000);
 },
-async deleteSuperSession(id){await this.api('/super/'+id,'DELETE');this.superSessions=this.superSessions.filter(s=>s.id!==id);if(this.selectedSuper?.id===id)this.selectedSuper=null;},
 superStatusLabel(s){return{routing:'🔍 Analysiert…',planning:'📋 Plant…',running:'▶ Agenten arbeiten…',synthesizing:'✨ Synthetisiert…',completed:'✅ Fertig',failed:'❌ Fehler'}[s]||s},
 superStatusColor(s){return{routing:'var(--muted-l)',planning:'var(--v-l)',running:'var(--sky)',synthesizing:'var(--amber)',completed:'var(--emerald)',failed:'var(--rose)'}[s]||'var(--muted)'},
 agentMsgIcon(a){return{super:'🦾',research:'🔬',sales:'💼',support:'🎧',data:'📊',marketing:'📢',finance:'💰',user:'👤',system:'⚙️'}[a]||'🤖'},
@@ -5729,12 +5729,6 @@ async disable2fa(){
 },
 // ── KEYS ──
 async loadKeys(){const d=await this.api('/keys');if(d.keys)this.apiKeys=d.keys;},
-async createKey(){
-  if(!this.newKeyName){this.toast('Name erforderlich','err');return;}
-  const d=await this.api('/keys','POST',{name:this.newKeyName});
-  if(d.key){this.lastKey=d.key;this.newKeyName='';await this.loadKeys();}
-  else this.toast(d.error||'Fehler','err');
-},
 async deleteKey(id){
   if(!confirm('Key löschen?'))return;
   await this.api('/keys/'+id,'DELETE');
@@ -5763,7 +5757,6 @@ async deleteWebhook(id){
   this.webhooks=this.webhooks.filter(w=>w.id!==id);
 },
 // ── BILLING ──
-async loadInvoices(){const d=await this.api('/invoices').catch(()=>({}));if(d.invoices)this.invoices=d.invoices;},
 async manageSubscription(){const d=await this.api('/stripe/portal','POST');if(d.url)window.location=d.url;},
 // ── CONVERSATIONS (global page) ──
 async loadConvAgents(){/* agents already loaded */},
