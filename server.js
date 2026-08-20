@@ -670,6 +670,7 @@ try {
         workerSrc:   ["'self'"],  // für Service Worker
         frameSrc:    ["'none'"],
         objectSrc:   ["'none'"],
+        scriptSrcAttr: ["'unsafe-inline'"],
       },
     },
     crossOriginEmbedderPolicy: false,
