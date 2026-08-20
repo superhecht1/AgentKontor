@@ -2803,17 +2803,27 @@ if (sig !== expected) return res.status(401).end();</div>
               </div>
             </div>
             <div class="field"><label>Provider</label>
-              <select class="inp" x-model="newCred.provider">
-                <template x-if="newCred.integration==='calendar'">
-                  <span><option value="google">Google Calendar</option><option value="microsoft">Outlook / Microsoft</option><option value="ical_url">iCal-URL (read-only)</option></span>
-                </template>
-                <template x-if="newCred.integration==='email'">
-                  <span><option value="google">Gmail</option><option value="imap">IMAP/SMTP</option></span>
-                </template>
-                <template x-if="newCred.integration==='crm'">
-                  <span><option value="webhook">Webhook (generic)</option><option value="hubspot">HubSpot</option><option value="airtable">Airtable</option></span>
-                </template>
+              <select class="inp" x-model="newCred.provider" x-show="newCred.integration==='calendar'">
+                <option value="google">Google Calendar</option>
+                <option value="microsoft">Outlook / Microsoft 365</option>
+                <option value="ical_url">iCal-URL (read-only)</option>
               </select>
+              <select class="inp" x-model="newCred.provider" x-show="newCred.integration==='email'">
+                <option value="google">Gmail (Google OAuth)</option>
+                <option value="microsoft">Outlook / Microsoft</option>
+                <option value="imap">IMAP/SMTP (beliebig)</option>
+              </select>
+              <select class="inp" x-model="newCred.provider" x-show="newCred.integration==='crm'">
+                <option value="hubspot">HubSpot</option>
+                <option value="airtable">Airtable</option>
+                <option value="webhook">Webhook (generic)</option>
+              </select>
+              <select class="inp" x-model="newCred.provider" x-show="newCred.integration==='document'">
+                <option value="local">Lokaler Upload (RAG)</option>
+                <option value="google_drive">Google Drive</option>
+                <option value="notion">Notion</option>
+              </select>
+
             </div>
             <!-- Google OAuth -->
             <div x-show="newCred.provider==='google'">
