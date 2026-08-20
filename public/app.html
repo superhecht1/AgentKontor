@@ -4160,6 +4160,10 @@ goalRunning:false,goalTab:'new',
 // Marketplace
 marketplaceAgents:[],marketplaceCategories:[],marketplaceMyInstalls:[],
 marketplaceTab:'featured',marketplaceSearch:'',marketplaceCategory:'',
+communityListings:[],communityTotal:0,communityPage:1,
+myListings:[],myPurchases:[],myEarnings:{total_cents:0,this_month_cents:0,commission_pct:20,listings:[]},
+selectedListing:null,showListingDetail:false,showCreateListing:false,
+listingAgentId:'',newListing:{title:'',tagline:'',description:'',category:'sonstiges',priceModel:'monthly',priceCents:0,hidePrompt:true,previewMsgs:[],quickChips:[],color:'#7c3aed'},
 selectedMarketplaceAgent:null,installingId:null,
 // Super Agent
 superSessions:[],superProfiles:[],superCollabs:[],
@@ -4818,7 +4822,23 @@ async ftApply(model){
 
 
 // ── ONBOARDING ───────────────────────────────────────────────────────────────
-finishOnboard(){this.showOnboarding=false;this.onboardDone=true;localStorage.setItem('ak_onboard','1');},
+
+async generateOnboardPrompt(){
+  this.onboardGenerating=true;
+  try{
+    const resp=await fetch('/api/demo/chat',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({messages:[{role:'user',content:'Erstelle einen deutschen System-Prompt (max. 200 Wörter) für einen KI-Agenten:\nName: '+(this.af?.name||'Assistent')+'\nBranche: '+(this.onboardTemplate?.name||'Allgemein')+'\nTon: '+(this.af?.tone||'freundlich')+'\nAntworte NUR mit dem fertigen Prompt.'}]})});
+    const d=await resp.json();
+    if(d.message&&this.af)this.af.system_prompt=d.message;
+  }catch(e){this.toast('Fehler: '+e.message,'err');}
+  this.onboardGenerating=false;
+},
+async copyWidgetCode(){
+  const id=this.agents[this.agents.length-1]?.id||'';
+  const code='<script src="https://'+window.location.hostname+'/widget.js" data-agent="'+id+'"><\/script>';
+  try{await navigator.clipboard.writeText(code.replace('\/',''));this.toast('Code kopiert ✓');}
+  catch{prompt('Code kopieren:',code.replace('\/',''));}
+},finishOnboard(){this.showOnboarding=false;this.onboardDone=true;localStorage.setItem('ak_onboard','1');},
 startTour(){this.tourActive=true;this.tourStep=0;},
 nextTour(){if(this.tourStep<4)this.tourStep++;else{this.tourActive=false;this.tourStep=0;}},
 closeTour(){this.tourActive=false;},
