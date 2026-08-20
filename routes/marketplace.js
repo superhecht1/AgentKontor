@@ -133,7 +133,7 @@ router.post('/:id/install', auth, async (req, res) => {
     // Bereits installiert?
     const existing = await pool.query(
       'SELECT * FROM marketplace_installations WHERE user_id=$1 AND marketplace_id=$2',
-      [req.userId, template.id]
+      [req.userId, parseInt(template.id)]
     );
     if (existing.rows.length && existing.rows[0].agent_id) {
       return res.json({ success: true, agentId: existing.rows[0].agent_id, alreadyInstalled: true });
@@ -190,20 +190,20 @@ router.post('/:id/install', auth, async (req, res) => {
     // Update-then-Insert (kein UNIQUE Constraint nötig)
     const existInst = await pool.query(
       'SELECT id FROM marketplace_installations WHERE user_id=$1 AND marketplace_id=$2',
-      [req.userId, template.id]
+      [req.userId, parseInt(template.id)]
     ).catch(()=>({rows:[]}));
     if (existInst.rows.length) {
       await pool.query('UPDATE marketplace_installations SET agent_id=$3 WHERE user_id=$1 AND marketplace_id=$2',
-        [req.userId, template.id, agentId]).catch(()=>{});
+        [req.userId, parseInt(template.id), agentId]).catch(()=>{});
     } else {
       await pool.query('INSERT INTO marketplace_installations (user_id, marketplace_id, agent_id) VALUES ($1,$2,$3)',
-        [req.userId, template.id, agentId]).catch(()=>{});
+        [req.userId, parseInt(template.id), agentId]).catch(()=>{});
     }
 
     // Install-Count erhöhen
     await pool.query(
       'UPDATE marketplace_agents SET install_count=install_count+1 WHERE id=$1',
-      [template.id]
+      [parseInt(template.id)]
     );
 
     res.status(201).json({ success: true, agentId, agentName: agentName || template.name });
