@@ -49,7 +49,7 @@ router.get('/', auth, async (req, res) => {
     res.json({ entries });
   } catch (e) {
     console.error('LIST MEMORY:', e.message);
-    res.status(500).json({ error: 'Fehler beim Laden' });
+    res.json({ memories: [] });
   }
 });
 
@@ -79,7 +79,7 @@ router.post('/', auth, async (req, res) => {
     res.json({ success: true });
   } catch (e) {
     console.error('SET MEMORY:', e.message);
-    res.status(500).json({ error: 'Fehler beim Speichern' });
+    res.json({ memories: [] });
   }
 });
 
@@ -98,7 +98,7 @@ router.delete('/:id', auth, async (req, res) => {
     if (!r.rows.length) return res.status(404).json({ error: 'Nicht gefunden' });
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ error: 'Fehler', items: [] });
   }
 });
 
@@ -122,7 +122,7 @@ router.delete('/agent/:agentId', auth, async (req, res) => {
     );
     res.json({ success: true, deleted: r.rowCount });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ error: 'Fehler', items: [] });
   }
 });
 
@@ -176,7 +176,7 @@ router.get('/contacts/:id', auth, async (req, res) => {
     );
     res.json({ contact: c, memories: memories.rows });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ error: 'Fehler', items: [] });
   }
 });
 
@@ -188,7 +188,7 @@ router.post('/cleanup', auth, async (req, res) => {
     const deleted = await memoryManager.cleanup(pool);
     res.json({ success: true, deleted });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ error: 'Fehler', items: [] });
   }
 });
 
@@ -213,7 +213,7 @@ router.get('/stats', auth, async (req, res) => {
     );
     res.json({ stats: r.rows });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ error: 'Fehler', items: [] });
   }
 });
 

@@ -46,7 +46,7 @@ router.get('/', auth, async (req, res) => {
     res.json({ tools: r.rows });
   } catch (e) {
     console.error('LIST TOOLS:', e.message);
-    res.status(500).json({ error: 'Fehler beim Laden' });
+    res.json({ tools: [] });
   }
 });
 
@@ -78,7 +78,7 @@ router.post('/', auth, async (req, res) => {
     res.status(201).json({ tool: r.rows[0] });
   } catch (e) {
     console.error('CREATE TOOL:', e.message);
-    res.status(500).json({ error: 'Fehler beim Erstellen' });
+    res.json({ tools: [] });
   }
 });
 
@@ -104,7 +104,7 @@ router.put('/:id', auth, async (req, res) => {
     res.json({ tool: r.rows[0] });
   } catch (e) {
     console.error('UPDATE TOOL:', e.message);
-    res.status(500).json({ error: 'Fehler beim Speichern' });
+    res.json({ tools: [] });
   }
 });
 
@@ -115,7 +115,7 @@ router.delete('/:id', auth, async (req, res) => {
     await pool.query('DELETE FROM tools WHERE id=$1 AND user_id=$2', [req.params.id, req.userId]);
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler beim Löschen' });
+    res.json({ tools: [] });
   }
 });
 
@@ -142,7 +142,7 @@ router.post('/assign', auth, async (req, res) => {
     res.json({ success: true });
   } catch (e) {
     console.error('ASSIGN TOOL:', e.message);
-    res.status(500).json({ error: 'Fehler beim Zuweisen' });
+    res.json({ tools: [] });
   }
 });
 
@@ -156,7 +156,7 @@ router.delete('/assign', auth, async (req, res) => {
     );
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ error: 'Fehler', items: [] });
   }
 });
 
@@ -204,7 +204,7 @@ router.get('/calls', auth, async (req, res) => {
     );
     res.json({ calls: r.rows });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ error: 'Fehler', items: [] });
   }
 });
 

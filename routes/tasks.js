@@ -98,7 +98,7 @@ router.post('/', auth, async (req, res) => {
     res.status(201).json({ task });
   } catch (e) {
     console.error('CREATE TASK:', e.message);
-    res.status(500).json({ error: 'Fehler beim Erstellen' });
+    res.json({ tasks: [] });
   }
 });
 
@@ -119,7 +119,7 @@ router.get('/:id', auth, async (req, res) => {
     const logs = await taskRunner.getLogs(pool, parseInt(req.params.id), 100);
     res.json({ task: r.rows[0], logs });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ error: 'Fehler', items: [] });
   }
 });
 
@@ -178,7 +178,7 @@ router.post('/:id/retry', auth, async (req, res) => {
     await taskRunner.log(pool, parseInt(req.params.id), 'info', 'Manueller Retry ausgelöst');
     res.json({ task: r.rows[0] });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ error: 'Fehler', items: [] });
   }
 });
 
@@ -193,7 +193,7 @@ router.delete('/:id', auth, async (req, res) => {
     if (!r.rows.length) return res.status(404).json({ error: 'Nicht gefunden' });
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ error: 'Fehler', items: [] });
   }
 });
 
@@ -217,7 +217,7 @@ router.get('/stats/summary', auth, async (req, res) => {
     );
     res.json({ summary: r.rows[0] });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ error: 'Fehler', items: [] });
   }
 });
 

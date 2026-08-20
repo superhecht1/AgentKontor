@@ -51,7 +51,7 @@ router.post('/', auth, async (req, res) => {
     res.status(201).json({ plan, decomposed });
   } catch (e) {
     console.error('CREATE PLAN:', e.message);
-    safeErr(res, e, 500);
+    res.json({ plans: [], error: e.message });
   }
 });
 
@@ -88,7 +88,7 @@ router.get('/', auth, async (req, res) => {
     res.json({ plans: r.rows, byStatus });
   } catch (e) {
     console.error('LIST PLANS:', e.message);
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ plans: [] });
   }
 });
 
@@ -119,7 +119,7 @@ router.get('/:id', auth, async (req, res) => {
 
     res.json({ plan: r.rows[0], steps: steps.rows, pendingApprovals: pendingApprovals.rows });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ plans: [] });
   }
 });
 
@@ -144,7 +144,7 @@ router.get('/:id/poll', auth, async (req, res) => {
     if (!r.rows.length) return res.status(404).json({ error: 'Nicht gefunden' });
     res.json(r.rows[0]);
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ plans: [] });
   }
 });
 
@@ -167,7 +167,7 @@ router.post('/:id/cancel', auth, async (req, res) => {
     );
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ plans: [] });
   }
 });
 
@@ -199,7 +199,7 @@ router.post('/:id/retry', auth, async (req, res) => {
 
     res.json({ plan: r.rows[0] });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ plans: [] });
   }
 });
 
@@ -212,7 +212,7 @@ router.delete('/:id', auth, async (req, res) => {
     );
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ plans: [] });
   }
 });
 
@@ -231,7 +231,7 @@ router.post('/decompose-preview', auth, async (req, res) => {
     });
     res.json({ decomposed });
   } catch (e) {
-    safeErr(res, e, 500);
+    res.json({ plans: [], error: e.message });
   }
 });
 

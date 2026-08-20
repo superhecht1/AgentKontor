@@ -55,7 +55,7 @@ router.get('/', auth, async (req, res) => {
     res.json({ approvals: r.rows, byStatus });
   } catch (e) {
     console.error('LIST APPROVALS:', e.message);
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ error: 'Fehler', items: [] });
   }
 });
 
@@ -93,7 +93,7 @@ router.post('/:id/approve', auth, async (req, res) => {
     res.json({ success: true, approval: r.rows[0] });
   } catch (e) {
     console.error('APPROVE:', e.message);
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ error: 'Fehler', items: [] });
   }
 });
 
@@ -132,7 +132,7 @@ router.post('/:id/reject', auth, async (req, res) => {
 
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ error: 'Fehler', items: [] });
   }
 });
 
@@ -151,7 +151,7 @@ router.get('/rules', auth, async (req, res) => {
     );
     res.json({ rules: r.rows });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ error: 'Fehler', items: [] });
   }
 });
 
@@ -180,7 +180,7 @@ router.post('/rules', auth, async (req, res) => {
     );
     res.status(201).json({ rule: r.rows[0] });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ error: 'Fehler', items: [] });
   }
 });
 
@@ -200,7 +200,7 @@ router.put('/rules/:id', auth, async (req, res) => {
     if (!r.rows.length) return res.status(404).json({ error: 'Nicht gefunden' });
     res.json({ rule: r.rows[0] });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ error: 'Fehler', items: [] });
   }
 });
 
@@ -213,7 +213,7 @@ router.delete('/rules/:id', auth, async (req, res) => {
     );
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ error: 'Fehler', items: [] });
   }
 });
 
