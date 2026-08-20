@@ -52,8 +52,8 @@ const conditions = ['ma.is_active=true'];
        JOIN marketplace_categories mc ON mc.slug = ma.category_slug
        LEFT JOIN marketplace_installations mi
          ON mi.marketplace_id = ma.id AND mi.user_id = $1
-       LEFT JOIN marketplace_ratings mr
-         ON mr.marketplace_id = ma.id AND mr.user_id = $1
+       LEFT JOIN (SELECT marketplace_id, AVG(rating) as rating_avg, COUNT(*) as rating_count FROM marketplace_ratings GROUP BY marketplace_id) mr
+         ON mr.marketplace_id = ma.id
        WHERE ${conditions.join(' AND ')}
        ORDER BY ma.is_featured DESC, ma.install_count DESC
        LIMIT $${i}`,
