@@ -2811,27 +2811,74 @@ if (sig !== expected) return res.status(401).end();</div>
                   <span><option value="google">Gmail</option><option value="imap">IMAP/SMTP</option></span>
                 </template>
                 <template x-if="newCred.integration==='crm'">
-                  <span><option value="webhook">Webhook (generic)</option><option value="airtable">Airtable</option><option value="hubspot">HubSpot</option></span>
+                  <span><option value="webhook">Webhook (generic)</option><option value="hubspot">HubSpot</option><option value="airtable">Airtable</option></span>
                 </template>
               </select>
             </div>
-            <!-- Google OAuth Token -->
+            <!-- Google OAuth -->
             <div x-show="newCred.provider==='google'">
-              <div class="ok-box" style="margin-bottom:12px">
-                <strong>Google OAuth:</strong> Generiere einen Access-Token über die <a href="https://developers.google.com/oauthplayground" target="_blank" style="color:var(--v-l)">Google OAuth Playground</a> mit den Scopes: <code style="font-size:.72rem;font-family:'JetBrains Mono',monospace">calendar.readonly calendar.events gmail.readonly gmail.send</code>
+              <div class="ok-box" style="margin-bottom:10px;font-size:.78rem">
+                <strong>Google OAuth:</strong> Token generieren via <a href="https://developers.google.com/oauthplayground" target="_blank" style="color:var(--v-l)">OAuth Playground</a> &mdash; Scopes: <code>calendar.events gmail.readonly gmail.send</code>
               </div>
               <div class="field"><label>Access Token</label><input class="inp" type="password" x-model="newCred.credentials.access_token" placeholder="ya29.a..."></div>
               <div class="field"><label>Refresh Token</label><input class="inp" type="password" x-model="newCred.credentials.refresh_token" placeholder="1//0g..."></div>
+              <div class="field"><label>Client ID</label><input class="inp" type="password" x-model="newCred.credentials.client_id" placeholder="xxxx.apps.googleusercontent.com"></div>
+              <div class="field"><label>Client Secret</label><input class="inp" type="password" x-model="newCred.credentials.client_secret" placeholder="GOCSPX-..."></div>
               <div class="field"><label>E-Mail-Adresse</label><input class="inp" type="email" x-model="newCred.credentials.email" placeholder="max@gmail.com"></div>
+            </div>
+            <!-- Microsoft / Outlook -->
+            <div x-show="newCred.provider==='microsoft'">
+              <div class="ok-box" style="margin-bottom:10px;font-size:.78rem">
+                <strong>Microsoft OAuth:</strong> App-Registrierung im <a href="https://portal.azure.com" target="_blank" style="color:var(--v-l)">Azure Portal</a> &mdash; Scopes: <code>Mail.Read Calendars.ReadWrite</code>
+              </div>
+              <div class="field"><label>Client ID (App-ID)</label><input class="inp" type="password" x-model="newCred.credentials.client_id" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"></div>
+              <div class="field"><label>Client Secret</label><input class="inp" type="password" x-model="newCred.credentials.client_secret" placeholder="xxx~xxx..."></div>
+              <div class="field"><label>Tenant ID</label><input class="inp" x-model="newCred.credentials.tenant_id" placeholder="common oder deine Tenant-ID"></div>
+              <div class="field"><label>Redirect URI</label><input class="inp" x-model="newCred.credentials.redirect_uri" :placeholder="'https://'+$root.window?.location?.hostname+'/api/integrations/oauth/microsoft/callback'"></div>
+              <div class="field"><label>E-Mail-Adresse</label><input class="inp" type="email" x-model="newCred.credentials.email" placeholder="max@outlook.com"></div>
+            </div>
+            <!-- IMAP/SMTP -->
+            <div x-show="newCred.provider==='imap'">
+              <div class="field"><label>IMAP-Server</label><input class="inp" x-model="newCred.credentials.imap_host" placeholder="imap.example.de"></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <div class="field"><label>IMAP-Port</label><input class="inp" type="number" x-model="newCred.credentials.imap_port" placeholder="993"></div>
+                <div class="field"><label>SMTP-Port</label><input class="inp" type="number" x-model="newCred.credentials.smtp_port" placeholder="587"></div>
+              </div>
+              <div class="field"><label>SMTP-Server</label><input class="inp" x-model="newCred.credentials.smtp_host" placeholder="smtp.example.de"></div>
+              <div class="field"><label>Benutzername / E-Mail</label><input class="inp" type="email" x-model="newCred.credentials.imap_user" placeholder="max@example.de"></div>
+              <div class="field"><label>Passwort / App-Passwort</label><input class="inp" type="password" x-model="newCred.credentials.imap_pass" placeholder="App-Passwort empfohlen"></div>
             </div>
             <!-- iCal URL -->
             <div x-show="newCred.provider==='ical_url'">
               <div class="field"><label>iCal-URL</label><input class="inp" x-model="newCred.credentials.url" placeholder="https://calendar.google.com/calendar/ical/.../basic.ics"></div>
             </div>
-            <!-- Webhook -->
+            <!-- HubSpot -->
+            <div x-show="newCred.provider==='hubspot'">
+              <div class="ok-box" style="margin-bottom:10px;font-size:.78rem">
+                <strong>HubSpot:</strong> Private App erstellen unter <a href="https://app.hubspot.com/private-apps" target="_blank" style="color:var(--v-l)">Private Apps</a> &mdash; Scopes: <code>crm.objects.contacts crm.objects.deals</code>
+              </div>
+              <div class="field"><label>API Token (Private App)</label><input class="inp" type="password" x-model="newCred.credentials.api_key" placeholder="pat-eu1-..."></div>
+              <div class="field"><label>Portal ID (optional)</label><input class="inp" x-model="newCred.credentials.portal_id" placeholder="12345678"></div>
+            </div>
+            <!-- Airtable -->
+            <div x-show="newCred.provider==='airtable'">
+              <div class="ok-box" style="margin-bottom:10px;font-size:.78rem">
+                <strong>Airtable:</strong> Personal Access Token erstellen unter <a href="https://airtable.com/create/tokens" target="_blank" style="color:var(--v-l)">airtable.com/create/tokens</a>
+              </div>
+              <div class="field"><label>Personal Access Token</label><input class="inp" type="password" x-model="newCred.credentials.api_key" placeholder="patXXXXXX..."></div>
+              <div class="field"><label>Base ID</label><input class="inp" x-model="newCred.credentials.base_id" placeholder="appXXXXXXXX"></div>
+              <div class="field"><label>Tabellen-Name</label><input class="inp" x-model="newCred.credentials.table_name" placeholder="Leads"></div>
+            </div>
+            <!-- Webhook / Generic CRM -->
             <div x-show="newCred.provider==='webhook'">
               <div class="field"><label>Webhook-URL</label><input class="inp" x-model="newCred.credentials.webhook_url" placeholder="https://mein-crm.de/api/leads"></div>
-              <div class="field"><label>API-Key (optional)</label><input class="inp" type="password" x-model="newCred.credentials.api_key" placeholder="Bearer ..."></div>
+              <div class="field"><label>HTTP-Methode</label>
+                <select class="inp" x-model="newCred.credentials.method">
+                  <option value="POST">POST</option><option value="PUT">PUT</option>
+                </select>
+              </div>
+              <div class="field"><label>API-Key / Bearer Token (optional)</label><input class="inp" type="password" x-model="newCred.credentials.api_key" placeholder="Bearer ..."></div>
+              <div class="field"><label>Extra Header (optional)</label><input class="inp" x-model="newCred.credentials.extra_header" placeholder="X-Custom-Header: Wert"></div>
             </div>
             <div class="field"><label>Label (für mehrere Konten)</label><input class="inp" x-model="newCred.label" placeholder="Standard"></div>
             <button class="btn btn-primary btn-full" @click="saveCredential()">🔌 Verbinden</button>
