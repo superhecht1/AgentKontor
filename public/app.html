@@ -36,7 +36,7 @@ body{font-family:"DM Sans",-apple-system,BlinkMacSystemFont,sans-serif;backgroun
 .auth-tabs{display:flex;background:rgba(255,255,255,.04);border-radius:10px;padding:3px;gap:3px;margin-bottom:24px}
 .auth-tab{flex:1;padding:9px;border-radius:8px;text-align:center;font-size:.83rem;font-weight:600;cursor:pointer;transition:all .2s;color:var(--muted-l)}
 .auth-tab.on{background:var(--v);color:#fff;box-shadow:0 2px 10px var(--v-glow)}
-.layout{display:flex;height:100vh;overflow:hidden}
+.layout{display:flex;flex-direction:column;height:100vh;overflow:hidden}
 .app-shell{display:flex;flex:1;overflow:hidden;height:calc(100vh - 56px)}
 .app-shell[style*="display: none"]{display:none!important}
 .sidebar{width:232px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transition:width .22s cubic-bezier(.4,0,.2,1);overflow:hidden;position:relative}
@@ -1113,7 +1113,7 @@ input:checked+.slider::before{transform:translateX(18px)}
       <div class="nav-item" :class="{on:page==='settings'}" @click="page='settings'"><span class="nav-ico">⚙️</span><span class="nav-lbl">Einstellungen</span></div>
       <div class="nav-item" x-show="user?.is_admin" @click="window.location='/admin'"><span class="nav-ico">🛡️</span><span class="nav-lbl">Admin Panel</span></div>
     </div>
-[page]||''"></div>
+      </div>
       </div>
       <div class="topbar-right">
           <!-- Theme Toggle -->
