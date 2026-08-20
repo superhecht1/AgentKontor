@@ -1,161 +1,157 @@
+'use strict';
 /**
- * AgentKontor — Instagram DM + Facebook Messenger Webhooks
- *
- * GET  /webhook/instagram  — webhook verification
- * POST /webhook/instagram  — incoming DM
- * GET  /webhook/facebook   — webhook verification
- * POST /webhook/facebook   — incoming message
+ * routes/social-webhooks.js
+ * WhatsApp Business API + Telegram Bot Webhook-Empfang
  */
+const express = require('express');
+const router  = express.Router();
+const auth    = require('../middleware/auth');
+const { getPool } = require('../utils/db');
+const { callLLM }  = require('../utils/llm');
 
-const router = require('express').Router();
-const { v4: uuid } = require('uuid');
+async function tableExists(pool, t) {
+  try { await pool.query(`SELECT 1 FROM ${t} LIMIT 1`); return true; } catch { return false; }
+}
 
-function getPool(req) { return req.app.locals.pool; }
-
-// ── SHARED: find agent by channel token ──────────────────
-async function findAgent(pool, field, token) {
+// Antwort generieren und senden
+async function generateAndReply(pool, agent, userMessage, platform, externalId) {
   try {
-    const r = await pool.query(
-      `SELECT * FROM agents WHERE ${field}=$1 AND is_active=true LIMIT 1`,
-      [token]
+    const reply = await callLLM(
+      agent.model || 'claude-haiku-4-5-20251001',
+      agent.system_prompt || 'Du bist ein hilfreicher Assistent.',
+      [{ role: 'user', content: userMessage.slice(0, 2000) }]
     );
-    return r.rows[0] || null;
-  } catch { return null; }
+
+    // Lead ggf. speichern
+    if (agent.cap_leads) {
+      await pool.query(
+        `INSERT INTO leads (agent_id, user_id, platform, external_id, message)
+         VALUES ($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING`,
+        [agent.id, agent.user_id, platform, externalId, userMessage.slice(0,500)]
+      ).catch(() => {});
+    }
+
+    return reply;
+  } catch (e) {
+    console.error('[social-webhook] LLM-Fehler:', e.message);
+    return 'Es tut mir leid, ich kann gerade nicht antworten.';
+  }
 }
 
-// ── SHARED: send to AgentKontor chat ────────────────────
-async function getAgentReply(pool, req, agent, userText, sessionId) {
+// ── WHATSAPP VERIFY ──────────────────────────────────────────────────────────
+router.get('/whatsapp/:agentId', async (req, res) => {
+  const mode  = req.query['hub.mode'];
+  const token = req.query['hub.verify_token'];
+  const chal  = req.query['hub.challenge'];
+  const pool  = getPool(req);
+
+  const ag = await pool.query('SELECT wa_verify_token FROM agents WHERE id=$1', [req.params.agentId])
+    .catch(() => ({ rows: [] }));
+
+  if (mode === 'subscribe' && ag.rows[0]?.wa_verify_token === token) {
+    return res.send(chal);
+  }
+  res.status(403).send('Forbidden');
+});
+
+// ── WHATSAPP NACHRICHTEN ─────────────────────────────────────────────────────
+router.post('/whatsapp/:agentId', async (req, res) => {
+  const pool = getPool(req);
+  res.sendStatus(200); // WhatsApp braucht sofort 200
+
   try {
-    // Reuse the chat.js logic via direct import
-    const Anthropic = require('@anthropic-ai/sdk');
-    const client    = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const entry = req.body?.entry?.[0];
+    const change = entry?.changes?.[0];
+    const msg = change?.value?.messages?.[0];
+    if (!msg || msg.type !== 'text') return;
 
-    // Build simple system prompt
-    let sys = agent.system_prompt || 'Du bist ein hilfreicher KI-Assistent.';
-    if (agent.cap_multilang) sys += '\n\nAntworte immer in der Sprache des Nutzers.';
+    const userText = msg.text?.body || '';
+    const phoneNumber = msg.from;
 
-    const response = await client.messages.create({
-      model: agent.model || 'claude-sonnet-4-6',
-      max_tokens: 512,
-      system: sys,
-      messages: [{ role: 'user', content: userText }],
+    const ag = await pool.query('SELECT * FROM agents WHERE id=$1 AND is_active=true', [req.params.agentId]);
+    if (!ag.rows.length) return;
+    const agent = ag.rows[0];
+
+    const reply = await generateAndReply(pool, agent, userText, 'whatsapp', phoneNumber);
+
+    // WhatsApp antworten (benötigt WHATSAPP_TOKEN ENV)
+    const waToken = process.env.WHATSAPP_TOKEN;
+    const phoneId = change?.value?.metadata?.phone_number_id;
+    if (waToken && phoneId) {
+      await fetch(`https://graph.facebook.com/v17.0/${phoneId}/messages`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${waToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          to: phoneNumber,
+          type: 'text',
+          text: { body: reply.slice(0, 4096) },
+        }),
+      }).catch(e => console.error('[WhatsApp Send]', e.message));
+    }
+  } catch (e) {
+    console.error('[WA Webhook]', e.message);
+  }
+});
+
+// ── TELEGRAM NACHRICHTEN ─────────────────────────────────────────────────────
+router.post('/telegram/:agentId', async (req, res) => {
+  const pool = getPool(req);
+  res.sendStatus(200);
+
+  try {
+    const msg = req.body?.message;
+    if (!msg) return;
+
+    const chatId   = msg.chat?.id;
+    const userText = msg.text || '';
+    if (!userText) return;
+
+    const ag = await pool.query('SELECT * FROM agents WHERE id=$1 AND is_active=true', [req.params.agentId]);
+    if (!ag.rows.length) return;
+    const agent = ag.rows[0];
+
+    const reply = await generateAndReply(pool, agent, userText, 'telegram', String(chatId));
+
+    // Telegram antworten
+    const tgToken = agent.telegram_token || process.env.TELEGRAM_BOT_TOKEN;
+    if (tgToken) {
+      await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text: reply.slice(0, 4096), parse_mode: 'Markdown' }),
+      }).catch(e => console.error('[Telegram Send]', e.message));
+    }
+  } catch (e) {
+    console.error('[TG Webhook]', e.message);
+  }
+});
+
+// ── TELEGRAM WEBHOOK REGISTRIEREN ────────────────────────────────────────────
+router.post('/telegram/:agentId/register', auth, async (req, res) => {
+  const { botToken } = req.body;
+  if (!botToken) return res.status(400).json({ error: 'botToken erforderlich' });
+
+  const baseUrl = process.env.BASE_URL || `https://${req.get('host')}`;
+  const webhookUrl = `${baseUrl}/api/social/telegram/${req.params.agentId}`;
+
+  try {
+    const r = await fetch(`https://api.telegram.org/bot${botToken}/setWebhook`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: webhookUrl }),
     });
-    return response.content[0]?.text || 'Entschuldigung, ich konnte keine Antwort generieren.';
-  } catch(e) {
-    console.error('Agent reply error:', e.message);
-    return null;
+    const data = await r.json();
+    if (!data.ok) return res.status(400).json({ error: data.description });
+
+    // Token am Agent speichern
+    await pool.query('UPDATE agents SET telegram_token=$1 WHERE id=$2 AND user_id=$3',
+      [botToken, req.params.agentId, req.userId]).catch(() => {});
+
+    res.json({ success: true, webhookUrl });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
-}
-
-// ── INSTAGRAM VERIFICATION ───────────────────────────────
-router.get('/instagram', (req, res) => {
-  const { 'hub.mode': mode, 'hub.verify_token': token, 'hub.challenge': challenge } = req.query;
-  const igToken = process.env.INSTAGRAM_VERIFY_TOKEN || '';
-  const tokenMatch = igToken && token ? crypto.timingSafeEqual(Buffer.from(token), Buffer.from(igToken)) : token === igToken;
-  if (mode === 'subscribe' && tokenMatch) {
-    console.log('✅ Instagram webhook verified');
-    return res.status(200).send(challenge);
-  }
-  res.sendStatus(403);
-});
-
-// ── INSTAGRAM INCOMING DM ────────────────────────────────
-router.post('/instagram', async (req, res) => {
-  res.sendStatus(200); // Acknowledge immediately
-
-  const pool = getPool(req);
-  try {
-    const body = req.body;
-    if (body.object !== 'instagram') return;
-
-    for (const entry of body.entry || []) {
-      for (const msg of entry.messaging || []) {
-        if (!msg.message?.text) continue;
-        const senderId = msg.sender?.id;
-        const text     = msg.message.text;
-        const pageId   = entry.id;
-
-        // Find agent by instagram_business_id
-        const agent = await findAgent(pool, 'instagram_business_id', pageId);
-        if (!agent || !agent.instagram_enabled || !agent.instagram_token) continue;
-
-        const sessionId = 'ig_' + senderId;
-        const reply     = await getAgentReply(pool, req, agent, text, sessionId);
-        if (!reply) continue;
-
-        // Save messages
-        await pool.query('INSERT INTO chat_messages (agent_id, session_id, role, content, source) VALUES ($1,$2,$3,$4,$5)', [agent.id, sessionId, 'user', text, 'instagram']);
-        await pool.query('INSERT INTO chat_messages (agent_id, session_id, role, content, source) VALUES ($1,$2,$3,$4,$5)', [agent.id, sessionId, 'assistant', reply, 'instagram']);
-        await pool.query('UPDATE agents SET total_messages=total_messages+1 WHERE id=$1', [agent.id]);
-
-        // Send reply via Instagram Graph API
-        await fetch(`https://graph.facebook.com/v19.0/me/messages?access_token=${agent.instagram_token}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            recipient: { id: senderId },
-            message:   { text: reply },
-          }),
-        });
-      }
-    }
-  } catch(e) { console.error('Instagram webhook error:', e.message); }
-});
-
-// ── FACEBOOK MESSENGER VERIFICATION ─────────────────────
-router.get('/facebook', (req, res) => {
-  const { 'hub.mode': mode, 'hub.verify_token': token, 'hub.challenge': challenge } = req.query;
-  const fbToken = process.env.FACEBOOK_VERIFY_TOKEN || '';
-  const fbMatch = fbToken && token ? crypto.timingSafeEqual(Buffer.from(token), Buffer.from(fbToken)) : token === fbToken;
-  if (mode === 'subscribe' && fbMatch) {
-    console.log('✅ Facebook webhook verified');
-    return res.status(200).send(challenge);
-  }
-  res.sendStatus(403);
-});
-
-// ── FACEBOOK MESSENGER INCOMING ──────────────────────────
-router.post('/facebook', async (req, res) => {
-  res.sendStatus(200); // Acknowledge immediately
-
-  const pool = getPool(req);
-  try {
-    const body = req.body;
-    if (body.object !== 'page') return;
-
-    for (const entry of body.entry || []) {
-      const pageId = entry.id;
-      for (const msg of entry.messaging || []) {
-        if (!msg.message?.text || msg.message.is_echo) continue;
-        const senderId = msg.sender?.id;
-        const text     = msg.message.text;
-
-        // Find agent by facebook_page_id
-        const agent = await findAgent(pool, 'facebook_page_id', pageId);
-        if (!agent || !agent.facebook_enabled || !agent.facebook_token) continue;
-
-        const sessionId = 'fb_' + senderId;
-        const reply     = await getAgentReply(pool, req, agent, text, sessionId);
-        if (!reply) continue;
-
-        // Save messages
-        await pool.query('INSERT INTO chat_messages (agent_id, session_id, role, content, source) VALUES ($1,$2,$3,$4,$5)', [agent.id, sessionId, 'user', text, 'facebook']);
-        await pool.query('INSERT INTO chat_messages (agent_id, session_id, role, content, source) VALUES ($1,$2,$3,$4,$5)', [agent.id, sessionId, 'assistant', reply, 'facebook']);
-        await pool.query('UPDATE agents SET total_messages=total_messages+1 WHERE id=$1', [agent.id]);
-
-        // Send reply via Facebook Graph API
-        await fetch(`https://graph.facebook.com/v19.0/me/messages?access_token=${agent.facebook_token}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            recipient: { id: senderId },
-            message:   { text: reply },
-            messaging_type: 'RESPONSE',
-          }),
-        });
-      }
-    }
-  } catch(e) { console.error('Facebook webhook error:', e.message); }
 });
 
 module.exports = router;

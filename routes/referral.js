@@ -130,5 +130,48 @@ router.get('/leaderboard', async (req, res) => {
   } catch(e) { res.json({ leaderboard: [] }); }
 });
 
+
+// ── CONVERSION TRACKEN (nach erfolgreicher Zahlung) ─────────────────────────
+router.post('/convert', auth, async (req, res) => {
+  const pool = getPool(req);
+  const { referralCode } = req.body;
+  if (!referralCode) return res.status(400).json({ error: 'code erforderlich' });
+  try {
+    // Referral-Code finden
+    const codeR = await pool.query(
+      'SELECT rc.*, u.id AS referrer_id FROM referral_codes rc JOIN users u ON u.id=rc.user_id WHERE rc.code=$1',
+      [referralCode]
+    ).catch(() => ({ rows: [] }));
+
+    if (!codeR.rows.length) return res.status(404).json({ error: 'Code nicht gefunden' });
+    const referral = codeR.rows[0];
+
+    // Bereits konvertiert?
+    const exists = await pool.query(
+      'SELECT id FROM referral_conversions WHERE referred_user_id=$1 LIMIT 1',
+      [req.userId]
+    ).catch(() => ({ rows: [] }));
+    if (exists.rows.length) return res.json({ success: true, already: true });
+
+    // Conversion speichern
+    await pool.query(
+      `INSERT INTO referral_conversions (referral_code_id, referrer_id, referred_user_id, converted_at)
+       VALUES ($1,$2,$3,now())
+       ON CONFLICT DO NOTHING`,
+      [referral.id, referral.referrer_id, req.userId]
+    ).catch(() => {});
+
+    // Click-Count updaten
+    await pool.query(
+      'UPDATE referral_codes SET conversion_count=COALESCE(conversion_count,0)+1 WHERE id=$1',
+      [referral.id]
+    ).catch(() => {});
+
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: 'Fehler' });
+  }
+});
+
 module.exports = router;
 module.exports.convertReferral = convertReferral;
