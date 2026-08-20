@@ -388,6 +388,24 @@ async function initDb() {
       chunk_index INTEGER NOT NULL, content TEXT NOT NULL
     )`,
     `CREATE INDEX IF NOT EXISTS idx_chunks_agent ON agent_document_chunks(agent_id)`,
+
+    `CREATE TABLE IF NOT EXISTS marketplace_ratings (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      marketplace_id INTEGER REFERENCES marketplace_agents(id) ON DELETE CASCADE,
+      rating INTEGER CHECK (rating BETWEEN 1 AND 5),
+      review TEXT,
+      created_at TIMESTAMPTZ DEFAULT now(),
+      UNIQUE(user_id, marketplace_id)
+    )`,
+    `CREATE TABLE IF NOT EXISTS marketplace_installations (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      marketplace_id INTEGER REFERENCES marketplace_agents(id) ON DELETE CASCADE,
+      agent_id INTEGER REFERENCES agents(id) ON DELETE SET NULL,
+      installed_at TIMESTAMPTZ DEFAULT now(),
+      UNIQUE(user_id, marketplace_id)
+    )`,
   ];
   for (const sql of criticalTables) {
     await pool.query(sql).catch(e => {
