@@ -46,7 +46,8 @@ router.get('/', auth, async (req, res) => {
     );
     res.json({ integrations: r.rows });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    console.error('[integrations GET]', e.message);
+    res.json({ integrations: [] }); // Fehler → leere Liste, nie 500
   }
 });
 
@@ -174,6 +175,10 @@ router.get('/email/messages', auth, async (req, res) => {
     });
     res.json({ emails });
   } catch (e) {
+    // Keine Integration konfiguriert → leere Liste statt 400
+    if (e.message?.includes('Keine') || e.message?.includes('nicht konfiguriert') || e.message?.includes('found')) {
+      return res.json({ emails: [] });
+    }
     res.status(400).json({ error: e.message });
   }
 });
@@ -190,6 +195,9 @@ router.post('/email/prioritize', auth, async (req, res) => {
     const prioritized = await emailTool.prioritizeEmails(emails, callLLM);
     res.json({ emails: prioritized });
   } catch (e) {
+    if (e.message?.includes('Keine') || e.message?.includes('nicht konfiguriert') || e.message?.includes('found')) {
+      return res.json({ emails: [] });
+    }
     res.status(400).json({ error: e.message });
   }
 });
