@@ -95,10 +95,10 @@ router.get('/:id/poll', auth, async (req, res) => {
     if (!await tableExists(pool, 'goals')) return res.json({ goals: [] });
     const [goal, campaign, steps, metrics, activity] = await Promise.all([
       pool.query('SELECT * FROM goals WHERE id=$1 AND user_id=$2', [req.params.id, req.userId]),
-      pool.query('SELECT * FROM goal_campaigns WHERE goal_id=$1 ORDER BY created_at DESC LIMIT 1', [req.params.id]),
+      pool.query('SELECT * FROM goal_campaigns WHERE goal_id=$1 ORDER BY created_at DESC LIMIT 1', [parseInt(req.params.id)]),
       pool.query('SELECT gs.* FROM goal_steps gs JOIN goals g ON g.id=gs.goal_id WHERE gs.goal_id=$1 AND g.user_id=$2 ORDER BY gs.step_number', [req.params.id, req.userId]),
-      pool.query('SELECT * FROM goal_metrics WHERE goal_id=$1 ORDER BY metric_key', [req.params.id]),
-      pool.query('SELECT * FROM goal_activity WHERE goal_id=$1 ORDER BY created_at DESC LIMIT 20', [req.params.id]),
+      pool.query('SELECT * FROM goal_metrics WHERE goal_id=$1 ORDER BY metric_key', [parseInt(req.params.id)]),
+      pool.query('SELECT * FROM goal_activity WHERE goal_id=$1 ORDER BY created_at DESC LIMIT 20', [parseInt(req.params.id)]),
     ]);
 
     if (!goal.rows.length) return res.status(404).json({ error: 'Nicht gefunden' });
@@ -106,7 +106,7 @@ router.get('/:id/poll', auth, async (req, res) => {
     // Pending Approvals
     const approvals = await pool.query(
       "SELECT * FROM approvals WHERE goal_id=$1 AND status='pending' ORDER BY created_at",
-      [req.params.id]
+      [parseInt(req.params.id)]
     ).catch(() => ({ rows: [] }));
 
     res.json({
@@ -146,7 +146,7 @@ router.post('/:id/approve', auth, async (req, res) => {
       // Neuesten waiting_approval Schritt freigeben
       const s = await pool.query(
         "SELECT id FROM goal_steps WHERE goal_id=$1 AND status='waiting_approval' ORDER BY step_number LIMIT 1",
-        [req.params.id]
+        [parseInt(req.params.id)]
       );
       if (s.rows.length) {
         await goalEngine.resumeAfterApproval(pool, {
@@ -177,10 +177,10 @@ router.post('/:id/reject', auth, async (req, res) => {
     }
     await pool.query(
       "UPDATE goal_steps SET status='rejected' WHERE goal_id=$1 AND status='waiting_approval'",
-      [req.params.id]
+      [parseInt(req.params.id)]
     );
     await pool.query(
-      "UPDATE goals SET status='paused',updated_at=now() WHERE id=$1", [req.params.id]
+      "UPDATE goals SET status='paused',updated_at=now() WHERE id=$1", [parseInt(req.params.id)]
     );
     await goalEngine.log(pool, { goalId:parseInt(req.params.id), type:'message', title:'❌ Schritt abgelehnt', detail:reason });
     res.json({ success: true });

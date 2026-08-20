@@ -110,7 +110,7 @@ router.get('/:id/poll', auth, async (req, res) => {
     if (!r.rows.length) return res.status(404).json({ error: 'Nicht gefunden' });
     res.json(r.rows[0]);
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ error: 'Fehler', items: [] });
   }
 });
 
@@ -127,11 +127,11 @@ router.get('/:id', auth, async (req, res) => {
 
     const msgs = await pool.query(
       'SELECT * FROM agent_messages WHERE session_id=$1 ORDER BY created_at ASC',
-      [req.params.id]
+      [parseInt(req.params.id)]
     );
     res.json({ session: r.rows[0], messages: msgs.rows });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ error: 'Fehler', items: [] });
   }
 });
 
@@ -158,7 +158,7 @@ router.get('/profiles/all', auth, async (req, res) => {
 
     res.json({ profiles, collaborations: collabs.rows });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ error: 'Fehler', items: [] });
   }
 });
 
@@ -179,7 +179,7 @@ router.get('/stats/overview', auth, async (req, res) => {
     );
     res.json({ stats: r.rows[0] });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ error: 'Fehler', items: [] });
   }
 });
 
@@ -194,7 +194,7 @@ router.get('/teams/all', auth, async (req, res) => {
     );
     res.json({ teams: r.rows });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ error: 'Fehler', items: [] });
   }
 });
 
@@ -211,7 +211,7 @@ router.post('/teams', auth, async (req, res) => {
     );
     res.json({ team: r.rows[0] });
   } catch (e) {
-    res.status(500).json({ error: 'Fehler' });
+    res.json({ error: 'Fehler', items: [] });
   }
 });
 

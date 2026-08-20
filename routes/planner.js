@@ -108,13 +108,13 @@ router.get('/:id', auth, async (req, res) => {
 
     const steps = await pool.query(
       'SELECT * FROM plan_steps WHERE plan_id=$1 ORDER BY step_number',
-      [req.params.id]
+      [parseInt(req.params.id)]
     );
 
     // Pending Approvals für diesen Plan
     const pendingApprovals = await pool.query(
       "SELECT * FROM approvals WHERE plan_id=$1 AND status='pending' ORDER BY created_at",
-      [req.params.id]
+      [parseInt(req.params.id)]
     );
 
     res.json({ plan: r.rows[0], steps: steps.rows, pendingApprovals: pendingApprovals.rows });
@@ -163,7 +163,7 @@ router.post('/:id/cancel', auth, async (req, res) => {
     // Offene Approvals ebenfalls schließen
     await pool.query(
       "UPDATE approvals SET status='expired' WHERE plan_id=$1 AND status='pending'",
-      [req.params.id]
+      [parseInt(req.params.id)]
     );
     res.json({ success: true });
   } catch (e) {
@@ -187,7 +187,7 @@ router.post('/:id/retry', auth, async (req, res) => {
     // Fehlgeschlagene Steps zurücksetzen
     await pool.query(
       "UPDATE plan_steps SET status='pending', error=NULL WHERE plan_id=$1 AND status IN ('failed')",
-      [req.params.id]
+      [parseInt(req.params.id)]
     );
 
     setImmediate(() => {

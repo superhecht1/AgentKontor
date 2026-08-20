@@ -125,7 +125,7 @@ router.post('/:id/install', auth, async (req, res) => {
     // Marketplace-Agent laden
     const mr = await pool.query(
       'SELECT * FROM marketplace_agents WHERE id=$1 OR slug=$1',
-      [req.params.id]
+      [parseInt(req.params.id)]
     );
     if (!mr.rows.length) return res.status(404).json({ error: 'Nicht gefunden' });
     const template = mr.rows[0];
@@ -187,12 +187,18 @@ router.post('/:id/install', auth, async (req, res) => {
     const agentId = ar.rows[0].id;
 
     // Installation speichern
-    await pool.query(
-      `INSERT INTO marketplace_installations (user_id, marketplace_id, agent_id)
-       VALUES ($1,$2,$3)
-       ON CONFLICT (user_id, marketplace_id) DO UPDATE SET agent_id=$3`,
-      [req.userId, template.id, agentId]
-    );
+    // Update-then-Insert (kein UNIQUE Constraint nötig)
+    const existInst = await pool.query(
+      'SELECT id FROM marketplace_installations WHERE user_id=$1 AND marketplace_id=$2',
+      [req.userId, template.id]
+    ).catch(()=>({rows:[]}));
+    if (existInst.rows.length) {
+      await pool.query('UPDATE marketplace_installations SET agent_id=$3 WHERE user_id=$1 AND marketplace_id=$2',
+        [req.userId, template.id, agentId]).catch(()=>{});
+    } else {
+      await pool.query('INSERT INTO marketplace_installations (user_id, marketplace_id, agent_id) VALUES ($1,$2,$3)',
+        [req.userId, template.id, agentId]).catch(()=>{});
+    }
 
     // Install-Count erhöhen
     await pool.query(
@@ -218,7 +224,7 @@ router.post('/:id/rate', auth, async (req, res) => {
     await pool.query(
       `INSERT INTO marketplace_ratings (user_id, marketplace_id, rating, review)
        VALUES ($1,$2,$3,$4)
-       ON CONFLICT (user_id, marketplace_id) DO UPDATE SET rating=$3, review=$4`,
+       ON CONFLICT (user_id, marketplace_id) DO UPDATE SET rating=EXCLUDED.rating, review=EXCLUDED.review`,
       [req.userId, req.params.id, rating, review || '']
     );
 
@@ -228,7 +234,7 @@ router.post('/:id/rate', auth, async (req, res) => {
          rating_avg  = (SELECT AVG(rating) FROM marketplace_ratings WHERE marketplace_id=$1),
          rating_count= (SELECT COUNT(*)   FROM marketplace_ratings WHERE marketplace_id=$1)
        WHERE id=$1`,
-      [req.params.id]
+      [parseInt(req.params.id)]
     );
     res.json({ success: true });
   } catch (e) {

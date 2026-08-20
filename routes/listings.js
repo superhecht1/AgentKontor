@@ -163,14 +163,14 @@ router.get('/:id(\\d+)', async (req, res) => {
         FROM agent_listings l
         JOIN users u ON u.id=l.user_id
         WHERE l.id=$1 AND l.status='active'
-      `, [req.params.id]),
+      `, [parseInt(req.params.id)]),
       pool.query(`
         SELECT r.rating, r.review_text, r.created_at, u.name AS reviewer_name
         FROM listing_reviews r
         JOIN users u ON u.id=r.user_id
         WHERE r.listing_id=$1
         ORDER BY r.created_at DESC LIMIT 20
-      `, [req.params.id]),
+      `, [parseInt(req.params.id)]),
     ]);
 
     if (!listing.rows.length) return res.status(404).json({ error: 'Listing nicht gefunden oder nicht aktiv' });
@@ -300,13 +300,13 @@ router.delete('/:id', auth, async (req, res) => {
 
     // Aktive Käufer? Nur pausieren, nicht löschen
     const buyers = await pool.query(
-      "SELECT COUNT(*) FROM listing_purchases WHERE listing_id=$1 AND status='active'", [req.params.id]
+      "SELECT COUNT(*) FROM listing_purchases WHERE listing_id=$1 AND status='active'", [parseInt(req.params.id)]
     ).catch(() => ({ rows: [{ count: 0 }] }));
 
     if (parseInt(buyers.rows[0].count) > 0)
       return res.status(409).json({ error: 'Aktive Abonnenten vorhanden. Bitte erst pausieren.' });
 
-    await pool.query('DELETE FROM agent_listings WHERE id=$1', [req.params.id]);
+    await pool.query('DELETE FROM agent_listings WHERE id=$1', [parseInt(req.params.id)]);
     await pool.query('UPDATE agents SET listing_id=NULL, is_listed=false WHERE id=$1', [listing.rows[0].agent_id]);
     res.json({ success: true });
   } catch(e) { res.status(500).json({ error: 'Fehler' }); }
@@ -319,7 +319,7 @@ router.post('/:id/purchase', auth, async (req, res) => {
     if (!await tableExists(pool, 'listing_purchases')) return res.status(503).json({ error: 'Service nicht bereit' });
 
     const listing = await pool.query(
-      "SELECT * FROM agent_listings WHERE id=$1 AND status='active'", [req.params.id]
+      "SELECT * FROM agent_listings WHERE id=$1 AND status='active'", [parseInt(req.params.id)]
     );
     if (!listing.rows.length) return res.status(404).json({ error: 'Listing nicht gefunden' });
     const l = listing.rows[0];
@@ -447,7 +447,7 @@ router.post('/:id/review', auth, async (req, res) => {
     // Durchschnitt neu berechnen
     const avg = await pool.query(
       'SELECT AVG(rating) AS avg, COUNT(*) AS cnt FROM listing_reviews WHERE listing_id=$1',
-      [req.params.id]
+      [parseInt(req.params.id)]
     );
     await pool.query(
       'UPDATE agent_listings SET rating_avg=$1, rating_count=$2 WHERE id=$3',
@@ -483,7 +483,7 @@ router.post('/admin/:id/approve', auth, async (req, res) => {
   if (!user.rows[0]?.is_admin) return res.status(403).json({ error: 'Nur Admins' });
   await pool.query(
     "UPDATE agent_listings SET status='active', approved_at=now(), reject_reason=NULL WHERE id=$1",
-    [req.params.id]
+    [parseInt(req.params.id)]
   ).catch(() => {});
   res.json({ success: true });
 });
