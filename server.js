@@ -402,6 +402,17 @@ async function initDb() {
   await pool.query("ALTER TABLE agent_tasks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now()").catch(()=>{});
   await pool.query("ALTER TABLE tool_calls ADD COLUMN IF NOT EXISTS agent_id INTEGER REFERENCES agents(id) ON DELETE SET NULL").catch(()=>{});
   await pool.query("ALTER TABLE approvals ADD COLUMN IF NOT EXISTS goal_id INTEGER").catch(()=>{});
+  // Memory: confidence Spalte nachrüsten falls fehlend
+  await pool.query(
+    'ALTER TABLE agent_memory ADD COLUMN IF NOT EXISTS confidence NUMERIC DEFAULT 1.0'
+  ).catch(() => {});
+  await pool.query(
+    'ALTER TABLE agent_memory ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT \'{}\'::jsonb'
+  ).catch(() => {});
+  await pool.query(
+    'ALTER TABLE agent_memory ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ'
+  ).catch(() => {});
+
   console.log('✅ Kritische Tabellen geprüft');
 
   // ── Marketplace Seeds (läuft jedes Mal, idempotent) ─────────────────────
