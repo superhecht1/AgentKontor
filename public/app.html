@@ -37,6 +37,8 @@ body{font-family:"DM Sans",-apple-system,BlinkMacSystemFont,sans-serif;backgroun
 .auth-tab{flex:1;padding:9px;border-radius:8px;text-align:center;font-size:.83rem;font-weight:600;cursor:pointer;transition:all .2s;color:var(--muted-l)}
 .auth-tab.on{background:var(--v);color:#fff;box-shadow:0 2px 10px var(--v-glow)}
 .layout{display:flex;height:100vh;overflow:hidden}
+.app-shell{display:flex;flex:1;overflow:hidden;height:calc(100vh - 56px)}
+.app-shell[style*="display: none"]{display:none!important}
 .sidebar{width:232px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transition:width .22s cubic-bezier(.4,0,.2,1);overflow:hidden;position:relative}
 .sidebar.collapsed{width:64px}
 .sidebar::after{content:"";position:absolute;top:0;left:0;right:0;height:160px;background:linear-gradient(180deg,rgba(124,58,237,.08),transparent);pointer-events:none}
@@ -1048,7 +1050,7 @@ input:checked+.slider::before{transform:translateX(18px)}
 
 
 <!-- EXPERTENMODUS -->
-<div class="app-shell" x-show="appMode==='expert'" style="display:flex;flex:1;overflow:hidden;height:calc(100vh - 56px)">
+<div class="app-shell" x-show="appMode==='expert'">
 <div class="sidebar" :class="{collapsed:sidebarCollapsed}">
     <div class="sb-top">
       <div class="sb-logo">
@@ -1147,7 +1149,7 @@ input:checked+.slider::before{transform:translateX(18px)}
     <div class="content">
 
       <!-- ── DASHBOARD ── -->
-      <div class="page" x-show="page==='dashboard'" @vue:mounted="loadNotifs()" x-init="$watch('page', v => { if(v==='dashboard') { loadNotifs(); setTimeout(()=>loadInsights(),300); } })">
+      <div class="page" x-show="page==='dashboard'" x-init="$nextTick(()=>{loadNotifs();$watch('page', v=>{if(v==='dashboard'){loadNotifs();setTimeout(()=>loadInsights(),300);}});})">
         <div x-show="user?.trial_ends_at&&user?.plan==='pro'" style="background:linear-gradient(90deg,rgba(245,158,11,.1),rgba(124,58,237,.08));border:1px solid rgba(245,158,11,.25);border-radius:var(--r);padding:12px 16px;margin-bottom:22px;display:flex;align-items:center;gap:12px">
           <span>⚡</span>
           <span style="font-size:.83rem;color:var(--amber-l)">Pro Trial aktiv bis <strong x-text="new Date(user.trial_ends_at).toLocaleDateString('de-DE')"></strong></span>
