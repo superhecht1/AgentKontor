@@ -81,8 +81,8 @@ const conditions = ['user_id=$1'];
 
     const r = await pool.query(
       `SELECT id, goal, status, created_at, updated_at, completed_at, total_duration_ms,
-         jsonb_object_keys(COALESCE(agent_results,'{}')) as agents_count,
-         LEFT(final_result, 200) as result_preview
+         LEFT(final_result, 200) as result_preview,
+         (SELECT COUNT(*) FROM jsonb_object_keys(COALESCE(agent_results,'{}'))) as agents_count
        FROM super_agent_sessions
        WHERE ${conditions.join(' AND ')}
        ORDER BY created_at DESC LIMIT $${params.length}`,

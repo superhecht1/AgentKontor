@@ -15,6 +15,12 @@ function safeErr(res, e, status = 500, context = '') {
 
 const auth    = require('../middleware/auth');
 const { getPool } = require('../utils/db');
+
+async function tableExists(pool, table) {
+  try { await pool.query(`SELECT 1 FROM ${table} LIMIT 1`); return true; }
+  catch { return false; }
+}
+
 const { goalEngine } = require('../utils/goal-engine');
 
 // ── POST /api/goals  — Neues Ziel starten ────────────────────────────────────
