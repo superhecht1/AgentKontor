@@ -63,7 +63,7 @@ router.post('/', auth, async (req, res) => {
       `INSERT INTO integration_credentials (user_id,integration,provider,label,credentials)
        VALUES ($1,$2,$3,$4,$5)
        ON CONFLICT (user_id,integration,provider,label)
-       DO UPDATE SET credentials=$5, is_active=true, updated_at=now()
+       DO UPDATE SET credentials=EXCLUDED.credentials, is_active=true, updated_at=now()
        RETURNING id, integration, provider, label, is_active`,
       [req.userId, integration, provider, label, encrypt(credentials)]
     );

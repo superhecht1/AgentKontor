@@ -47,7 +47,7 @@ const conditions = ['ma.is_active=true'];
          mc.color  AS category_color,
          mi.id     IS NOT NULL AS is_installed,
          mi.agent_id AS installed_agent_id,
-         COALESCE(mr.rating, 0) AS user_rating
+         COALESCE(mr.rating_avg, 0) AS user_rating
        FROM marketplace_agents ma
        JOIN marketplace_categories mc ON mc.slug = ma.category_slug
        LEFT JOIN marketplace_installations mi
