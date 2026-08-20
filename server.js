@@ -376,6 +376,18 @@ async function initDb() {
     `ALTER TABLE agents ADD COLUMN IF NOT EXISTS listing_id INTEGER REFERENCES agent_listings(id) ON DELETE SET NULL`,
     `ALTER TABLE agents ADD COLUMN IF NOT EXISTS is_listed BOOLEAN DEFAULT false`,
 
+
+    `CREATE TABLE IF NOT EXISTS agent_documents (
+      id SERIAL PRIMARY KEY, agent_id INTEGER REFERENCES agents(id) ON DELETE CASCADE,
+      filename TEXT NOT NULL, file_size INTEGER DEFAULT 0, chunk_count INTEGER DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS agent_document_chunks (
+      id SERIAL PRIMARY KEY, document_id INTEGER REFERENCES agent_documents(id) ON DELETE CASCADE,
+      agent_id INTEGER REFERENCES agents(id) ON DELETE CASCADE,
+      chunk_index INTEGER NOT NULL, content TEXT NOT NULL
+    )`,
+    `CREATE INDEX IF NOT EXISTS idx_chunks_agent ON agent_document_chunks(agent_id)`,
   ];
   for (const sql of criticalTables) {
     await pool.query(sql).catch(e => {
@@ -788,6 +800,7 @@ app.use('/api/web',            aiLimiter, require('./routes/web-agent'));
 app.use('/api/super',          aiLimiter, require('./routes/super-agent'));
 
 // ── Agent Marketplace ───────────────────────────────────────────────────────
+app.use('/api/social',          require('./routes/social-webhooks'));
 app.use('/api/listings',         require('./routes/listings'));
 app.use('/api/marketplace',    require('./routes/marketplace'));
 
