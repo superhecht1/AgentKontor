@@ -1003,8 +1003,34 @@ input:checked+.slider::before{transform:translateX(18px)}
             </template>
           </div>
         </div>
+        <!-- Mode Toggle -->
+        <div style="display:flex;align-items:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:3px;gap:2px">
+          <button @click="setMode('simple')"
+            :style="appMode==='simple'?'background:var(--purple);color:#fff':'color:var(--muted-l)'"
+            style="padding:4px 12px;border-radius:16px;font-size:.72rem;font-weight:600;border:none;cursor:pointer;transition:all .2s;background:transparent">
+            ⚡ Einfach
+          </button>
+          <button @click="setMode('expert')"
+            :style="appMode==='expert'?'background:var(--purple);color:#fff':'color:var(--muted-l)'"
+            style="padding:4px 12px;border-radius:16px;font-size:.72rem;font-weight:600;border:none;cursor:pointer;transition:all .2s;background:transparent">
+            🔧 Experte
+          </button>
+        </div>
         <button class="btn btn-primary btn-sm" @click="openNew()">+ Agent</button>
-        <button class="topbar-icon-btn" @click="logout()" title="Abmelden">🚪</button>
+        <!-- Mode Toggle -->
+        <div style="display:flex;align-items:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:3px;gap:2px;flex-shrink:0">
+          <button @click="setMode('simple')"
+            :style="appMode==='simple'?'background:var(--purple);color:#fff;':'color:#ccc;'"
+            style="padding:4px 12px;border-radius:16px;font-size:.72rem;font-weight:600;border:none;cursor:pointer;transition:all .2s">
+            &#x26A1; Einfach
+          </button>
+          <button @click="setMode('expert')"
+            :style="appMode==='expert'?'background:var(--purple);color:#fff;':'color:#ccc;'"
+            style="padding:4px 12px;border-radius:16px;font-size:.72rem;font-weight:600;border:none;cursor:pointer;transition:all .2s">
+            &#x1F527; Experte
+          </button>
+        </div>
+        <button class="topbar-icon-btn" @click="logout()" title="Abmelden">&#x1F6AA;</button>
       </div>
     </div>
 
