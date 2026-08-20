@@ -1110,37 +1110,7 @@ input:checked+.slider::before{transform:translateX(18px)}
       <div class="nav-item" :class="{on:page==='settings'}" @click="page='settings'"><span class="nav-ico">⚙️</span><span class="nav-lbl">Einstellungen</span></div>
       <div class="nav-item" x-show="user?.is_admin" @click="window.location='/admin'"><span class="nav-ico">🛡️</span><span class="nav-lbl">Admin Panel</span></div>
     </div>
-    <div class="sb-plan" x-show="user?.plan!=='pro'" @click="page='billing';loadInvoices()">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div class="sb-logo-icon" style="width:24px;height:24px;font-size:.7rem;background:linear-gradient(135deg,var(--amber),var(--v))">⚡</div>
-        <div><div class="sb-plan-txt">Auf Pro upgraden</div><div class="sb-plan-sub">€19/Mo · Alle Features</div></div>
-      </div>
-    </div>
-    <div x-show="!sidebarCollapsed" style="padding:0 12px 8px">
-      <div style="font-size:.65rem;color:var(--muted);display:flex;justify-content:space-between;margin-bottom:3px">
-        <span>Nachrichten</span>
-        <span style="color:var(--muted-l)" x-text="(user?.msg_count_month||0).toLocaleString('de-DE')+'/'+(user?.plan==='pro'?'10k':'500')"></span>
-      </div>
-      <div class="usage-bar">
-        <div class="usage-fill" :style="'width:'+Math.min(100,((user?.msg_count_month||0)/(user?.plan==='pro'?10000:500))*100)+'%;background:'+(((user?.msg_count_month||0)/(user?.plan==='pro'?10000:500))>.85?'var(--rose)':'var(--v)')"></div>
-      </div>
-    </div>
-    <div class="sb-user">
-      <div class="sb-av" x-text="(user?.name||user?.email||'?')[0].toUpperCase()"></div>
-      <div class="sb-user-info">
-        <div class="sb-user-name" x-text="user?.name||'Nutzer'"></div>
-        <div class="sb-user-plan" x-text="user?.plan==='pro'?'Pro Plan ✨':'Free Plan'"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MAIN -->
-  <div class="main" x-show="appMode==='expert'">
-    <!-- TOP BAR -->
-    <div class="topbar">
-      <div class="topbar-left">
-        <div class="topbar-cmd" @click="openCmd()"><span>⚡ Suchen oder Aktion…</span><div style="display:flex;gap:4px"><kbd>⌘K</kbd></div></div>
-        <div class="topbar-page-title" x-show="page!=='dashboard'" x-text="{agents:'Agenten',analytics:'Analytics',conversations:'Gespräche',keys:'API Keys',docs:'Dokumentation',webhooks:'Webhooks',billing:'Abrechnung',settings:'Einstellungen'}[page]||''"></div>
+[page]||''"></div>
       </div>
       <div class="topbar-right">
           <!-- Theme Toggle -->
@@ -1234,7 +1204,10 @@ input:checked+.slider::before{transform:translateX(18px)}
           <!-- Stunden-Heatmap -->
           <div class="card" style="margin-bottom:0">
             <div class="card-hdr">🕐 Aktivität nach Uhrzeit</div>
-            <div class="heatmap-grid">
+            <div x-show="insightHeatmap.length===0" style="color:var(--muted);font-size:.8rem;padding:16px 0;text-align:center">
+              Noch keine Aktivitätsdaten vorhanden.
+            </div>
+          <div class="heatmap-grid" x-show="insightHeatmap.length>0">
               <template x-for="h in insightHeatmap" :key="h.hour">
                 <div class="heatmap-cell"
                   :title="h.hour+':00 — '+h.count+' Msgs'"
@@ -1587,22 +1560,7 @@ input:checked+.slider::before{transform:translateX(18px)}
         <div style="max-width:640px">
           <div class="card">
             <div class="card-hdr">Neuen Key erstellen</div>
-            <div style="display:flex;gap:8px"><input class="inp" x-model="newKeyName" placeholder="Key-Name" @keydown.enter="createKey()"><button class="btn btn-primary" @click="createKey()">Erstellen</button></div>
-            <div class="ok-box" x-show="lastKey" style="margin-top:12px"><div style="font-size:.74rem;font-weight:700;margin-bottom:5px">✓ Key erstellt — jetzt kopieren:</div><div class="code" x-text="lastKey"></div></div>
-          </div>
-          <div class="card" style="padding:0;overflow:hidden">
-            <div class="empty" style="padding:28px" x-show="!apiKeys.length"><div class="empty-ico">🔑</div><h3>Keine Keys</h3></div>
-            <template x-for="k in apiKeys" :key="k.id">
-              <div class="key-row"><span class="key-pfx" x-text="k.key_prefix+'…'"></span><span style="flex:1;font-size:.82rem;font-weight:600;color:var(--white)" x-text="k.name"></span><span style="font-size:.72rem;color:var(--muted)" x-text="new Date(k.created_at).toLocaleDateString('de-DE')"></span><button class="btn btn-xs btn-danger" @click="deleteKey(k.id)">✕</button></div>
-            </template>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── DOCS ── -->
-      <div class="page" x-show="page==='docs'">
-        <div class="ph"><h1>📖 Dokumentation</h1></div>
-        <div class="tabs"><div class="tab" :class="{on:docsTab==='api'}" @click="docsTab='api'">Chat API</div><div class="tab" :class="{on:docsTab==='widget'}" @click="docsTab='widget'">Widget</div><div class="tab" :class="{on:docsTab==='voice'}" @click="docsTab='voice'">Voice</div><div class="tab" :class="{on:docsTab==='webhook'}" @click="docsTab='webhook'">Webhooks</div></div>
+" @click="docsTab='api'">Chat API</div><div class="tab" :class="{on:docsTab==='widget'}" @click="docsTab='widget'">Widget</div><div class="tab" :class="{on:docsTab==='voice'}" @click="docsTab='voice'">Voice</div><div class="tab" :class="{on:docsTab==='webhook'}" @click="docsTab='webhook'">Webhooks</div></div>
         <div style="max-width:820px">
           <template x-if="docsTab==='api'"><div class="card"><div class="card-hdr">Chat-Nachricht senden</div><div class="code">POST /api/chat/send
 Authorization: Bearer {API_KEY}
@@ -4723,7 +4681,6 @@ async dropFile(e){this.dragging=false;const f=e.dataTransfer.files[0];if(!f)retu
 async _upload(file){if(!this.editing)return;this.uploading=true;const fd=new FormData();fd.append('file',file);try{const r=await fetch('/api/rag/'+this.editing.id+'/upload',{method:'POST',credentials:'include',headers:{Authorization:'Bearer '+this.token},body:fd});const d=await r.json();if(d.error)this.toast(d.error,'err');else{this.toast('Upload gestartet — Verarbeitung läuft…');setTimeout(()=>this.loadDocs(this.editing.id),3500);}}catch{this.toast('Upload fehlgeschlagen','err');}this.uploading=false;},
 async deleteDoc(id){if(!confirm('Dokument löschen?'))return;await this.api('/rag/'+this.editing.id+'/documents/'+id,'DELETE');this.loadDocs(this.editing.id);},
 
-async loadKeys(){const d=await this.api('/keys');if(d.keys)this.apiKeys=d.keys;},
 async createKey(){const d=await this.api('/keys','POST',this.nkf);if(d.error){this.toast(d.error,'err');return;}this.newKeyRev=d.key;this.showNewKey=false;await this.loadKeys();this.toast('Key erstellt!');},
 async delKey(id){if(!confirm('Key löschen?'))return;await this.api('/keys/'+id,'DELETE');await this.loadKeys();},
 
@@ -4851,9 +4808,6 @@ async openSession(s){
 
 async loadPlan(){const d=await this.api('/account/plan');if(d.plan||d.plan===null)this.planData=d;this.nameForm.name=this.user?.name||'';this.digestFreq=this.user?.digest_frequency||'daily';await this.check2FAStatus();await this.loadReferral();await this.loadInvoices();},
 async changeName(){if(!this.nameForm.name.trim())return;this.settingsSaving=true;const d=await this.api('/account/name','PATCH',{name:this.nameForm.name});this.settingsSaving=false;if(d.error){this.toast(d.error,'err');return;}this.user.name=d.name;localStorage.setItem('ak_user',JSON.stringify(this.user));this.toast('Gespeichert ✓');},
-async changePassword(){this.pwErr='';this.pwOk=false;if(!this.pwForm.current||!this.pwForm.newPw){this.pwErr='Alle Felder ausfüllen';return;}if(this.pwForm.newPw!==this.pwForm.confirm){this.pwErr='Passwörter stimmen nicht überein';return;}this.settingsSaving=true;const d=await this.api('/account/password','PATCH',{current:this.pwForm.current,newPw:this.pwForm.newPw});this.settingsSaving=false;if(d.error){this.pwErr=d.error;return;}this.pwOk=true;this.pwForm={current:'',newPw:'',confirm:''};setTimeout(()=>this.pwOk=false,4000);},
-async changeEmail(){this.emailErr='';this.emailOk=false;if(!this.emailForm.email||!this.emailForm.password){this.emailErr='Alle Felder ausfüllen';return;}this.settingsSaving=true;const d=await this.api('/account/email','PATCH',this.emailForm);this.settingsSaving=false;if(d.error){this.emailErr=d.error;return;}this.emailOk=true;this.user.email=d.email;localStorage.setItem('ak_user',JSON.stringify(this.user));this.emailForm={email:'',password:''};setTimeout(()=>this.emailOk=false,4000);},
-async deleteAccount(){this.deleteErr='';if(!this.deleteForm.password){this.deleteErr='Passwort erforderlich';return;}if(this.deleteForm.confirm!=='LÖSCHEN'){this.deleteErr='"LÖSCHEN" eingeben';return;}if(!confirm('Konto wirklich löschen?'))return;this.settingsSaving=true;const d=await this.api('/account','DELETE',this.deleteForm);this.settingsSaving=false;if(d.error){this.deleteErr=d.error;return;}this.logout();},
 async createCheckout(){this.checkoutLoading=true;const d=await this.api('/stripe/create-checkout','POST');this.checkoutLoading=false;if(d.error){this.toast(d.error,'err');return;}if(d.url)window.location.href=d.url;},
 async openPortal(){const d=await this.api('/stripe/portal','POST');if(d.error){this.toast(d.error,'err');return;}if(d.url)window.open(d.url,'_blank');},
 
@@ -5105,12 +5059,8 @@ async loadInsights(){
       sessions,engaged,leads:leadCount,
       rate:sessions?Math.round((leadCount/sessions)*100):0
     };
-    // Top questions from recent messages
-    const topQ=ov.top_questions||[
-      {q:'Wie kann ich bestellen?',count:23},{q:'Öffnungszeiten?',count:18},
-      {q:'Rückgabe möglich?',count:14},{q:'Lieferzeit?',count:11},{q:'Preise?',count:8}
-    ];
-    this.insightTopQ=topQ;
+    // Top questions — nur echte Daten
+    this.insightTopQ=ov.top_questions||[];
     // Heatmap: msgs by hour (0-23) — mock if not available
     this.insightHeatmap=ov.by_hour||Array.from({length:24},(_,i)=>({hour:i,count:Math.round(Math.random()*30*(i>8&&i<20?1:.15))}));
     // Agent scores
@@ -5848,8 +5798,8 @@ copy(t){navigator.clipboard.writeText(t).then(()=>this.toast('Kopiert!')).catch(
 toast(msg,type='ok'){const id=Date.now();this.toasts.push({id,msg,type});setTimeout(()=>this.toasts=this.toasts.filter(t=>t.id!==id),3500);}
 };}
 </script>
-<!-- cookie-banner: via index.html -->
-<script src="/cookie-banner.js"></script>
+
+
 
 <script>
 /* PWA Install Prompt */
@@ -5886,7 +5836,7 @@ if (window.matchMedia('(display-mode: standalone)').matches) {
 
 <script>
 var _dp=null;var _ib=document.getElementById('pwa-install-btn');
-window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();_dp=e;if(_ib)_ib.style.display='block';});
+
 if(_ib){_ib.addEventListener('click',async function(){if(!_dp)return;_dp.prompt();await _dp.userChoice;_dp=null;_ib.style.display='none';});}
 window.addEventListener('appinstalled',function(){if(_ib)_ib.style.display='none';});
 if(window.matchMedia('(display-mode: standalone)').matches){document.documentElement.classList.add('pwa-mode');}
