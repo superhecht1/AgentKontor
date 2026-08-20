@@ -73,16 +73,15 @@ router.get('/', auth, async (req, res) => {
   const pool = getPool(req);
   const { limit = 20, status } = req.query;
   try {
-        if (!await tableExists(pool, 'super_agent_sessions')) return res.json({ sessions: [] });
-const conditions = ['user_id=$1'];
+    if (!await tableExists(pool, 'super_agent_sessions')) return res.json({ sessions: [] });
+
+    const conditions = ['user_id=$1'];
     const params = [req.userId];
-    if (status) { conditions.push('status=$2'); params.push(status); }
-    params.push(parseInt(limit));
+    if (status) { conditions.push(`status=$${params.length+1}`); params.push(status); }
+    params.push(Math.min(parseInt(limit)||20, 50));
 
     const r = await pool.query(
-      `SELECT id, goal, status, created_at, updated_at, completed_at, total_duration_ms,
-         LEFT(final_result, 200) as result_preview,
-         (SELECT COUNT(*) FROM jsonb_object_keys(COALESCE(agent_results,'{}'))) as agents_count
+      `SELECT id, goal, status, created_at, updated_at
        FROM super_agent_sessions
        WHERE ${conditions.join(' AND ')}
        ORDER BY created_at DESC LIMIT $${params.length}`,
@@ -90,17 +89,8 @@ const conditions = ['user_id=$1'];
     );
     res.json({ sessions: r.rows });
   } catch (e) {
-    // Fallback ohne jsonb_object_keys
-    try {
-      const r2 = await pool.query(
-        `SELECT id, goal, status, created_at, updated_at, completed_at, total_duration_ms
-         FROM super_agent_sessions WHERE user_id=$1 ORDER BY created_at DESC LIMIT $2`,
-        [req.userId, parseInt(limit)]
-      );
-      res.json({ sessions: r2.rows });
-    } catch (e2) {
-      res.status(500).json({ error: 'Fehler' });
-    }
+    console.error('LIST SUPER:', e.message);
+    res.json({ sessions: [] });
   }
 });
 
