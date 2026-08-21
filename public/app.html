@@ -1625,32 +1625,31 @@ X-AgentKontor-Signature: sha256=…
               </div>
               <div style="display:flex;align-items:center;gap:6px">
                 <label style="font-size:.75rem;color:var(--muted-l)">Modell:</label>
-                <select class="inp" style="width:160px;font-size:.78rem;padding:5px 8px" x-model="goalModel">
-<optgroup label="Anthropic">
-                    <option value="claude-sonnet-4-6">Claude Sonnet 4.6 ★</option>
-                    <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 ⚡</option>
-                    <option value="claude-opus-4-6">Claude Opus 4.6 🧠</option>
-                  </optgroup>
-                  <optgroup label="OpenAI">
-                    <option value="gpt-4o">GPT-4o</option>
-                    <option value="gpt-4o-mini">GPT-4o mini ⚡</option>
-                  </optgroup>
-                  <optgroup label="Google">
-                    <option value="gemini-2.0-flash">Gemini 2.0 Flash ⚡</option>
-                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-                  </optgroup>
-                  <optgroup label="Mistral 🇪🇺">
-                    <option value="mistral-large-latest">Mistral Large</option>
-                    <option value="mistral-small-latest">Mistral Small ⚡</option>
-                  </optgroup>
-                  <optgroup label="Groq ⚡">
-                    <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
-                    <option value="llama-3.1-8b-instant">Llama 3.1 8B ⚡</option>
-                  </optgroup>
-                  <optgroup label="DeepSeek">
-                    <option value="deepseek-chat">DeepSeek Chat</option>
-                  </optgroup>
-                </select>
+                <div class="model-picker" @click.outside="goalModelOpen=false">
+          <button type="button" class="model-picker-btn" :class="{'model-picker-open':goalModelOpen}" @click="goalModelOpen=!goalModelOpen">
+            <div class="model-provider-dot" :style="'background:'+modelColor(goalModel)"></div>
+            <span class="model-picker-label" x-text="modelLabel(goalModel)"></span>
+            <span class="model-picker-sub" x-text="goalModel"></span>
+            <span class="model-picker-chevron">▾</span>
+          </button>
+          <div class="model-dropdown" x-show="goalModelOpen" x-cloak>
+            <template x-for="group in MODEL_GROUPS" :key="group.label">
+              <div>
+                <div class="model-group-label" x-text="group.label"></div>
+                <template x-for="m in group.models" :key="m.value">
+                  <div class="model-option" :class="{'selected':goalModel===m.value}" @click="goalModel=m.value;goalModelOpen=false">
+                    <div class="model-opt-dot" :style="'background:'+group.color"></div>
+                    <div style="flex:1;min-width:0">
+                      <div class="model-opt-name" x-text="m.name"></div>
+                      <div class="model-opt-desc" x-text="m.desc"></div>
+                    </div>
+                    <span class="model-opt-badge" :style="'background:'+m.badgeColor+';color:var(--text)'" x-text="m.badge"></span>
+                  </div>
+                </template>
+              </div>
+            </template>
+          </div>
+        </div>
               </div>
             </div>
           </div>
@@ -2970,32 +2969,31 @@ https://anbieter3.de"></textarea></div>
                   </select>
                 </div>
                 <div class="field"><label>Modell</label>
-                  <select class="inp" x-model="planModel">
-<optgroup label="Anthropic">
-                    <option value="claude-sonnet-4-6">Claude Sonnet 4.6 ★</option>
-                    <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 ⚡</option>
-                    <option value="claude-opus-4-6">Claude Opus 4.6 🧠</option>
-                  </optgroup>
-                  <optgroup label="OpenAI">
-                    <option value="gpt-4o">GPT-4o</option>
-                    <option value="gpt-4o-mini">GPT-4o mini ⚡</option>
-                  </optgroup>
-                  <optgroup label="Google">
-                    <option value="gemini-2.0-flash">Gemini 2.0 Flash ⚡</option>
-                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-                  </optgroup>
-                  <optgroup label="Mistral 🇪🇺">
-                    <option value="mistral-large-latest">Mistral Large</option>
-                    <option value="mistral-small-latest">Mistral Small ⚡</option>
-                  </optgroup>
-                  <optgroup label="Groq ⚡">
-                    <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
-                    <option value="llama-3.1-8b-instant">Llama 3.1 8B ⚡</option>
-                  </optgroup>
-                  <optgroup label="DeepSeek">
-                    <option value="deepseek-chat">DeepSeek Chat</option>
-                  </optgroup>
-                  </select>
+                  <div class="model-picker" @click.outside="planModelOpen=false">
+          <button type="button" class="model-picker-btn" :class="{'model-picker-open':planModelOpen}" @click="planModelOpen=!planModelOpen">
+            <div class="model-provider-dot" :style="'background:'+modelColor(planModel)"></div>
+            <span class="model-picker-label" x-text="modelLabel(planModel)"></span>
+            <span class="model-picker-sub" x-text="planModel"></span>
+            <span class="model-picker-chevron">▾</span>
+          </button>
+          <div class="model-dropdown" x-show="planModelOpen" x-cloak>
+            <template x-for="group in MODEL_GROUPS" :key="group.label">
+              <div>
+                <div class="model-group-label" x-text="group.label"></div>
+                <template x-for="m in group.models" :key="m.value">
+                  <div class="model-option" :class="{'selected':planModel===m.value}" @click="planModel=m.value;planModelOpen=false">
+                    <div class="model-opt-dot" :style="'background:'+group.color"></div>
+                    <div style="flex:1;min-width:0">
+                      <div class="model-opt-name" x-text="m.name"></div>
+                      <div class="model-opt-desc" x-text="m.desc"></div>
+                    </div>
+                    <span class="model-opt-badge" :style="'background:'+m.badgeColor+';color:var(--text)'" x-text="m.badge"></span>
+                  </div>
+                </template>
+              </div>
+            </template>
+          </div>
+        </div>
                 </div>
               </div>
               <div style="display:flex;gap:7px">
