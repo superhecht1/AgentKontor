@@ -761,7 +761,7 @@ input:checked+.slider::before{transform:translateX(18px)}
 .model-picker-sub{font-size:.7rem;color:var(--muted);margin-left:auto}
 .model-picker-chevron{color:var(--muted);font-size:.7rem;transition:transform .2s}
 .model-picker-open .model-picker-chevron{transform:rotate(180deg)}
-.model-dropdown{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.35);z-index:200;overflow:hidden;max-height:400px;overflow-y:auto}
+.model-dropdown{position:fixed;min-width:280px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.5);z-index:9999;overflow:hidden;max-height:380px;overflow-y:auto}
 .model-group-label{padding:8px 12px 4px;font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;background:var(--surface-2);border-bottom:1px solid var(--border)}
 .model-option{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;transition:background .15s}
 .model-option:hover{background:rgba(124,58,237,.1)}
@@ -1632,7 +1632,7 @@ X-AgentKontor-Signature: sha256=…
             <span class="model-picker-sub" x-text="goalModel"></span>
             <span class="model-picker-chevron">▾</span>
           </button>
-          <div class="model-dropdown" x-show="goalModelOpen" x-cloak>
+          <div class="model-dropdown" x-show="goalModelOpen" x-cloak x-init="$watch('goalModelOpen', v=>{ if(v){ const r=$el.previousElementSibling.getBoundingClientRect(); $el.style.top=(r.bottom+4)+'px'; $el.style.left=r.left+'px'; $el.style.width=r.width+'px'; } })">
             <template x-for="group in MODEL_GROUPS" :key="group.label">
               <div>
                 <div class="model-group-label" x-text="group.label"></div>
@@ -2332,13 +2332,13 @@ X-AgentKontor-Signature: sha256=…
               <div class="field"><label>Kontext (optional)</label><input class="inp" x-model="superContext" placeholder="Branche, Produkt, Zielgruppe…"></div>
               <div class="field"><label>Modell</label>
                 <div class="model-picker" @click.outside="superModelOpen=false">
-          <button type="button" class="model-picker-btn" :class="{'superModelOpen':!superModelOpen,'model-picker-open':superModelOpen}" @click="superModelOpen=!superModelOpen">
+          <button type="button" class="model-picker-btn" :class="{'model-picker-open':superModelOpen}" @click="superModelOpen=!superModelOpen">
             <div class="model-provider-dot" :style="'background:'+modelColor(superModel)"></div>
             <span class="model-picker-label" x-text="modelLabel(superModel)"></span>
             <span class="model-picker-sub" x-text="superModel"></span>
             <span class="model-picker-chevron">▾</span>
           </button>
-          <div class="model-dropdown" x-show="superModelOpen" x-cloak>
+          <div class="model-dropdown" x-show="superModelOpen" x-cloak x-init="$watch('superModelOpen', v=>{ if(v){ const r=$el.previousElementSibling.getBoundingClientRect(); $el.style.top=(r.bottom+4)+'px'; $el.style.left=r.left+'px'; $el.style.width=r.width+'px'; } })">
             <template x-for="group in MODEL_GROUPS" :key="group.label">
               <div>
                 <div class="model-group-label" x-text="group.label"></div>
@@ -2976,7 +2976,7 @@ https://anbieter3.de"></textarea></div>
             <span class="model-picker-sub" x-text="planModel"></span>
             <span class="model-picker-chevron">▾</span>
           </button>
-          <div class="model-dropdown" x-show="planModelOpen" x-cloak>
+          <div class="model-dropdown" x-show="planModelOpen" x-cloak x-init="$watch('planModelOpen', v=>{ if(v){ const r=$el.previousElementSibling.getBoundingClientRect(); $el.style.top=(r.bottom+4)+'px'; $el.style.left=r.left+'px'; $el.style.width=r.width+'px'; } })">
             <template x-for="group in MODEL_GROUPS" :key="group.label">
               <div>
                 <div class="model-group-label" x-text="group.label"></div>
@@ -3852,7 +3852,7 @@ https://anbieter3.de"></textarea></div>
             <span class="model-picker-sub" x-text="af.model"></span>
             <span class="model-picker-chevron">▾</span>
           </button>
-          <div class="model-dropdown" x-show="modelPickerOpen" x-cloak>
+          <div class="model-dropdown" x-show="modelPickerOpen" x-cloak x-init="$watch('modelPickerOpen', v=>{ if(v){ const r=$el.previousElementSibling.getBoundingClientRect(); $el.style.top=(r.bottom+4)+'px'; $el.style.left=r.left+'px'; $el.style.width=r.width+'px'; } })">
             <template x-for="group in MODEL_GROUPS" :key="group.label">
               <div>
                 <div class="model-group-label" x-text="group.label"></div>
@@ -4293,6 +4293,18 @@ goalInput:'',goalContext:'',goalModel:'claude-sonnet-4-6',
 goalRunning:false,goalTab:'new',
 // Marketplace
 marketplaceAgents:[],marketplaceCategories:[],marketplaceMyInstalls:[],
+    // Simple Mode
+    appMode:localStorage.getItem('ak_mode')||'simple',
+    simpleGoal:'',simpleGoals:[],simpleRunning:false,
+    // Community Listings
+    communityListings:[],communityTotal:0,myListings:[],myPurchases:[],
+    myEarnings:{total_cents:0,this_month_cents:0,commission_pct:20,listings:[]},
+    selectedListing:null,showListingDetail:false,showCreateListing:false,
+    listingAgentId:'',newListing:{title:'',tagline:'',description:'',category:'sonstiges',priceModel:'monthly',priceCents:0,hidePrompt:true},
+    // UI toggles
+    planModelOpen:false,
+    // Admin
+    userFilter:{plan:'all',status:'all',sort:'created_at',order:'desc'},userTotal:0,selectedUsers:[],bulkAction:'',bulkValue:'',
 marketplaceTab:'featured',marketplaceSearch:'',marketplaceCategory:'',
 selectedMarketplaceAgent:null,installingId:null,
 // Super Agent
@@ -5173,7 +5185,29 @@ stepStatusColor(s){return{waiting:'var(--muted)',ready:'var(--v-l)',running:'var
     },
     listingStars(avg){return '★'.repeat(Math.round(avg||0))+'☆'.repeat(5-Math.round(avg||0));},
 
-    async loadMarketplace(){
+    
+setMode(m){this.appMode=m;localStorage.setItem('ak_mode',m);if(m==='simple')this.loadSimpleGoals();},
+async loadSimpleGoals(){const d=await this.api('/goals?limit=5').catch(()=>({goals:[]}));this.simpleGoals=(d.goals||[]).slice(0,5);},
+async startSimpleGoal(){if(!this.simpleGoal.trim()){this.toast('Ziel beschreiben','err');return;}this.simpleRunning=true;const d=await this.api('/goals','POST',{goal:this.simpleGoal,model:'claude-sonnet-4-6'}).catch(e=>({error:e.message}));this.simpleRunning=false;if(d.error){this.toast(d.error,'err');return;}this.simpleGoal='';this.toast('Goal gestartet ✓');await this.loadSimpleGoals();},
+simpleStatusLabel(s){return{pending:'⏳ Wartet',running:'⚡ Läuft',completed:'✅ Fertig',failed:'❌ Fehler'}[s]||s;},
+widgetCode(){const id=this.agents[this.agents.length-1]?.id||'AGENT_ID';return'<script src="https://'+window.location.hostname+'/widget.js" data-agent="'+id+'"><\/script>';},
+async loadCommunityListings(){const d=await this.api('/listings?limit=24').catch(()=>({listings:[],total:0}));this.communityListings=d.listings||[];this.communityTotal=d.total||0;},
+async loadMyListings(){const d=await this.api('/listings/my').catch(()=>({listings:[]}));this.myListings=d.listings||[];},
+async loadEarnings(){const d=await this.api('/listings/earnings').catch(()=>({earnings:{}}));this.myEarnings=d.earnings||{total_cents:0,this_month_cents:0,commission_pct:20,listings:[]};},
+async openListingDetail(l){this.showListingDetail=true;this.selectedListing=null;const d=await this.api('/listings/'+l.id).catch(()=>null);if(d)this.selectedListing=d;},
+async purchaseListing(l){if(!l)return;const d=await this.api('/listings/'+l.id+'/purchase','POST',{});if(d.error){this.toast(d.error,'err');return;}if(d.checkoutUrl){window.location.href=d.checkoutUrl;}else{this.toast('Installiert ✓');this.showListingDetail=false;await this.loadAgents();}},
+async createListing(){if(!this.listingAgentId||!this.newListing.title.trim()){this.toast('Agent und Titel pflicht','err');return;}const d=await this.api('/listings','POST',{agentId:parseInt(this.listingAgentId),...this.newListing});if(d.error){this.toast(d.error,'err');return;}this.toast('Listing erstellt ✓');this.showCreateListing=false;await this.loadMyListings();},
+listingPrice(l){if(!l||l.price_cents===undefined||l.price_cents===null)return'';if(!l.price_cents||l.price_model==='free')return'Kostenlos';return'€'+(l.price_cents/100).toFixed(2).replace('.',',')+(l.price_model==='monthly'?'/Mo':'');},
+listingStars(avg){return'★'.repeat(Math.round(avg||0))+'☆'.repeat(5-Math.round(avg||0));},
+async loadUsersFiltered(){const {plan,status,sort,order}=this.userFilter;const d=await this.api('/admin/users/filter?plan='+plan+'&status='+status+'&sort='+sort+'&order='+order+'&limit=50&q='+(this.userSearch||'')).catch(()=>({users:[],total:0}));this.users=d.users||[];this.userTotal=d.total||0;this.selectedUsers=[];},
+async openUserDetail(u){this.userDetail=null;this.showUserDetail=true;const d=await this.api('/admin/users/'+u.id).catch(()=>null);if(d)this.userDetail=d;},
+toggleSelectUser(id){const i=this.selectedUsers.indexOf(id);if(i>-1)this.selectedUsers.splice(i,1);else this.selectedUsers.push(id);},
+async runBulkAction(){if(!this.selectedUsers.length||!this.bulkAction){this.toast('Auswahl und Aktion nötig','err');return;}if(!confirm(this.selectedUsers.length+' Nutzer: '+this.bulkAction+'?'))return;const d=await this.api('/admin/users/bulk','POST',{ids:this.selectedUsers,action:this.bulkAction,value:this.bulkValue});if(d.error){this.toast(d.error,'err');return;}this.toast((d.affected||0)+' geändert');this.selectedUsers=[];await this.loadUsersFiltered();},
+async createUser(){const{name,email,password,plan}=this.newUser||{};if(!name||!email||!password){this.toast('Alle Felder ausfüllen','err');return;}const d=await this.api('/admin/users/create','POST',{name,email,password,plan:plan||'free'});if(d.error){this.toast(d.error,'err');return;}this.toast('Nutzer angelegt ✓');this.showNewUser=false;await this.loadUsersFiltered();},
+generateOnboardPrompt(){},
+copyWidgetCode(){const code=this.widgetCode();try{navigator.clipboard.writeText(code.replace('\/',''));this.toast('Kopiert ✓');}catch{prompt('Widget Code:',code.replace('\/',''));}},
+
+async loadMarketplace(){
   const [ag,cat,my]=await Promise.all([
     this.api('/marketplace?limit=50'),
     this.api('/marketplace/categories'),
