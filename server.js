@@ -437,6 +437,90 @@ async function initDb() {
       user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
       role TEXT DEFAULT 'member', joined_at TIMESTAMPTZ DEFAULT now(),
       UNIQUE(workspace_id, user_id))`,
+
+    // ── Fehlende kritische Tabellen ──────────────────────────────────────
+    `CREATE TABLE IF NOT EXISTS chat_messages (
+      id SERIAL PRIMARY KEY,
+      agent_id INTEGER REFERENCES agents(id) ON DELETE CASCADE,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      session_id TEXT NOT NULL,
+      role TEXT NOT NULL CHECK (role IN ('user','assistant','system')),
+      content TEXT NOT NULL,
+      tokens_used INTEGER DEFAULT 0,
+      model TEXT,
+      created_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE INDEX IF NOT EXISTS idx_chat_messages_session ON chat_messages(agent_id, session_id)`,
+    `CREATE TABLE IF NOT EXISTS llm_usage (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      agent_id INTEGER REFERENCES agents(id) ON DELETE SET NULL,
+      model TEXT NOT NULL,
+      input_tokens INTEGER DEFAULT 0,
+      output_tokens INTEGER DEFAULT 0,
+      cost_usd NUMERIC(10,6) DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS lead_captures (
+      id SERIAL PRIMARY KEY,
+      agent_id INTEGER REFERENCES agents(id) ON DELETE CASCADE,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      session_id TEXT,
+      name TEXT, email TEXT, phone TEXT,
+      channel TEXT DEFAULT 'widget',
+      data JSONB DEFAULT '{}',
+      created_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS outgoing_webhooks (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      agent_id INTEGER REFERENCES agents(id) ON DELETE CASCADE,
+      name TEXT NOT NULL, url TEXT NOT NULL,
+      events TEXT[] DEFAULT '{}',
+      secret TEXT, is_active BOOLEAN DEFAULT true,
+      last_triggered TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS webhook_deliveries (
+      id SERIAL PRIMARY KEY,
+      webhook_id INTEGER REFERENCES outgoing_webhooks(id) ON DELETE CASCADE,
+      event TEXT NOT NULL, payload JSONB,
+      status_code INTEGER, response_body TEXT,
+      success BOOLEAN DEFAULT false,
+      created_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS password_reset_tokens (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      token TEXT UNIQUE NOT NULL,
+      expires_at TIMESTAMPTZ NOT NULL,
+      used BOOLEAN DEFAULT false,
+      created_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS user_notes (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      admin_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      note TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT now()
+    )`,
+    `CREATE TABLE IF NOT EXISTS widget_consents (
+      id SERIAL PRIMARY KEY,
+      agent_id INTEGER REFERENCES agents(id) ON DELETE CASCADE,
+      session_id TEXT NOT NULL,
+      ip_hash TEXT, user_agent TEXT,
+      given_at TIMESTAMPTZ DEFAULT now(),
+      UNIQUE(agent_id, session_id)
+    )`,
+    `CREATE TABLE IF NOT EXISTS agent_cost_daily (
+      id SERIAL PRIMARY KEY,
+      agent_id INTEGER REFERENCES agents(id) ON DELETE CASCADE,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      date DATE NOT NULL,
+      model TEXT, input_tokens INTEGER DEFAULT 0,
+      output_tokens INTEGER DEFAULT 0, cost_usd NUMERIC(10,6) DEFAULT 0,
+      UNIQUE(agent_id, date, model)
+    )`,
   ];
   for (const sql of criticalTables) {
     await pool.query(sql).catch(e => {
